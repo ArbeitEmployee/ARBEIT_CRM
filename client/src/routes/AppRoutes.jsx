@@ -1,0 +1,67 @@
+import { Routes, Route, Navigate } from "react-router-dom";
+import AdminLayout from "../layouts/AdminLayout";
+import ClientLayout from "../layouts/ClientLayout";
+
+// Admin Pages
+import Dashboard from "../pages/admin/Dashboard";
+import AdminLogin from "../pages/admin/adminLogin";
+import ForgotPassword from "../pages/admin/forgotPassword";
+import AdminSignup from "../pages/admin/adminSignup";
+
+// Client Pages
+import ClientLogin from "../pages/client/login";
+import ClientRegistration from "../pages/client/registration";
+import ClientForgotPassword from "../pages/client/forgotPassword";
+import ClientDashboard from "../pages/client/Dashboard";
+import ClientHome from "../pages/client/Home";
+
+const AppRoutes = () => {
+  return (
+    <Routes>
+      {/* Redirect root to client home */}
+      <Route path="/" element={<Navigate to="/admin/login" replace />} />
+
+      {/* Admin Auth Routes */}
+      <Route path="/admin/login" element={<AdminLogin />} />
+      <Route path="/admin/signup" element={<AdminSignup />} />
+      <Route path="/admin/forgot-password" element={<ForgotPassword />} />
+
+      {/* Client Auth Routes */}
+      <Route path="/client/login" element={<ClientLogin />} />
+      <Route path="/client/registration" element={<ClientRegistration />} />
+      <Route path="/client/forgot-password" element={<ClientForgotPassword />} />
+
+      {/* Admin Dashboard Routes */}
+      <Route
+        path="/admin/*"
+        element={
+          <AdminLayout>
+            <Routes>
+              <Route path="dashboard" element={<Dashboard />} />
+              {/* Add more admin routes here */}
+            </Routes>
+          </AdminLayout>
+        }
+      />
+
+      {/* Client Routes */}
+      <Route
+        path="/client/*"
+        element={
+          <ClientLayout>
+            <Routes>
+              <Route path="home" element={<ClientHome />} />
+              <Route path="dashboard" element={<ClientDashboard />} />
+              {/* Add more client routes here */}
+            </Routes>
+          </ClientLayout>
+        }
+      />
+
+      {/* 404 Not Found - Redirect to client home */}
+      <Route path="*" element={<Navigate to="/client/home" replace />} />
+    </Routes>
+  );
+};
+
+export default AppRoutes;
