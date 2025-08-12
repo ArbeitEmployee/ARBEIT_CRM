@@ -6,6 +6,7 @@ const adminSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ["superAdmin", "admin"], default: "admin" },
+    status: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" }, // new field
     resetCode: { type: String },
     resetCodeExpire: { type: Date }
   },

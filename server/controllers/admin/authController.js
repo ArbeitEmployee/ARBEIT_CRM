@@ -23,10 +23,11 @@ export const registerAdmin = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role: role || "admin"
+      role: role || "admin",
+      status: "pending" // default to pending
     });
 
-    res.status(201).json({ message: "Admin registered successfully", admin });
+    res.status(201).json({ message: "Registration successful. Await superAdmin approval.", admin });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -39,6 +40,12 @@ export const loginAdmin = async (req, res) => {
 
     const admin = await Admin.findOne({ email });
     if (!admin) return res.status(400).json({ message: "Invalid email or password" });
+
+    // Check approval
+    if (admin.status === "pending")
+      return res.status(403).json({ message: "Your account is pending approval from the superAdmin." });
+    if (admin.status === "rejected")
+      return res.status(403).json({ message: "Your account has been rejected by the superAdmin." });
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) return res.status(400).json({ message: "Invalid email or password" });
@@ -54,7 +61,26 @@ export const loginAdmin = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+//update status
+export const updateAdminStatus = async (req, res) => {
+  try {
+    const { adminId, status } = req.body;
 
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ message: "Invalid status value" });
+    }
+
+    const admin = await Admin.findById(adminId);
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    admin.status = status;
+    await admin.save();
+
+    res.json({ message: `Admin status updated to ${status}` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 // FORGOT PASSWORD - SEND OTP
 export const forgotPassword = async (req, res) => {
   try {

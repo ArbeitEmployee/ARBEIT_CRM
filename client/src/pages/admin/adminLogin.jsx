@@ -7,39 +7,68 @@ import backgroundImage from "../../assets/login-background.jpg";
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [touched, setTouched] = useState({ email: false, password: false });
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const res = await fetch("http://localhost:5000/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      toast.error(data.message || "Login failed");
+    if (!email || !password) {
+      toast.error("Please fill in all fields.");
       return;
     }
 
-    toast.success("Login successful!");
+    try {
+      const res = await fetch("http://localhost:5000/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
-    // Save JWT token in localStorage
-    localStorage.setItem("crm_token", data.token);
+      // Read text then try parse JSON (safe for any response)
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        data = { message: text || "" };
+      }
 
-    // Redirect after 1 sec so toast shows first
-    setTimeout(() => {
-      navigate("/admin/dashboard");
-    }, 1000);
+      console.log("LOGIN response:", res.status, data);
 
-  } catch (error) {
-    toast.error("Something went wrong. Please try again.");
-  }
-};
+      // If backend returns non-OK, show its message
+      if (!res.ok) {
+        toast.error(data.message || `Login failed (status ${res.status})`);
+        return;
+      }
+
+      // Expect token in successful response
+      const token = data.token;
+      if (!token) {
+        // backend didn't return token — show message and don't navigate
+        toast.error(data.message || "Login succeeded but token missing.");
+        return;
+      }
+
+      // Success
+      toast.success(data.message || "Login successful!");
+      localStorage.setItem("crm_token", token);
+
+      // small delay so toast is visible
+      setTimeout(() => {
+        navigate("/admin/dashboard");
+      }, 900);
+    } catch (err) {
+      console.error("Network/login error:", err);
+      toast.error("Something went wrong. Please try again.");
+    }
+  };
+
+  const getInputClasses = (field, value) =>
+    `w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+      touched[field] && !value ? "border border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
+    }`;
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-4"
@@ -67,25 +96,27 @@ export default function AdminLogin() {
               <input
                 type="email"
                 placeholder="Enter your email"
+                autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onBlur={() => setTouched({ ...touched, email: true })}
+                className={getInputClasses("email", email)}
               />
             </div>
+            {touched.email && !email && (
+              <p className="text-red-400 text-xs mt-1">Please fill up the email field.</p>
+            )}
           </div>
 
           {/* Password */}
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="text-sm">Password</label>
-              <Link
-                to="/admin/forgot-password"
-                className="text-xs text-gray-100 hover:underline"
-              >
+              <Link to="/admin/forgot-password" className="text-xs text-gray-100 hover:underline">
                 Forgot Password?
               </Link>
             </div>
+
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiLock className="text-gray-400" />
@@ -95,10 +126,13 @@ export default function AdminLogin() {
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onBlur={() => setTouched({ ...touched, password: true })}
+                className={getInputClasses("password", password)}
               />
             </div>
+            {touched.password && !password && (
+              <p className="text-red-400 text-xs mt-1">Please fill up the password field.</p>
+            )}
           </div>
 
           <button
