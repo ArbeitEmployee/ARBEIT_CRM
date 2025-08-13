@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { FiLock } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import { toast } from "react-hot-toast";
 import backgroundImage from "../../assets/login-background.jpg";
 
 export default function ForgotPassword() {
@@ -9,6 +10,7 @@ export default function ForgotPassword() {
   const [code, setCode] = useState(["", "", "", ""]);
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({
     email: "",
     code: "",
@@ -16,28 +18,23 @@ export default function ForgotPassword() {
     confirmPassword: ""
   });
 
-  // refs for the 4 code inputs
-  const codeInputsRef = useRef([]);
+  const codeRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
   const handleCodeChange = (index, value) => {
-    if (value.length > 1) return; // restrict one char per box
-    if (value && !/^\d$/.test(value)) return; // allow only digits
-
+    if (value.length > 1) return;
     const newCode = [...code];
-    newCode[index] = value;
+    newCode[index] = value.replace(/[^0-9]/g, "");
     setCode(newCode);
     setErrors({...errors, code: ""});
 
-    // auto move to next input if value is valid and not last input
-    if (value && index < codeInputsRef.current.length - 1) {
-      codeInputsRef.current[index + 1].focus();
+    if (value && index < code.length - 1) {
+      codeRefs[index + 1].current.focus();
     }
   };
 
-  // Optional: handle backspace to move back focus if input empty
-  const handleCodeKeyDown = (e, index) => {
-    if (e.key === "Backspace" && code[index] === "" && index > 0) {
-      codeInputsRef.current[index - 1].focus();
+  const handleKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !code[index] && index > 0) {
+      codeRefs[index - 1].current.focus();
     }
   };
 
@@ -46,41 +43,92 @@ export default function ForgotPassword() {
       step === lineNum ? "bg-white w-8" : "bg-white/30 w-6"
     }`;
 
-  const validateStep1 = () => {
+  // 1. Send Reset Code to Email
+  const sendResetCode = async () => {
     if (!email) {
       setErrors({...errors, email: "Email is required"});
-      return false;
+      return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setErrors({...errors, email: "Please enter a valid email"});
-      return false;
+      return;
     }
-    return true;
+
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/client/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to send code");
+      toast.success("Reset code sent to your email");
+      setStep(2);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const validateStep2 = () => {
+  // 2. Verify Reset Code
+  const verifyCode = async () => {
     if (code.some((digit) => digit === "")) {
       setErrors({...errors, code: "Please enter complete code"});
-      return false;
+      return;
     }
-    return true;
+    const codeString = code.join("");
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/client/verify-reset-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: codeString }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Invalid reset code");
+      toast.success("Code verified. You can set a new password.");
+      setStep(3);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const validateStep3 = () => {
-    const newErrors = {...errors};
-    let isValid = true;
-
+  // 3. Reset Password
+  const resetPassword = async () => {
     if (newPassword.length < 6) {
-      newErrors.newPassword = "Password must be at least 6 characters";
-      isValid = false;
+      setErrors({...errors, newPassword: "Password must be at least 6 characters"});
+      return;
     }
     if (newPassword !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-      isValid = false;
+      setErrors({...errors, confirmPassword: "Passwords do not match"});
+      return;
     }
-    
-    setErrors(newErrors);
-    return isValid;
+
+    setLoading(true);
+    try {
+      const res = await fetch("http://localhost:5000/api/client/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to reset password");
+
+      toast.success("Password reset successful! Redirecting to login...");
+      
+      setTimeout(() => {
+        window.location.href = "/client/login";
+      }, 1500);
+
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -97,24 +145,22 @@ export default function ForgotPassword() {
       <div className="text-center mb-6">
         {step === 1 && (
           <>
-            <h2 className="text-xl font-semibold text-white mb-2">Forgot Password</h2>
-            <p className="text-sm text-gray-300 mb-4">
-                Enter your email to receive reset instructions
+            <h2 className="text-lg font-semibold text-white">Forgot Password</h2>
+            <p className="text-xs text-gray-300">
+              Enter your email to receive reset instructions
             </p>
           </>
         )}
         {step === 2 && (
           <>
-            <h2 className="text-xl font-semibold text-white mb-2">Password Reset</h2>
-            <p className="text-sm text-gray-300 mb-4">
-              We sent a code to {email || "your email"}
-            </p>
+            <h2 className="text-lg font-semibold text-white">Password Reset</h2>
+            <p className="text-xs text-gray-300">We sent a code to {email || "your email"}</p>
           </>
         )}
         {step === 3 && (
           <>
-            <h2 className="text-xl font-semibold text-white mb-2">Set New Password</h2>
-            <p className="text-sm text-gray-300 mb-4">Must be at least 6 characters</p>
+            <h2 className="text-lg font-semibold text-white">Set New Password</h2>
+            <p className="text-xs text-gray-300">Must be at least 6 characters</p>
           </>
         )}
       </div>
@@ -125,13 +171,12 @@ export default function ForgotPassword() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (validateStep1()) setStep(2);
+              sendResetCode();
             }}
             className="space-y-4"
-            noValidate
           >
             <div>
-              <label className="block text-sm mb-2">Email Address</label>
+              <label className="block text-sm mb-1">Email Address</label>
               <input
                 type="email"
                 placeholder="Enter your email"
@@ -148,9 +193,10 @@ export default function ForgotPassword() {
             </div>
             <button
               type="submit"
-              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition"
+              disabled={loading}
+              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition disabled:opacity-50"
             >
-              Send code
+              {loading ? "Sending..." : "Send code"}
             </button>
           </form>
         )}
@@ -159,41 +205,41 @@ export default function ForgotPassword() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (validateStep2()) setStep(3);
+              verifyCode();
             }}
             className="space-y-4"
-            noValidate
           >
-            <div className="flex justify-between space-x-2 mb-4">
+            <div className="flex justify-between space-x-2 mb-9">
               {code.map((digit, idx) => (
                 <input
                   key={idx}
-                  ref={el => (codeInputsRef.current[idx] = el)}
+                  ref={codeRefs[idx]}
                   type="text"
                   maxLength={1}
                   value={digit}
-                  onChange={(e) => handleCodeChange(idx, e.target.value.replace(/[^0-9]/g, ""))}
-                  onKeyDown={(e) => handleCodeKeyDown(e, idx)}
+                  onChange={(e) => handleCodeChange(idx, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(idx, e)}
                   className={`w-16 h-14 text-center rounded bg-[#10194f] text-white text-lg font-semibold focus:outline-none focus:ring-2 ${
-                    errors.code ? "focus:ring-red-500" : "focus:ring-gray-700"
+                    errors.code ? "focus:ring-red-500" : "focus:ring-blue-500"
                   }`}
-                  autoFocus={idx === 0}
                 />
               ))}
             </div>
-            {errors.code && <p className="text-red-400 text-xs -mt-2 mb-2">{errors.code}</p>}
+            {errors.code && <p className="text-red-400 text-xs -mt-6 mb-2">{errors.code}</p>}
             <button
               type="submit"
-              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition"
+              disabled={loading}
+              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition disabled:opacity-50"
             >
-              CONTINUE
+              {loading ? "Verifying..." : "CONTINUE"}
             </button>
             <p className="text-center text-xs mt-2">
               Didn&apos;t receive the email?{" "}
               <button
                 type="button"
-                className="underline text-white"
-                onClick={() => alert("Resend email clicked")}
+                className="underline text-blue-400"
+                disabled={loading}
+                onClick={sendResetCode}
               >
                 Resend Again
               </button>
@@ -205,77 +251,59 @@ export default function ForgotPassword() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
-              if (validateStep3()) {
-                alert("Password reset successful!");
-                setStep(1);
-                setEmail("");
-                setCode(["", "", "", ""]);
-                setNewPassword("");
-                setConfirmPassword("");
-                setErrors({
-                  email: "",
-                  code: "",
-                  newPassword: "",
-                  confirmPassword: ""
-                });
-              }
+              resetPassword();
             }}
             className="space-y-4"
-            noValidate
           >
             <div>
               <label className="block text-sm mb-1">New Password</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  placeholder="Enter your new password"
-                  value={newPassword}
-                  onChange={(e) => {
-                    setNewPassword(e.target.value);
-                    setErrors({...errors, newPassword: ""});
-                  }}
-                  className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                    errors.newPassword ? "focus:ring-red-500" : "focus:ring-gray-700"
-                  }`}
-                />
-              </div>
+              <input
+                type="password"
+                placeholder="Enter your new password"
+                value={newPassword}
+                onChange={(e) => {
+                  setNewPassword(e.target.value);
+                  setErrors({...errors, newPassword: ""});
+                }}
+                className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                  errors.newPassword ? "focus:ring-red-500" : "focus:ring-blue-400"
+                }`}
+                required
+              />
               {errors.newPassword && <p className="text-red-400 text-xs mt-1">{errors.newPassword}</p>}
             </div>
 
             <div>
               <label className="block text-sm mb-1">Confirm Password</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  placeholder="Enter your confirm password"
-                  value={confirmPassword}
-                  onChange={(e) => {
-                    setConfirmPassword(e.target.value);
-                    setErrors({...errors, confirmPassword: ""});
-                  }}
-                  className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                    errors.confirmPassword ? "focus:ring-red-500" : "focus:ring-gray-700"
-                  }`}
-                />
-              </div>
+              <input
+                type="password"
+                placeholder="Enter your confirm password"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value);
+                  setErrors({...errors, confirmPassword: ""});
+                }}
+                className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                  errors.confirmPassword ? "focus:ring-red-500" : "focus:ring-blue-400"
+                }`}
+                required
+              />
               {errors.confirmPassword && <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>}
             </div>
 
             <button
               type="submit"
-              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition"
+              disabled={loading}
+              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition disabled:opacity-50"
             >
-              RESET PASSWORD
+              {loading ? "Resetting..." : "RESET PASSWORD"}
             </button>
           </form>
         )}
 
         {/* Back to login link */}
         <p className="text-center text-sm mt-4">
-          <Link
-            to="/client/login"
-            className="text-white hover:underline transition"
-          >
+          <Link to="/client/login" className="text-white hover:underline transition">
             ← Back to log in
           </Link>
         </p>

@@ -16,12 +16,6 @@ import ClientRegistration from "../pages/client/registration";
 import ClientForgotPassword from "../pages/client/forgotPassword";
 import ClientDashboard from "../pages/client/Dashboard";
 import ClientHome from "../pages/client/Home";
-import Proposals from "../pages/admin/sales/proposals";
-import Estimates from "../pages/admin/sales/estimates";
-import Invoices from "../pages/admin/sales/invoices";
-import CreditNotes from "../pages/admin/sales/creditNotes";
-import Items from "../pages/admin/sales/items";
-import Payments from "../pages/admin/sales/payments";
 
 const AppRoutes = () => {
   return (
@@ -64,16 +58,13 @@ const AppRoutes = () => {
         element={
           <ClientLayout>
             <Routes>
-              <Route path="home" element={<ClientHome />} />
-              <Route path="dashboard" element={<ClientDashboard />} />
+              <Route index element={<Home />} />
+              <Route path="home" element={<Home />} />
               {/* Add more client routes here */}
             </Routes>
           </ClientLayout>
         }
       />
-
-      {/* 404 Not Found - Redirect to client home */}
-      <Route path="*" element={<Navigate to="/client/home" replace />} />
     </Routes>
   );
 };
