@@ -12,7 +12,7 @@ import AdminSignup from "../pages/admin/adminSignup";
 import ClientLogin from "../pages/client/login";
 import ClientRegistration from "../pages/client/registration";
 import ClientForgotPassword from "../pages/client/forgotPassword";
-import ClientHome from "../pages/client/Home";
+import Home from "../pages/client/Home";
 
 const AppRoutes = () => {
   return (
@@ -49,7 +49,8 @@ const AppRoutes = () => {
         element={
           <ClientLayout>
             <Routes>
-              <Route path="home" element={<ClientHome />} />
+              <Route index element={<Home />} />
+              <Route path="home" element={<Home />} />
               {/* Add more client routes here */}
             </Routes>
           </ClientLayout>
