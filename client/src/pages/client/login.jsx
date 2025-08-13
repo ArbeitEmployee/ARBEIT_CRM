@@ -57,9 +57,9 @@ const ClientLogin = () => {
         localStorage.removeItem("crm_client_email");
       }
 
-      // Redirect to dashboard
+      // Redirect to home
       setTimeout(() => {
-        navigate("/client/dashboard");
+        navigate("/client/home");
       }, 1000);
 
     } catch (error) {

@@ -12,7 +12,6 @@ import AdminSignup from "../pages/admin/adminSignup";
 import ClientLogin from "../pages/client/login";
 import ClientRegistration from "../pages/client/registration";
 import ClientForgotPassword from "../pages/client/forgotPassword";
-import ClientDashboard from "../pages/client/Dashboard";
 import ClientHome from "../pages/client/Home";
 
 const AppRoutes = () => {
@@ -51,15 +50,11 @@ const AppRoutes = () => {
           <ClientLayout>
             <Routes>
               <Route path="home" element={<ClientHome />} />
-              <Route path="dashboard" element={<ClientDashboard />} />
               {/* Add more client routes here */}
             </Routes>
           </ClientLayout>
         }
       />
-
-      {/* 404 Not Found - Redirect to client home */}
-      <Route path="*" element={<Navigate to="/client/home" replace />} />
     </Routes>
   );
 };
