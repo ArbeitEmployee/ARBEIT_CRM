@@ -2,6 +2,8 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
 
+
+
 // Admin Pages
 import Dashboard from "../pages/admin/Dashboard";
 import AdminLogin from "../pages/admin/adminLogin";
@@ -14,6 +16,12 @@ import ClientRegistration from "../pages/client/registration";
 import ClientForgotPassword from "../pages/client/forgotPassword";
 import ClientDashboard from "../pages/client/Dashboard";
 import ClientHome from "../pages/client/Home";
+import Proposals from "../pages/admin/sales/proposals";
+import Estimates from "../pages/admin/sales/estimates";
+import Invoices from "../pages/admin/sales/invoices";
+import CreditNotes from "../pages/admin/sales/creditNotes";
+import Items from "../pages/admin/sales/items";
+import Payments from "../pages/admin/sales/payments";
 
 const AppRoutes = () => {
   return (
@@ -38,6 +46,12 @@ const AppRoutes = () => {
           <AdminLayout>
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="sales/proposals" element={<Proposals />} />
+              <Route path="sales/estimates" element={<Estimates />} />
+              <Route path="sales/invoices" element={<Invoices/>} />
+              <Route path="sales/payments" element={<Payments/>} />
+              <Route path="sales/creditNotes" element={<CreditNotes/>} />
+              <Route path="sales/items" element={<Items/>} />
               {/* Add more admin routes here */}
             </Routes>
           </AdminLayout>

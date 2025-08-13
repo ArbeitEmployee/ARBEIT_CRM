@@ -14,7 +14,7 @@ const Dashboard = () => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-2xl font-semibold mb-4">Admin Dashboard</h2>
+      <h2 className="text-2xl font-semibold mt-6">Admin Dashboard</h2>
       <p className="text-gray-600">
         Welcome to the admin panel. Here you can manage leads, clients, and all CRM data.
       </p>
