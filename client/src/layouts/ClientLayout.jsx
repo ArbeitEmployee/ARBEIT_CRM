@@ -1,4 +1,3 @@
-// ClientLayout.jsx
 import { useState } from "react";
 import ClientHeader from "../components/headers/ClientHeader";
 import ClientSidebar from "../components/sidebar/ClientSidebar";
@@ -11,11 +10,11 @@ const ClientLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
       <ClientHeader onToggleSidebar={handleToggleSidebar} />
 
-      <div className="flex">
+      <div className="flex flex-1 pt-14"> {/* Changed to pt-14 to match header height */}
         {/* Sidebar */}
         <ClientSidebar isOpen={isSidebarOpen} />
 
@@ -24,7 +23,6 @@ const ClientLayout = ({ children }) => {
           className={`flex-1 p-4 transition-all duration-300 ${
             isSidebarOpen ? "ml-60" : "ml-0"
           }`}
-          style={{ marginTop: '56px' }} // To account for fixed header
         >
           {children}
         </main>

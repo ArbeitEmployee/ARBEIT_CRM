@@ -1,4 +1,3 @@
-// ClientSidebar.jsx
 import { useState } from "react";
 import {
   FaQuestionCircle,
@@ -11,7 +10,7 @@ import {
   FaHome
 } from "react-icons/fa";
 import { IoIosArrowForward } from "react-icons/io";
-import { NavLink } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const ClientSidebar = ({ isOpen }) => {
   const [activeMenu, setActiveMenu] = useState("");
@@ -25,10 +24,10 @@ const ClientSidebar = ({ isOpen }) => {
       icon: <FaFileInvoiceDollar />,
       hasSub: true,
       subItems: [
-        { label: "All Invoices", path: "/client/invoices" },
-        { label: "Paid", path: "/client/invoices/paid" },
-        { label: "Unpaid", path: "/client/invoices/unpaid" },
-        { label: "Overdue", path: "/client/invoices/overdue" }
+        { name: "All Invoices", path: "/client/invoices" },
+        { name: "Paid", path: "/client/invoices/paid" },
+        { name: "Unpaid", path: "/client/invoices/unpaid" },
+        { name: "Overdue", path: "/client/invoices/overdue" }
       ]
     },
     { label: "Contracts", icon: <FaFileContract />, path: "/client/contracts" },
@@ -39,7 +38,7 @@ const ClientSidebar = ({ isOpen }) => {
 
   return (
     <aside
-      className={`bg-gray-900 text-white h-[calc(100vh-56px)] fixed top-[56px] left-0 z-40 flex flex-col transition-all duration-300
+      className={`bg-gray-900 text-white h-[calc(100vh-56px)] fixed top-14 left-0 z-40 flex flex-col transition-all duration-300
         ${isOpen ? "w-60" : "w-0 overflow-hidden"}`}
     >
       {/* User profile */}
@@ -82,33 +81,25 @@ const ClientSidebar = ({ isOpen }) => {
                 {activeMenu === item.label && (
                   <div className="pl-12 bg-gray-800">
                     {item.subItems.map((sub, sIdx) => (
-                      <NavLink
+                      <Link
                         key={sIdx}
                         to={sub.path}
-                        className={({ isActive }) => 
-                          `block py-1 text-xs hover:text-white cursor-pointer ${
-                            isActive ? "text-white font-medium" : "text-gray-300"
-                          }`
-                        }
+                        className="block py-1 text-xs text-gray-300 hover:text-white cursor-pointer"
                       >
-                        {sub.label}
-                      </NavLink>
+                        {sub.name}
+                      </Link>
                     ))}
                   </div>
                 )}
               </>
             ) : (
-              <NavLink
+              <Link
                 to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center gap-3 w-full px-4 py-2 hover:bg-gray-800 transition-colors ${
-                    isActive ? "bg-gray-800 text-white" : ""
-                  }`
-                }
+                className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 transition-colors"
               >
                 <span className="text-lg">{item.icon}</span>
                 <span className="text-sm">{item.label}</span>
-              </NavLink>
+              </Link>
             )}
           </div>
         ))}
