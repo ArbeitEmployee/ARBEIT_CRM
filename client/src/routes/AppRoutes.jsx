@@ -16,6 +16,7 @@ import ClientLogin from "../pages/client/login";
 import ClientRegistration from "../pages/client/registration";
 import ClientForgotPassword from "../pages/client/forgotPassword";
 import Home from "../pages/client/Home";
+import Customers from "../pages/admin/customers";
 import Proposals from "../pages/admin/sales/proposals";
 import Estimates from "../pages/admin/sales/estimates";
 import Invoices from "../pages/admin/sales/invoices";
@@ -50,6 +51,7 @@ const AppRoutes = () => {
           <AdminLayout>
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="customers" element={<Customers />} />
               <Route path="sales/proposals" element={<Proposals/>} />
               <Route path="sales/estimates" element={<Estimates />} />
               <Route path="sales/invoices" element={<Invoices/>} />

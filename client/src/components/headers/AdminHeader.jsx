@@ -2,7 +2,7 @@ import { FaBars, FaBell, FaUserCircle, FaCog } from "react-icons/fa";
 
 const AdminHeader = ({ onToggleSidebar }) => {
   return (
-    <header className="bg-gray-600 text-white flex items-center justify-between px-4 py-3 shadow-md fixed top-0 left-0 right-0 z-50">
+    <header className="bg-gray-600 text-white flex items-center justify-between px-4 py-3 shadow-md fixed top-0 left-0 right-0 z-50 h-14"> {/* Added h-14 */}
       {/* Left - Sidebar Toggle + Brand */}
       <div className="flex items-center gap-4">
         <button onClick={onToggleSidebar} className="text-white text-xl">

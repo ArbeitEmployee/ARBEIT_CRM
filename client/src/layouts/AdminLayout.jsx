@@ -10,11 +10,11 @@ const AdminLayout = ({ children }) => {
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
       <AdminHeader onToggleSidebar={handleToggleSidebar} />
 
-      <div className="flex">
+      <div className="flex flex-1 pt-14"> {/* Added pt-14 to account for header height */}
         {/* Sidebar */}
         <AdminSideBar isOpen={isSidebarOpen} />
 
