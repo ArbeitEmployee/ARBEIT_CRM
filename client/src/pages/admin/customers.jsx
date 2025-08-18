@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaPlus, FaFilter, FaSearch, FaSyncAlt, FaUser, FaUserCheck, FaUserTimes, FaUserClock, FaChevronRight } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
+import axios from "axios";
 
 const CustomersPage = () => {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -9,47 +10,90 @@ const CustomersPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false);
-
-  // Stats data
-  const stats = {
-    totalCustomers: 11,
-    activeCustomers: 11,
+  const [showNewCustomerForm, setShowNewCustomerForm] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [stats, setStats] = useState({
+    totalCustomers: 0,
+    activeCustomers: 0,
     inactiveCustomers: 0,
-    activeContacts: 11,
+    activeContacts: 0,
     inactiveContacts: 0,
-    loggedInContacts: 2
+    loggedInContacts: 0
+  });
+  const [newCustomer, setNewCustomer] = useState({
+    company: "",
+    vatNumber: "",
+    contact: "",
+    phone: "",
+    email: "",
+    website: "",
+    groups: [],
+    currency: "System Default",
+    language: "System Default",
+    active: true,
+    contactsActive: true
+  });
+
+  // Fetch customers from API
+  const fetchCustomers = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:5000/api/customers");
+      setCustomers(data.customers || []);
+      setStats({
+        totalCustomers: data.stats?.totalCustomers ?? 0,
+        activeCustomers: data.stats?.activeCustomers ?? 0,
+        inactiveCustomers: data.stats?.inactiveCustomers ?? 0,
+        activeContacts: data.stats?.activeContacts ?? 0,
+        inactiveContacts: data.stats?.inactiveContacts ?? 0,
+        loggedInContacts: data.stats?.loggedInContacts ?? 0,
+      });
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+      setCustomers([]);
+      setStats({
+        totalCustomers: 0,
+        activeCustomers: 0,
+        inactiveCustomers: 0,
+        activeContacts: 0,
+        inactiveContacts: 0,
+        loggedInContacts: 0,
+      });
+    }
   };
 
-  // Customer data
-  const customers = [
-    {
-      id: 1,
-      company: "Abbott LLC",
-      contact: "Samson Stokes",
-      email: "ryan.summer@example.com",
-      phone: "+1-616-601-9312",
-      active: true,
-      groups: ["Wholesaler", "VIP"],
-      dateCreated: "2025-08-14 00:00:08"
-    },
-    {
-      id: 2,
-      company: "Bernier-Witting",
-      contact: "Ben Roberts",
-      email: "green37@example.net",
-      phone: "+15343942904",
-      active: true,
-      groups: ["High Budget"],
-      dateCreated: "2025-08-11 16:00:08"
-    },
-    // Add more customers as needed
-  ];
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  // Toggle customer active status
+  const toggleCustomerActive = async (id) => {
+    try {
+      await axios.put(`http://localhost:5000/api/customers/${id}/active`);
+      fetchCustomers();
+    } catch (error) {
+      console.error("Error updating customer status:", error);
+      alert(`Error updating customer status: ${error.response?.data?.message || error.message}`);
+    }
+  };
+
+  // Toggle contacts active status
+  const toggleContactsActive = async (id) => {
+    try {
+      await axios.put(`http://localhost:5000/api/customers/${id}/contacts-active`);
+      fetchCustomers();
+    } catch (error) {
+      console.error("Error updating contacts status:", error);
+      alert(`Error updating contacts status: ${error.response?.data?.message || error.message}`);
+    }
+  };
 
   // Search filter
-  const filteredCustomers = customers.filter((c) =>
+  const filteredCustomers = (customers || []).filter((c) =>
     Object.values(c).some((val) =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
-  ));
+    )
+  );
 
   // Pagination
   const totalPages = Math.ceil(filteredCustomers.length / entriesPerPage);
@@ -65,6 +109,72 @@ const CustomersPage = () => {
         ? prev.filter(customerId => customerId !== id)
         : [...prev, id]
     );
+  };
+
+  const handleNewCustomerChange = (e) => {
+    const { name, value } = e.target;
+    setNewCustomer(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddGroup = () => {
+    const newGroup = prompt("Enter group name");
+    if (newGroup) {
+      setNewCustomer(prev => ({
+        ...prev,
+        groups: [...prev.groups, newGroup]
+      }));
+    }
+  };
+
+  const handleRemoveGroup = (index) => {
+    setNewCustomer(prev => ({
+      ...prev,
+      groups: prev.groups.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleSaveCustomer = async () => {
+    if (isSaving) return;
+    
+    if (!newCustomer.company || !newCustomer.contact || !newCustomer.email) {
+      alert("Please fill in all required fields (Company, Contact, Email)");
+      return;
+    }
+
+    setIsSaving(true);
+    console.log("Attempting to save customer:", newCustomer);
+    
+    try {
+      const response = await axios.post("http://localhost:5000/api/customers", newCustomer);
+      console.log("API response:", response);
+      
+      if (response.status === 201) {
+        setShowNewCustomerForm(false);
+        setNewCustomer({
+          company: "",
+          vatNumber: "",
+          contact: "",
+          phone: "",
+          email: "",
+          website: "",
+          groups: [],
+          currency: "System Default",
+          language: "System Default",
+          active: true,
+          contactsActive: true
+        });
+        fetchCustomers();
+        alert("Customer created successfully!");
+      }
+    } catch (error) {
+      console.error("Full error details:", error);
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+      }
+      alert(`Error creating customer: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -162,7 +272,10 @@ const CustomersPage = () => {
       {/* Top action buttons */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <div className="flex items-center gap-2">
-          <button className="bg-black text-white px-3 py-1 text-sm rounded flex items-center gap-2">
+          <button 
+            className="bg-black text-white px-3 py-1 text-sm rounded flex items-center gap-2"
+            onClick={() => setShowNewCustomerForm(!showNewCustomerForm)}
+          >
             <FaPlus /> New Customer
           </button>
           <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
@@ -181,6 +294,163 @@ const CustomersPage = () => {
           </button>
         </div>
       </div>
+
+      {/* New Customer Form */}
+      {showNewCustomerForm && (
+        <div className="bg-white shadow-md rounded p-4 mb-4">
+          <h2 className="text-xl font-bold mb-4">Customer Details</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+              <input
+                type="text"
+                name="company"
+                value={newCustomer.company}
+                onChange={handleNewCustomerChange}
+                className="w-full border rounded px-3 py-2"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">VAT Number</label>
+              <input
+                type="text"
+                name="vatNumber"
+                value={newCustomer.vatNumber}
+                onChange={handleNewCustomerChange}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Primary Contact *</label>
+              <input
+                type="text"
+                name="contact"
+                value={newCustomer.contact}
+                onChange={handleNewCustomerChange}
+                className="w-full border rounded px-3 py-2"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <input
+                type="text"
+                name="phone"
+                value={newCustomer.phone}
+                onChange={handleNewCustomerChange}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Primary Email *</label>
+              <input
+                type="email"
+                name="email"
+                value={newCustomer.email}
+                onChange={handleNewCustomerChange}
+                className="w-full border rounded px-3 py-2"
+                required
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Website</label>
+              <input
+                type="text"
+                name="website"
+                value={newCustomer.website}
+                onChange={handleNewCustomerChange}
+                className="w-full border rounded px-3 py-2"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Groups</label>
+              <div className="flex">
+                <select
+                  className="border rounded-l px-3 py-2 flex-grow"
+                  disabled
+                >
+                  <option>Select a group</option>
+                </select>
+                <button
+                  onClick={handleAddGroup}
+                  className="bg-gray-200 px-3 py-2 rounded-r"
+                >
+                  Add
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {newCustomer.groups.map((group, index) => (
+                  <span key={index} className="bg-gray-100 px-2 py-1 rounded text-xs flex items-center">
+                    {group}
+                    <button 
+                      onClick={() => handleRemoveGroup(index)}
+                      className="ml-1 text-gray-500 hover:text-gray-700"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+              <select
+                name="currency"
+                value={newCustomer.currency}
+                onChange={handleNewCustomerChange}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option>System Default</option>
+                <option>USD</option>
+                <option>EUR</option>
+                <option>GBP</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Default Language</label>
+              <select
+                name="language"
+                value={newCustomer.language}
+                onChange={handleNewCustomerChange}
+                className="w-full border rounded px-3 py-2"
+              >
+                <option>System Default</option>
+                <option>English</option>
+                <option>Spanish</option>
+                <option>French</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setShowNewCustomerForm(false)}
+              className="px-4 py-2 border rounded"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveCustomer}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              disabled={!newCustomer.company || !newCustomer.contact || !newCustomer.email || isSaving}
+            >
+              {isSaving ? "Saving..." : "Save Customer"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* White box for table */}
       <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
@@ -233,7 +503,7 @@ const CustomersPage = () => {
             {/* Refresh button */}
             <button
               className="border px-2 py-1 rounded text-sm flex items-center"
-              onClick={() => window.location.reload()}
+              onClick={fetchCustomers}
             >
               <FaSyncAlt />
             </button>
@@ -266,14 +536,16 @@ const CustomersPage = () => {
                   <>
                     <th className="p-2 border">Primary Contact</th>
                     <th className="p-2 border">Email</th>
-                    <th className="p-2 border">Status</th>
+                    <th className="p-2 border">Active Customer</th>
+                    <th className="p-2 border">Active Contacts</th>
                   </>
                 ) : (
                   <>
                     <th className="p-2 border">Primary Contact</th>
                     <th className="p-2 border">Primary Email</th>
                     <th className="p-2 border">Phone</th>
-                    <th className="p-2 border">Active</th>
+                    <th className="p-2 border">Active Customer</th>
+                    <th className="p-2 border">Active Contacts</th>
                     <th className="p-2 border">Groups</th>
                     <th className="p-2 border">Date Created</th>
                   </>
@@ -282,12 +554,12 @@ const CustomersPage = () => {
             </thead>
             <tbody>
               {currentData.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50">
+                <tr key={customer._id} className="hover:bg-gray-50">
                   <td className="p-2 border">
                     <input
                       type="checkbox"
-                      checked={selectedCustomers.includes(customer.id)}
-                      onChange={() => toggleCustomerSelection(customer.id)}
+                      checked={selectedCustomers.includes(customer._id)}
+                      onChange={() => toggleCustomerSelection(customer._id)}
                       className="h-4 w-4"
                     />
                   </td>
@@ -295,14 +567,42 @@ const CustomersPage = () => {
                   <td className="p-2 border">{customer.contact}</td>
                   <td className="p-2 border">{customer.email}</td>
                   {compactView ? (
-                    <td className="p-2 border">
-                      <span className={`inline-block w-3 h-3 rounded-full ${customer.active ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                    </td>
+                    <>
+                      <td className="p-2 border">
+                        <button 
+                          onClick={() => toggleCustomerActive(customer._id)}
+                          className={`px-2 py-1 rounded text-xs ${customer.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                        >
+                          {customer.active ? 'Active' : 'Inactive'}
+                        </button>
+                      </td>
+                      <td className="p-2 border">
+                        <button 
+                          onClick={() => toggleContactsActive(customer._id)}
+                          className={`px-2 py-1 rounded text-xs ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                        >
+                          {customer.contactsActive ? 'Active' : 'Inactive'}
+                        </button>
+                      </td>
+                    </>
                   ) : (
                     <>
                       <td className="p-2 border">{customer.phone}</td>
                       <td className="p-2 border">
-                        <span className={`inline-block w-3 h-3 rounded-full ${customer.active ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                        <button 
+                          onClick={() => toggleCustomerActive(customer._id)}
+                          className={`px-2 py-1 rounded text-xs ${customer.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                        >
+                          {customer.active ? 'Active' : 'Inactive'}
+                        </button>
+                      </td>
+                      <td className="p-2 border">
+                        <button 
+                          onClick={() => toggleContactsActive(customer._id)}
+                          className={`px-2 py-1 rounded text-xs ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                        >
+                          {customer.contactsActive ? 'Active' : 'Inactive'}
+                        </button>
                       </td>
                       <td className="p-2 border">
                         <div className="flex flex-wrap gap-1">
@@ -313,7 +613,9 @@ const CustomersPage = () => {
                           ))}
                         </div>
                       </td>
-                      <td className="p-2 border whitespace-nowrap">{customer.dateCreated}</td>
+                      <td className="p-2 border whitespace-nowrap">
+                        {new Date(customer.dateCreated).toLocaleString()}
+                      </td>
                     </>
                   )}
                 </tr>
