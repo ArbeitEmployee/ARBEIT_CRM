@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { FaPlus, FaFilter, FaSearch, FaSyncAlt, FaUser, FaUserCheck, FaUserTimes, FaUserClock, FaChevronRight } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
+import * as XLSX from 'xlsx';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const CustomersPage = () => {
   const [selectedCustomers, setSelectedCustomers] = useState([]);
@@ -92,8 +95,7 @@ const CustomersPage = () => {
   const filteredCustomers = (customers || []).filter((c) =>
     Object.values(c).some((val) =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
+  ));
 
   // Pagination
   const totalPages = Math.ceil(filteredCustomers.length / entriesPerPage);
@@ -175,6 +177,148 @@ const CustomersPage = () => {
     } finally {
       setIsSaving(false);
     }
+  };
+
+  // Export functions
+  const exportToExcel = () => {
+    const dataToExport = filteredCustomers.map(customer => ({
+      Company: customer.company,
+      'Primary Contact': customer.contact,
+      Email: customer.email,
+      Phone: customer.phone,
+      'Active Customer': customer.active ? 'Yes' : 'No',
+      'Active Contacts': customer.contactsActive ? 'Yes' : 'No',
+      Groups: customer.groups.join(', '),
+      'Date Created': new Date(customer.dateCreated).toLocaleString()
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Customers");
+    XLSX.writeFile(workbook, "Customers.xlsx");
+    setShowExportMenu(false);
+  };
+
+  const exportToCSV = () => {
+    const dataToExport = filteredCustomers.map(customer => ({
+      Company: customer.company,
+      'Primary Contact': customer.contact,
+      Email: customer.email,
+      Phone: customer.phone,
+      'Active Customer': customer.active ? 'Yes' : 'No',
+      'Active Contacts': customer.contactsActive ? 'Yes' : 'No',
+      Groups: customer.groups.join(', '),
+      'Date Created': new Date(customer.dateCreated).toLocaleString()
+    }));
+
+    const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'Customers.csv');
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setShowExportMenu(false);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+
+    const tableColumn = [
+      "Company",
+      "Primary Contact",
+      "Email",
+      "Phone",
+      "Active Customer",
+      "Active Contacts",
+      "Groups",
+      "Date Created"
+    ];
+    
+    const tableRows = filteredCustomers.map(customer => [
+      customer.company,
+      customer.contact,
+      customer.email,
+      customer.phone,
+      customer.active ? 'Yes' : 'No',
+      customer.contactsActive ? 'Yes' : 'No',
+      customer.groups.join(', '),
+      new Date(customer.dateCreated).toLocaleString()
+    ]);
+
+    autoTable(doc,{
+      head: [tableColumn],
+      body: tableRows,
+      margin: { top: 20 },
+      styles: { fontSize: 8 },
+
+    });
+
+    doc.save("Customers.pdf");
+    setShowExportMenu(false);
+  };
+
+  const printTable = () => {
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write('<html><head><title>Customers</title>');
+    printWindow.document.write('<style>');
+    printWindow.document.write(`
+      body { font-family: Arial, sans-serif; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      th { background-color: #f2f2f2; }
+      tr:nth-child(even) { background-color: #f9f9f9; }
+      @media print {
+        body { margin: 0; padding: 20px; }
+        .no-print { display: none; }
+      }
+    `);
+    printWindow.document.write('</style>');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<h1>Customers</h1>');
+    printWindow.document.write('<table>');
+    
+    // Table header
+    printWindow.document.write('<thead><tr>');
+    ['Company', 'Primary Contact', 'Email', 'Phone', 'Active Customer', 'Active Contacts', 'Groups', 'Date Created'].forEach(header => {
+      printWindow.document.write(`<th>${header}</th>`);
+    });
+    printWindow.document.write('</tr></thead>');
+    
+    // Table body
+    printWindow.document.write('<tbody>');
+    filteredCustomers.forEach(customer => {
+      printWindow.document.write('<tr>');
+      [
+        customer.company,
+        customer.contact,
+        customer.email,
+        customer.phone,
+        customer.active ? 'Yes' : 'No',
+        customer.contactsActive ? 'Yes' : 'No',
+        customer.groups.join(', '),
+        new Date(customer.dateCreated).toLocaleString()
+      ].forEach(value => {
+        printWindow.document.write(`<td>${value}</td>`);
+      });
+      printWindow.document.write('</tr>');
+    });
+    printWindow.document.write('</tbody>');
+    
+    printWindow.document.write('</table>');
+    printWindow.document.write('<p class="no-print">Printed on: ' + new Date().toLocaleString() + '</p>');
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    
+    setTimeout(() => {
+      printWindow.print();
+      printWindow.close();
+    }, 200);
+    setShowExportMenu(false);
   };
 
   return (
@@ -484,18 +628,30 @@ const CustomersPage = () => {
               {/* Dropdown menu */}
               {showExportMenu && (
                 <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
-                  {["Excel", "CSV", "PDF", "Print"].map((item) => (
-                    <button
-                      key={item}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                      onClick={() => {
-                        console.log(`${item} export triggered`);
-                        setShowExportMenu(false);
-                      }}
-                    >
-                      {item}
-                    </button>
-                  ))}
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={exportToExcel}
+                  >
+                    Excel
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={exportToCSV}
+                  >
+                    CSV
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={exportToPDF}
+                  >
+                    PDF
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={printTable}
+                  >
+                    Print
+                  </button>
                 </div>
               )}
             </div>
