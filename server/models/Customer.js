@@ -20,7 +20,6 @@ const customerSchema = new mongoose.Schema({
   },
   phone: {
     type: String,
-    required: [true, "Phone number is required"],
     trim: true,
     maxlength: [20, "Phone number cannot exceed 20 characters"]
   },

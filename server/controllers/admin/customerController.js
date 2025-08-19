@@ -1,4 +1,5 @@
 import Customer from "../../models/Customer.js";
+import XLSX from "xlsx";
 
 // @desc    Get all customers
 // @route   GET /api/customers
@@ -66,6 +67,101 @@ export const createCustomer = async (req, res) => {
       message: error.message.includes("validation failed") 
         ? "Validation error: " + error.message 
         : error.message 
+    });
+  }
+};
+
+// @desc    Import customers from CSV
+// @route   POST /api/customers/import
+// @access  Public
+export const importCustomers = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+    if (!jsonData.length) {
+      return res.status(400).json({ message: "CSV file is empty" });
+    }
+
+    // Validate required fields - matching createCustomer requirements
+    const requiredFields = ['Company', 'Contact', 'Email'];
+    const missingFields = requiredFields.filter(field => !jsonData[0].hasOwnProperty(field));
+    
+    if (missingFields.length) {
+      return res.status(400).json({ 
+        message: `Missing required fields: ${missingFields.join(', ')}` 
+      });
+    }
+
+    // Process each row
+    const importedCustomers = [];
+    const errorMessages = [];
+    const emailSet = new Set();
+
+    for (const [index, row] of jsonData.entries()) {
+      const rowNumber = index + 2; // Excel rows start at 1, header is row 1
+      
+      // Skip if required fields are missing
+      if (!row.Company || !row.Contact || !row.Email) {
+        errorMessages.push(`Row ${rowNumber}: Missing required fields`);
+        continue;
+      }
+
+      // Skip if email is duplicate
+      if (emailSet.has(row.Email)) {
+        errorMessages.push(`Row ${rowNumber}: Duplicate email (${row.Email})`);
+        continue;
+      }
+
+      emailSet.add(row.Email);
+
+      const customerData = {
+        company: row.Company,
+        contact: row.Contact,
+        email: row.Email,
+        vatNumber: row.Vat || "",
+        phone: row.Phone || "",
+        website: row.Website || "",
+        groups: row.Groups ? row.Groups.split(',').map(g => g.trim()) : [],
+        currency: row.Currency || "System Default",
+        language: row.Language && row.Language !== "System Default" ? row.Language : "English", // fallback to 'en'
+        active: row.Active !== undefined ? Boolean(row.Active) : true,
+        contactsActive: row.ContactsActive !== undefined ? Boolean(row.ContactsActive) : true,
+        dateCreated: new Date()
+      };
+
+      try {
+        const customer = new Customer(customerData);
+        const savedCustomer = await customer.save();
+        importedCustomers.push(savedCustomer);
+      } catch (error) {
+        const errorMsg = error.message.includes("validation failed") 
+          ? `Row ${rowNumber}: Validation error - ${error.message.split(': ')[2]}`
+          : `Row ${rowNumber}: ${error.message}`;
+        errorMessages.push(errorMsg);
+      }
+    }
+
+    res.status(201).json({
+      message: `Import completed with ${importedCustomers.length} successful and ${errorMessages.length} failed`,
+      importedCount: importedCustomers.length,
+      errorCount: errorMessages.length,
+      errorMessages,
+      importedCustomers
+    });
+
+  } catch (error) {
+    console.error("Error importing customers:", error);
+    res.status(500).json({ 
+      message: error.message.includes("validation failed") 
+        ? "Validation error: " + error.message 
+        : "Server error while importing customers" 
     });
   }
 };

@@ -6,7 +6,11 @@ import {
   deleteCustomer,
   updateCustomerStatus,
   updateContactsStatus,
+  importCustomers
 } from "../../controllers/admin/customerController.js";
+import multer from "multer";
+
+const upload = multer();
 
 const router = express.Router();
 
@@ -14,6 +18,9 @@ const router = express.Router();
 router.route("/")
   .get(getCustomers)
   .post(createCustomer);
+
+router.route("/import")
+  .post(upload.single('file'), importCustomers);
 
 router.route("/:id")
   .put(updateCustomer)
