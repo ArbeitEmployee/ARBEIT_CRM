@@ -14,12 +14,13 @@ const customerSchema = new mongoose.Schema({
   },
   contact: {
     type: String,
-    required: [true, "Primary contact is required"],
+    required: [true, "Primary contact name is required"],
     trim: true,
     maxlength: [100, "Contact name cannot exceed 100 characters"]
   },
   phone: {
     type: String,
+    required: [true, "Phone number is required"],
     trim: true,
     maxlength: [20, "Phone number cannot exceed 20 characters"]
   },

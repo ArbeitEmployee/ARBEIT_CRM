@@ -70,6 +70,68 @@ export const createCustomer = async (req, res) => {
   }
 };
 
+// @desc    Update a customer
+// @route   PUT /api/customers/:id
+// @access  Public
+export const updateCustomer = async (req, res) => {
+  try {
+    const { company, contact, email } = req.body;
+    
+    if (!company || !contact || !email) {
+      return res.status(400).json({ 
+        message: "Company, contact, and email are required fields" 
+      });
+    }
+
+    const customer = await Customer.findById(req.params.id);
+    
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    customer.company = company;
+    customer.vatNumber = req.body.vatNumber || "";
+    customer.contact = contact;
+    customer.phone = req.body.phone || "";
+    customer.email = email;
+    customer.website = req.body.website || "";
+    customer.groups = req.body.groups || [];
+    customer.currency = req.body.currency || "System Default";
+    customer.language = req.body.language || "System Default";
+    customer.active = req.body.active !== undefined ? req.body.active : true;
+    customer.contactsActive = req.body.contactsActive !== undefined ? req.body.contactsActive : true;
+
+    const updatedCustomer = await customer.save();
+    res.json(updatedCustomer);
+  } catch (error) {
+    console.error("Error updating customer:", error);
+    res.status(400).json({ 
+      message: error.message.includes("validation failed") 
+        ? "Validation error: " + error.message 
+        : error.message 
+    });
+  }
+};
+
+// @desc    Delete a customer
+// @route   DELETE /api/customers/:id
+// @access  Public
+export const deleteCustomer = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+    
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    await Customer.deleteOne({ _id: req.params.id });
+    res.json({ message: "Customer removed successfully" });
+  } catch (error) {
+    console.error("Error deleting customer:", error);
+    res.status(500).json({ message: "Server error while deleting customer" });
+  }
+};
+
 // @desc    Update customer active status
 // @route   PUT /api/customers/:id/active
 // @access  Public
