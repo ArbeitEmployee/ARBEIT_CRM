@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
-import { FaPlus, FaFilter, FaSearch, FaSyncAlt, FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import { FaPlus, FaFilter, FaSyncAlt, FaEye, FaEdit, FaTrash } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const Proposals = () => {
   const navigate = useNavigate();
@@ -17,6 +20,7 @@ const Proposals = () => {
 
   const [viewProposal, setViewProposal] = useState(null);
   const [editProposal, setEditProposal] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
   const [formData, setFormData] = useState({ clientName: "", title: "", total: 0, status: "Draft" });
 
   // Fetch proposals
@@ -34,6 +38,84 @@ const Proposals = () => {
   useEffect(() => {
     fetchProposals();
   }, []);
+
+  // Export handler
+  const handleExport = (type) => {
+    if (!proposals.length) return;
+
+    const exportData = proposals.map((p) => ({
+      ProposalNumber: p.proposalNumber || "TEMP-" + p._id.slice(-6).toUpperCase(),
+      Client: p.clientName,
+      Title: p.title,
+      Amount: p.total,
+      Status: p.status,
+      Date: p.date ? new Date(p.date).toLocaleDateString() : "-",
+      OpenTill: p.openTill ? new Date(p.openTill).toLocaleDateString() : "-",
+      Tags: p.tags || "-",
+    }));
+
+    switch (type) {
+      case "CSV": {
+        const headers = Object.keys(exportData[0]).join(",");
+        const rows = exportData
+          .map((row) => Object.values(row).map((val) => `"${val}"`).join(","))
+          .join("\n");
+        const csvContent = headers + "\n" + rows;
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", "proposals.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        break;
+      }
+
+      case "Excel": {
+        const worksheet = XLSXUtils.json_to_sheet(exportData);
+        const workbook = XLSXUtils.book_new();
+        XLSXUtils.book_append_sheet(workbook, worksheet, "Proposals");
+        XLSXWriteFile(workbook, "proposals.xlsx");
+        break;
+      }
+
+      case "PDF": {
+        const doc = new jsPDF();
+        const columns = Object.keys(exportData[0]);
+        const tableRows = exportData.map((row) => columns.map((col) => row[col]));
+        autoTable(doc, { head: [columns], body: tableRows });
+        doc.save("proposals.pdf");
+        break;
+      }
+
+      case "Print": {
+        const printWindow = window.open("", "", "height=500,width=800");
+        printWindow.document.write("<html><head><title>Proposals</title></head><body>");
+        printWindow.document.write("<table border='1' style='border-collapse: collapse; width: 100%;'>");
+        printWindow.document.write("<thead><tr>");
+        Object.keys(exportData[0]).forEach((col) => {
+          printWindow.document.write(`<th>${col}</th>`);
+        });
+        printWindow.document.write("</tr></thead><tbody>");
+        exportData.forEach((row) => {
+          printWindow.document.write("<tr>");
+          Object.values(row).forEach((val) => {
+            printWindow.document.write(`<td>${val}</td>`);
+          });
+          printWindow.document.write("</tr>");
+        });
+        printWindow.document.write("</tbody></table></body></html>");
+        printWindow.document.close();
+        printWindow.print();
+        break;
+      }
+
+      default:
+        console.log("Unknown export type:", type);
+    }
+
+    setShowExportMenu(false);
+  };
 
   // Delete proposal
   const handleDelete = async (id) => {
@@ -73,6 +155,7 @@ const Proposals = () => {
 
   if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading proposals...</div>;
 
+  // --- JSX BELOW ---
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Top action buttons */}
@@ -133,10 +216,7 @@ const Proposals = () => {
                     <button
                       key={item}
                       className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                      onClick={() => {
-                        console.log(`${item} export triggered`);
-                        setShowExportMenu(false);
-                      }}
+                      onClick={() => handleExport(item)}
                     >
                       {item}
                     </button>
@@ -156,17 +236,24 @@ const Proposals = () => {
 
           {/* Search */}
           <div className="relative">
-            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
-            <input
-              type="text"
-              placeholder="Search proposals..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
-            />
+            <div className="relative flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Search proposals..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="border rounded pl-2 pr-3 py-1 text-sm"
+              />
+              <button
+                onClick={() => {
+                  setSearchTerm(searchInput);
+                  setCurrentPage(1);
+                }}
+                className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
+              >
+                Search
+              </button>
+            </div>
           </div>
         </div>
 
@@ -345,33 +432,22 @@ const Proposals = () => {
         </div>
       </div>
 
-      {/* View Modal */}
+      {/* View & Edit Modals */}
       {viewProposal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded p-4 w-96 shadow-lg">
             <h2 className="text-lg font-bold mb-2">Proposal Details</h2>
-            <p>
-              <b>Client:</b> {viewProposal.clientName}
-            </p>
-            <p>
-              <b>Title:</b> {viewProposal.title}
-            </p>
-            <p>
-              <b>Amount:</b> {viewProposal.total}
-            </p>
-            <p>
-              <b>Status:</b> {viewProposal.status}
-            </p>
+            <p><b>Client:</b> {viewProposal.clientName}</p>
+            <p><b>Title:</b> {viewProposal.title}</p>
+            <p><b>Amount:</b> {viewProposal.total}</p>
+            <p><b>Status:</b> {viewProposal.status}</p>
             <div className="mt-4 flex justify-end">
-              <button onClick={() => setViewProposal(null)} className="px-3 py-1 bg-gray-200 rounded">
-                Close
-              </button>
+              <button onClick={() => setViewProposal(null)} className="px-3 py-1 bg-gray-200 rounded">Close</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Edit Modal */}
       {editProposal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded p-4 w-96 shadow-lg">
@@ -408,12 +484,8 @@ const Proposals = () => {
               <option value="Rejected">Rejected</option>
             </select>
             <div className="mt-4 flex justify-end gap-2">
-              <button onClick={() => setEditProposal(null)} className="px-3 py-1 bg-gray-200 rounded">
-                Cancel
-              </button>
-              <button onClick={handleUpdate} className="px-3 py-1 bg-blue-600 text-white rounded">
-                Save
-              </button>
+              <button onClick={() => setEditProposal(null)} className="px-3 py-1 bg-gray-200 rounded">Cancel</button>
+              <button onClick={handleUpdate} className="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
             </div>
           </div>
         </div>
