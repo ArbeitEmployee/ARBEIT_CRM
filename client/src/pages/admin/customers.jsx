@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaPlus, FaFilter, FaSearch, FaSyncAlt, FaUser, FaUserCheck, FaUserTimes, FaUserClock, FaChevronRight, FaTimes, FaEdit, FaTrash } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
@@ -41,6 +41,11 @@ const CustomersPage = () => {
   const [showGroupDropdown, setShowGroupDropdown] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importProgress, setImportProgress] = useState(null);
+  const [importResult, setImportResult] = useState(null);
+  const fileInputRef = useRef(null);
 
   const groupOptions = ["Low Budget", "High Budget", "VIP", "Wholesaler"];
 
@@ -226,6 +231,65 @@ const CustomersPage = () => {
         console.error("Error deleting customer:", error);
         alert(`Error deleting customer: ${error.response?.data?.message || error.message}`);
       }
+    }
+  };
+
+  const handleImportClick = () => {
+    setImportModalOpen(true);
+    setImportFile(null);
+    setImportProgress(null);
+    setImportResult(null);
+  };
+
+  const handleFileChange = (e) => {
+    setImportFile(e.target.files[0]);
+  };
+
+  const handleImportSubmit = async () => {
+    if (!importFile) {
+      alert("Please select a file to import");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', importFile);
+
+    try {
+      setImportProgress({ status: 'uploading', message: 'Uploading file...' });
+      
+      const { data } = await axios.post('http://localhost:5000/api/customers/import', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setImportProgress(null);
+      setImportResult({
+        success: true,
+        imported: data.importedCount,
+        errorCount: data.errorMessages?.length || 0,
+        errorMessages: data.errorMessages
+      });
+      
+      // Refresh customer list
+      fetchCustomers();
+    } catch (error) {
+      console.error("Error importing customers:", error);
+      setImportProgress(null);
+      setImportResult({
+        success: false,
+        message: error.response?.data?.message || error.message || 'Import failed'
+      });
+    }
+  };
+
+  const closeImportModal = () => {
+    setImportModalOpen(false);
+    setImportFile(null);
+    setImportProgress(null);
+    setImportResult(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -700,7 +764,10 @@ const CustomersPage = () => {
               >
                 <FaPlus /> New Customer
               </button>
-              <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
+              <button 
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={handleImportClick}
+              >
                 Import Customers
               </button>
             </div>
@@ -731,7 +798,7 @@ const CustomersPage = () => {
                     setCurrentPage(1);
                   }}
                 >
-                  <option value={10}>10</option>
+                  <option value={5}>5</option>
                   <option value={25}>25</option>
                   <option value={50}>50</option>
                   <option value={100}>100</option>
@@ -804,10 +871,50 @@ const CustomersPage = () => {
 
             {/* Table */}
             <div className="overflow-x-auto">
+              {/* Bulk delete button */}
+                {selectedCustomers.length > 0 && (
+                  <tr>
+                    <td colSpan={compactView ? 6 : 9} className="p-2 border bg-red-50">
+                      <button
+                        className="bg-red-600 text-white px-3 py-1 rounded"
+                        onClick={async () => {
+                          if (window.confirm(`Delete ${selectedCustomers.length} selected customers?`)) {
+                            try {
+                              await Promise.all(selectedCustomers.map(id =>
+                                axios.delete(`http://localhost:5000/api/customers/${id}`)
+                              ));
+                              setSelectedCustomers([]);
+                              fetchCustomers();
+                              alert("Selected customers deleted!");
+                            } catch {
+                              alert("Error deleting selected customers.");
+                            }
+                          }
+                        }}
+                      >
+                        Delete Selected ({selectedCustomers.length})
+                      </button>
+                    </td>
+                  </tr>
+                )}
+                
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="bg-gray-100 text-left">
-                    <th className="p-2 border w-8"></th>
+                    <th className="p-2 border w-8">
+                      <input
+                        type="checkbox"
+                        checked={selectedCustomers.length === currentData.length && currentData.length > 0}
+                        indeterminate={selectedCustomers.length > 0 && selectedCustomers.length < currentData.length ? "indeterminate" : undefined}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedCustomers(currentData.map(c => c._id));
+                          } else {
+                            setSelectedCustomers([]);
+                          }
+                        }}
+                      />
+                    </th>
                     <th className="p-2 border">Company</th>
                     {compactView ? (
                       <>
@@ -827,8 +934,10 @@ const CustomersPage = () => {
                         <th className="p-2 border">Date Created</th>
                       </>
                     )}
+                    {/* ...rest of your headers... */}
                   </tr>
                 </thead>
+                
                 <tbody>
                   {currentData.map((customer) => (
                     <tr 
@@ -963,6 +1072,113 @@ const CustomersPage = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Import Customers Modal */}
+      {importModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Import Customers</h2>
+              <button onClick={closeImportModal} className="text-gray-500 hover:text-gray-700">
+                <FaTimes />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                Your CSV data should include <strong>Company</strong>, <strong>Contact</strong>, and <strong>Email</strong> columns. 
+                Duplicate emails will be skipped.
+              </p>
+              
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+                  className="hidden"
+                  id="import-file"
+                />
+                <label
+                  htmlFor="import-file"
+                  className="cursor-pointer block"
+                >
+                  {importFile ? (
+                    <div className="text-green-600">
+                      <p>Selected file: {importFile.name}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {(importFile.size / 1024).toFixed(2)} KB
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <HiOutlineDownload className="mx-auto text-3xl text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600">
+                        Drag and drop your CSV file here, or click to browse
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Only CSV files are accepted
+                      </p>
+                    </>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            {importProgress && (
+              <div className="mb-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
+                <p>{importProgress.message}</p>
+              </div>
+            )}
+
+            {importResult && (
+              <div className={`mb-4 p-3 rounded text-sm ${
+                  importResult.success && (!importResult.errorCount || importResult.errorCount === 0)
+                    ? 'bg-green-50 text-green-800'
+                    : 'bg-red-50 text-red-800'
+                }`}>
+                {importResult.success ? (
+                  <>
+                    <p>Import completed with {importResult.imported} successful and {importResult.errorCount} failed.</p>
+                    {importResult.errorCount > 0 && (
+                      <details className="mt-2">
+                        <summary className="cursor-pointer text-sm">Show error details</summary>
+                        <div className="bg-white p-2 mt-1 rounded border text-xs max-h-32 overflow-auto">
+                          {importResult.errorMessages?.map((msg, i) => (
+                            <p key={i}>{msg}</p>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </>
+                ) : (
+                  <p>Error: {importResult.message}</p>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-3 mt-4">
+              <button
+                onClick={closeImportModal}
+                className="px-4 py-2 border rounded text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleImportSubmit}
+                disabled={!importFile || importProgress}
+                className={`px-4 py-2 rounded text-sm ${
+                  !importFile || importProgress
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-black text-white'
+                }`}
+              >
+                {importProgress ? 'Importing...' : 'Import'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
