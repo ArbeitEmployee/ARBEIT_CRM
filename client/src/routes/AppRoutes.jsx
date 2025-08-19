@@ -16,13 +16,15 @@ import ClientLogin from "../pages/client/login";
 import ClientRegistration from "../pages/client/registration";
 import ClientForgotPassword from "../pages/client/forgotPassword";
 import Home from "../pages/client/Home";
-import CustomersPage from "../pages/admin/customers";
+import Customers from "../pages/admin/customers";
 import Proposals from "../pages/admin/sales/proposals";
 import Estimates from "../pages/admin/sales/estimates";
 import Invoices from "../pages/admin/sales/invoices";
 import Payments from "../pages/admin/sales/payments";
 import CreditNotes from "../pages/admin/sales/creditNotes";
 import Items from "../pages/admin/sales/items";
+import ProposalForm from "../pages/admin/sales/proposalForm";
+
 
 
 
@@ -51,8 +53,9 @@ const AppRoutes = () => {
           <AdminLayout>
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
-              <Route path="customers" element={<CustomersPage />} />
+              <Route path="customers" element={<Customers />} />
               <Route path="sales/proposals" element={<Proposals/>} />
+              <Route path="/proposals/new" element={<ProposalForm />} />
               <Route path="sales/estimates" element={<Estimates />} />
               <Route path="sales/invoices" element={<Invoices/>} />
               <Route path="sales/payments" element={<Payments/>} />
