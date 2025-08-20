@@ -10,10 +10,10 @@ import {
 const router = express.Router();
 
 // CRUD Routes
-router.post("/", createEstimate);         // Insert
-router.get("/", getEstimates);            // View all
-router.get("/:id", getEstimateById);      // View single
-router.put("/:id", updateEstimate);       // Update
-router.delete("/:id", deleteEstimate);    // Delete
+router.post("/estimates", createEstimate);         // Insert
+router.get("/estimates", getEstimates);            // View all
+router.get("/estimates/:id", getEstimateById);      // View single
+router.put("/estimates/:id", updateEstimate);       // Update
+router.delete("/estimates/:id", deleteEstimate);    // Delete
 
 export default router;

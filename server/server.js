@@ -23,7 +23,7 @@ app.use("/api/client", clientAuthRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/admin", itemRoutes);
 app.use("/api/admin", proposalRoutes);
-app.use("/api/estimates", estimateRoutes);
+app.use("/api/admin", estimateRoutes);
 
 
 const PORT = process.env.PORT || 5000;

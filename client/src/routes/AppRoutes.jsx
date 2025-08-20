@@ -25,6 +25,7 @@ import ProposalForm from "../pages/admin/sales/proposalForm";
 import SubscriptionPage from "../pages/admin/Subscription";
 import ExpensesPage from "../pages/admin/Expenses";
 import ContactsPage from "../pages/admin/Contacts";
+import EstimateForm from "../pages/admin/sales/estimateForm";
 
 
 
@@ -57,6 +58,7 @@ const AppRoutes = () => {
               <Route path="sales/proposals" element={<Proposals/>} />
               <Route path="/proposals/new" element={<ProposalForm />} />
               <Route path="sales/estimates" element={<Estimates />} />
+               <Route path="/estimates/new" element={<EstimateForm />} />
               <Route path="sales/invoices" element={<Invoices/>} />
               <Route path="sales/payments" element={<Payments/>} />
               <Route path="sales/creditNotes" element={<CreditNotes/>} />

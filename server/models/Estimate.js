@@ -26,7 +26,7 @@ const estimateSchema = new mongoose.Schema(
       enum: ["Draft", "Pending", "Approved", "Rejected"],
       default: "Draft"
     },
-    reference: { type: String },
+    reference: { type: String, required: true },
     salesAgent: { type: String },
     discountType: { type: String, default: "percent" },
     discountValue: { type: Number, default: 0 },
@@ -38,13 +38,14 @@ const estimateSchema = new mongoose.Schema(
         quantity: { type: Number, required: true, default: 1 },
         rate: { type: Number, required: true },
         tax1: { type: Number, default: 0 },
-        tax2: { type: Number, default: 0 }
+        tax2: { type: Number, default: 0 },
+        amount: { type: Number,default: 0}
       }
     ],
 
-    subtotal: { type: Number },
+    subtotal: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
-    total: { type: Number }
+    total: { type: Number, default: 0 }
   },
   {
     timestamps: true,
@@ -73,23 +74,25 @@ estimateSchema.pre("save", async function (next) {
 
 // Calculate subtotal, discount, and total before saving
 estimateSchema.pre("save", function (next) {
-  if (
-    this.isModified("items") ||
-    this.isModified("discountType") ||
-    this.isModified("discountValue")
-  ) {
-    this.subtotal = this.items.reduce(
-      (sum, item) => sum + item.quantity * item.rate,
-      0
-    );
+  // Calculate subtotal from items
+  this.subtotal = this.items.reduce(
+    (sum, item) => sum + (item.quantity * item.rate),
+    0
+  );
 
-    this.discount =
-      this.discountType === "percent"
-        ? this.subtotal * (this.discountValue / 100)
-        : this.discountValue;
+  // Calculate discount
+  this.discount = this.discountType === "percent"
+    ? this.subtotal * (this.discountValue / 100)
+    : this.discountValue;
 
-    this.total = this.subtotal - this.discount;
-  }
+  // Calculate total
+  this.total = this.subtotal - this.discount;
+
+  // Also calculate amount for each item
+  this.items.forEach(item => {
+    item.amount = item.quantity * item.rate;
+  });
+
   next();
 });
 
