@@ -1,6 +1,4 @@
 
-
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
@@ -24,7 +22,7 @@ import Payments from "../pages/admin/sales/payments";
 import CreditNotes from "../pages/admin/sales/creditNotes";
 import Items from "../pages/admin/sales/items";
 import ProposalForm from "../pages/admin/sales/proposalForm";
-
+import SubscriptionPage from "../pages/admin/Subscription";
 
 
 
@@ -61,6 +59,7 @@ const AppRoutes = () => {
               <Route path="sales/payments" element={<Payments/>} />
               <Route path="sales/creditNotes" element={<CreditNotes/>} />
               <Route path="sales/items" element={<Items/>} />
+              <Route path="subscriptions" element={<SubscriptionPage />} />
               {/* Add more admin routes here */}
             </Routes>
           </AdminLayout>
