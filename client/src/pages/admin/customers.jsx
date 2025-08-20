@@ -935,13 +935,13 @@ const CustomersPage = () => {
                 </thead>
                 <tbody>
                   {currentData.map((customer) => (
-                    <tr
-                      key={customer._id}
-                      className="hover:bg-gray-50 relative"
-                      onMouseEnter={() => setHoveredRow(customer._id)}
-                      onMouseLeave={() => setHoveredRow(null)}
-                      style={{ backgroundColor: 'white', color: 'black' }}
-                    >
+                      <tr
+                        key={customer._id}
+                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                        onMouseEnter={() => setHoveredRow(customer._id)}
+                        onMouseLeave={() => setHoveredRow(null)}
+                        style={{ color: 'black' }}
+                      >
                       <td className="p-3 rounded-l-lg border-0">
                         <div className="flex items-center">
                           <input
