@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FaPlus, FaSearch, FaSyncAlt, FaUpload, FaTasks, FaTimes } from "react-icons/fa";
+import { FaPlus, FaSearch, FaSyncAlt, FaUpload, FaTasks, FaTimes, FaTrash } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
+import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import Papa from "papaparse"; // For CSV parsing
 
 const Items = () => {
   const [entriesPerPage, setEntriesPerPage] = useState(25);
@@ -9,7 +13,12 @@ const Items = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [showImportForm, setShowImportForm] = useState(false);
   const [items, setItems] = useState([]);
+  const [csvData, setCsvData] = useState([]);
+  const [csvFile, setCsvFile] = useState(null);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
   const [formData, setFormData] = useState({
     description: "",
     longDescription: "",
@@ -24,16 +33,134 @@ const Items = () => {
 
   // Fetch items from backend
   useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const { data } = await axios.get("http://localhost:5000/api/admin/items");
-        setItems(data);
-      } catch (err) {
-        console.error("Error fetching items", err);
-      }
-    };
     fetchItems();
   }, []);
+
+  const fetchItems = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:5000/api/admin/items");
+      setItems(data);
+    } catch (err) {
+      console.error("Error fetching items", err);
+    }
+  };
+
+  // Export handler
+  const handleExport = (type) => {
+    if (!items.length) return;
+
+    const exportData = items.map((item) => ({
+      Description: item.description || "-",
+      "Long Description": item.longDescription || "-",
+      Rate: item.rate || "-",
+      Tax1: item.tax1 || "-",
+      Tax2: item.tax2 || "-",
+      Unit: item.unit || "-",
+      "Group Name": item.groupName || "-",
+    }));
+
+    switch (type) {
+      case "CSV": {
+        const headers = Object.keys(exportData[0]).join(",");
+        const rows = exportData
+          .map((row) => Object.values(row).map((val) => `"${val}"`).join(","))
+          .join("\n");
+        const csvContent = headers + "\n" + rows;
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute("download", "items.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        break;
+      }
+
+      case "Excel": {
+        const worksheet = XLSXUtils.json_to_sheet(exportData);
+        const workbook = XLSXUtils.book_new();
+        XLSXUtils.book_append_sheet(workbook, worksheet, "Items");
+        XLSXWriteFile(workbook, "items.xlsx");
+        break;
+      }
+
+      case "PDF": {
+        const doc = new jsPDF();
+        const columns = Object.keys(exportData[0]);
+        const tableRows = exportData.map((row) => columns.map((col) => row[col]));
+        autoTable(doc, { head: [columns], body: tableRows });
+        doc.save("items.pdf");
+        break;
+      }
+
+      case "Print": {
+        const printWindow = window.open("", "", "height=500,width=800");
+        printWindow.document.write("<html><head><title>Items</title></head><body>");
+        printWindow.document.write("<table border='1' style='border-collapse: collapse; width: 100%;'>");
+        printWindow.document.write("<thead><tr>");
+        Object.keys(exportData[0]).forEach((col) => {
+          printWindow.document.write(`<th>${col}</th>`);
+        });
+        printWindow.document.write("</tr></thead><tbody>");
+        exportData.forEach((row) => {
+          printWindow.document.write("<tr>");
+          Object.values(row).forEach((val) => {
+            printWindow.document.write(`<td>${val}</td>`);
+          });
+          printWindow.document.write("</tr>");
+        });
+        printWindow.document.write("</tbody></table></body></html>");
+        printWindow.document.close();
+        printWindow.print();
+        break;
+      }
+
+      default:
+        console.log("Unknown export type:", type);
+    }
+
+    setShowExportMenu(false);
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = async () => {
+    if (selectedItems.length === 0) {
+      alert("Please select at least one item to delete");
+      return;
+    }
+
+    if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} item(s)?`)) return;
+
+    try {
+      await axios.post("http://localhost:5000/api/admin/items/bulk-delete", { ids: selectedItems });
+      setItems(items.filter(item => !selectedItems.includes(item._id)));
+      setSelectedItems([]);
+      setSelectAll(false);
+      alert("Items deleted successfully!");
+    } catch (err) {
+      console.error("Error deleting items", err);
+      alert("Error deleting items");
+    }
+  };
+
+  // Handle individual checkbox change
+  const handleCheckboxChange = (id) => {
+    if (selectedItems.includes(id)) {
+      setSelectedItems(selectedItems.filter(itemId => itemId !== id));
+    } else {
+      setSelectedItems([...selectedItems, id]);
+    }
+  };
+
+  // Handle select all checkbox
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(filteredItems.map(item => item._id));
+    }
+    setSelectAll(!selectAll);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -67,6 +194,82 @@ const Items = () => {
     }
   };
 
+  // Handle CSV file upload
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setCsvFile(file);
+      
+      // Parse the CSV file
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          setCsvData(results.data);
+        },
+        error: function(error) {
+          console.error("Error parsing CSV:", error);
+          alert("Error parsing CSV file. Please check the format.");
+        }
+      });
+    } else {
+      alert("Please select a file");
+    }
+  };
+
+  // Simulate CSV data (preview)
+  const handleSimulateData = () => {
+    if (csvData.length === 0) {
+      alert("Please upload a CSV file first");
+      return;
+    }
+    
+    // Display the preview in an alert
+    alert(JSON.stringify(csvData.slice(0, 5), null, 2)); // Show first 5 rows
+  };
+
+  // Import CSV data to database
+  const handleImport = async () => {
+    if (csvData.length === 0) {
+      alert("No data to import");
+      return;
+    }
+
+    try {
+      // Format the data before sending - handle different CSV formats
+      const formattedData = csvData.map(item => {
+        // Handle different column name variations
+        const description = item.description || item.Description || "";
+        const longDescription = item.longDescription || item["Long Description"] || item.long_desc || "";
+        const rate = item.rate || item.Rate || "";
+        const tax1 = item.tax1 || item.Tax1 || "";
+        const tax2 = item.tax2 || item.Tax2 || "";
+        const unit = item.unit || item.Unit || "";
+        const groupName = item.groupName || item["Group Name"] || item.group_name || "";
+
+        return {
+          description,
+          longDescription,
+          rate: rate ? (rate.startsWith('$') ? rate : `$${rate}`) : "$0",
+          tax1,
+          tax2,
+          unit,
+          groupName
+        };
+      });
+
+      const { data } = await axios.post("http://localhost:5000/api/admin/items/import", formattedData);
+      setItems([...data, ...items]);
+      setShowImportForm(false);
+      setCsvFile(null);
+      setCsvData([]);
+      alert("Items imported successfully!");
+    } catch (err) {
+      console.error("Error importing items", err);
+      alert("Error importing items. Please try again.");
+    }
+  };
+
   // Filter by search
   const filteredItems = items.filter((item) =>
     Object.values(item).some((val) =>
@@ -90,7 +293,10 @@ const Items = () => {
           >
             <FaPlus /> New Item
           </button>
-          <button className="bg-blue-600 text-white px-3 py-1 text-sm rounded flex items-center gap-2">
+          <button 
+            className="bg-blue-600 text-white px-3 py-1 text-sm rounded flex items-center gap-2"
+            onClick={() => setShowImportForm(true)}
+          >
             <FaUpload /> Import Items
           </button>
         </div>
@@ -215,6 +421,103 @@ const Items = () => {
         </div>
       )}
 
+      {/* Import Items Form */}
+      {showImportForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
+            <div className="flex justify-between items-center border-b p-4">
+              <h2 className="text-xl font-semibold">Import Items from CSV</h2>
+              <button
+                onClick={() => {
+                  setShowImportForm(false);
+                  setCsvFile(null);
+                  setCsvData([]);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Choose CSV File
+                </label>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileUpload}
+                  className="w-full border px-3 py-2 rounded text-sm"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  CSV should contain item data with columns like description, rate, tax1, tax2, unit, groupName
+                </p>
+              </div>
+
+              {csvData.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-md font-medium mb-2">Preview (First 5 rows)</h3>
+                  <div className="border rounded p-2 max-h-40 overflow-y-auto">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-gray-100">
+                          {Object.keys(csvData[0]).map((key, i) => (
+                            <th key={i} className="p-1 border text-left">{key}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {csvData.slice(0, 5).map((row, i) => (
+                          <tr key={i}>
+                            {Object.values(row).map((value, j) => (
+                              <td key={j} className="p-1 border">{value}</td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-between mt-6">
+                <button
+                  type="button"
+                  onClick={handleSimulateData}
+                  className="px-4 py-2 bg-gray-200 rounded text-sm hover:bg-gray-300"
+                  disabled={csvData.length === 0}
+                >
+                  Simulate Data
+                </button>
+                
+                <div className="space-x-3">
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setShowImportForm(false);
+                      setCsvFile(null);
+                      setCsvData([]);
+                    }} 
+                    className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
+                                      >
+                    Cancel
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleImport} 
+                    className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                    disabled={csvData.length === 0}
+                  >
+                    Import
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Table & Controls */}
       <div className="bg-white shadow-md rounded p-4 mt-4">
         {/* Controls */}
@@ -236,13 +539,24 @@ const Items = () => {
               {showExportMenu && (
                 <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                   {["Excel", "CSV", "PDF", "Print"].map((item) => (
-                    <button key={item} className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100" onClick={() => setShowExportMenu(false)}>{item}</button>
+                    <button
+                      key={item}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                      onClick={() => handleExport(item)}
+                    >
+                      {item}
+                    </button>
                   ))}
                 </div>
               )}
             </div>
-            <button className="border px-3 py-1 rounded text-sm flex items-center gap-2"><FaTasks /> Bulk Action</button>
-            <button className="border px-2 py-1 rounded text-sm flex items-center" onClick={() => window.location.reload()}><FaSyncAlt /></button>
+            <button 
+              className="border px-3 py-1 rounded text-sm flex items-center gap-2"
+              onClick={handleBulkDelete}
+            >
+              <FaTasks /> Bulk Action
+            </button>
+            <button className="border px-2 py-1 rounded text-sm flex items-center" onClick={fetchItems}><FaSyncAlt /></button>
           </div>
 
           <div className="relative">
@@ -262,6 +576,13 @@ const Items = () => {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="bg-gray-100 text-left">
+                <th className="p-2 border w-10">
+                  <input
+                    type="checkbox"
+                    checked={selectAll}
+                    onChange={handleSelectAll}
+                  />
+                </th>
                 <th className="p-2 border">Description</th>
                 <th className="p-2 border">Long Description</th>
                 <th className="p-2 border">Rate</th>
@@ -272,17 +593,32 @@ const Items = () => {
               </tr>
             </thead>
             <tbody>
-              {currentData.map((item, idx) => (
-                <tr key={idx}>
-                  <td className="p-2 border">{item.description}</td>
-                  <td className="p-2 border">{item.longDescription}</td>
-                  <td className="p-2 border">{item.rate}</td>
-                  <td className="p-2 border">{item.tax1}</td>
-                  <td className="p-2 border">{item.tax2}</td>
-                  <td className="p-2 border">{item.unit}</td>
-                  <td className="p-2 border">{item.groupName}</td>
+              {currentData.length > 0 ? (
+                currentData.map((item, idx) => (
+                  <tr key={item._id || idx}>
+                    <td className="p-2 border">
+                      <input
+                        type="checkbox"
+                        checked={selectedItems.includes(item._id)}
+                        onChange={() => handleCheckboxChange(item._id)}
+                      />
+                    </td>
+                    <td className="p-2 border">{item.description}</td>
+                    <td className="p-2 border">{item.longDescription}</td>
+                    <td className="p-2 border">{item.rate}</td>
+                    <td className="p-2 border">{item.tax1}</td>
+                    <td className="p-2 border">{item.tax2}</td>
+                    <td className="p-2 border">{item.unit}</td>
+                    <td className="p-2 border">{item.groupName}</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={8} className="p-4 text-center text-gray-500">
+                    No items found
+                  </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -297,7 +633,7 @@ const Items = () => {
             {Array.from({ length: totalPages }, (_, i) => (
               <button key={i} className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-gray-200" : ""}`} onClick={() => setCurrentPage(i + 1)}>{i + 1}</button>
             ))}
-            <button className="px-2 py-1 border rounded disabled:opacity-50" disabled={currentPage === totalPages} onClick={() => setCurrentPage(prev => prev + 1)}>Next</button>
+            <button className="px-2 py-1 border rounded disabled:opacity-50" disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(prev => prev + 1)}>Next</button>
           </div>
         </div>
       </div>

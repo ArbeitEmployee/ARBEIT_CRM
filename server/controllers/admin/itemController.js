@@ -22,3 +22,27 @@ export const createItem = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// @desc    Import multiple items
+// @route   POST /api/admin/items/import
+export const importItems = async (req, res) => {
+  try {
+    const items = req.body;
+    const savedItems = await Item.insertMany(items);
+    res.status(201).json(savedItems);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// @desc    Bulk delete items
+// @route   POST /api/admin/items/bulk-delete
+export const bulkDeleteItems = async (req, res) => {
+  try {
+    const { ids } = req.body;
+    await Item.deleteMany({ _id: { $in: ids } });
+    res.json({ message: "Items deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
