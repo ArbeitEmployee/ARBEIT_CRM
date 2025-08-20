@@ -759,7 +759,7 @@ const CustomersPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button 
-                className="bg-black text-white px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
                 onClick={() => setShowNewCustomerForm(true)}
               >
                 <FaPlus /> New Customer
@@ -898,14 +898,13 @@ const CustomersPage = () => {
                   </tr>
                 )}
                 
-              <table className="w-full text-sm border-collapse">
+              <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
-                  <tr className="bg-gray-100 text-left">
-                    <th className="p-2 border w-8">
+                  <tr className="text-left">
+                    <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
                       <input
                         type="checkbox"
                         checked={selectedCustomers.length === currentData.length && currentData.length > 0}
-                        indeterminate={selectedCustomers.length > 0 && selectedCustomers.length < currentData.length ? "indeterminate" : undefined}
                         onChange={(e) => {
                           if (e.target.checked) {
                             setSelectedCustomers(currentData.map(c => c._id));
@@ -915,38 +914,35 @@ const CustomersPage = () => {
                         }}
                       />
                     </th>
-                    <th className="p-2 border">Company</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Company</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Primary Contact</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Primary Email</th>
                     {compactView ? (
                       <>
-                        <th className="p-2 border">Primary Contact</th>
-                        <th className="p-2 border">Email</th>
-                        <th className="p-2 border">Active Customer</th>
-                        <th className="p-2 border">Active Contacts</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Active Customer</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Active Contacts</th>
                       </>
                     ) : (
                       <>
-                        <th className="p-2 border">Primary Contact</th>
-                        <th className="p-2 border">Primary Email</th>
-                        <th className="p-2 border">Phone</th>
-                        <th className="p-2 border">Active Customer</th>
-                        <th className="p-2 border">Active Contacts</th>
-                        <th className="p-2 border">Groups</th>
-                        <th className="p-2 border">Date Created</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Phone</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Active Customer</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Active Contacts</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Groups</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Date Created</th>
                       </>
                     )}
-                    {/* ...rest of your headers... */}
                   </tr>
                 </thead>
-                
                 <tbody>
                   {currentData.map((customer) => (
-                    <tr 
-                      key={customer._id} 
+                    <tr
+                      key={customer._id}
                       className="hover:bg-gray-50 relative"
                       onMouseEnter={() => setHoveredRow(customer._id)}
                       onMouseLeave={() => setHoveredRow(null)}
+                      style={{ backgroundColor: 'white', color: 'black' }}
                     >
-                      <td className="p-2 border">
+                      <td className="p-3 rounded-l-lg border-0">
                         <div className="flex items-center">
                           <input
                             type="checkbox"
@@ -956,14 +952,14 @@ const CustomersPage = () => {
                           />
                           {hoveredRow === customer._id && (
                             <div className="absolute left-8 flex space-x-1 bg-white shadow-md rounded p-1 z-10">
-                              <button 
+                              <button
                                 onClick={() => handleEditCustomer(customer)}
                                 className="text-blue-500 hover:text-blue-700 p-1"
                                 title="Edit"
                               >
                                 <FaEdit size={14} />
                               </button>
-                              <button 
+                              <button
                                 onClick={() => handleDeleteCustomer(customer._id)}
                                 className="text-red-500 hover:text-red-700 p-1"
                                 title="Delete"
@@ -974,48 +970,52 @@ const CustomersPage = () => {
                           )}
                         </div>
                       </td>
-                      <td className="p-2 border">{customer.company}</td>
-                      <td className="p-2 border">{customer.contact}</td>
-                      <td className="p-2 border">{customer.email}</td>
+                      <td className="p-3 border-0">{customer.company}</td>
+                      <td className="p-3 border-0">{customer.contact}</td>
+                      <td className="p-3 border-0">{customer.email}</td>
                       {compactView ? (
                         <>
-                          <td className="p-2 border">
-                            <button 
+                          <td className="p-3 border-0">
+                            <span
+                              className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
                               onClick={() => toggleCustomerActive(customer._id)}
-                              className={`px-2 py-1 rounded text-xs ${customer.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                              title="Toggle customer active status"
                             >
                               {customer.active ? 'Active' : 'Inactive'}
-                            </button>
+                            </span>
                           </td>
-                          <td className="p-2 border">
-                            <button 
-                              onClick={() => toggleContactsActive(customer._id)}
-                              className={`px-2 py-1 rounded text-xs ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                            >
-                              {customer.contactsActive ? 'Active' : 'Inactive'}
-                            </button>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <span
+                            className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                            onClick={() => toggleContactsActive(customer._id)}
+                            title="Toggle contacts active status"
+                          >
+                            {customer.contactsActive ? 'Active' : 'Inactive'}
+                          </span>
                           </td>
                         </>
                       ) : (
                         <>
-                          <td className="p-2 border">{customer.phone}</td>
-                          <td className="p-2 border">
-                            <button 
+                          <td className="p-3 border-0">{customer.phone}</td>
+                          <td className="p-3 border-0">
+                            <span
+                              className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
                               onClick={() => toggleCustomerActive(customer._id)}
-                              className={`px-2 py-1 rounded text-xs ${customer.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                              title="Toggle customer active status"
                             >
                               {customer.active ? 'Active' : 'Inactive'}
-                            </button>
+                            </span>
                           </td>
-                          <td className="p-2 border">
-                            <button 
+                          <td className="p-3 border-0">
+                            <span
+                              className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
                               onClick={() => toggleContactsActive(customer._id)}
-                              className={`px-2 py-1 rounded text-xs ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                              title="Toggle contacts active status"
                             >
                               {customer.contactsActive ? 'Active' : 'Inactive'}
-                            </button>
+                            </span>
                           </td>
-                          <td className="p-2 border">
+                          <td className="p-3 border-0">
                             <div className="flex flex-wrap gap-1">
                               {customer.groups.map((group, i) => (
                                 <span key={i} className="bg-gray-100 px-2 py-1 rounded text-xs">
@@ -1024,7 +1024,7 @@ const CustomersPage = () => {
                               ))}
                             </div>
                           </td>
-                          <td className="p-2 border whitespace-nowrap">
+                          <td className="p-3 rounded-r-lg border-0 whitespace-nowrap">
                             {new Date(customer.dateCreated).toLocaleString()}
                           </td>
                         </>
@@ -1032,7 +1032,7 @@ const CustomersPage = () => {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+</table>
             </div>
 
             {/* Pagination */}
