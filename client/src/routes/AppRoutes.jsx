@@ -23,6 +23,8 @@ import CreditNotes from "../pages/admin/sales/creditNotes";
 import Items from "../pages/admin/sales/items";
 import ProposalForm from "../pages/admin/sales/proposalForm";
 import SubscriptionPage from "../pages/admin/Subscription";
+import ExpensesPage from "../pages/admin/Expenses";
+import ContactsPage from "../pages/admin/Contacts";
 
 
 
@@ -60,6 +62,8 @@ const AppRoutes = () => {
               <Route path="sales/creditNotes" element={<CreditNotes/>} />
               <Route path="sales/items" element={<Items/>} />
               <Route path="subscriptions" element={<SubscriptionPage />} />
+              <Route path="expenses" element={<ExpensesPage />} />
+              <Route path="contracts" element={<ContactsPage />} />
               {/* Add more admin routes here */}
             </Routes>
           </AdminLayout>
