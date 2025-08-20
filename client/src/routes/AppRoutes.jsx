@@ -26,7 +26,8 @@ import SubscriptionPage from "../pages/admin/Subscription";
 import ExpensesPage from "../pages/admin/Expenses";
 import ContactsPage from "../pages/admin/Contacts";
 import EstimateForm from "../pages/admin/sales/estimateForm";
-
+import ProjectsPage from "../pages/admin/Project";
+import TasksPage from "../pages/admin/Task";
 
 
 
@@ -66,6 +67,8 @@ const AppRoutes = () => {
               <Route path="subscriptions" element={<SubscriptionPage />} />
               <Route path="expenses" element={<ExpensesPage />} />
               <Route path="contracts" element={<ContactsPage />} />
+              <Route path="projects" element={<ProjectsPage />} />
+              <Route path="tasks" element={<TasksPage />} />
               {/* Add more admin routes here */}
             </Routes>
           </AdminLayout>
