@@ -82,11 +82,11 @@ const AdminSideBar = ({ isOpen }) => {
 
   return (
     <aside
-      className={`bg-[#2c2c2c] text-white h-[calc(100vh-56px)] fixed top-[56px] left-0 z-40 flex flex-col transition-all duration-300
+      className={`bg-gray-900 text-white h-[calc(100vh-56px)] fixed top-[56px] left-0 z-40 flex flex-col transition-all duration-300
         ${isOpen ? "w-60" : "w-0 overflow-hidden"}`}
     >
       {/* User profile */}
-      <div className="flex items-center gap-3 p-4 border-b border-gray-600 bg-[#333333]">
+      <div className="flex items-center gap-3 p-4 border-b border-gray-700">
         <img
           src="https://via.placeholder.com/40"
           alt="Profile"
@@ -105,7 +105,7 @@ const AdminSideBar = ({ isOpen }) => {
             {item.hasSub ? (
               <>
                 <button
-                  className="flex items-center justify-between w-full px-4 py-2 hover:bg-[#3a3a3a] transition-colors"
+                  className="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-800 transition-colors"
                   onClick={() =>
                     setActiveMenu(activeMenu === item.label ? "" : item.label)
                   }
@@ -121,7 +121,7 @@ const AdminSideBar = ({ isOpen }) => {
                   />
                 </button>
                 {activeMenu === item.label && (
-                  <div className="pl-12 bg-[#383838]">
+                  <div className="pl-12 bg-gray-800">
                     {item.subItems.map((sub, sIdx) => (
                       <Link
                         to={sub.path}
@@ -137,7 +137,7 @@ const AdminSideBar = ({ isOpen }) => {
             ) : (
               <Link
                 to={item.path}
-                className="flex items-center gap-3 px-4 py-2 hover:bg-[#3a3a3a] transition-colors"
+                className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 transition-colors"
               >
                 <span className="text-lg">{item.icon}</span>
                 <span className="text-sm">{item.label}</span>
