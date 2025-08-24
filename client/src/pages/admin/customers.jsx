@@ -40,7 +40,6 @@ const CustomersPage = () => {
   const [groupSearchTerm, setGroupSearchTerm] = useState("");
   const [showGroupDropdown, setShowGroupDropdown] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
-  const [hoveredRow, setHoveredRow] = useState(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importFile, setImportFile] = useState(null);
   const [importProgress, setImportProgress] = useState(null);
@@ -874,7 +873,7 @@ const CustomersPage = () => {
               {/* Bulk delete button */}
                 {selectedCustomers.length > 0 && (
                   <tr>
-                    <td colSpan={compactView ? 6 : 9} className="p-2 border bg-red-50">
+                    <td colSpan={compactView ? 7 : 10} className="p-2 border bg-red-50">
                       <button
                         className="bg-red-600 text-white px-3 py-1 rounded"
                         onClick={async () => {
@@ -920,7 +919,8 @@ const CustomersPage = () => {
                     {compactView ? (
                       <>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Active Customer</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Active Contacts</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Active Contacts</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
                     ) : (
                       <>
@@ -928,7 +928,8 @@ const CustomersPage = () => {
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Active Customer</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Active Contacts</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Groups</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Date Created</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date Created</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
                     )}
                   </tr>
@@ -937,9 +938,7 @@ const CustomersPage = () => {
                   {currentData.map((customer) => (
                       <tr
                         key={customer._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                        onMouseEnter={() => setHoveredRow(customer._id)}
-                        onMouseLeave={() => setHoveredRow(null)}
+                        className="bg-white shadow rounded-lg hover:bg-gray-50"
                         style={{ color: 'black' }}
                       >
                       <td className="p-3 rounded-l-lg border-0">
@@ -950,24 +949,6 @@ const CustomersPage = () => {
                             onChange={() => toggleCustomerSelection(customer._id)}
                             className="h-4 w-4"
                           />
-                          {hoveredRow === customer._id && (
-                            <div className="absolute left-8 flex space-x-1 bg-white shadow-md rounded p-1 z-10">
-                              <button
-                                onClick={() => handleEditCustomer(customer)}
-                                className="text-blue-500 hover:text-blue-700 p-1"
-                                title="Edit"
-                              >
-                                <FaEdit size={14} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteCustomer(customer._id)}
-                                className="text-red-500 hover:text-red-700 p-1"
-                                title="Delete"
-                              >
-                                <FaTrash size={14} />
-                              </button>
-                            </div>
-                          )}
                         </div>
                       </td>
                       <td className="p-3 border-0">{customer.company}</td>
@@ -984,7 +965,7 @@ const CustomersPage = () => {
                               {customer.active ? 'Active' : 'Inactive'}
                             </span>
                           </td>
-                          <td className="p-3 rounded-r-lg border-0">
+                          <td className="p-3 border-0">
                             <span
                             className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
                             onClick={() => toggleContactsActive(customer._id)}
@@ -992,6 +973,24 @@ const CustomersPage = () => {
                           >
                             {customer.contactsActive ? 'Active' : 'Inactive'}
                           </span>
+                          </td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditCustomer(customer)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="Edit"
+                              >
+                                <FaEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCustomer(customer._id)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Delete"
+                              >
+                                <FaTrash size={16} />
+                              </button>
+                            </div>
                           </td>
                         </>
                       ) : (
@@ -1016,55 +1015,64 @@ const CustomersPage = () => {
                             </span>
                           </td>
                           <td className="p-3 border-0">
-                            <div className="flex flex-wrap gap-1">
-                              {customer.groups.map((group, i) => (
-                                <span key={i} className="bg-gray-100 px-2 py-1 rounded text-xs">
-                                  {group}
-                                </span>
-                              ))}
-                            </div>
+                            {customer.groups.map((group, index) => (
+                              <span
+                                key={index}
+                                className="bg-gray-100 px-2 py-1 rounded text-xs mr-1"
+                              >
+                                {group}
+                              </span>
+                            ))}
                           </td>
-                          <td className="p-3 rounded-r-lg border-0 whitespace-nowrap">
+                          <td className="p-3 border-0">
                             {new Date(customer.dateCreated).toLocaleString()}
+                          </td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditCustomer(customer)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="Edit"
+                              >
+                                <FaEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCustomer(customer._id)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Delete"
+                              >
+                                <FaTrash size={16} />
+                              </button>
+                            </div>
                           </td>
                         </>
                       )}
                     </tr>
                   ))}
                 </tbody>
-</table>
+              </table>
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <span>
-                Showing {startIndex + 1} to{" "}
-                {Math.min(startIndex + entriesPerPage, filteredCustomers.length)} of{" "}
-                {filteredCustomers.length} entries
-              </span>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-gray-700">
+                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredCustomers.length)} of {filteredCustomers.length} entries
+              </div>
+              <div className="flex items-center space-x-2">
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => prev - 1)}
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    className={`px-3 py-1 border rounded ${
-                      currentPage === i + 1 ? "bg-gray-200" : ""
-                    }`}
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
                 >
                   Next
                 </button>
@@ -1074,108 +1082,77 @@ const CustomersPage = () => {
         </>
       )}
 
-      {/* Import Customers Modal */}
+      {/* Import Modal */}
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Import Customers</h2>
-              <button onClick={closeImportModal} className="text-gray-500 hover:text-gray-700">
-                <FaTimes />
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">
-                Your CSV data should include <strong>Company</strong>, <strong>Contact</strong>, and <strong>Email</strong> columns. 
-                Duplicate emails will be skipped.
-              </p>
-              
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+            <h2 className="text-xl font-semibold mb-4">Import Customers</h2>
+            
+            {importProgress ? (
+              <div className="mb-4">
+                <p className="text-sm">{importProgress.message}</p>
+              </div>
+            ) : importResult ? (
+              <div className={`mb-4 p-3 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {importResult.success ? (
+                  <>
+                    <p className="font-semibold">Import completed!</p>
+                    <p className="text-sm">Imported: {importResult.imported}</p>
+                    <p className="text-sm">Errors: {importResult.errorCount}</p>
+                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm font-semibold">Error details:</p>
+                        <ul className="text-xs max-h-32 overflow-auto">
+                          {importResult.errorMessages.map((error, index) => (
+                            <li key={index} className="mt-1">{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm">Error: {importResult.message}</p>
+                )}
+              </div>
+            ) : (
+              <div className="mb-4">
+                <p className="text-sm mb-2">Select a CSV or Excel file to import customers:</p>
                 <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileChange}
-                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                  className="hidden"
-                  id="import-file"
+                  accept=".csv,.xlsx,.xls"
+                  className="w-full border rounded p-2 text-sm"
                 />
-                <label
-                  htmlFor="import-file"
-                  className="cursor-pointer block"
+              </div>
+            )}
+            
+            <div className="flex justify-end space-x-2">
+              {!importResult && (
+                <button
+                  onClick={closeImportModal}
+                  className="px-4 py-2 border rounded text-sm"
                 >
-                  {importFile ? (
-                    <div className="text-green-600">
-                      <p>Selected file: {importFile.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {(importFile.size / 1024).toFixed(2)} KB
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <HiOutlineDownload className="mx-auto text-3xl text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">
-                        Drag and drop your CSV file here, or click to browse
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Only CSV files are accepted
-                      </p>
-                    </>
-                  )}
-                </label>
-              </div>
-            </div>
-
-            {importProgress && (
-              <div className="mb-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                <p>{importProgress.message}</p>
-              </div>
-            )}
-
-            {importResult && (
-              <div className={`mb-4 p-3 rounded text-sm ${
-                  importResult.success && (!importResult.errorCount || importResult.errorCount === 0)
-                    ? 'bg-green-50 text-green-800'
-                    : 'bg-red-50 text-red-800'
-                }`}>
-                {importResult.success ? (
-                  <>
-                    <p>Import completed with {importResult.imported} successful and {importResult.errorCount} failed.</p>
-                    {importResult.errorCount > 0 && (
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-sm">Show error details</summary>
-                        <div className="bg-white p-2 mt-1 rounded border text-xs max-h-32 overflow-auto">
-                          {importResult.errorMessages?.map((msg, i) => (
-                            <p key={i}>{msg}</p>
-                          ))}
-                        </div>
-                      </details>
-                    )}
-                  </>
-                ) : (
-                  <p>Error: {importResult.message}</p>
-                )}
-              </div>
-            )}
-
-            <div className="flex justify-end space-x-3 mt-4">
-              <button
-                onClick={closeImportModal}
-                className="px-4 py-2 border rounded text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleImportSubmit}
-                disabled={!importFile || importProgress}
-                className={`px-4 py-2 rounded text-sm ${
-                  !importFile || importProgress
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-black text-white'
-                }`}
-              >
-                {importProgress ? 'Importing...' : 'Import'}
-              </button>
+                  Cancel
+                </button>
+              )}
+              {!importProgress && !importResult && (
+                <button
+                  onClick={handleImportSubmit}
+                  className="px-4 py-2 bg-black text-white rounded text-sm"
+                  disabled={!importFile}
+                >
+                  Import
+                </button>
+              )}
+              {importResult && (
+                <button
+                  onClick={closeImportModal}
+                  className="px-4 py-2 bg-black text-white rounded text-sm"
+                >
+                  Close
+                </button>
+              )}
             </div>
           </div>
         </div>
