@@ -788,6 +788,33 @@ const CustomersPage = () => {
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
+
+
+                {/* Delete Selected button before the select */}
+      {selectedCustomers.length > 0 && (
+        <button
+          className="bg-red-600 text-white px-3 py-1 rounded"
+          onClick={async () => {
+            if (window.confirm(`Delete ${selectedCustomers.length} selected customers?`)) {
+              try {
+                await Promise.all(selectedCustomers.map(id =>
+                  axios.delete(`http://localhost:5000/api/customers/${id}`)
+                ));
+                setSelectedCustomers([]);
+                fetchCustomers();
+                alert("Selected customers deleted!");
+              } catch {
+                alert("Error deleting selected customers.");
+              }
+            }
+          }}
+        >
+          Delete Selected ({selectedCustomers.length})
+        </button>
+      )}
+
+
+
                 {/* Entries per page */}
                 <select
                   className="border rounded px-2 py-1 text-sm"
@@ -871,6 +898,7 @@ const CustomersPage = () => {
             {/* Table */}
             <div className="overflow-x-auto">
               {/* Bulk delete button */}
+                {/*
                 {selectedCustomers.length > 0 && (
                   <tr>
                     <td colSpan={compactView ? 7 : 10} className="p-2 border bg-red-50">
@@ -896,6 +924,7 @@ const CustomersPage = () => {
                     </td>
                   </tr>
                 )}
+                */}
                 
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>

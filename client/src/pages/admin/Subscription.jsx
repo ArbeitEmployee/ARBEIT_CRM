@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { 
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight, 
   FaTimes, FaEdit, FaTrash, FaUser, FaUserCheck, 
@@ -674,6 +674,12 @@ const SubscriptionPage = () => {
               >
                 <FaPlus /> New Subscription
               </button>
+
+              
+
+
+
+
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -690,6 +696,35 @@ const SubscriptionPage = () => {
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
+
+                
+                {/* --- ADD THIS BLOCK: Delete Selected button before the select --- */}
+      {selectedSubscriptions.length > 0 && (
+        <button
+          className="bg-red-600 text-white px-3 py-1 rounded"
+          onClick={async () => {
+            if (window.confirm(`Delete ${selectedSubscriptions.length} selected subscriptions?`)) {
+              try {
+                await Promise.all(selectedSubscriptions.map(id =>
+                  axios.delete(`http://localhost:5000/api/subscriptions/${id}`)
+                ));
+                setSelectedSubscriptions([]);
+                fetchSubscriptions();
+                alert("Selected subscriptions deleted!");
+              } catch {
+                alert("Error deleting selected subscriptions.");
+              }
+            }
+          }}
+        >
+          Delete Selected ({selectedSubscriptions.length})
+        </button>
+      )}
+      {/* --- END BLOCK --- */}
+
+
+
+
                 {/* Entries per page */}
                 <select
                   className="border rounded px-2 py-1 text-sm"
@@ -772,7 +807,9 @@ const SubscriptionPage = () => {
 
             {/* Table */}
             <div className="overflow-x-auto">
+              
               {/* Bulk delete button */}
+              {/*
               {selectedSubscriptions.length > 0 && (
                 <tr>
                   <td colSpan={compactView ? 8 : 10} className="p-2 border bg-red-50">
@@ -798,6 +835,8 @@ const SubscriptionPage = () => {
                   </td>
                 </tr>
               )}
+              */}
+         
               
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
