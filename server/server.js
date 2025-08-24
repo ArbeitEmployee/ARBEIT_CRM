@@ -11,6 +11,7 @@ import estimateRoutes from "./routes/admin/estimateRoutes.js";
 import invoiceRoutes from "./routes/admin/invoiceRoutes.js";
 import creditNoteRoutes from "./routes/admin/creditNoteRoutes.js";
 import subscriptionRoutes from "./routes/admin/subscriptionRoutes.js";
+import expenseRoutes from "./routes/admin/expenseRoutes.js";
 
 dotenv.config();
 
@@ -30,6 +31,8 @@ app.use("/api/admin", estimateRoutes);
 app.use("/api/admin", invoiceRoutes);
 app.use("/api/admin", creditNoteRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/expenses", expenseRoutes);
+
 
 
 const PORT = process.env.PORT || 5000;

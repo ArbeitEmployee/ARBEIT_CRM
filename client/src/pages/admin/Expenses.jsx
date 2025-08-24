@@ -13,7 +13,7 @@ import autoTable from 'jspdf-autotable';
 const ExpensesPage = () => {
   const [selectedExpenses, setSelectedExpenses] = useState([]);
   const [compactView, setCompactView] = useState(false);
-  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [entriesPerPage, setEntriesPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -33,17 +33,20 @@ const ExpensesPage = () => {
     hasReceipt: false,
     date: "",
     project: "",
-    customer: "",
+    customerId: "",
+    customerName: "",
     isInvoiced: false,
     referenceId: "",
     paymentMode: ""
   });
   const [editingExpense, setEditingExpense] = useState(null);
-  const [hoveredRow, setHoveredRow] = useState(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importFile, setImportFile] = useState(null);
   const [importProgress, setImportProgress] = useState(null);
   const [importResult, setImportResult] = useState(null);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [customerSearchResults, setCustomerSearchResults] = useState([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const fileInputRef = useRef(null);
 
   const categoryOptions = [
@@ -70,157 +73,13 @@ const ExpensesPage = () => {
   // Fetch expenses from API
   const fetchExpenses = async () => {
     try {
-      // For demo purposes, using dummy data
-      const dummyExpenses = [
-        {
-          _id: "EXP-001",
-          category: "Travel Expense",
-          amount: 2234.00,
-          name: "Makibul Hossain Tamim",
-          hasReceipt: true,
-          date: "18-08-2025",
-          project: "Project",
-          customer: "RFL Group, Rahul Rahman",
-          isInvoiced: false,
-          referenceId: "#996",
-          paymentMode: "BANK"
-        },
-        {
-          _id: "EXP-002",
-          category: "Meals & Entertainment",
-          amount: 125.50,
-          name: "John Smith",
-          hasReceipt: true,
-          date: "19-08-2025",
-          project: "Client Meeting",
-          customer: "ABC Corp, Sarah Johnson",
-          isInvoiced: true,
-          referenceId: "#997",
-          paymentMode: "CREDIT CARD"
-        },
-        {
-          _id: "EXP-003",
-          category: "Office Supplies",
-          amount: 345.75,
-          name: "Emily Wilson",
-          hasReceipt: false,
-          date: "20-08-2025",
-          project: "Office Upgrade",
-          customer: "Internal",
-          isInvoiced: false,
-          referenceId: "#998",
-          paymentMode: "CASH"
-        },
-        {
-          _id: "EXP-004",
-          category: "Travel Expense",
-          amount: 1890.00,
-          name: "Robert Davis",
-          hasReceipt: true,
-          date: "21-08-2025",
-          project: "Client Visit",
-          customer: "XYZ Ltd, Michael Brown",
-          isInvoiced: true,
-          referenceId: "#999",
-          paymentMode: "BANK"
-        },
-        {
-          _id: "EXP-005",
-          category: "Software & Tools",
-          amount: 499.99,
-          name: "Lisa Taylor",
-          hasReceipt: true,
-          date: "22-08-2025",
-          project: "Development",
-          customer: "Tech Solutions, David Miller",
-          isInvoiced: false,
-          referenceId: "#1000",
-          paymentMode: "DEBIT CARD"
-        },
-        {
-          _id: "EXP-006",
-          category: "Transportation",
-          amount: 85.25,
-          name: "James Wilson",
-          hasReceipt: false,
-          date: "23-08-2025",
-          project: "Client Meeting",
-          customer: "Global Inc, Jennifer Lee",
-          isInvoiced: true,
-          referenceId: "#1001",
-          paymentMode: "CASH"
-        },
-        {
-          _id: "EXP-007",
-          category: "Accommodation",
-          amount: 320.00,
-          name: "Makibul Hossain Tamim",
-          hasReceipt: true,
-          date: "24-08-2025",
-          project: "Business Trip",
-          customer: "RFL Group, Rahul Rahman",
-          isInvoiced: false,
-          referenceId: "#1002",
-          paymentMode: "BANK"
-        },
-        {
-          _id: "EXP-008",
-          category: "Training & Education",
-          amount: 750.00,
-          name: "Sarah Johnson",
-          hasReceipt: true,
-          date: "25-08-2025",
-          project: "Skill Development",
-          customer: "Internal",
-          isInvoiced: true,
-          referenceId: "#1003",
-          paymentMode: "BANK"
-        },
-        {
-          _id: "EXP-009",
-          category: "Communication",
-          amount: 45.00,
-          name: "Michael Brown",
-          hasReceipt: false,
-          date: "26-08-2025",
-          project: "Client Call",
-          customer: "ABC Corp, Sarah Johnson",
-          isInvoiced: false,
-          referenceId: "#1004",
-          paymentMode: "DIGITAL WALLET"
-        },
-        {
-          _id: "EXP-010",
-          category: "Other",
-          amount: 120.50,
-          name: "David Miller",
-          hasReceipt: true,
-          date: "27-08-2025",
-          project: "Miscellaneous",
-          customer: "Tech Solutions, David Miller",
-          isInvoiced: true,
-          referenceId: "#1005",
-          paymentMode: "CREDIT CARD"
-        }
-      ];
-      
-      setExpenses(dummyExpenses);
-      
-      // Calculate stats
-      const total = dummyExpenses.reduce((sum, expense) => sum + expense.amount, 0);
-      const billable = dummyExpenses
-        .filter(expense => expense.isInvoiced)
-        .reduce((sum, expense) => sum + expense.amount, 0);
-      const nonBillable = total - billable;
-      const notInvoiced = dummyExpenses
-        .filter(expense => !expense.isInvoiced)
-        .reduce((sum, expense) => sum + expense.amount, 0);
-      
-      setStats({
-        total,
-        billable,
-        nonBillable,
-        notInvoiced
+      const { data } = await axios.get("http://localhost:5000/api/expenses");
+      setExpenses(data.expenses || []);
+      setStats(data.stats || {
+        total: 0,
+        billable: 0,
+        nonBillable: 0,
+        notInvoiced: 0
       });
     } catch (error) {
       console.error("Error fetching expenses:", error);
@@ -238,13 +97,39 @@ const ExpensesPage = () => {
     fetchExpenses();
   }, []);
 
+  // Search customers by company name
+  const searchCustomers = async (searchTerm) => {
+    if (searchTerm.length < 2) {
+      setCustomerSearchResults([]);
+      return;
+    }
+    
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/expenses/customers/search?q=${searchTerm}`);
+      setCustomerSearchResults(data);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+      setCustomerSearchResults([]);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (customerSearchTerm) {
+        searchCustomers(customerSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [customerSearchTerm]);
+
   // Search filter
   const filteredExpenses = expenses.filter(expense => 
     expense._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     expense.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
     expense.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     expense.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    expense.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (expense.customer && expense.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
     expense.referenceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
     expense.paymentMode.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -267,33 +152,63 @@ const ExpensesPage = () => {
 
   const handleNewExpenseChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setNewExpense(prev => ({ 
-      ...prev, 
-      [name]: type === 'checkbox' ? checked : value 
+    setNewExpense(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
     }));
+    
+    if (name === "customerName") {
+      setCustomerSearchTerm(value);
+      setShowCustomerDropdown(true);
+    }
   };
 
-  const handleSaveExpense = async () => {
-    if (isSaving) return;
-    
-    if (!newExpense.category || !newExpense.amount || !newExpense.name) {
-      alert("Please fill in all required fields (Category, Amount, Name)");
-      return;
-    }
+  const handleSelectCustomer = (customer) => {
+    setNewExpense(prev => ({
+      ...prev,
+      customerId: customer._id,
+      customerName: customer.company
+    }));
+    setShowCustomerDropdown(false);
+    setCustomerSearchTerm("");
+  };
+
+  // Add this function to format date for backend
+const formatDateForBackend = (dateString) => {
+  if (!dateString) return '';
+  
+  // Convert YYYY-MM-DD to DD-MM-YYYY
+  const [year, month, day] = dateString.split('-');
+  return `${day}-${month}-${year}`;
+};
+
+// Update handleSaveExpense function
+const handleSaveExpense = async () => {
+  if (isSaving) return;
+  
+  if (!newExpense.category || !newExpense.amount || !newExpense.name || !newExpense.customerId || !newExpense.date) {
+    alert("Please fill in all required fields (Category, Amount, Name, Customer, Date)");
+    return;
+  }
 
     setIsSaving(true);
     
     try {
+      const expenseData = {
+      ...newExpense,
+      date: formatDateForBackend(newExpense.date) // Format the date
+    };
+
       if (editingExpense) {
         // Update existing expense
-        // await axios.put(`http://localhost:5000/api/expenses/${editingExpense._id}`, newExpense);
+        await axios.put(`http://localhost:5000/api/expenses/${editingExpense._id}`, expenseData);
         setShowNewExpenseForm(false);
         setEditingExpense(null);
         fetchExpenses();
         alert("Expense updated successfully!");
       } else {
         // Create new expense
-        // await axios.post("http://localhost:5000/api/expenses", newExpense);
+        await axios.post("http://localhost:5000/api/expenses", expenseData);
         setShowNewExpenseForm(false);
         fetchExpenses();
         alert("Expense created successfully!");
@@ -307,7 +222,8 @@ const ExpensesPage = () => {
         hasReceipt: false,
         date: "",
         project: "",
-        customer: "",
+        customerId: "",
+        customerName: "",
         isInvoiced: false,
         referenceId: "",
         paymentMode: ""
@@ -329,7 +245,8 @@ const ExpensesPage = () => {
       hasReceipt: expense.hasReceipt,
       date: expense.date,
       project: expense.project,
-      customer: expense.customer,
+      customerId: expense.customerId,
+      customerName: expense.customer ? expense.customer.company : "",
       isInvoiced: expense.isInvoiced,
       referenceId: expense.referenceId,
       paymentMode: expense.paymentMode
@@ -340,12 +257,28 @@ const ExpensesPage = () => {
   const handleDeleteExpense = async (id) => {
     if (window.confirm("Are you sure you want to delete this expense?")) {
       try {
-        // await axios.delete(`http://localhost:5000/api/expenses/${id}`);
+        await axios.delete(`http://localhost:5000/api/expenses/${id}`);
         fetchExpenses();
         alert("Expense deleted successfully!");
       } catch (error) {
         console.error("Error deleting expense:", error);
         alert(`Error deleting expense: ${error.response?.data?.message || error.message}`);
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedExpenses.length === 0) return;
+    
+    if (window.confirm(`Are you sure you want to delete ${selectedExpenses.length} selected expenses?`)) {
+      try {
+        await axios.post("http://localhost:5000/api/expenses/bulk-delete", { ids: selectedExpenses });
+        setSelectedExpenses([]);
+        fetchExpenses();
+        alert("Selected expenses deleted successfully!");
+      } catch (error) {
+        console.error("Error bulk deleting expenses:", error);
+        alert(`Error deleting expenses: ${error.response?.data?.message || error.message}`);
       }
     }
   };
@@ -373,19 +306,22 @@ const ExpensesPage = () => {
     try {
       setImportProgress({ status: 'uploading', message: 'Uploading file...' });
       
-      // Simulate API call
-      setTimeout(() => {
-        setImportProgress(null);
-        setImportResult({
-          success: true,
-          imported: 5,
-          errorCount: 0,
-          errorMessages: []
-        });
-        
-        // Refresh expense list
-        fetchExpenses();
-      }, 1500);
+      const { data } = await axios.post('http://localhost:5000/api/expenses/import', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      setImportProgress(null);
+      setImportResult({
+        success: true,
+        imported: data.importedCount,
+        errorCount: data.errorMessages?.length || 0,
+        errorMessages: data.errorMessages
+      });
+      
+      // Refresh expense list
+      fetchExpenses();
     } catch (error) {
       console.error("Error importing expenses:", error);
       setImportProgress(null);
@@ -416,7 +352,7 @@ const ExpensesPage = () => {
       Receipt: expense.hasReceipt ? "YES" : "NO",
       Date: expense.date,
       Project: expense.project,
-      Customer: expense.customer,
+      Customer: expense.customer ? expense.customer.company : "N/A",
       Invoiced: expense.isInvoiced ? "YES" : "NO",
       'Reference ID': expense.referenceId,
       'Payment Mode': expense.paymentMode
@@ -438,7 +374,7 @@ const ExpensesPage = () => {
       Receipt: expense.hasReceipt ? "YES" : "NO",
       Date: expense.date,
       Project: expense.project,
-      Customer: expense.customer,
+      Customer: expense.customer ? expense.customer.company : "N/A",
       Invoiced: expense.isInvoiced ? "YES" : "NO",
       'Reference ID': expense.referenceId,
       'Payment Mode': expense.paymentMode
@@ -483,7 +419,7 @@ const ExpensesPage = () => {
       expense.hasReceipt ? "YES" : "NO",
       expense.date,
       expense.project,
-      expense.customer,
+      expense.customer ? expense.customer.company : "N/A",
       expense.isInvoiced ? "YES" : "NO",
       expense.referenceId,
       expense.paymentMode
@@ -539,7 +475,7 @@ const ExpensesPage = () => {
         expense.hasReceipt ? "YES" : "NO",
         expense.date,
         expense.project,
-        expense.customer,
+        expense.customer ? expense.customer.company : "N/A",
         expense.isInvoiced ? "YES" : "NO",
         expense.referenceId,
         expense.paymentMode
@@ -643,14 +579,14 @@ const ExpensesPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
                 <input
-                  type="text"
+                  type="date"
                   name="date"
                   value={newExpense.date}
                   onChange={handleNewExpenseChange}
                   className="w-full border rounded px-3 py-2"
-                  placeholder="DD-MM-YYYY"
+                  required
                 />
               </div>
             </div>
@@ -658,22 +594,45 @@ const ExpensesPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="customerName"
+                    value={newExpense.customerName}
+                    onChange={handleNewExpenseChange}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                    placeholder="Search customer by company name..."
+                  />
+                  {showCustomerDropdown && customerSearchResults.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                      {customerSearchResults.map((customer, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelectCustomer(customer)}
+                        >
+                          <div className="font-medium">{customer.company}</div>
+                          <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">No customers found</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project</label>
                 <input
                   type="text"
                   name="project"
                   value={newExpense.project}
-                  onChange={handleNewExpenseChange}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
-                <input
-                  type="text"
-                  name="customer"
-                  value={newExpense.customer}
                   onChange={handleNewExpenseChange}
                   className="w-full border rounded px-3 py-2"
                 />
@@ -704,51 +663,51 @@ const ExpensesPage = () => {
                   ))}
                 </select>
               </div>
-
-              <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="hasReceipt"
-                    checked={newExpense.hasReceipt}
-                    onChange={handleNewExpenseChange}
-                    className="h-4 w-4"
-                  />
-                  <label className="ml-2 text-sm font-medium text-gray-700">Has Receipt</label>
-                </div>
-
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    name="isInvoiced"
-                    checked={newExpense.isInvoiced}
-                    onChange={handleNewExpenseChange}
-                    className="h-4 w-4"
-                  />
-                  <label className="ml-2 text-sm font-medium text-gray-700">Invoiced</label>
-                </div>
-              </div>
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3">
+          <div className="flex flex-wrap gap-4 mb-6">
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                name="hasReceipt"
+                checked={newExpense.hasReceipt}
+                onChange={handleNewExpenseChange}
+                className="mr-2"
+                id="hasReceipt"
+              />
+              <label htmlFor="hasReceipt" className="text-sm text-gray-700">Has Receipt</label>
+            </div>
+
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                name="isInvoiced"
+                checked={newExpense.isInvoiced}
+                onChange={handleNewExpenseChange}
+                className="mr-2"
+                id="isInvoiced"
+              />
+              <label htmlFor="isInvoiced" className="text-sm text-gray-700">Is Invoiced</label>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3">
             <button
-              type="button"
               onClick={() => {
                 setShowNewExpenseForm(false);
                 setEditingExpense(null);
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
-              type="button"
               onClick={handleSaveExpense}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
-              disabled={!newExpense.category || !newExpense.amount || !newExpense.name || isSaving}
+              disabled={isSaving}
+              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
             >
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving ? 'Saving...' : (editingExpense ? 'Update Expense' : 'Save Expense')}
             </button>
           </div>
         </div>
@@ -760,17 +719,12 @@ const ExpensesPage = () => {
             <div className="bg-white p-4 rounded-lg shadow border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total</p>
+                  <p className="text-gray-500 text-sm">Total Expenses</p>
                   <p className="text-2xl font-bold">{formatCurrency(stats.total)}</p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-full">
                   <FaReceipt className="text-blue-600" />
                 </div>
-              </div>
-              <div className="mt-2">
-                <button className="text-xs text-gray-500 flex items-center">
-                  <FaFilter className="mr-1" /> Filter
-                </button>
               </div>
             </div>
 
@@ -785,28 +739,18 @@ const ExpensesPage = () => {
                   <FaReceipt className="text-green-600" />
                 </div>
               </div>
-              <div className="mt-2">
-                <button className="text-xs text-gray-500 flex items-center">
-                  <FaSearch className="mr-1" /> Search
-                </button>
-              </div>
             </div>
 
-            {/* Non Billable Expenses */}
+            {/* Non-Billable Expenses */}
             <div className="bg-white p-4 rounded-lg shadow border">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Non Billable</p>
+                  <p className="text-gray-500 text-sm">Non-Billable</p>
                   <p className="text-2xl font-bold">{formatCurrency(stats.nonBillable)}</p>
                 </div>
                 <div className="bg-red-100 p-3 rounded-full">
                   <FaReceipt className="text-red-600" />
                 </div>
-              </div>
-              <div className="mt-2">
-                <button className="text-xs text-gray-500 flex items-center">
-                  <span className="line-through">Billed</span>
-                </button>
               </div>
             </div>
 
@@ -821,83 +765,67 @@ const ExpensesPage = () => {
                   <FaReceipt className="text-purple-600" />
                 </div>
               </div>
-              <div className="mt-2">
-                <button className="text-xs text-gray-500 flex items-center">
-                  <FaFileImport className="mr-1" /> Import
-                </button>
-              </div>
+            </div>
+          </div>
+
+          {/* Top action buttons */}
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <button 
+                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+                onClick={() => setShowNewExpenseForm(true)}
+              >
+                <FaPlus /> New Expense
+              </button>
+              <button 
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={handleImportClick}
+              >
+                Import Expenses
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={() => setCompactView(!compactView)}
+              >
+                {compactView ? "<<" : ">>"}
+              </button>
+              <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
+                <FaFilter /> Filters
+              </button>
             </div>
           </div>
 
           {/* White box for table */}
-          <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`} 
-               style={{ borderRadius: '8px', border: '1px solid #E0E0E0', backgroundColor: '#F2F4F7' }}>
+          <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                {/* Entries per page */}
-                <div className="flex items-center gap-2">
-                  <select
-                    className="border rounded px-2 py-1 text-sm"
-                    value={entriesPerPage}
-                    onChange={(e) => {
-                      setEntriesPerPage(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
+                {/* Delete Selected button */}
+                {selectedExpenses.length > 0 && (
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    onClick={handleBulkDelete}
                   >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </div>
-                
-                {/* Filter button */}
-                <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
-                  <FaFilter /> Filter
-                </button>
-                
-                {/* Search */}
-                <div className="relative">
-                  <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="border rounded pl-8 pr-3 py-1 text-sm"
-                  />
-                </div>
-              </div>
+                    Delete Selected ({selectedExpenses.length})
+                  </button>
+                )}
 
-              <div className="flex items-center gap-2">
-                {/* Arrow button */}
-                <button
-                  className="border px-3 py-1 text-sm rounded flex items-center gap-2"
-                  onClick={() => setCompactView(!compactView)}
+                {/* Entries per page */}
+                <select
+                  className="border rounded px-2 py-1 text-sm"
+                  value={entriesPerPage}
+                  onChange={(e) => {
+                    setEntriesPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
                 >
-                  {compactView ? "<<" : ">>"}
-                </button>
-
-                {/* New Expense button */}
-                <button 
-                  className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
-                  onClick={() => setShowNewExpenseForm(true)}
-                >
-                  <FaPlus /> New Expense
-                </button>
-                
-                {/* Import Expenses button */}
-                <button 
-                  className="border px-3 py-1 text-sm rounded flex items-center gap-2"
-                  onClick={handleImportClick}
-                >
-                  <FaFileImport /> Import Expenses
-                </button>
+                  <option value={5}>5</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
                 
                 {/* Export button */}
                 <div className="relative">
@@ -947,35 +875,26 @@ const ExpensesPage = () => {
                   <FaSyncAlt />
                 </button>
               </div>
+
+              {/* Search */}
+              <div className="relative">
+                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                />
+              </div>
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
-              {/* Bulk delete button */}
-              {selectedExpenses.length > 0 && (
-                <div className="p-2 border bg-red-50 mb-2 rounded-lg">
-                  <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
-                    onClick={async () => {
-                      if (window.confirm(`Delete ${selectedExpenses.length} selected expenses?`)) {
-                        try {
-                          // await Promise.all(selectedExpenses.map(id =>
-                          //   axios.delete(`http://localhost:5000/api/expenses/${id}`)
-                          // ));
-                          setSelectedExpenses([]);
-                          fetchExpenses();
-                          alert("Selected expenses deleted!");
-                        } catch {
-                          alert("Error deleting selected expenses.");
-                        }
-                      }
-                    }}
-                  >
-                    Delete Selected ({selectedExpenses.length})
-                  </button>
-                </div>
-              )}
-              
+            <div className="overflow-x-auto">      
+                
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
@@ -997,9 +916,9 @@ const ExpensesPage = () => {
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Name</th>
                     {compactView ? (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Receipt</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
                     ) : (
                       <>
@@ -1007,22 +926,20 @@ const ExpensesPage = () => {
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Invoice</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Invoiced</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Reference ID</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Payment Mode</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Payment Mode</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
                     )}
                   </tr>
                 </thead>
-                
                 <tbody>
                   {currentData.map((expense) => (
-                    <tr 
-                      key={expense._id} 
-                      className="hover:bg-gray-50 relative"
-                      onMouseEnter={() => setHoveredRow(expense._id)}
-                      onMouseLeave={() => setHoveredRow(null)}
-                      style={{ backgroundColor: 'white', color: 'black' }}
+                    <tr
+                      key={expense._id}
+                      className="bg-white shadow rounded-lg hover:bg-gray-50"
+                      style={{ color: 'black' }}
                     >
                       <td className="p-3 rounded-l-lg border-0">
                         <div className="flex items-center">
@@ -1032,56 +949,82 @@ const ExpensesPage = () => {
                             onChange={() => toggleExpenseSelection(expense._id)}
                             className="h-4 w-4"
                           />
-                          {hoveredRow === expense._id && (
-                            <div className="absolute left-8 flex space-x-1 bg-white shadow-md rounded p-1 z-10">
-                              <button 
-                                onClick={() => handleEditExpense(expense)}
-                                className="text-blue-500 hover:text-blue-700 p-1"
-                                title="Edit"
-                              >
-                                <FaEdit size={14} />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteExpense(expense._id)}
-                                className="text-red-500 hover:text-red-700 p-1"
-                                title="Delete"
-                              >
-                                <FaTrash size={14} />
-                              </button>
-                            </div>
-                          )}
                         </div>
                       </td>
-                      <td className="p-3 border-0 font-medium">{expense.category}</td>
-                      <td className="p-3 border-0 font-bold">{formatCurrency(expense.amount)}</td>
+                      <td className="p-3 border-0">{expense.category}</td>
+                      <td className="p-3 border-0">{formatCurrency(expense.amount)}</td>
                       <td className="p-3 border-0">{expense.name}</td>
                       {compactView ? (
                         <>
                           <td className="p-3 border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${expense.hasReceipt ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                              {expense.hasReceipt ? "YES" : "NO"}
-                            </span>
+                            {expense.customer ? expense.customer.company : "N/A"}
                           </td>
                           <td className="p-3 border-0">{expense.date}</td>
-                          <td className="p-3 rounded-r-lg border-0">{expense.project}</td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditExpense(expense)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="Edit"
+                              >
+                                <FaEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteExpense(expense._id)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Delete"
+                              >
+                                <FaTrash size={16} />
+                              </button>
+                            </div>
+                          </td>
                         </>
                       ) : (
                         <>
                           <td className="p-3 border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${expense.hasReceipt ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                              {expense.hasReceipt ? "YES" : "NO"}
-                            </span>
+                            {expense.hasReceipt ? (
+                              <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">Yes</span>
+                            ) : (
+                              <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">No</span>
+                            )}
                           </td>
                           <td className="p-3 border-0">{expense.date}</td>
-                          <td className="p-3 border-0">{expense.project}</td>
-                          <td className="p-3 border-0">{expense.customer}</td>
+                          <td className="p-3 border-0">{expense.project || "-"}</td>
                           <td className="p-3 border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${expense.isInvoiced ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                              {expense.isInvoiced ? "YES" : "NO"}
-                            </span>
+                            {expense.customer ? expense.customer.company : "N/A"}
+                            {expense.customer && (
+                              <div className="text-xs text-gray-500">
+                                {expense.customer.contact} • {expense.customer.email}
+                              </div>
+                            )}
                           </td>
-                          <td className="p-3 border-0">{expense.referenceId}</td>
-                          <td className="p-3 rounded-r-lg border-0">{expense.paymentMode}</td>
+                          <td className="p-3 border-0">
+                            {expense.isInvoiced ? (
+                              <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">Yes</span>
+                            ) : (
+                              <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">No</span>
+                            )}
+                          </td>
+                          <td className="p-3 border-0">{expense.referenceId || "-"}</td>
+                          <td className="p-3 border-0">{expense.paymentMode || "-"}</td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditExpense(expense)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="Edit"
+                              >
+                                <FaEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteExpense(expense._id)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Delete"
+                              >
+                                <FaTrash size={16} />
+                              </button>
+                            </div>
+                          </td>
                         </>
                       )}
                     </tr>
@@ -1091,35 +1034,44 @@ const ExpensesPage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <span>
-                Showing {startIndex + 1} to{" "}
-                {Math.min(startIndex + entriesPerPage, filteredExpenses.length)} of{" "}
-                {filteredExpenses.length} entries
-              </span>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mt-4">
+              <div>
+                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredExpenses.length)} of {filteredExpenses.length} entries
+              </div>
+              <div className="flex items-center gap-1">
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="px-3 py-1 border rounded"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => prev - 1)}
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    className={`px-3 py-1 border rounded ${
-                      currentPage === i + 1 ? "bg-gray-200" : ""
-                    }`}
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`px-3 py-1 border rounded ${currentPage === pageNum ? 'bg-black text-white' : ''}`}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="px-3 py-1 border rounded"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
                 >
                   Next
                 </button>
@@ -1129,108 +1081,108 @@ const ExpensesPage = () => {
         </>
       )}
 
-      {/* Import Expenses Modal */}
+      {/* Import Modal */}
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Import Expenses</h2>
+              <h3 className="text-lg font-semibold">Import Expenses</h3>
               <button onClick={closeImportModal} className="text-gray-500 hover:text-gray-700">
                 <FaTimes />
               </button>
             </div>
 
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">
-                Your CSV data should include <strong>Category</strong>, <strong>Amount</strong>, and <strong>Name</strong> columns.
-              </p>
-              
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                  className="hidden"
-                  id="import-file"
-                />
-                <label
-                  htmlFor="import-file"
-                  className="cursor-pointer block"
-                >
-                  {importFile ? (
-                    <div className="text-green-600">
-                      <p>Selected file: {importFile.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {(importFile.size / 1024).toFixed(2)} KB
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <HiOutlineDownload className="mx-auto text-3xl text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">
-                        Drag and drop your CSV file here, or click to browse
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Only CSV files are accepted
-                      </p>
-                    </>
-                  )}
-                </label>
-              </div>
-            </div>
+            {!importResult && (
+              <>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Upload a CSV or Excel file with expense data. The file should include columns for:
+                    Category, Amount, Name, Date, Customer (company name- must exist in customer field), and other optional fields.
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Download a <a href="#" className="text-blue-500">template file</a> for reference.
+                  </p>
+                </div>
 
-            {importProgress && (
-              <div className="mb-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                <p>{importProgress.message}</p>
-              </div>
+                <div className="mb-4">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept=".csv,.xlsx,.xls"
+                    className="w-full border rounded p-2"
+                  />
+                </div>
+
+                {importProgress && (
+                  <div className="mb-4 p-2 bg-blue-50 text-blue-700 rounded text-sm">
+                    {importProgress.message}
+                  </div>
+                )}
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleImportSubmit}
+                    disabled={!importFile || importProgress}
+                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    Import
+                  </button>
+                </div>
+              </>
             )}
 
             {importResult && (
-              <div className={`mb-4 p-3 rounded text-sm ${
-                  importResult.success && (!importResult.errorCount || importResult.errorCount === 0)
-                    ? 'bg-green-50 text-green-800'
-                    : 'bg-red-50 text-red-800'
-                }`}>
+              <>
                 {importResult.success ? (
-                  <>
-                    <p>Import completed with {importResult.imported} successful and {importResult.errorCount} failed.</p>
-                    {importResult.errorCount > 0 && (
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-sm">Show error details</summary>
-                        <div className="bg-white p-2 mt-1 rounded border text-xs max-h-32 overflow-auto">
-                          {importResult.errorMessages?.map((msg, i) => (
-                            <p key={i}>{msg}</p>
+                  <div className="mb-4">
+                    <div className="p-3 bg-green-50 text-green-700 rounded mb-3">
+                      <p className="font-medium">Import completed successfully!</p>
+                      <p className="text-sm mt-1">
+                        Imported {importResult.imported} expenses.
+                        {importResult.errorCount > 0 && (
+                          <span> {importResult.errorCount} rows had errors.</span>
+                        )}
+                      </p>
+                    </div>
+
+                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
+                      <div className="mb-4">
+                        <p className="font-medium text-sm mb-1">Error details:</p>
+                        <div className="max-h-40 overflow-y-auto text-xs">
+                          {importResult.errorMessages.map((error, index) => (
+                            <div key={index} className="p-2 border-b">
+                              <p className="text-red-600">{error}</p>
+                            </div>
                           ))}
                         </div>
-                      </details>
+                      </div>
                     )}
-                  </>
+                  </div>
                 ) : (
-                  <p>Error: {importResult.message}</p>
+                  // Changed this div to have red background and text
+                  <div className="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-200">
+                    <p className="font-medium">Import failed!</p>
+                    <p className="text-sm mt-1">{importResult.message}</p>
+                  </div>
                 )}
-              </div>
-            )}
 
-            <div className="flex justify-end space-x-3 mt-4">
-              <button
-                onClick={closeImportModal}
-                className="px-4 py-2 border rounded text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleImportSubmit}
-                disabled={!importFile || importProgress}
-                className={`px-4 py-2 rounded text-sm ${
-                  !importFile || importProgress
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-black text-white'
-                }`}
-              >
-                {importProgress ? 'Importing...' : 'Import'}
-              </button>
-            </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+                  >
+                    Close
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
