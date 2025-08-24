@@ -29,6 +29,7 @@ import EstimateForm from "../pages/admin/sales/estimateForm";
 import ProjectsPage from "../pages/admin/Project";
 import TasksPage from "../pages/admin/Task";
 import InvoiceForm from "../pages/admin/sales/invoiceForm";
+import CreditNoteForm from "../pages/admin/sales/creditNoteForm";
 
 
 
@@ -65,6 +66,9 @@ const AppRoutes = () => {
                <Route path="/invoices/new" element={<InvoiceForm/>} />
               <Route path="sales/payments" element={<Payments/>} />
               <Route path="sales/creditNotes" element={<CreditNotes/>} />
+
+              
+               <Route path="/credit-notes/new" element={<CreditNoteForm/>} />
               <Route path="sales/items" element={<Items/>} />
               <Route path="subscriptions" element={<SubscriptionPage />} />
               <Route path="expenses" element={<ExpensesPage />} />
