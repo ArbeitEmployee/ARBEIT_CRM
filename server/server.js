@@ -8,6 +8,7 @@ import customerRoutes from "./routes/admin/customerRoutes.js";
 import itemRoutes from "./routes/admin/itemRoutes.js";
 import proposalRoutes from "./routes/admin/proposalRoutes.js";
 import estimateRoutes from "./routes/admin/estimateRoutes.js";
+import invoiceRoutes from "./routes/admin/invoiceRoutes.js";
 import subscriptionRoutes from "./routes/admin/subscriptionRoutes.js";
 
 dotenv.config();
@@ -25,6 +26,7 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/admin", itemRoutes);
 app.use("/api/admin", proposalRoutes);
 app.use("/api/admin", estimateRoutes);
+app.use("/api/admin", invoiceRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 
 

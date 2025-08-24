@@ -28,6 +28,7 @@ import ContactsPage from "../pages/admin/Contacts";
 import EstimateForm from "../pages/admin/sales/estimateForm";
 import ProjectsPage from "../pages/admin/Project";
 import TasksPage from "../pages/admin/Task";
+import InvoiceForm from "../pages/admin/sales/invoiceForm";
 
 
 
@@ -61,6 +62,7 @@ const AppRoutes = () => {
               <Route path="sales/estimates" element={<Estimates />} />
                <Route path="/estimates/new" element={<EstimateForm />} />
               <Route path="sales/invoices" element={<Invoices/>} />
+               <Route path="/invoices/new" element={<InvoiceForm/>} />
               <Route path="sales/payments" element={<Payments/>} />
               <Route path="sales/creditNotes" element={<CreditNotes/>} />
               <Route path="sales/items" element={<Items/>} />
