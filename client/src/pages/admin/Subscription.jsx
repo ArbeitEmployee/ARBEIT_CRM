@@ -88,7 +88,7 @@ const SubscriptionPage = () => {
 
   // Search customers by company name
   const searchCustomers = async (searchTerm) => {
-    if (searchTerm.length < 2) {
+    if (searchTerm.length < 1) {
       setCustomerSearchResults([]);
       return;
     }

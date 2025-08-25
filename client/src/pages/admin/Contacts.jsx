@@ -33,15 +33,16 @@ const ContactsPage = () => {
   const [contacts, setContacts] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
   const [stats, setStats] = useState({
-    active: 16,
-    expired: 8,
-    aboutToExpire: 5,
-    recentlyAdded: 5,
+    active: 0,
+    expired: 0,
+    aboutToExpire: 0,
+    recentlyAdded: 0,
     trash: 0
   });
   const [newContact, setNewContact] = useState({
     subject: "",
-    customer: "",
+    customerId: "",
+    customerName: "",
     contractType: "Express Contract",
     contractValue: "",
     startDate: "",
@@ -50,11 +51,15 @@ const ContactsPage = () => {
     signature: "Not Signed"
   });
   const [editingContact, setEditingContact] = useState(null);
-  const [hoveredRow, setHoveredRow] = useState(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importFile, setImportFile] = useState(null);
   const [importProgress, setImportProgress] = useState(null);
   const [importResult, setImportResult] = useState(null);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [customerSearchResults, setCustomerSearchResults] = useState([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [chartData, setChartData] = useState([]);
+  const [contractValueData, setContractValueData] = useState([]);
   const fileInputRef = useRef(null);
 
   const contractTypeOptions = [
@@ -62,139 +67,33 @@ const ContactsPage = () => {
     "Standard Contract",
     "Custom Contract"
   ];
-  const [chartData, setChartData] = useState([
-    { name: 'Express', value: 45, color: '#8884d8' },
-    { name: 'Standard', value: 30, color: '#82ca9d' },
-    { name: 'Custom', value: 25, color: '#ffc658' },
-  ]);
-
-  const contractValueData = [
-    { type: 'Express Contract', value: 45657 },
-    { type: 'Standard Contract', value: 125000 },
-    { type: 'Custom Contract', value: 75000 },
-    { type: 'New Contract', value: 89000 },
-  ];
-  
 
   // Fetch contacts from API
   const fetchContacts = async () => {
     try {
-      // For demo purposes, using dummy data
-      setContacts([
-        {
-          _id: "01",
-          subject: "She was a little bottle that stood...",
-          customer: "RFL_Bilai Khan",
-          contractType: "Express Contract",
-          contractValue: 45857.00,
-          startDate: "20-09-2025",
-          endDate: "20-09-2025",
-          project: "Project Alpha",
-          signature: "Not Signed"
-        },
-        {
-          _id: "02",
-          subject: "Website Development Agreement",
-          customer: "ABC Corporation",
-          contractType: "Standard Contract",
-          contractValue: 125000.00,
-          startDate: "15-08-2025",
-          endDate: "15-08-2026",
-          project: "Corporate Website",
-          signature: "Signed"
-        },
-        {
-          _id: "03",
-          subject: "Marketing Services Contract",
-          customer: "XYZ Enterprises",
-          contractType: "Custom Contract",
-          contractValue: 75000.00,
-          startDate: "01-10-2025",
-          endDate: "01-10-2026",
-          project: "Digital Marketing",
-          signature: "Not Signed"
-        },
-        {
-          _id: "04",
-          subject: "Software License Agreement",
-          customer: "Tech Solutions Ltd",
-          contractType: "Express Contract",
-          contractValue: 35000.00,
-          startDate: "05-09-2025",
-          endDate: "05-09-2026",
-          project: "Software Implementation",
-          signature: "Signed"
-        },
-        {
-          _id: "05",
-          subject: "Consulting Services Agreement",
-          customer: "Global Consulting Inc",
-          contractType: "Standard Contract",
-          contractValue: 89000.00,
-          startDate: "12-11-2025",
-          endDate: "12-11-2026",
-          project: "Business Consulting",
-          signature: "Signed"
-        },
-        {
-          _id: "06",
-          subject: "Maintenance and Support Contract",
-          customer: "Service Providers LLC",
-          contractType: "Custom Contract",
-          contractValue: 45000.00,
-          startDate: "18-07-2025",
-          endDate: "18-07-2026",
-          project: "IT Support",
-          signature: "Not Signed"
-        },
-        {
-          _id: "07",
-          subject: "Product Supply Agreement",
-          customer: "Retail Chain Inc",
-          contractType: "Express Contract",
-          contractValue: 225000.00,
-          startDate: "22-08-2025",
-          endDate: "22-08-2026",
-          project: "Product Supply",
-          signature: "Signed"
-        },
-        {
-          _id: "08",
-          subject: "Partnership Agreement",
-          customer: "Strategic Partners Co",
-          contractType: "Standard Contract",
-          contractValue: 150000.00,
-          startDate: "30-10-2025",
-          endDate: "30-10-2026",
-          project: "Joint Venture",
-          signature: "Not Signed"
-        },
-        {
-          _id: "09",
-          subject: "Non-Disclosure Agreement",
-          customer: "Innovative Solutions Ltd",
-          contractType: "Express Contract",
-          contractValue: 0.00,
-          startDate: "03-09-2025",
-          endDate: "03-09-2028",
-          project: "Confidential Discussion",
-          signature: "Signed"
-        },
-        {
-          _id: "10",
-          subject: "Service Level Agreement",
-          customer: "Cloud Services Inc",
-          contractType: "Custom Contract",
-          contractValue: 65000.00,
-          startDate: "14-12-2025",
-          endDate: "14-12-2026",
-          project: "Cloud Services",
-          signature: "Signed"
-        }
-      ]);
+      const { data } = await axios.get("http://localhost:5000/api/contacts");
+      setContacts(data.contacts || []);
+      setStats(data.stats || {
+        active: 0,
+        expired: 0,
+        aboutToExpire: 0,
+        recentlyAdded: 0,
+        trash: 0
+      });
+      setChartData(data.chartData || []);
+      setContractValueData(data.contractValueData || []);
     } catch (error) {
       console.error("Error fetching contacts:", error);
       setContacts([]);
+      setStats({
+        active: 0,
+        expired: 0,
+        aboutToExpire: 0,
+        recentlyAdded: 0,
+        trash: 0
+      });
+      setChartData([]);
+      setContractValueData([]);
     }
   };
 
@@ -202,11 +101,37 @@ const ContactsPage = () => {
     fetchContacts();
   }, []);
 
+  // Search customers by company name
+  const searchCustomers = async (searchTerm) => {
+    if (searchTerm.length < 2) {
+      setCustomerSearchResults([]);
+      return;
+    }
+    
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/contacts/customers/search?q=${searchTerm}`);
+      setCustomerSearchResults(data);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+      setCustomerSearchResults([]);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (customerSearchTerm) {
+        searchCustomers(customerSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [customerSearchTerm]);
+
   // Search filter
   const filteredContacts = contacts.filter(contact => 
     contact._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     contact.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    contact.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (contact.customer && contact.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
     contact.contractType.toLowerCase().includes(searchTerm.toLowerCase()) ||
     contact.project.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -228,15 +153,34 @@ const ContactsPage = () => {
   };
 
   const handleNewContactChange = (e) => {
-    const { name, value } = e.target;
-    setNewContact(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setNewContact(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+    
+    if (name === "customerName") {
+      setCustomerSearchTerm(value);
+      setShowCustomerDropdown(true);
+    }
+  };
+
+  const handleSelectCustomer = (customer) => {
+    setNewContact(prev => ({
+      ...prev,
+      customerId: customer._id,
+      customerName: customer.company
+    }));
+    setShowCustomerDropdown(false);
+    setCustomerSearchTerm("");
   };
 
   const handleSaveContact = async () => {
     if (isSaving) return;
     
-    if (!newContact.subject || !newContact.customer || !newContact.project) {
-      alert("Please fill in all required fields (Subject, Customer, Project)");
+    if (!newContact.subject || !newContact.customerId || !newContact.project || 
+        !newContact.contractValue || !newContact.startDate || !newContact.endDate) {
+      alert("Please fill in all required fields (Subject, Customer, Project, Contract Value, Start Date, End Date)");
       return;
     }
 
@@ -245,12 +189,14 @@ const ContactsPage = () => {
     try {
       if (editingContact) {
         // Update existing contact
+        await axios.put(`http://localhost:5000/api/contacts/${editingContact._id}`, newContact);
         setShowNewContactForm(false);
         setEditingContact(null);
         fetchContacts();
         alert("Contact updated successfully!");
       } else {
         // Create new contact
+        await axios.post("http://localhost:5000/api/contacts", newContact);
         setShowNewContactForm(false);
         fetchContacts();
         alert("Contact created successfully!");
@@ -259,7 +205,8 @@ const ContactsPage = () => {
       // Reset form
       setNewContact({
         subject: "",
-        customer: "",
+        customerId: "",
+        customerName: "",
         contractType: "Express Contract",
         contractValue: "",
         startDate: "",
@@ -279,7 +226,8 @@ const ContactsPage = () => {
     setEditingContact(contact);
     setNewContact({
       subject: contact.subject,
-      customer: contact.customer,
+      customerId: contact.customerId,
+      customerName: contact.customer ? contact.customer.company : "",
       contractType: contact.contractType,
       contractValue: contact.contractValue,
       startDate: contact.startDate,
@@ -293,11 +241,28 @@ const ContactsPage = () => {
   const handleDeleteContact = async (id) => {
     if (window.confirm("Are you sure you want to delete this contact?")) {
       try {
+        await axios.delete(`http://localhost:5000/api/contacts/${id}`);
         fetchContacts();
         alert("Contact deleted successfully!");
       } catch (error) {
         console.error("Error deleting contact:", error);
         alert(`Error deleting contact: ${error.response?.data?.message || error.message}`);
+      }
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedContacts.length === 0) return;
+    
+    if (window.confirm(`Are you sure you want to delete ${selectedContacts.length} selected contacts?`)) {
+      try {
+        await axios.post("http://localhost:5000/api/contacts/bulk-delete", { ids: selectedContacts });
+        setSelectedContacts([]);
+        fetchContacts();
+        alert("Selected contacts deleted successfully!");
+      } catch (error) {
+        console.error("Error bulk deleting contacts:", error);
+        alert(`Error deleting contacts: ${error.response?.data?.message || error.message}`);
       }
     }
   };
@@ -319,21 +284,36 @@ const ContactsPage = () => {
       return;
     }
 
-    // Simulate import process
-    setImportProgress({ status: 'uploading', message: 'Uploading file...' });
-    
-    setTimeout(() => {
+    const formData = new FormData();
+    formData.append('file', importFile);
+
+    try {
+      setImportProgress({ status: 'uploading', message: 'Uploading file...' });
+      
+      const { data } = await axios.post('http://localhost:5000/api/contacts/import', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
       setImportProgress(null);
       setImportResult({
         success: true,
-        imported: 5,
-        errorCount: 0,
-        errorMessages: []
+        imported: data.importedCount,
+        errorCount: data.errorMessages?.length || 0,
+        errorMessages: data.errorMessages
       });
       
       // Refresh contact list
       fetchContacts();
-    }, 1500);
+    } catch (error) {
+      console.error("Error importing contacts:", error);
+      setImportProgress(null);
+      setImportResult({
+        success: false,
+        message: error.response?.data?.message || error.message || 'Import failed'
+      });
+    }
   };
 
   const closeImportModal = () => {
@@ -351,7 +331,7 @@ const ContactsPage = () => {
     const dataToExport = filteredContacts.map(contact => ({
       ID: contact._id,
       Subject: contact.subject,
-      Customer: contact.customer,
+      Customer: contact.customer ? contact.customer.company : "N/A",
       'Contract Type': contact.contractType,
       'Contract Value': contact.contractValue,
       'Start Date': contact.startDate,
@@ -371,7 +351,7 @@ const ContactsPage = () => {
     const dataToExport = filteredContacts.map(contact => ({
       ID: contact._id,
       Subject: contact.subject,
-      Customer: contact.customer,
+      Customer: contact.customer ? contact.customer.company : "N/A",
       'Contract Type': contact.contractType,
       'Contract Value': contact.contractValue,
       'Start Date': contact.startDate,
@@ -412,7 +392,7 @@ const ContactsPage = () => {
     const tableRows = filteredContacts.map(contact => [
       contact._id,
       contact.subject,
-      contact.customer,
+      contact.customer ? contact.customer.company : "N/A",
       contact.contractType,
       `$${contact.contractValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
       contact.startDate,
@@ -466,7 +446,7 @@ const ContactsPage = () => {
       [
         contact._id,
         contact.subject,
-        contact.customer,
+        contact.customer ? contact.customer.company : "N/A",
         contact.contractType,
         `$${contact.contractValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
         contact.startDate,
@@ -501,7 +481,7 @@ const ContactsPage = () => {
   };
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="bg-gray-100 min-h-screen p-4 ">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">{showNewContactForm ? (editingContact ? "Edit Contact" : "Add New Contact") : "Contracts"}</h1>
@@ -544,12 +524,86 @@ const ContactsPage = () => {
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                <input
-                  type="text"
-                  name="customer"
-                  value={newContact.customer}
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="customerName"
+                    value={newContact.customerName}
+                    onChange={handleNewContactChange}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                    placeholder="Search customer by company name..."
+                  />
+                  {showCustomerDropdown && customerSearchResults.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                      {customerSearchResults.map((customer) => (
+                        <div
+                          key={customer._id}
+                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelectCustomer(customer)}
+                        >
+                          <div className="font-medium">{customer.company}</div>
+                          <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Type *</label>
+                <select
+                  name="contractType"
+                  value={newContact.contractType}
                   onChange={handleNewContactChange}
                   className="w-full border rounded px-3 py-2"
+                >
+                  {contractTypeOptions.map(type => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Value *</label>
+                <input
+                  type="number"
+                  name="contractValue"
+                  value={newContact.contractValue}
+                  onChange={handleNewContactChange}
+                  className="w-full border rounded px-3 py-2"
+                  required
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
+                <input
+                  type="text"
+                  name="startDate"
+                  value={newContact.startDate}
+                  onChange={handleNewContactChange}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="DD-MM-YYYY"
+                  required
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
+                <input
+                  type="text"
+                  name="endDate"
+                  value={newContact.endDate}
+                  onChange={handleNewContactChange}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="DD-MM-YYYY"
                   required
                 />
               </div>
@@ -565,63 +619,9 @@ const ContactsPage = () => {
                   required
                 />
               </div>
-            </div>
-
-            {/* Right Column */}
-            <div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
-                <select
-                  name="contractType"
-                  value={newContact.contractType}
-                  onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
-                >
-                  {contractTypeOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Value (USD)</label>
-                <input
-                  type="number"
-                  name="contractValue"
-                  value={newContact.contractValue}
-                  onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
-                  placeholder="0.00"
-                  step="0.01"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
-                <input
-                  type="text"
-                  name="startDate"
-                  value={newContact.startDate}
-                  onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
-                  placeholder="DD-MM-YYYY"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
-                <input
-                  type="text"
-                  name="endDate"
-                  value={newContact.endDate}
-                  onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
-                  placeholder="DD-MM-YYYY"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Signature Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Signature Status *</label>
                 <select
                   name="signature"
                   value={newContact.signature}
@@ -637,108 +637,51 @@ const ContactsPage = () => {
 
           <div className="flex justify-end space-x-3">
             <button
-              type="button"
               onClick={() => {
                 setShowNewContactForm(false);
                 setEditingContact(null);
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
             >
               Cancel
             </button>
             <button
-              type="button"
               onClick={handleSaveContact}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
-              disabled={!newContact.subject || !newContact.customer || !newContact.project || isSaving}
+              disabled={isSaving}
+              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
             >
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving ? "Saving..." : (editingContact ? "Update Contact" : "Save Contact")}
             </button>
           </div>
         </div>
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-            {/* Active Contracts */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Active</p>
-                  <p className="text-2xl font-bold">{stats.active}</p>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaSyncAlt className="text-blue-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Expired Contracts */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Expired</p>
-                  <p className="text-2xl font-bold">{stats.expired}</p>
-                </div>
-                <div className="bg-red-100 p-3 rounded-full">
-                  <FaSyncAlt className="text-red-600" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            {[
+              { title: "Active", value: stats.active, color: "bg-blue-500" },
+              { title: "Expired", value: stats.expired, color: "bg-red-500" },
+              { title: "About to Expire", value: stats.aboutToExpire, color: "bg-yellow-500" },
+              { title: "Recently Added", value: stats.recentlyAdded, color: "bg-green-500" },
+              { title: "Trash", value: stats.trash, color: "bg-gray-500" }
+            ].map((stat, index) => (
+              <div key={index} className="bg-white shadow rounded-lg p-4 border border-black">
+                <div className="flex items-center">
+                  <div className={`${stat.color} w-4 h-4 rounded-full mr-3`}></div>
+                  <div>
+                    <p className="text-gray-600 text-sm">{stat.title}</p>
+                    <p className="text-2xl font-bold">{stat.value}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* About To Expire Contracts */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">About To Expire</p>
-                  <p className="text-2xl font-bold">{stats.aboutToExpire}</p>
-                </div>
-                <div className="bg-orange-100 p-3 rounded-full">
-                  <FaSyncAlt className="text-orange-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Recently Added Contracts */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Recently Added</p>
-                  <p className="text-2xl font-bold">{stats.recentlyAdded}</p>
-                </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaSyncAlt className="text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Trash Contracts */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Trash</p>
-                  <p className="text-2xl font-bold">{stats.trash}</p>
-                </div>
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <FaSyncAlt className="text-gray-600" />
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
 
-
-
-          {/* Charts Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            {/* Contracts by Type Chart */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <h3 className="font-semibold mb-4">Contracts by Type</h3>
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-2xl font-bold">25</div>
-                <div className="flex items-center text-sm text-gray-500">
-                  <FaFilter className="mr-1" /> Filter
-                </div>
-              </div>
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Contract Type Distribution */}
+            <div className="bg-white shadow rounded-lg p-6 border border-black">
+              <h3 className="text-lg font-semibold mb-4">Contract Type Distribution</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -746,50 +689,32 @@ const ContactsPage = () => {
                       data={chartData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={60}
                       outerRadius={80}
                       fill="#8884d8"
-                      paddingAngle={5}
                       dataKey="value"
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
                     >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip />
-                    <Legend />
+                    <Tooltip formatter={(value) => [`${value} contracts`, 'Count']} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            {/* Contracts Value by Type Chart */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold">Contracts Value by Type(USD)</h3>
-                <div className="flex space-x-2">
-                  <button className="text-sm flex items-center px-2 py-1 border rounded">
-                    New Contract
-                  </button>
-                  <button className="text-sm flex items-center px-2 py-1 border rounded">
-                    Export
-                  </button>
-                </div>
-              </div>
+            {/* Contract Value by Type */}
+            <div className="bg-white shadow rounded-lg p-6 border border-black">
+              <h3 className="text-lg font-semibold mb-4">Contract Value by Type</h3>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={contractValueData}
-                    margin={{
-                      top: 5,
-                      right: 30,
-                      left: 20,
-                      bottom: 5,
-                    }}
-                  >
+                  <BarChart data={contractValueData}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="type" />
-                    <YAxis />
+                    <YAxis 
+                      tickFormatter={(value) => `$${value.toLocaleString()}`}
+                    />
                     <Tooltip 
                       formatter={(value) => [`$${value.toLocaleString()}`, 'Value']}
                     />
@@ -801,67 +726,64 @@ const ContactsPage = () => {
             </div>
           </div>
 
+          {/* Top action buttons */}
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <button 
+                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+                onClick={() => setShowNewContactForm(true)}
+              >
+                <FaPlus /> New Contract
+              </button>
+              <button 
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={handleImportClick}
+              >
+                Import Contracts
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={() => setCompactView(!compactView)}
+              >
+                {compactView ? "<<" : ">>"}
+              </button>
+              <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
+                <FaFilter /> Filters
+              </button>
+            </div>
+          </div>
 
           {/* White box for table */}
-          <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`} 
-               style={{ borderRadius: '8px', border: '1px solid #E0E0E0', backgroundColor: '#F2F4F7' }}>
+          <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                {/* Entries per page */}
-                <div className="flex items-center gap-2">
-                  <select
-                    className="border rounded px-2 py-1 text-sm"
-                    value={entriesPerPage}
-                    onChange={(e) => {
-                      setEntriesPerPage(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
+                {/* Delete Selected button */}
+                {selectedContacts.length > 0 && (
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    onClick={handleBulkDelete}
                   >
-                    <option value={5}>5</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </div>
-                
-                {/* Filter button */}
-                <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
-                  <FaFilter /> Filter
-                </button>
-                
-                {/* Search */}
-                <div className="relative">
-                  <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="border rounded pl-8 pr-3 py-1 text-sm"
-                  />
-                </div>
-              </div>
+                    Delete Selected ({selectedContacts.length})
+                  </button>
+                )}
 
-              <div className="flex items-center gap-2">
-                {/* Arrow button */}
-                <button
-                  className="border px-3 py-1 text-sm rounded flex items-center gap-2"
-                  onClick={() => setCompactView(!compactView)}
+                {/* Entries per page */}
+                <select
+                  className="border rounded px-2 py-1 text-sm"
+                  value={entriesPerPage}
+                  onChange={(e) => {
+                    setEntriesPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
                 >
-                  {compactView ? "<<" : ">>"}
-                </button>
-
-                {/* New Contract button */}
-                <button 
-                  className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
-                  onClick={() => setShowNewContactForm(true)}
-                >
-                  <FaPlus /> New Contract
-                </button>
+                  <option value={5}>5</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
                 
                 {/* Export button */}
                 <div className="relative">
@@ -911,33 +833,27 @@ const ContactsPage = () => {
                   <FaSyncAlt />
                 </button>
               </div>
+
+              {/* Search */}
+              <div className="relative">
+                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                />
+              </div>
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
-              {/* Bulk delete button */}
-              {selectedContacts.length > 0 && (
-                <div className="p-2 border bg-red-50 mb-2 rounded-lg">
-                  <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
-                    onClick={async () => {
-                      if (window.confirm(`Delete ${selectedContacts.length} selected contracts?`)) {
-                        try {
-                          setSelectedContacts([]);
-                          fetchContacts();
-                          alert("Selected contracts deleted!");
-                        } catch {
-                          alert("Error deleting selected contracts.");
-                        }
-                      }
-                    }}
-                  >
-                    Delete Selected ({selectedContacts.length})
-                  </button>
-                </div>
-              )}
-              
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+            <div className="overflow-x-auto ">      
+                
+              <table className="w-full text-sm border-separate border-spacing-y-2 ">
                 <thead>
                   <tr className="text-left">
                     <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
@@ -955,98 +871,164 @@ const ContactsPage = () => {
                     </th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>ID</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Subject</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Type</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Value</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>End Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Signature</th>
+                    {compactView ? (
+                      <>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Type</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Value</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Type</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Value</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>End Date</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Signature</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                      </>
+                    )}
                   </tr>
                 </thead>
-                
                 <tbody>
-                  {currentData.map((contact) => (
-                    <tr 
-                      key={contact._id} 
-                      className="hover:bg-gray-50 relative"
-                      onMouseEnter={() => setHoveredRow(contact._id)}
-                      onMouseLeave={() => setHoveredRow(null)}
-                      style={{ backgroundColor: 'white', color: 'black' }}
-                    >
-                      <td className="p-3 rounded-l-lg border-0">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedContacts.includes(contact._id)}
-                            onChange={() => toggleContactSelection(contact._id)}
-                            className="h-4 w-4"
-                          />
-                          {hoveredRow === contact._id && (
-                            <div className="absolute left-8 flex space-x-1 bg-white shadow-md rounded p-1 z-10">
-                              <button 
-                                onClick={() => handleEditContact(contact)}
-                                className="text-blue-500 hover:text-blue-700 p-1"
-                                title="Edit"
-                              >
-                                <FaEdit size={14} />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteContact(contact._id)}
-                                className="text-red-500 hover:text-red-700 p-1"
-                                title="Delete"
-                              >
-                                <FaTrash size={14} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                  {currentData.length === 0 ? (
+                    <tr>
+                      <td colSpan={compactView ? 7 : 11} className="px-6 py-4 text-center text-gray-500">
+                        {contacts.length === 0 ? "No contacts found. Create your first contact!" : "No matching contacts found."}
                       </td>
-                      <td className="p-3 border-0">#{contact._id}</td>
-                      <td className="p-3 border-0">{contact.subject}</td>
-                      <td className="p-3 border-0">{contact.customer}</td>
-                      <td className="p-3 border-0">{contact.contractType}</td>
-                      <td className="p-3 border-0">{formatCurrency(contact.contractValue)}</td>
-                      <td className="p-3 border-0">{contact.startDate}</td>
-                      <td className="p-3 border-0">{contact.endDate}</td>
-                      <td className="p-3 border-0">{contact.project}</td>
-                      <td className="p-3 rounded-r-lg border-0">{contact.signature}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    currentData.map((contact) => (
+                      <tr
+                        key={contact._id}
+                        className="bg-white shadow rounded-lg hover:bg-gray-50"
+                        style={{ color: 'black' }}
+                      >
+                        <td className="p-3 rounded-l-lg border-0">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedContacts.includes(contact._id)}
+                              onChange={() => toggleContactSelection(contact._id)}
+                              className="h-4 w-4"
+                            />
+                          </div>
+                        </td>
+                        <td className="p-3 border-0">{contact._id.substring(0, 8)}...</td>
+                        <td className="p-3 border-0">{contact.subject}</td>
+                        {compactView ? (
+                          <>
+                            <td className="p-3 border-0">
+                              {contact.customer ? contact.customer.company : "N/A"}
+                            </td>
+                            <td className="p-3 border-0">{contact.contractType}</td>
+                            <td className="p-3 border-0">{formatCurrency(contact.contractValue)}</td>
+                            <td className="p-3 rounded-r-lg border-0">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditContact(contact)}
+                                  className="text-blue-500 hover:text-blue-700"
+                                  title="Edit"
+                                >
+                                  <FaEdit size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteContact(contact._id)}
+                                  className="text-red-500 hover:text-red-700"
+                                  title="Delete"
+                                >
+                                  <FaTrash size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="p-3 border-0">
+                              {contact.customer ? contact.customer.company : "N/A"}
+                            </td>
+                            <td className="p-3 border-0">{contact.contractType}</td>
+                            <td className="p-3 border-0">{formatCurrency(contact.contractValue)}</td>
+                            <td className="p-3 border-0">{contact.startDate}</td>
+                            <td className="p-3 border-0">{contact.endDate}</td>
+                            <td className="p-3 border-0">{contact.project}</td>
+                            <td className="p-3 border-0">
+                              <span className={`px-2 py-1 rounded text-xs ${
+                                contact.signature === "Signed" 
+                                  ? "bg-green-100 text-green-800" 
+                                  : "bg-red-100 text-red-800"
+                              }`}>
+                                {contact.signature}
+                              </span>
+                            </td>
+                            <td className="p-3 rounded-r-lg border-0">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditContact(contact)}
+                                  className="text-blue-500 hover:text-blue-700"
+                                  title="Edit"
+                                >
+                                  <FaEdit size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteContact(contact._id)}
+                                  className="text-red-500 hover:text-red-700"
+                                  title="Delete"
+                                >
+                                  <FaTrash size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <span>
-                Showing {startIndex + 1} to{" "}
-                {Math.min(startIndex + entriesPerPage, filteredContacts.length)} of{" "}
-                {filteredContacts.length} entries
-              </span>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mt-4">
+              <div>
+                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredContacts.length)} of {filteredContacts.length} entries
+              </div>
+              <div className="flex items-center gap-1">
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="px-3 py-1 border rounded"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => prev - 1)}
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    className={`px-3 py-1 border rounded ${
-                      currentPage === i + 1 ? "bg-gray-200" : ""
-                    }`}
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`px-3 py-1 border rounded ${currentPage === pageNum ? 'bg-black text-white' : ''}`}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="px-3 py-1 border rounded"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
                 >
                   Next
                 </button>
@@ -1056,108 +1038,93 @@ const ContactsPage = () => {
         </>
       )}
 
-      {/* Import Contacts Modal */}
+      {/* Import Modal */}
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Import Contracts</h2>
+              <h3 className="text-lg font-semibold">Import Contracts</h3>
               <button onClick={closeImportModal} className="text-gray-500 hover:text-gray-700">
                 <FaTimes />
               </button>
             </div>
-
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">
-                Your CSV data should include <strong>Subject</strong>, <strong>Customer</strong>, and <strong>Project</strong> columns.
-              </p>
-              
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                  className="hidden"
-                  id="import-file"
-                />
-                <label
-                  htmlFor="import-file"
-                  className="cursor-pointer block"
-                >
-                  {importFile ? (
-                    <div className="text-green-600">
-                      <p>Selected file: {importFile.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {(importFile.size / 1024).toFixed(2)} KB
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <HiOutlineDownload className="mx-auto text-3xl text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">
-                        Drag and drop your CSV file here, or click to browse
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Only CSV files are accepted
-                      </p>
-                    </>
-                  )}
-                </label>
-              </div>
-            </div>
-
-            {importProgress && (
-              <div className="mb-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                <p>{importProgress.message}</p>
-              </div>
-            )}
-
-            {importResult && (
-              <div className={`mb-4 p-3 rounded text-sm ${
-                  importResult.success && (!importResult.errorCount || importResult.errorCount === 0)
-                    ? 'bg-green-50 text-green-800'
-                    : 'bg-red-50 text-red-800'
-                }`}>
+            
+            {!importResult ? (
+              <>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Upload an Excel or CSV file with your contract data. The file should include columns for:
+                    Subject, Customer ID, Contract Type, Contract Value, Start Date, End Date, Project, and Signature Status.
+                  </p>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept=".xlsx,.xls,.csv"
+                    className="w-full border rounded p-2"
+                  />
+                </div>
+                
+                {importProgress && (
+                  <div className="mb-4 p-2 bg-blue-50 text-blue-700 rounded text-sm">
+                    {importProgress.message}
+                  </div>
+                )}
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleImportSubmit}
+                    disabled={!importFile || importProgress}
+                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    Import
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className={`p-4 rounded ${importResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                 {importResult.success ? (
                   <>
-                    <p>Import completed with {importResult.imported} successful and {importResult.errorCount} failed.</p>
+                    <p className="font-medium">Import completed successfully!</p>
+                    <p className="mt-2">{importResult.imported} contracts imported.</p>
                     {importResult.errorCount > 0 && (
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-sm">Show error details</summary>
-                        <div className="bg-white p-2 mt-1 rounded border text-xs max-h-32 overflow-auto">
-                          {importResult.errorMessages?.map((msg, i) => (
-                            <p key={i}>{msg}</p>
+                      <p className="mt-2">{importResult.errorCount} rows had errors and were skipped.</p>
+                    )}
+                    
+                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
+                      <div className="mt-3">
+                        <p className="font-medium">Error details:</p>
+                        <ul className="mt-1 text-sm max-h-40 overflow-auto">
+                          {importResult.errorMessages.map((error, index) => (
+                            <li key={index} className="mt-1">• {error}</li>
                           ))}
-                        </div>
-                      </details>
+                        </ul>
+                      </div>
                     )}
                   </>
                 ) : (
-                  <p>Error: {importResult.message}</p>
+                  <>
+                    <p className="font-medium">Import failed!</p>
+                    <p className="mt-2">{importResult.message}</p>
+                  </>
                 )}
+                
+                <div className="mt-4 flex justify-end">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
             )}
-
-            <div className="flex justify-end space-x-3 mt-4">
-              <button
-                onClick={closeImportModal}
-                className="px-4 py-2 border rounded text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleImportSubmit}
-                disabled={!importFile || importProgress}
-                className={`px-4 py-2 rounded text-sm ${
-                  !importFile || importProgress
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-black text-white'
-                }`}
-              >
-                {importProgress ? 'Importing...' : 'Import'}
-              </button>
-            </div>
           </div>
         </div>
       )}
