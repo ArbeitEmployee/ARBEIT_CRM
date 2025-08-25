@@ -869,16 +869,19 @@ const processBatchPayments = async () => {
                   required
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Payment Mode *</label>
-                <input
-                  type="text"
-                  value={batchPaymentData.paymentMode}
-                  onChange={(e) => setBatchPaymentData({...batchPaymentData, paymentMode: e.target.value})}
-                  className="border rounded w-full p-2"
-                  placeholder="e.g., Bank Transfer, Credit Card"
-                  required
-                />
+             <div>
+            <label className="block text-sm font-medium mb-1">Payment Mode *</label>
+              <select
+                value={batchPaymentData.paymentMode}
+                onChange={(e) => setBatchPaymentData({...batchPaymentData, paymentMode: e.target.value})}
+                className="border rounded w-full p-2"
+                required
+              >
+                <option value="">Select Payment Mode</option>
+                <option value="Bank">Bank Transfer</option>
+                <option value="Stripe Checkout">Stripe Checkout</option>
+              </select>
+             
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Transaction ID</label>
