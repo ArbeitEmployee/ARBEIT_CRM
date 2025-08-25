@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FaPlus, FaFilter, FaSyncAlt, FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import { FaPlus, FaFilter, FaSyncAlt, FaEye, FaEdit, FaTrash, FaSearch, FaChevronRight, FaTimes } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -16,10 +16,9 @@ const Estimates = () => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [estimates, setEstimates] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredId, setHoveredId] = useState(null);
+  const [selectedEstimates, setSelectedEstimates] = useState([]);
   const [viewEstimate, setViewEstimate] = useState(null);
   const [editEstimate, setEditEstimate] = useState(null);
-  const [searchInput, setSearchInput] = useState("");
   const [formData, setFormData] = useState({ 
     customer: "", 
     status: "Draft" 
@@ -40,6 +39,15 @@ const Estimates = () => {
   useEffect(() => {
     fetchEstimates();
   }, []);
+
+  // Toggle estimate selection
+  const toggleEstimateSelection = (id) => {
+    if (selectedEstimates.includes(id)) {
+      setSelectedEstimates(selectedEstimates.filter(estimateId => estimateId !== id));
+    } else {
+      setSelectedEstimates([...selectedEstimates, id]);
+    }
+  };
 
   // Export handler
   const handleExport = (type) => {
@@ -127,8 +135,28 @@ const Estimates = () => {
     try {
       await axios.delete(`http://localhost:5000/api/admin/estimates/${id}`);
       setEstimates(estimates.filter((e) => e._id !== id));
+      // Remove from selected if it was selected
+      setSelectedEstimates(selectedEstimates.filter(estimateId => estimateId !== id));
     } catch (err) {
       console.error("Error deleting estimate", err);
+    }
+  };
+
+  // Bulk delete estimates
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedEstimates.length} estimates?`)) return;
+    try {
+      await Promise.all(
+        selectedEstimates.map(id => 
+          axios.delete(`http://localhost:5000/api/admin/estimates/${id}`)
+        )
+      );
+      setEstimates(estimates.filter(e => !selectedEstimates.includes(e._id)));
+      setSelectedEstimates([]);
+      alert("Selected estimates deleted successfully!");
+    } catch (err) {
+      console.error("Error deleting estimates", err);
+      alert("Error deleting selected estimates.");
     }
   };
 
@@ -147,7 +175,7 @@ const Estimates = () => {
   const filteredEstimates = estimates.filter(
     (estimate) =>
       estimate.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      estimate.estimateNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (estimate.estimateNumber || "EST-" + estimate._id.slice(-6).toUpperCase()).toLowerCase().includes(searchTerm.toLowerCase()) ||
       estimate.reference?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -157,18 +185,53 @@ const Estimates = () => {
   const currentEstimates = filteredEstimates.slice(indexOfFirstEstimate, indexOfLastEstimate);
   const totalPages = Math.ceil(filteredEstimates.length / entriesPerPage);
 
+  // Get status color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Draft": return "bg-gray-100 text-gray-800";
+      case "Sent": return "bg-blue-100 text-blue-800";
+      case "Approved": return "bg-green-100 text-green-800";
+      case "Rejected": return "bg-red-100 text-red-800";
+      case "Expired": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
   if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading estimates...</div>;
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Estimates</h1>
+        <div className="flex items-center text-gray-600">
+          <span>Dashboard</span>
+          <FaChevronRight className="mx-1 text-xs" />
+          <span>Estimates</span>
+        </div>
+      </div>
+
       {/* Top action buttons */}
-      <div className="flex items-center justify-between mt-11 flex-wrap gap-2">
-        <button
-          onClick={() => navigate("../estimates/new")}
-          className="bg-black text-white px-3 py-1 text-sm rounded flex items-center gap-2"
-        >
-          <FaPlus /> New Estimate
-        </button>
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+        <div className="flex items-center gap-2">
+          <button 
+            className="px-3 py-1 text-sm rounded flex items-center gap-2" 
+            style={{ backgroundColor: '#333333', color: 'white' }}
+            onClick={() => navigate("../estimates/new")}
+          >
+            <FaPlus /> New Estimate
+          </button>
+          
+          {/* Bulk delete button */}
+          {selectedEstimates.length > 0 && (
+            <button
+              className="bg-red-600 text-white px-3 py-1 rounded"
+              onClick={handleBulkDelete}
+            >
+              Delete Selected ({selectedEstimates.length})
+            </button>
+          )}
+        </div>
         <div className="flex items-center gap-2">
           <button
             className="border px-3 py-1 text-sm rounded flex items-center gap-2"
@@ -176,21 +239,15 @@ const Estimates = () => {
           >
             {compactView ? "<<" : ">>"}
           </button>
-          <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
-            <FaFilter /> Filters
-          </button>
         </div>
       </div>
 
-      {/* White box */}
-      <div
-        className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
-          compactView ? "w-1/2" : "w-full"
-        }`}
-      >
-        {/* Table controls */}
+      {/* White box for table */}
+      <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+        {/* Controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
+            {/* Entries per page */}
             <select
               className="border rounded px-2 py-1 text-sm"
               value={entriesPerPage}
@@ -199,13 +256,14 @@ const Estimates = () => {
                 setCurrentPage(1);
               }}
             >
+              <option value={5}>5</option>
               <option value={10}>10</option>
               <option value={25}>25</option>
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-
-            {/* Export */}
+            
+            {/* Export button */}
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu((prev) => !prev)}
@@ -213,22 +271,39 @@ const Estimates = () => {
               >
                 <HiOutlineDownload /> Export
               </button>
+
+              {/* Dropdown menu */}
               {showExportMenu && (
                 <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
-                  {["Excel", "CSV", "PDF", "Print"].map((item) => (
-                    <button
-                      key={item}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                      onClick={() => handleExport(item)}
-                    >
-                      {item}
-                    </button>
-                  ))}
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={() => handleExport("Excel")}
+                  >
+                    Excel
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={() => handleExport("CSV")}
+                  >
+                    CSV
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={() => handleExport("PDF")}
+                  >
+                    PDF
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={() => handleExport("Print")}
+                  >
+                    Print
+                  </button>
                 </div>
               )}
             </div>
 
-            {/* Refresh */}
+            {/* Refresh button */}
             <button
               className="border px-2 py-1 rounded text-sm flex items-center"
               onClick={fetchEstimates}
@@ -239,50 +314,57 @@ const Estimates = () => {
 
           {/* Search */}
           <div className="relative">
-            <div className="relative flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Search estimates..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="border rounded pl-2 pr-3 py-1 text-sm"
-              />
-              <button
-                onClick={() => {
-                  setSearchTerm(searchInput);
-                  setCurrentPage(1);
-                }}
-                className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
-              >
-                Search
-              </button>
-            </div>
+            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="border rounded pl-8 pr-3 py-1 text-sm"
+            />
           </div>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-2 border">Estimate#</th>
-                <th className="p-2 border">Amount</th>
+              <tr className="text-left">
+                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedEstimates.length === currentEstimates.length && currentEstimates.length > 0}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedEstimates(currentEstimates.map(e => e._id));
+                      } else {
+                        setSelectedEstimates([]);
+                      }
+                    }}
+                  />
+                </th>
+                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Estimate#</th>
+                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                 {compactView ? (
                   <>
-                    <th className="p-2 border">Customer</th>
-                    <th className="p-2 border">Date</th>
-                    <th className="p-2 border">Status</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                   </>
                 ) : (
                   <>
-                    <th className="p-2 border">Total Tax</th>
-                    <th className="p-2 border">Customer</th>
-                    <th className="p-2 border">Project</th>
-                    <th className="p-2 border">Tags</th>
-                    <th className="p-2 border">Date</th>
-                    <th className="p-2 border">Expiry Date</th>
-                    <th className="p-2 border">Reference</th>
-                    <th className="p-2 border">Status</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Total Tax</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Expiry Date</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                   </>
                 )}
               </tr>
@@ -310,91 +392,111 @@ const Estimates = () => {
                   return (
                     <tr
                       key={estimate._id}
-                      className="hover:bg-gray-50 cursor-pointer relative"
-                      onMouseEnter={() => setHoveredId(estimate._id)}
-                      onMouseLeave={() => setHoveredId(null)}
+                      className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                      style={{ color: 'black' }}
                     >
-                      <td className="p-2 border font-mono relative">
-                        {displayEstimateNumber}
-                        {hoveredId === estimate._id && (
-                          <div className="absolute left-0 top-full mt-1 bg-white border rounded shadow-md p-1 flex gap-2 text-xs z-10">
-                            <button
-                              onClick={() => setViewEstimate(estimate)}
-                              className="px-2 py-1 flex items-center gap-1 hover:bg-gray-100 rounded"
-                            >
-                              <FaEye /> View
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditEstimate(estimate);
-                                setFormData({
-                                  customer: estimate.customer || "",
-                                  status: estimate.status || "Draft",
-                                });
-                              }}
-                              className="px-2 py-1 flex items-center gap-1 hover:bg-gray-100 rounded"
-                            >
-                              <FaEdit /> Update
-                            </button>
-                            <button
-                              onClick={() => handleDelete(estimate._id)}
-                              className="px-2 py-1 flex items-center gap-1 text-red-600 hover:bg-gray-100 rounded"
-                            >
-                              <FaTrash /> Delete
-                            </button>
-                          </div>
-                        )}
+                      <td className="p-3 rounded-l-lg border-0">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedEstimates.includes(estimate._id)}
+                            onChange={() => toggleEstimateSelection(estimate._id)}
+                            className="h-4 w-4"
+                          />
+                        </div>
                       </td>
-                      <td className="p-2 border text-right">{displayAmount}</td>
+                      <td className="p-3 border-0 font-mono">{displayEstimateNumber}</td>
+                      <td className="p-3 border-0">{estimate.customer || "-"}</td>
                       {compactView ? (
                         <>
-                          <td className="p-2 border">{estimate.customer || "-"}</td>
-                          <td className="p-2 border">{formatDate(estimate.estimateDate)}</td>
-                          <td className="p-2 border">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                !estimate.status || estimate.status === "Draft"
-                                  ? "bg-gray-100 text-gray-800"
-                                  : estimate.status === "Approved"
-                                  ? "bg-green-100 text-green-800"
-                                  : estimate.status === "Rejected"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-blue-100 text-blue-800"
-                              }`}
-                            >
+                          <td className="p-3 border-0 text-right">{displayAmount}</td>
+                          <td className="p-3 border-0">{formatDate(estimate.estimateDate)}</td>
+                          <td className="p-3 border-0">
+                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(estimate.status)}`}>
                               {estimate.status || "Draft"}
                             </span>
+                          </td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => setViewEstimate(estimate)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="View"
+                              >
+                                <FaEye size={16} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditEstimate(estimate);
+                                  setFormData({
+                                    customer: estimate.customer || "",
+                                    status: estimate.status || "Draft",
+                                  });
+                                }}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="Edit"
+                              >
+                                <FaEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(estimate._id)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Delete"
+                              >
+                                <FaTrash size={16} />
+                              </button>
+                            </div>
                           </td>
                         </>
                       ) : (
                         <>
-                          <td className="p-2 border text-right">
+                          <td className="p-3 border-0 text-right">{displayAmount}</td>
+                          <td className="p-3 border-0 text-right">
                             {new Intl.NumberFormat("en-US", {
                               style: "currency",
                               currency: estimate.currency || "USD",
                               minimumFractionDigits: 2,
                             }).format(totalTax)}
                           </td>
-                          <td className="p-2 border">{estimate.customer || "-"}</td>
-                          <td className="p-2 border">{estimate.reference || "-"}</td>
-                          <td className="p-2 border">{estimate.tags || "-"}</td>
-                          <td className="p-2 border">{formatDate(estimate.estimateDate)}</td>
-                          <td className="p-2 border">{formatDate(estimate.expiryDate)}</td>
-                          <td className="p-2 border">{estimate.reference || "-"}</td>
-                          <td className="p-2 border">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                !estimate.status || estimate.status === "Draft"
-                                  ? "bg-gray-100 text-gray-800"
-                                  : estimate.status === "Approved"
-                                  ? "bg-green-100 text-green-800"
-                                  : estimate.status === "Rejected"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-blue-100 text-blue-800"
-                              }`}
-                            >
+                          <td className="p-3 border-0">{estimate.reference || "-"}</td>
+                          <td className="p-3 border-0">{estimate.tags || "-"}</td>
+                          <td className="p-3 border-0">{formatDate(estimate.estimateDate)}</td>
+                          <td className="p-3 border-0">{formatDate(estimate.expiryDate)}</td>
+                          <td className="p-3 border-0">
+                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(estimate.status)}`}>
                               {estimate.status || "Draft"}
                             </span>
+                          </td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => setViewEstimate(estimate)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="View"
+                              >
+                                <FaEye size={16} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditEstimate(estimate);
+                                  setFormData({
+                                    customer: estimate.customer || "",
+                                    status: estimate.status || "Draft",
+                                  });
+                                }}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="Edit"
+                              >
+                                <FaEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(estimate._id)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Delete"
+                              >
+                                <FaTrash size={16} />
+                              </button>
+                            </div>
                           </td>
                         </>
                       )}
@@ -403,7 +505,10 @@ const Estimates = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={compactView ? 5 : 10} className="p-4 text-center text-gray-500">
+                  <td 
+                    colSpan={compactView ? 7 : 11} 
+                    className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
+                  >
                     No estimates found
                   </td>
                 </tr>
@@ -429,7 +534,9 @@ const Estimates = () => {
             {Array.from({ length: totalPages }, (_, i) => (
               <button
                 key={i}
-                className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-gray-200" : ""}`}
+                className={`px-3 py-1 border rounded ${
+                  currentPage === i + 1 ? "bg-gray-200" : ""
+                }`}
                 onClick={() => setCurrentPage(i + 1)}
               >
                 {i + 1}
@@ -448,45 +555,95 @@ const Estimates = () => {
 
       {/* View & Edit Modals */}
       {viewEstimate && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded p-4 w-96 shadow-lg">
-            <h2 className="text-lg font-bold mb-2">Estimate Details</h2>
-            <p><b>Estimate #:</b> {viewEstimate.estimateNumber}</p>
-            <p><b>Customer:</b> {viewEstimate.customer}</p>
-            <p><b>Reference:</b> {viewEstimate.reference || "-"}</p>
-            <p><b>Amount:</b> {viewEstimate.total}</p>
-            <p><b>Status:</b> {viewEstimate.status}</p>
-            <div className="mt-4 flex justify-end">
-              <button onClick={() => setViewEstimate(null)} className="px-3 py-1 bg-gray-200 rounded">Close</button>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Estimate Details</h2>
+              <button 
+                onClick={() => setViewEstimate(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <p><b>Estimate #:</b> {viewEstimate.estimateNumber || "EST-" + viewEstimate._id.slice(-6).toUpperCase()}</p>
+              <p><b>Customer:</b> {viewEstimate.customer || "-"}</p>
+              <p><b>Reference:</b> {viewEstimate.reference || "-"}</p>
+              <p><b>Amount:</b> {new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: viewEstimate.currency || "USD",
+                minimumFractionDigits: 2,
+              }).format(viewEstimate.total || 0)}</p>
+              <p><b>Status:</b> <span className={`px-2 py-1 rounded text-xs ${getStatusColor(viewEstimate.status)}`}>
+                {viewEstimate.status || "Draft"}
+              </span></p>
+              {viewEstimate.estimateDate && <p><b>Date:</b> {new Date(viewEstimate.estimateDate).toLocaleDateString()}</p>}
+              {viewEstimate.expiryDate && <p><b>Expiry Date:</b> {new Date(viewEstimate.expiryDate).toLocaleDateString()}</p>}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button 
+                onClick={() => setViewEstimate(null)} 
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {editEstimate && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded p-4 w-96 shadow-lg">
-            <h2 className="text-lg font-bold mb-2">Update Estimate</h2>
-            <input
-              type="text"
-              value={formData.customer}
-              onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-              className="border w-full p-2 mb-2 rounded"
-              placeholder="Customer Name"
-            />
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="border w-full p-2 mb-2 rounded"
-            >
-              <option value="Draft">Draft</option>
-              <option value="Pending">Pending</option>
-              <option value="Approved">Approved</option>
-              <option value="Rejected">Rejected</option>
-            </select>
-            <div className="mt-4 flex justify-end gap-2">
-              <button onClick={() => setEditEstimate(null)} className="px-3 py-1 bg-gray-200 rounded">Cancel</button>
-              <button onClick={handleUpdate} className="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Update Estimate</h2>
+              <button 
+                onClick={() => setEditEstimate(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                <input
+                  type="text"
+                  value={formData.customer}
+                  onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Customer Name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Sent">Sent</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Rejected">Rejected</option>
+                  <option value="Expired">Expired</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button 
+                onClick={() => setEditEstimate(null)} 
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleUpdate} 
+                className="px-4 py-2 bg-black text-white rounded text-sm"
+              >
+                Update Estimate
+              </button>
             </div>
           </div>
         </div>

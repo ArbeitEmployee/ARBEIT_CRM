@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { FaPlus, FaFilter, FaSyncAlt, FaEye, FaEdit, FaTrash } from "react-icons/fa";
+import { FaPlus, FaFilter, FaSyncAlt, FaEye, FaEdit, FaTrash, FaChevronRight, FaTimes, FaSearch, FaFileInvoiceDollar, FaMoneyCheckAlt, FaClock, FaExclamationTriangle, FaFileAlt, FaMoneyBillWave } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -24,6 +24,27 @@ const Invoices = () => {
     customer: "", 
     status: "Draft" 
   });
+  const [showBatchPayment, setShowBatchPayment] = useState(false);
+  const [batchPaymentData, setBatchPaymentData] = useState({
+    paymentDate: new Date().toISOString().split('T')[0],
+    paymentMode: "",
+    transactionId: "",
+    sendEmail: false
+  });
+  const [paymentAmounts, setPaymentAmounts] = useState({});
+  const [batchPaymentError, setBatchPaymentError] = useState("");
+  const [batchPaymentLoading, setBatchPaymentLoading] = useState(false);
+  
+  // Stats state
+  const [stats, setStats] = useState({
+    totalInvoices: 0,
+    paidInvoices: 0,
+    overdueInvoices: 0,
+    draftInvoices: 0,
+    pendingInvoices: 0,
+    partiallypaidInvoices: 0,
+    unpaidInvoices: 0
+  });
 
   // Fetch invoices
   const fetchInvoices = async () => {
@@ -31,6 +52,23 @@ const Invoices = () => {
     try {
       const { data } = await axios.get("http://localhost:5000/api/admin/invoices");
       setInvoices(data.data || data);
+      
+      // Calculate stats
+      const total = data.data?.length || data.length || 0;
+      const paid = (data.data || data).filter(i => i.status === "Paid").length;
+      const unpaid = (data.data || data).filter(i => i.status === "Unpaid").length;
+      const overdue = (data.data || data).filter(i => i.status === "Overdue").length;
+      const draft = (data.data || data).filter(i => i.status === "Draft").length;
+      const partiallypaid = (data.data || data).filter(i => i.status === "Partiallypaid").length;
+      
+      setStats({
+        totalInvoices: total,
+        paidInvoices: paid,
+        unpaidInvoices: unpaid,
+        overdueInvoices: overdue,
+        draftInvoices: draft,
+        partiallypaidInvoices: partiallypaid
+      });
     } catch (err) {
       console.error("Error fetching invoices", err);
     }
@@ -40,6 +78,128 @@ const Invoices = () => {
   useEffect(() => {
     fetchInvoices();
   }, []);
+
+  // Get status color
+  const getStatusColor = (status) => {
+    switch(status) {
+      case "Paid": return "bg-green-100 text-green-800";
+      case "Overdue": return "bg-red-100 text-red-800";
+      case "Draft": return "bg-gray-100 text-gray-800";
+      case "Unpaid": return "bg-blue-100 text-blue-800";
+      case "Partiallypaid": return "bg-yellow-100 text-yellow-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  // Get unpaid and Partiallypaid invoices for batch payment
+  const getPayableInvoices = () => {
+    return invoices.filter(invoice => 
+      invoice.status === "Unpaid" || invoice.status === "Partiallypaid" || invoice.status === "Overdue"
+    );
+  };
+
+  // Handle batch payment amount change
+  const handlePaymentAmountChange = (invoiceId, amount) => {
+    const numAmount = parseFloat(amount) || 0;
+    
+    // Get the invoice to validate amount
+    const invoice = invoices.find(inv => inv._id === invoiceId);
+    if (invoice) {
+      const balanceDue = invoice.total - (invoice.paidAmount || 0);
+      
+      // Ensure payment doesn't exceed balance due
+      if (numAmount > balanceDue) {
+        setPaymentAmounts(prev => ({
+          ...prev,
+          [invoiceId]: balanceDue
+        }));
+        return;
+      }
+    }
+    
+    setPaymentAmounts(prev => ({
+      ...prev,
+      [invoiceId]: numAmount
+    }));
+  };
+
+ // Process batch payments
+const processBatchPayments = async () => {
+  setBatchPaymentLoading(true);
+  setBatchPaymentError("");
+  
+  try {
+    const payableInvoices = getPayableInvoices();
+    let hasValidPayment = false;
+    
+    // Check if at least one payment is being made
+    for (const invoice of payableInvoices) {
+      if (paymentAmounts[invoice._id] > 0) {
+        hasValidPayment = true;
+        break;
+      }
+    }
+    
+    if (!hasValidPayment) {
+      setBatchPaymentError("Please enter at least one payment amount.");
+      setBatchPaymentLoading(false);
+      return;
+    }
+    
+    // Validate payment mode
+    if (!batchPaymentData.paymentMode.trim()) {
+      setBatchPaymentError("Payment mode is required.");
+      setBatchPaymentLoading(false);
+      return;
+    }
+    
+    for (const invoice of payableInvoices) {
+      const paymentAmount = paymentAmounts[invoice._id] || 0;
+      
+      if (paymentAmount > 0) {
+        // Calculate new status
+        let newStatus = invoice.status;
+        const balanceDue = invoice.total - (invoice.paidAmount || 0);
+        
+        if (paymentAmount >= balanceDue) {
+          newStatus = "Paid";
+        } else if (paymentAmount > 0) {
+          newStatus = "Partiallypaid";
+        }
+        
+        // Prepare the complete update data
+        const updateData = {
+          ...invoice, // Include all existing invoice data
+          paidAmount: (invoice.paidAmount || 0) + paymentAmount,
+          status: newStatus,
+          paymentDate: batchPaymentData.paymentDate,
+          paymentMode: batchPaymentData.paymentMode,
+          transactionId: batchPaymentData.transactionId
+        };
+        
+        // Remove MongoDB-specific fields that might cause issues
+        delete updateData._id;
+        delete updateData.__v;
+        delete updateData.createdAt;
+        delete updateData.updatedAt;
+        
+        // Update invoice
+        await axios.put(`http://localhost:5000/api/admin/invoices/${invoice._id}`, updateData);
+      }
+    }
+    
+    // Refresh data
+    fetchInvoices();
+    setShowBatchPayment(false);
+    setPaymentAmounts({});
+    alert("Payments processed successfully!");
+    
+  } catch (err) {
+    console.error("Error processing batch payments", err);
+    setBatchPaymentError("Error processing payments. Please try again.");
+  }
+  setBatchPaymentLoading(false);
+};
 
   // Export handler
   const handleExport = (type) => {
@@ -127,6 +287,7 @@ const Invoices = () => {
     try {
       await axios.delete(`http://localhost:5000/api/admin/invoices/${id}`);
       setInvoices(invoices.filter((i) => i._id !== id));
+      fetchInvoices(); // Refresh stats
     } catch (err) {
       console.error("Error deleting invoice", err);
     }
@@ -161,14 +322,119 @@ const Invoices = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Invoices</h1>
+        <div className="flex items-center text-gray-600">
+          <span>Dashboard</span>
+          <FaChevronRight className="mx-1 text-xs" />
+          <span>Invoices</span>
+        </div>
+      </div>
+
+      {/* Stats Cards - All in one row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+        {/* Total Invoices */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Total Invoices</p>
+              <p className="text-2xl font-bold">{stats.totalInvoices}</p>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-full">
+              <FaFileInvoiceDollar className="text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Paid Invoices */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Paid</p>
+              <p className="text-2xl font-bold">{stats.paidInvoices}</p>
+            </div>
+            <div className="bg-green-100 p-3 rounded-full">
+              <FaMoneyCheckAlt className="text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Unpaid Invoices */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Unpaid</p>
+              <p className="text-2xl font-bold">{stats.unpaidInvoices}</p>
+            </div>
+            <div className="bg-purple-100 p-3 rounded-full">
+              <FaClock className="text-purple-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Partiallypaid Invoices */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Partiallypaid</p>
+              <p className="text-2xl font-bold">{stats.partiallypaidInvoices}</p>
+            </div>
+            <div className="bg-yellow-100 p-3 rounded-full">
+              <FaMoneyBillWave className="text-yellow-600" />
+            </div>
+          </div>
+        </div>
+     
+        {/* Overdue Invoices */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Overdue</p>
+              <p className="text-2xl font-bold">{stats.overdueInvoices}</p>
+            </div>
+            <div className="bg-red-100 p-3 rounded-full">
+              <FaExclamationTriangle className="text-red-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Draft Invoices */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Draft</p>
+              <p className="text-2xl font-bold">{stats.draftInvoices}</p>
+            </div>
+            <div className="bg-gray-100 p-3 rounded-full">
+              <FaFileAlt className="text-gray-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+      
       {/* Top action buttons */}
-      <div className="flex items-center justify-between mt-11 flex-wrap gap-2">
-        <button
-          onClick={() => navigate("../invoices/new")}
-          className="bg-black text-white px-3 py-1 text-sm rounded flex items-center gap-2"
-        >
-          <FaPlus /> New Invoice
-        </button>
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => navigate("../invoices/new")}
+            className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+          >
+            <FaPlus /> New Invoice
+          </button>
+          
+          {/* Batch Payment Button */}
+          <button 
+            onClick={() => {
+              setShowBatchPayment(true);
+              setBatchPaymentError("");
+              setPaymentAmounts({});
+            }}
+            className="px-3 py-1 text-sm rounded flex items-center gap-2 bg-blue-600 text-white"
+          >
+            <FaMoneyCheckAlt /> Batch Payment
+          </button>
+        </div>
         <div className="flex items-center gap-2">
           <button
             className="border px-3 py-1 text-sm rounded flex items-center gap-2"
@@ -176,18 +442,11 @@ const Invoices = () => {
           >
             {compactView ? "<<" : ">>"}
           </button>
-          <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
-            <FaFilter /> Filters
-          </button>
         </div>
       </div>
 
       {/* White box */}
-      <div
-        className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
-          compactView ? "w-1/2" : "w-full"
-        }`}
-      >
+      <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
         {/* Table controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
@@ -262,27 +521,29 @@ const Invoices = () => {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-2 border">Invoice#</th>
-                <th className="p-2 border">Amount</th>
+              <tr className="text-left">
+                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Invoice#</th>
+                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
                 {compactView ? (
                   <>
-                    <th className="p-2 border">Customer</th>
-                    <th className="p-2 border">Date</th>
-                    <th className="p-2 border">Status</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                   </>
                 ) : (
                   <>
-                    <th className="p-2 border">Total Tax</th>
-                    <th className="p-2 border">Customer</th>
-                    <th className="p-2 border">Project</th>
-                    <th className="p-2 border">Tags</th>
-                    <th className="p-2 border">Date</th>
-                    <th className="p-2 border">Due Date</th>
-                    <th className="p-2 border">Reference</th>
-                    <th className="p-2 border">Status</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Total Tax</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Due Date</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Reference</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                   </>
                 )}
               </tr>
@@ -310,91 +571,106 @@ const Invoices = () => {
                   return (
                     <tr
                       key={invoice._id}
-                      className="hover:bg-gray-50 cursor-pointer relative"
+                      className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                      style={{ color: 'black' }}
                       onMouseEnter={() => setHoveredId(invoice._id)}
                       onMouseLeave={() => setHoveredId(null)}
                     >
-                      <td className="p-2 border font-mono relative">
+                      <td className="p-3 rounded-l-lg border-0 font-mono relative">
                         {displayInvoiceNumber}
-                        {hoveredId === invoice._id && (
-                          <div className="absolute left-0 top-full mt-1 bg-white border rounded shadow-md p-1 flex gap-2 text-xs z-10">
-                            <button
-                              onClick={() => setViewInvoice(invoice)}
-                              className="px-2 py-1 flex items-center gap-1 hover:bg-gray-100 rounded"
-                            >
-                              <FaEye /> View
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditInvoice(invoice);
-                                setFormData({
-                                  customer: invoice.customer || "",
-                                  status: invoice.status || "Draft",
-                                });
-                              }}
-                              className="px-2 py-1 flex items-center gap-1 hover:bg-gray-100 rounded"
-                            >
-                              <FaEdit /> Update
-                            </button>
-                            <button
-                              onClick={() => handleDelete(invoice._id)}
-                              className="px-2 py-1 flex items-center gap-1 text-red-600 hover:bg-gray-100 rounded"
-                            >
-                              <FaTrash /> Delete
-                            </button>
-                          </div>
-                        )}
                       </td>
-                      <td className="p-2 border text-right">{displayAmount}</td>
+                      <td className="p-3 border-0 text-right">{displayAmount}</td>
                       {compactView ? (
                         <>
-                          <td className="p-2 border">{invoice.customer || "-"}</td>
-                          <td className="p-2 border">{formatDate(invoice.invoiceDate)}</td>
-                          <td className="p-2 border">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                !invoice.status || invoice.status === "Draft"
-                                  ? "bg-gray-100 text-gray-800"
-                                  : invoice.status === "Paid"
-                                  ? "bg-green-100 text-green-800"
-                                  : invoice.status === "Overdue"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-blue-100 text-blue-800"
-                              }`}
-                            >
+                          <td className="p-3 border-0">{invoice.customer || "-"}</td>
+                          <td className="p-3 border-0">{formatDate(invoice.invoiceDate)}</td>
+                          <td className="p-3 border-0">
+                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(invoice.status)}`}>
                               {invoice.status || "Draft"}
                             </span>
+                          </td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setViewInvoice(invoice)}
+                                className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                                title="View"
+                              >
+                                <FaEye />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditInvoice(invoice);
+                                  setFormData({
+                                    customer: invoice.customer || "",
+                                    status: invoice.status || "Draft",
+                                  });
+                                }}
+                                className="p-1 text-green-600 hover:bg-green-100 rounded"
+                                title="Edit"
+                              >
+                                <FaEdit />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(invoice._id)}
+                                className="p-1 text-red-600 hover:bg-red-100 rounded"
+                                title="Delete"
+                              >
+                                <FaTrash />
+                              </button>
+                            </div>
                           </td>
                         </>
                       ) : (
                         <>
-                          <td className="p-2 border text-right">
+                          <td className="p-3 border-0 text-right">
                             {new Intl.NumberFormat("en-US", {
                               style: "currency",
                               currency: invoice.currency || "USD",
                               minimumFractionDigits: 2,
                             }).format(totalTax)}
                           </td>
-                          <td className="p-2 border">{invoice.customer || "-"}</td>
-                          <td className="p-2 border">{invoice.reference || "-"}</td>
-                          <td className="p-2 border">{invoice.tags || "-"}</td>
-                          <td className="p-2 border">{formatDate(invoice.invoiceDate)}</td>
-                          <td className="p-2 border">{formatDate(invoice.dueDate)}</td>
-                          <td className="p-2 border">{invoice.reference || "-"}</td>
-                          <td className="p-2 border">
-                            <span
-                              className={`px-2 py-1 rounded-full text-xs ${
-                                !invoice.status || invoice.status === "Draft"
-                                  ? "bg-gray-100 text-gray-800"
-                                  : invoice.status === "Paid"
-                                  ? "bg-green-100 text-green-800"
-                                  : invoice.status === "Overdue"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-blue-100 text-blue-800"
-                              }`}
-                            >
+                          <td className="p-3 border-0">{invoice.customer || "-"}</td>
+                          <td className="p-3 border-0">{invoice.reference || "-"}</td>
+                          <td className="p-3 border-0">{invoice.tags || "-"}</td>
+                          <td className="p-3 border-0">{formatDate(invoice.invoiceDate)}</td>
+                          <td className="p-3 border-0">{formatDate(invoice.dueDate)}</td>
+                          <td className="p-3 border-0">{invoice.reference || "-"}</td>
+                          <td className="p-3 border-0">
+                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(invoice.status)}`}>
                               {invoice.status || "Draft"}
                             </span>
+                          </td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => setViewInvoice(invoice)}
+                                className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                                title="View"
+                              >
+                                <FaEye />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditInvoice(invoice);
+                                  setFormData({
+                                    customer: invoice.customer || "",
+                                    status: invoice.status || "Draft",
+                                  });
+                                }}
+                                className="p-1 text-green-600 hover:bg-green-100 rounded"
+                                title="Edit"
+                              >
+                                <FaEdit />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(invoice._id)}
+                                className="p-1 text-red-600 hover:bg-red-100 rounded"
+                                title="Delete"
+                              >
+                                <FaTrash />
+                              </button>
+                            </div>
                           </td>
                         </>
                       )}
@@ -403,7 +679,7 @@ const Invoices = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={compactView ? 5 : 10} className="p-4 text-center text-gray-500">
+                  <td colSpan={compactView ? 6 : 11} className="p-4 text-center text-gray-500">
                     No invoices found
                   </td>
                 </tr>
@@ -448,45 +724,262 @@ const Invoices = () => {
 
       {/* View & Edit Modals */}
       {viewInvoice && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded p-4 w-96 shadow-lg">
-            <h2 className="text-lg font-bold mb-2">Invoice Details</h2>
-            <p><b>Invoice #:</b> {viewInvoice.invoiceNumber}</p>
-            <p><b>Customer:</b> {viewInvoice.customer}</p>
-            <p><b>Reference:</b> {viewInvoice.reference || "-"}</p>
-            <p><b>Amount:</b> {viewInvoice.total}</p>
-            <p><b>Status:</b> {viewInvoice.status}</p>
-            <div className="mt-4 flex justify-end">
-              <button onClick={() => setViewInvoice(null)} className="px-3 py-1 bg-gray-200 rounded">Close</button>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded p-6 w-11/12 max-w-2xl shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Invoice Details</h2>
+              <button onClick={() => setViewInvoice(null)} className="text-gray-500 hover:text-gray-700">
+                <FaTimes size={20} />
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p className="font-semibold">Invoice #:</p>
+                <p>{viewInvoice.invoiceNumber || "INV-" + viewInvoice._id.slice(-6).toUpperCase()}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Customer:</p>
+                <p>{viewInvoice.customer}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Reference:</p>
+                <p>{viewInvoice.reference || "-"}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Amount:</p>
+                <p>{new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: viewInvoice.currency || "USD",
+                }).format(viewInvoice.total)}</p>
+              </div>
+              <div>
+                <p className="font-semibold">Status:</p>
+                <p><span className={`px-2 py-1 rounded text-xs ${getStatusColor(viewInvoice.status)}`}>
+                  {viewInvoice.status}
+                </span></p>
+              </div>
+              <div>
+                <p className="font-semibold">Paid Amount:</p>
+                <p>{new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: viewInvoice.currency || "USD",
+                }).format(viewInvoice.paidAmount || 0)}</p>
+              </div>
+              {viewInvoice.items && viewInvoice.items.length > 0 && (
+                <div className="col-span-2">
+                  <p className="font-semibold mb-2">Items:</p>
+                  <div className="border rounded p-2">
+                    {viewInvoice.items.map((item, index) => (
+                      <div key={index} className="flex justify-between py-1 border-b last:border-b-0">
+                        <div>
+                          <p className="font-medium">{item.description}</p>
+                          <p className="text-sm text-gray-600">{item.quantity} x {item.rate}</p>
+                        </div>
+                        <div>
+                          <p>{new Intl.NumberFormat("en-US", {
+                            style: "currency",
+                            currency: viewInvoice.currency || "USD",
+                          }).format(item.amount)}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button onClick={() => setViewInvoice(null)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {editInvoice && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded p-4 w-96 shadow-lg">
-            <h2 className="text-lg font-bold mb-2">Update Invoice</h2>
-            <input
-              type="text"
-              value={formData.customer}
-              onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-              className="border w-full p-2 mb-2 rounded"
-              placeholder="Customer Name"
-            />
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="border w-full p-2 mb-2 rounded"
-            >
-              <option value="Draft">Draft</option>
-              <option value="Pending">Pending</option>
-              <option value="Paid">Paid</option>
-              <option value="Overdue">Overdue</option>
-            </select>
-            <div className="mt-4 flex justify-end gap-2">
-              <button onClick={() => setEditInvoice(null)} className="px-3 py-1 bg-gray-200 rounded">Cancel</button>
-              <button onClick={handleUpdate} className="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded p-6 w-11/12 max-w-md shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Update Invoice</h2>
+              <button onClick={() => setEditInvoice(null)} className="text-gray-500 hover:text-gray-700">
+                <FaTimes size={20} />
+              </button>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Customer</label>
+              <input
+                type="text"
+                value={formData.customer}
+                onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+                className="border w-full p-2 rounded"
+                placeholder="Customer Name"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Status</label>
+              <select
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                className="border w-full p-2 rounded"
+              >
+                <option value="Draft">Draft</option>
+                <option value="Unpaid">Unpaid</option>
+                <option value="Paid">Paid</option>
+                <option value="Partiallypaid">Partiallypaid</option>
+                <option value="Overdue">Overdue</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={() => setEditInvoice(null)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+                Cancel
+              </button>
+              <button onClick={handleUpdate} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Batch Payment Modal */}
+      {showBatchPayment && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded p-6 w-11/12 max-w-5xl max-h-screen overflow-y-auto shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold">Batch Payment</h2>
+              <button onClick={() => setShowBatchPayment(false)} className="text-gray-500 hover:text-gray-700">
+                <FaTimes size={20} />
+              </button>
+            </div>
+            
+            {batchPaymentError && (
+              <div className="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-200">
+                {batchPaymentError}
+              </div>
+            )}
+            
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Payment Date *</label>
+                <input
+                  type="date"
+                  value={batchPaymentData.paymentDate}
+                  onChange={(e) => setBatchPaymentData({...batchPaymentData, paymentDate: e.target.value})}
+                  className="border rounded w-full p-2"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Payment Mode *</label>
+                <input
+                  type="text"
+                  value={batchPaymentData.paymentMode}
+                  onChange={(e) => setBatchPaymentData({...batchPaymentData, paymentMode: e.target.value})}
+                  className="border rounded w-full p-2"
+                  placeholder="e.g., Bank Transfer, Credit Card"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Transaction ID</label>
+                <input
+                  type="text"
+                  value={batchPaymentData.transactionId}
+                  onChange={(e) => setBatchPaymentData({...batchPaymentData, transactionId: e.target.value})}
+                  className="border rounded w-full p-2"
+                  placeholder="Transaction reference"
+                />
+              </div>
+            </div>
+            
+            <div className="mb-4 flex items-center">
+              <input
+                type="checkbox"
+                checked={batchPaymentData.sendEmail}
+                onChange={(e) => setBatchPaymentData({...batchPaymentData, sendEmail: e.target.checked})}
+                className="mr-2"
+                id="sendEmail"
+              />
+              <label htmlFor="sendEmail" className="text-sm">
+                Send invoice payment recorded email to customer contacts
+              </label>
+            </div>
+            
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-3">Invoices for Payment</h3>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-2 border">Invoice #</th>
+                      <th className="p-2 border">Customer</th>
+                      <th className="p-2 border">Total Amount</th>
+                      <th className="p-2 border">Paid Amount</th>
+                      <th className="p-2 border">Balance Due</th>
+                      <th className="p-2 border">Payment Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getPayableInvoices().map((invoice) => {
+                      const paidAmount = invoice.paidAmount || 0;
+                      const balanceDue = invoice.total - paidAmount;
+                      
+                      return (
+                        <tr key={invoice._id}>
+                          <td className="p-2 border">{invoice.invoiceNumber || "INV-" + invoice._id.slice(-6).toUpperCase()}</td>
+                          <td className="p-2 border">{invoice.customer}</td>
+                          <td className="p-2 border text-right">
+                            {new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: invoice.currency || "USD",
+                            }).format(invoice.total)}
+                          </td>
+                          <td className="p-2 border text-right">
+                            {new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: invoice.currency || "USD",
+                            }).format(paidAmount)}
+                          </td>
+                          <td className="p-2 border text-right">
+                            {new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: invoice.currency || "USD",
+                            }).format(balanceDue)}
+                          </td>
+                          <td className="p-2 border">
+                            <input
+                              type="number"
+                              min="0"
+                              max={balanceDue}
+                              step="0.01"
+                              value={paymentAmounts[invoice._id] || ""}
+                              onChange={(e) => handlePaymentAmountChange(invoice._id, e.target.value)}
+                              className="border rounded p-1 w-full"
+                              placeholder="0.00"
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowBatchPayment(false)} 
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={processBatchPayments}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Process Payments
+              </button>
             </div>
           </div>
         </div>

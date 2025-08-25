@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FaPlus, FaSearch, FaSyncAlt, FaUpload, FaTasks, FaTimes, FaTrash } from "react-icons/fa";
+import { FaPlus, FaSearch, FaSyncAlt, FaUpload, FaTasks, FaTimes, FaTrash, FaChevronRight } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
-import Papa from "papaparse"; // For CSV parsing
+import Papa from "papaparse";
 
 const Items = () => {
   const [entriesPerPage, setEntriesPerPage] = useState(25);
@@ -284,17 +284,29 @@ const Items = () => {
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Items</h1>
+        <div className="flex items-center text-gray-600">
+          <span>Dashboard</span>
+          <FaChevronRight className="mx-1 text-xs" />
+          <span>Items</span>
+        </div>
+      </div>
+
       {/* Top action buttons */}
-      <div className="flex items-center justify-between mt-8 flex-wrap gap-2">
-        <div className="flex gap-2">
-          <button
-            className="bg-black text-white px-3 py-1 text-sm rounded flex items-center gap-2"
+      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+        <div className="flex items-center gap-2">
+          <button 
+            className="px-3 py-1 text-sm rounded flex items-center gap-2" 
+            style={{ backgroundColor: '#333333', color: 'white' }}
             onClick={() => setShowForm(true)}
           >
             <FaPlus /> New Item
           </button>
           <button 
-            className="bg-blue-600 text-white px-3 py-1 text-sm rounded flex items-center gap-2"
+            className="px-3 py-1 text-sm rounded flex items-center gap-2" 
+            style={{ backgroundColor: '#333333', color: 'white' }}
             onClick={() => setShowImportForm(true)}
           >
             <FaUpload /> Import Items
@@ -414,7 +426,7 @@ const Items = () => {
               {/* Buttons */}
               <div className="flex justify-end space-x-3 mt-6">
                 <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50">Close</button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Save Item</button>
+                <button type="submit" className="px-4 py-2 bg-black text-white rounded text-sm">Save Item</button>
               </div>
             </form>
           </div>
@@ -500,13 +512,13 @@ const Items = () => {
                       setCsvData([]);
                     }} 
                     className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
-                                      >
+                  >
                     Cancel
                   </button>
                   <button 
                     type="button" 
                     onClick={handleImport} 
-                    className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                    className="px-4 py-2 bg-black text-white rounded text-sm"
                     disabled={csvData.length === 0}
                   >
                     Import
@@ -518,54 +530,96 @@ const Items = () => {
         </div>
       )}
 
-      {/* Table & Controls */}
-      <div className="bg-white shadow-md rounded p-4 mt-4">
+      {/* White box for table */}
+      <div className="bg-white shadow-md rounded p-4">
         {/* Controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
+            {/* Bulk delete button */}
+            {selectedItems.length > 0 && (
+              <button
+                className="bg-red-600 text-white px-3 py-1 rounded"
+                onClick={handleBulkDelete}
+              >
+                Delete Selected ({selectedItems.length})
+              </button>
+            )}
+
+            {/* Entries per page */}
             <select
               className="border rounded px-2 py-1 text-sm"
               value={entriesPerPage}
-              onChange={(e) => { setEntriesPerPage(Number(e.target.value)); setCurrentPage(1); }}
+              onChange={(e) => {
+                setEntriesPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
             >
+              <option value={5}>5</option>
               <option value={25}>25</option>
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
+            
+            {/* Export button */}
             <div className="relative">
-              <button onClick={() => setShowExportMenu(!showExportMenu)} className="border px-2 py-1 rounded text-sm flex items-center gap-1">
+              <button
+                onClick={() => setShowExportMenu((prev) => !prev)}
+                className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+              >
                 <HiOutlineDownload /> Export
               </button>
+
+              {/* Dropdown menu */}
               {showExportMenu && (
                 <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
-                  {["Excel", "CSV", "PDF", "Print"].map((item) => (
-                    <button
-                      key={item}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                      onClick={() => handleExport(item)}
-                    >
-                      {item}
-                    </button>
-                  ))}
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={() => handleExport("Excel")}
+                  >
+                    Excel
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={() => handleExport("CSV")}
+                  >
+                    CSV
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={() => handleExport("PDF")}
+                  >
+                    PDF
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    onClick={() => handleExport("Print")}
+                  >
+                    Print
+                  </button>
                 </div>
               )}
             </div>
-            <button 
-              className="border px-3 py-1 rounded text-sm flex items-center gap-2"
-              onClick={handleBulkDelete}
+
+            {/* Refresh button */}
+            <button
+              className="border px-2 py-1 rounded text-sm flex items-center"
+              onClick={fetchItems}
             >
-              <FaTasks /> Bulk Action
+              <FaSyncAlt />
             </button>
-            <button className="border px-2 py-1 rounded text-sm flex items-center" onClick={fetchItems}><FaSyncAlt /></button>
           </div>
 
+          {/* Search */}
           <div className="relative">
             <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
             <input
               type="text"
               placeholder="Search..."
               value={searchTerm}
-              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
               className="border rounded pl-8 pr-3 py-1 text-sm"
             />
           </div>
@@ -573,52 +627,51 @@ const Items = () => {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-2 border w-10">
+              <tr className="text-left">
+                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
                   <input
                     type="checkbox"
                     checked={selectAll}
                     onChange={handleSelectAll}
                   />
                 </th>
-                <th className="p-2 border">Description</th>
-                <th className="p-2 border">Long Description</th>
-                <th className="p-2 border">Rate</th>
-                <th className="p-2 border">Tax1</th>
-                <th className="p-2 border">Tax2</th>
-                <th className="p-2 border">Unit</th>
-                <th className="p-2 border">Group Name</th>
+                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Description</th>
+                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Long Description</th>
+                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Rate</th>
+                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tax1</th>
+                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tax2</th>
+                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Unit</th>
+                <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Group Name</th>
               </tr>
             </thead>
             <tbody>
-              {currentData.length > 0 ? (
-                currentData.map((item, idx) => (
-                  <tr key={item._id || idx}>
-                    <td className="p-2 border">
+              {currentData.map((item) => (
+                <tr
+                  key={item._id}
+                  className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                  style={{ color: 'black' }}
+                >
+                  <td className="p-3 rounded-l-lg border-0">
+                    <div className="flex items-center">
                       <input
                         type="checkbox"
                         checked={selectedItems.includes(item._id)}
                         onChange={() => handleCheckboxChange(item._id)}
+                        className="h-4 w-4"
                       />
-                    </td>
-                    <td className="p-2 border">{item.description}</td>
-                    <td className="p-2 border">{item.longDescription}</td>
-                    <td className="p-2 border">{item.rate}</td>
-                    <td className="p-2 border">{item.tax1}</td>
-                    <td className="p-2 border">{item.tax2}</td>
-                    <td className="p-2 border">{item.unit}</td>
-                    <td className="p-2 border">{item.groupName}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={8} className="p-4 text-center text-gray-500">
-                    No items found
+                    </div>
                   </td>
+                  <td className="p-3 border-0">{item.description}</td>
+                  <td className="p-3 border-0">{item.longDescription}</td>
+                  <td className="p-3 border-0">{item.rate}</td>
+                  <td className="p-3 border-0">{item.tax1}</td>
+                  <td className="p-3 border-0">{item.tax2}</td>
+                  <td className="p-3 border-0">{item.unit}</td>
+                  <td className="p-3 rounded-r-lg border-0">{item.groupName}</td>
                 </tr>
-              )}
+              ))}
             </tbody>
           </table>
         </div>
@@ -626,14 +679,36 @@ const Items = () => {
         {/* Pagination */}
         <div className="flex justify-between items-center mt-4 text-sm">
           <span>
-            Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredItems.length)} of {filteredItems.length} entries
+            Showing {startIndex + 1} to{" "}
+            {Math.min(startIndex + entriesPerPage, filteredItems.length)} of{" "}
+            {filteredItems.length} entries
           </span>
           <div className="flex items-center gap-2">
-            <button className="px-2 py-1 border rounded disabled:opacity-50" disabled={currentPage === 1} onClick={() => setCurrentPage(prev => prev - 1)}>Previous</button>
+            <button
+              className="px-2 py-1 border rounded disabled:opacity-50"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+            >
+              Previous
+            </button>
             {Array.from({ length: totalPages }, (_, i) => (
-              <button key={i} className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-gray-200" : ""}`} onClick={() => setCurrentPage(i + 1)}>{i + 1}</button>
+              <button
+                key={i}
+                className={`px-3 py-1 border rounded ${
+                  currentPage === i + 1 ? "bg-gray-200" : ""
+                }`}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </button>
             ))}
-            <button className="px-2 py-1 border rounded disabled:opacity-50" disabled={currentPage === totalPages || totalPages === 0} onClick={() => setCurrentPage(prev => prev + 1)}>Next</button>
+            <button
+              className="px-2 py-1 border rounded disabled:opacity-50"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>

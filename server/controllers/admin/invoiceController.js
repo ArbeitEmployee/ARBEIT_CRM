@@ -44,6 +44,7 @@ export const createInvoice = async (req, res) => {
       discountValue: req.body.discountValue || 0,
       adminNote: req.body.adminNote || "",
       status: req.body.status || "Draft",
+      paidAmount: req.body.paidAmount || 0, // Add paidAmount field
       items: items.map(item => ({
         description: item.description,
         quantity: Number(item.quantity),
@@ -125,6 +126,24 @@ export const getInvoiceById = async (req, res) => {
 // Update invoice
 export const updateInvoice = async (req, res) => {
   try {
+    // If updating paidAmount, automatically update status based on payment
+    if (req.body.paidAmount !== undefined) {
+      const existingInvoice = await Invoice.findById(req.params.id);
+      if (existingInvoice) {
+        const paidAmount = Number(req.body.paidAmount);
+        const total = existingInvoice.total;
+        
+        // Determine new status based on payment
+        if (paidAmount >= total) {
+          req.body.status = "Paid";
+        } else if (paidAmount > 0) {
+          req.body.status = "Partiallypaid"; // Match frontend spelling
+        } else {
+          req.body.status = "Unpaid";
+        }
+      }
+    }
+
     // If items are being updated, recalculate totals
     if (req.body.items) {
       const subtotal = req.body.items.reduce((sum, item) => {

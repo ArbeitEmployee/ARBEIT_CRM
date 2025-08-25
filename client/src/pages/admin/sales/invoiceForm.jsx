@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FaPlus, FaTimes } from "react-icons/fa";
+import { FaPlus, FaTimes, FaSearch, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const InvoiceForm = () => {
@@ -9,6 +9,7 @@ const InvoiceForm = () => {
   // Form state matching your schema exactly
   const [formData, setFormData] = useState({
     customer: "",
+    customerId: "",
     billTo: "",
     shipTo: "",
     invoiceDate: new Date().toISOString().split('T')[0],
@@ -21,7 +22,8 @@ const InvoiceForm = () => {
     discountType: "percent",
     discountValue: 0,
     adminNote: "",
-    status: "Draft"
+    status: "Draft",
+    paidAmount: 0 // Add paidAmount field
   });
 
   // Items state
@@ -37,14 +39,19 @@ const InvoiceForm = () => {
     tax2: 0
   });
   const [loading, setLoading] = useState(false);
+  const [showItemsDropdown, setShowItemsDropdown] = useState(false); // For item selection dropdown
+
+  // Customer search state
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [customerSearchResults, setCustomerSearchResults] = useState([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
   // Static data matching your schema enums
-  const customers = ["Acme Corp", "Tech Solutions", "Global Traders"];
   const staffMembers = ["John Doe", "Jane Smith", "Mike Johnson"];
   const tagOptions = ["Bug", "Follow Up", "Urgent", "Design", "Development"];
   const paymentModes = ["Bank", "Stripe Checkout"];
   const recurringOptions = ["No", "Every one month", "Custom"];
-  const statusOptions = ["Draft", "Pending", "Paid", "Cancelled"];
+  const statusOptions = ["Draft", "Unpaid", "Paid", "Partiallypaid", "Overdue"];
   const taxOptions = [0, 5, 10, 15, 20];
 
   // Fetch items from database
@@ -60,13 +67,74 @@ const InvoiceForm = () => {
     fetchItems();
   }, []);
 
+  // Customer search function
+  const searchCustomers = async (searchTerm) => {
+    if (searchTerm.length < 2) {
+      setCustomerSearchResults([]);
+      return;
+    }
+    
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`);
+      setCustomerSearchResults(data);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+      setCustomerSearchResults([]);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (customerSearchTerm) {
+        searchCustomers(customerSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [customerSearchTerm]);
+
   // Form handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
+    
+    // If status changes to "Partiallypaid", validate paid amount
+    if (name === "status" && value === "Partiallypaid") {
+      setFormData({
+        ...formData,
+        [name]: value,
+        paidAmount: formData.paidAmount > total ? total : formData.paidAmount
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
+  };
+
+  const handleCustomerSearchChange = (e) => {
+    const value = e.target.value;
+    setCustomerSearchTerm(value);
+    setShowCustomerDropdown(true);
+    
+    // Update form data
     setFormData({
       ...formData,
-      [name]: value,
+      customer: value,
+      customerId: "" // Reset customer ID when typing
     });
+  };
+
+  const handleSelectCustomer = (customer) => {
+    setFormData({
+      ...formData,
+      customer: customer.company,
+      customerId: customer._id,
+      billTo: customer.billingAddress || "",
+      shipTo: customer.shippingAddress || ""
+    });
+    setShowCustomerDropdown(false);
+    setCustomerSearchTerm("");
   };
 
   const handleNewItemChange = (e) => {
@@ -90,6 +158,7 @@ const InvoiceForm = () => {
     newInvoiceItem.amount = newInvoiceItem.quantity * newInvoiceItem.rate;
     
     setInvoiceItems([...invoiceItems, newInvoiceItem]);
+    setShowItemsDropdown(false);
   };
 
   const handleItemChange = (index, field, value) => {
@@ -147,11 +216,30 @@ const InvoiceForm = () => {
     : parseFloat(formData.discountValue);
   const total = subtotal - discount;
 
+  // Handle paid amount change
+  const handlePaidAmountChange = (e) => {
+    const value = Math.max(0, Math.min(total, parseFloat(e.target.value) || 0));
+    setFormData({
+      ...formData,
+      paidAmount: value
+    });
+  };
+
   // Form validation
   const validate = () => {
     let newErrors = {};
     if (!formData.customer.trim()) newErrors.customer = "Customer is required";
+    if (!formData.customerId) newErrors.customer = "Please select a valid customer from the dropdown";
     if (invoiceItems.length === 0) newErrors.items = "At least one item is required";
+    
+    // Validate Partiallypaid amount
+    if (formData.status === "Partiallypaid" && formData.paidAmount <= 0) {
+      newErrors.paidAmount = "Paid amount must be greater than 0 for Partiallypaid invoices";
+    }
+    
+    if (formData.status === "Partiallypaid" && formData.paidAmount >= total) {
+      newErrors.paidAmount = "Paid amount must be less than total for Partiallypaid invoices";
+    }
     
     // Validate each item
     invoiceItems.forEach((item, index) => {
@@ -190,6 +278,7 @@ const InvoiceForm = () => {
       // Prepare invoice data matching your schema
       const invoiceData = {
         customer: formData.customer,
+        customerId: formData.customerId,
         billTo: formData.billTo,
         shipTo: formData.shipTo,
         invoiceDate: formData.invoiceDate,
@@ -209,7 +298,10 @@ const InvoiceForm = () => {
         total: total
       };
 
-     
+      // Add paidAmount if status is Partiallypaid
+      if (formData.status === "Partiallypaid") {
+        invoiceData.paidAmount = formData.paidAmount;
+      }
 
       console.log("Submitting invoice:", invoiceData);
 
@@ -253,20 +345,37 @@ const InvoiceForm = () => {
             {/* Customer */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer*</label>
-              <select
-                name="customer"
-                value={formData.customer}
-                onChange={handleChange}
-                className={`w-full border px-3 py-2 rounded text-sm ${
-                  errors.customer ? "border-red-500" : "border-gray-300"
-                }`}
-                required
-              >
-                <option value="">Select Customer</option>
-                {customers.map((customer, i) => (
-                  <option key={i} value={customer}>{customer}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.customer}
+                  onChange={handleCustomerSearchChange}
+                  className={`w-full border px-3 py-2 rounded text-sm ${
+                    errors.customer ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="Search customer by company name..."
+                />
+                <FaSearch className="absolute right-3 top-3 text-gray-400 text-sm" />
+                {showCustomerDropdown && customerSearchResults.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                    {customerSearchResults.map((customer, index) => (
+                      <div
+                        key={index}
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => handleSelectCustomer(customer)}
+                      >
+                        <div className="font-medium">{customer.company}</div>
+                        <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                    <div className="px-3 py-2 text-gray-500">No customers found</div>
+                  </div>
+                )}
+              </div>
               {errors.customer && <p className="text-red-500 text-xs mt-1">{errors.customer}</p>}
             </div>
 
@@ -338,6 +447,43 @@ const InvoiceForm = () => {
 
           {/* Right Column */}
           <div>
+            {/* Status Field - Added below Recurring Invoice */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+              >
+                {statusOptions.map((option, i) => (
+                  <option key={i} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Partiallypaid Amount Field - Only show when status is Partiallypaid */}
+            {formData.status === "Partiallypaid" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Paid Amount (Max: ${total.toFixed(2)})
+                </label>
+                <input
+                  type="number"
+                  name="paidAmount"
+                  value={formData.paidAmount}
+                  onChange={handlePaidAmountChange}
+                  className={`w-full border px-3 py-2 rounded text-sm ${
+                    errors.paidAmount ? "border-red-500" : "border-gray-300"
+                  }`}
+                  min="0"
+                  max={total}
+                  step="0.01"
+                />
+                {errors.paidAmount && <p className="text-red-500 text-xs mt-1">{errors.paidAmount}</p>}
+              </div>
+            )}
+
             {/* Recurring Invoice */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Recurring Invoice</label>
@@ -456,38 +602,96 @@ const InvoiceForm = () => {
           </button>
         </div>
 
-        {/* Item Database Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-3 font-medium">Description</th>
-                <th className="p-3 font-medium">Rate</th>
-                <th className="p-3 font-medium">Tax 1</th>
-                <th className="p-3 font-medium">Tax 2</th>
-                <th className="p-3 font-medium">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {databaseItems.map((item) => (
-                <tr key={item._id}>
-                  <td className="p-3">{item.description}</td>
-                  <td className="p-3">{item.rate}</td>
-                  <td className="p-3">{item.tax1}%</td>
-                  <td className="p-3">{item.tax2}%</td>
-                  <td className="p-3">
-                    <button 
+        {/* Item Selection Dropdown */}
+        <div className="mb-4">
+          <div className="relative">
+            <button
+              onClick={() => setShowItemsDropdown(!showItemsDropdown)}
+              className="w-full flex justify-between items-center border border-gray-300 rounded px-3 py-2 text-sm bg-white"
+            >
+              <span>Select Items to Add</span>
+              {showItemsDropdown ? <FaChevronUp /> : <FaChevronDown />}
+            </button>
+            
+            {showItemsDropdown && (
+              <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                {databaseItems.length > 0 ? (
+                  databaseItems.map((item) => (
+                    <div
+                      key={item._id}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                       onClick={() => addItemFromDatabase(item)}
-                      className="text-blue-500 hover:text-blue-700 px-2 py-1 border border-blue-500 rounded hover:bg-blue-50"
                     >
-                      Add to Invoice
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                      <div>
+                        <div className="font-medium">{item.description}</div>
+                        <div className="text-sm text-gray-600">
+                          ${parseFloat(item.rate?.replace('$', '') || 0).toFixed(2)} | 
+                          Tax1: {item.tax1}% | Tax2: {item.tax2}%
+                        </div>
+                      </div>
+                      <button 
+                        className="text-blue-500 hover:text-blue-700 px-2 py-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addItemFromDatabase(item);
+                        }}
+                      >
+                        Add
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-3 py-2 text-gray-500">No items available</div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Item Database Table - Now Collapsible */}
+        <div className="mb-4">
+          <button
+            onClick={() => setShowItemsDropdown(!showItemsDropdown)}
+            className="text-blue-500 hover:text-blue-700 text-sm flex items-center"
+          >
+            {showItemsDropdown ? "Hide Item Database" : "Show Full Item Database"} 
+            {showItemsDropdown ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
+          </button>
+        </div>
+
+        {showItemsDropdown && (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-gray-100 text-left">
+                  <th className="p-3 font-medium">Description</th>
+                  <th className="p-3 font-medium">Rate</th>
+                  <th className="p-3 font-medium">Tax 1</th>
+                  <th className="p-3 font-medium">Tax 2</th>
+                  <th className="p-3 font-medium">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {databaseItems.map((item) => (
+                  <tr key={item._id}>
+                    <td className="p-3">{item.description}</td>
+                    <td className="p-3">{item.rate}</td>
+                    <td className="p-3">{item.tax1}%</td>
+                    <td className="p-3">{item.tax2}%</td>
+                    <td className="p-3">
+                      <button 
+                        onClick={() => addItemFromDatabase(item)}
+                        className="text-blue-500 hover:text-blue-700 px-2 py-1 border border-blue-500 rounded hover:bg-blue-50"
+                      >
+                        Add to Invoice
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Invoice Items Section */}
@@ -647,6 +851,20 @@ const InvoiceForm = () => {
             <span>Total:</span>
             <span>${total.toFixed(2)}</span>
           </div>
+
+          {/* Show paid amount and balance if Partiallypaid */}
+          {formData.status === "Partiallypaid" && (
+            <>
+              <div className="flex justify-between py-2 border-t mt-2">
+                <span className="font-medium">Paid Amount:</span>
+                <span className="text-green-600">${formData.paidAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between py-2 font-bold text-lg border-t">
+                <span>Balance Due:</span>
+                <span>${(total - formData.paidAmount).toFixed(2)}</span>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

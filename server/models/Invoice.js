@@ -56,9 +56,10 @@ const invoiceSchema = new mongoose.Schema(
     subtotal: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
     total: { type: Number, default: 0 },
+    paidAmount: { type: Number, default: 0 }, // Add paidAmount field
     status: {
       type: String,
-      enum: ["Draft", "Pending", "Paid", "Cancelled"],
+      enum: ["Draft", "Unpaid", "Paid", "Partiallypaid", "Overdue"], // Fixed spelling
       default: "Draft"
     }
   },

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FaPlus, FaTimes } from "react-icons/fa";
+import { FaPlus, FaTimes, FaSearch, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const EstimateForm = () => {
@@ -9,6 +9,7 @@ const EstimateForm = () => {
   // Form state
   const [formData, setFormData] = useState({
     customer: "",
+    customerId: "",
     billTo: "",
     shipTo: "",
     estimateDate: new Date().toISOString().split('T')[0],
@@ -37,8 +38,12 @@ const EstimateForm = () => {
     tax2: 0
   });
 
+  // Customer search state
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [customerSearchResults, setCustomerSearchResults] = useState([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+
   // Static data
-  const customers = ["Acme Corp", "Tech Solutions", "Global Traders"];
   const staffMembers = ["John Doe", "Jane Smith", "Mike Johnson"];
   const tagOptions = ["Bug", "Follow Up", "Urgent", "Design", "Development"];
   const statusOptions = ["Draft", "Pending", "Approved", "Rejected"];
@@ -57,6 +62,32 @@ const EstimateForm = () => {
     fetchItems();
   }, []);
 
+  // Search customers by company name
+  const searchCustomers = async (searchTerm) => {
+    if (searchTerm.length < 2) {
+      setCustomerSearchResults([]);
+      return;
+    }
+    
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`);
+      setCustomerSearchResults(data);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+      setCustomerSearchResults([]);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (customerSearchTerm) {
+        searchCustomers(customerSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [customerSearchTerm]);
+
   // Form handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -64,6 +95,31 @@ const EstimateForm = () => {
       ...formData,
       [name]: value,
     });
+  };
+
+  const handleCustomerSearchChange = (e) => {
+    const value = e.target.value;
+    setCustomerSearchTerm(value);
+    setShowCustomerDropdown(true);
+    
+    // Update form data
+    setFormData({
+      ...formData,
+      customer: value,
+      customerId: "" // Reset customer ID when typing
+    });
+  };
+
+  const handleSelectCustomer = (customer) => {
+    setFormData({
+      ...formData,
+      customer: customer.company,
+      customerId: customer._id,
+      billTo: customer.billingAddress || "",
+      shipTo: customer.shippingAddress || ""
+    });
+    setShowCustomerDropdown(false);
+    setCustomerSearchTerm("");
   };
 
   const handleNewItemChange = (e) => {
@@ -144,7 +200,7 @@ const EstimateForm = () => {
   // Form validation and submission
   const validate = () => {
     let newErrors = {};
-    if (!formData.customer) newErrors.customer = "Customer is required";
+    if (!formData.customer || !formData.customerId) newErrors.customer = "Customer is required";
     if (!formData.reference) newErrors.reference = "Reference is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -165,6 +221,7 @@ const EstimateForm = () => {
 
       const estimateData = {
         customer: formData.customer,
+        customerId: formData.customerId,
         billTo: formData.billTo,
         shipTo: formData.shipTo,
         estimateDate: formData.estimateDate,
@@ -209,7 +266,17 @@ const EstimateForm = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">New Estimate</h2>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">New Estimate</h1>
+        <div className="flex items-center text-gray-600">
+          <span>Dashboard</span>
+          <FaChevronRight className="mx-1 text-xs" />
+          <span>Estimates</span>
+          <FaChevronRight className="mx-1 text-xs" />
+          <span>New Estimate</span>
+        </div>
+      </div>
       
       {/* Main Form Container */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
@@ -220,19 +287,37 @@ const EstimateForm = () => {
             {/* Customer */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer*</label>
-              <select
-                name="customer"
-                value={formData.customer}
-                onChange={handleChange}
-                className={`w-full border px-3 py-2 rounded text-sm ${
-                  errors.customer ? "border-red-500" : "border-gray-300"
-                }`}
-              >
-                <option value="">Select Customer</option>
-                {customers.map((customer, i) => (
-                  <option key={i} value={customer}>{customer}</option>
-                ))}
-              </select>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.customer}
+                  onChange={handleCustomerSearchChange}
+                  className={`w-full border px-3 py-2 rounded text-sm ${
+                    errors.customer ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="Search customer by company name..."
+                />
+                <FaSearch className="absolute right-3 top-3 text-gray-400 text-sm" />
+                {showCustomerDropdown && customerSearchResults.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                    {customerSearchResults.map((customer, index) => (
+                      <div
+                        key={index}
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => handleSelectCustomer(customer)}
+                      >
+                        <div className="font-medium">{customer.company}</div>
+                        <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                    <div className="px-3 py-2 text-gray-500">No customers found</div>
+                  </div>
+                )}
+              </div>
               {errors.customer && <p className="text-red-500 text-xs mt-1">{errors.customer}</p>}
             </div>
 
@@ -413,7 +498,7 @@ const EstimateForm = () => {
           <h3 className="text-lg font-semibold">Item Database</h3>
           <button
             onClick={() => setShowItemForm(true)}
-            className="bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 flex items-center"
+            className="bg-black text-white px-3 py-2 rounded text-sm hover:bg-gray-800 flex items-center"
           >
             <FaPlus /> <span className="ml-1">Add New Item</span>
           </button>
@@ -423,7 +508,7 @@ const EstimateForm = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-100 text-left">
+              <tr className="bg-gray-800 text-white text-left">
                 <th className="p-3 font-medium">Description</th>
                 <th className="p-3 font-medium">Rate</th>
                 <th className="p-3 font-medium">Tax 1</th>
@@ -433,7 +518,7 @@ const EstimateForm = () => {
             </thead>
             <tbody>
               {databaseItems.map((item) => (
-                <tr key={item._id}>
+                <tr key={item._id} className="hover:bg-gray-50">
                   <td className="p-3">{item.description}</td>
                   <td className="p-3">{item.rate}</td>
                   <td className="p-3">{item.tax1}%</td>
@@ -471,7 +556,7 @@ const EstimateForm = () => {
                 }
               ]);
             }}
-            className="bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 flex items-center"
+            className="bg-black text-white px-3 py-2 rounded text-sm hover:bg-gray-800 flex items-center"
           >
             <FaPlus /> <span className="ml-1">Add Custom Item</span>
           </button>
@@ -481,7 +566,7 @@ const EstimateForm = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-100 text-left">
+              <tr className="bg-gray-800 text-white text-left">
                 <th className="p-3 font-medium">#</th>
                 <th className="p-3 font-medium">Item Description</th>
                 <th className="p-3 font-medium">Qty</th>
@@ -494,7 +579,7 @@ const EstimateForm = () => {
             </thead>
             <tbody>
               {estimateItems.map((item, i) => (
-                <tr key={i}>
+                <tr key={i} className="hover:bg-gray-50">
                   <td className="p-3">{i + 1}</td>
                   <td className="p-3">
                     <input
@@ -682,7 +767,7 @@ const EstimateForm = () => {
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  className="px-4 py-2 bg-black text-white rounded text-sm hover:bg-gray-800"
                 >
                   Save Item
                 </button>
@@ -702,7 +787,7 @@ const EstimateForm = () => {
         </button>
         <button
           onClick={() => handleSubmit(true)}
-          className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800"
         >
           Save & Send
         </button>
