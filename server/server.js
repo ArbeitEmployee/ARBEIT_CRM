@@ -13,6 +13,7 @@ import creditNoteRoutes from "./routes/admin/creditNoteRoutes.js";
 import subscriptionRoutes from "./routes/admin/subscriptionRoutes.js";
 import expenseRoutes from "./routes/admin/expenseRoutes.js";
 import contactRoutes from "./routes/admin/contactRoutes.js";
+import projectRoutes from "./routes/admin/projectRoutes.js";
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use("/api/admin", creditNoteRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/contacts", contactRoutes);
+app.use("/api/projects", projectRoutes);
 
 
 

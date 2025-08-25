@@ -230,8 +230,8 @@ const ContactsPage = () => {
       customerName: contact.customer ? contact.customer.company : "",
       contractType: contact.contractType,
       contractValue: contact.contractValue,
-      startDate: contact.startDate,
-      endDate: contact.endDate,
+      startDate: contact.startDate ? new Date(contact.startDate).toISOString().split('T')[0] : "",
+      endDate: contact.endDate ? new Date(contact.endDate).toISOString().split('T')[0] : "",
       project: contact.project,
       signature: contact.signature
     });
@@ -585,12 +585,11 @@ const ContactsPage = () => {
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
                 <input
-                  type="text"
+                  type="date"
                   name="startDate"
                   value={newContact.startDate}
                   onChange={handleNewContactChange}
                   className="w-full border rounded px-3 py-2"
-                  placeholder="DD-MM-YYYY"
                   required
                 />
               </div>
@@ -598,12 +597,11 @@ const ContactsPage = () => {
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">End Date *</label>
                 <input
-                  type="text"
+                  type="date"
                   name="endDate"
                   value={newContact.endDate}
                   onChange={handleNewContactChange}
                   className="w-full border rounded px-3 py-2"
-                  placeholder="DD-MM-YYYY"
                   required
                 />
               </div>
@@ -997,7 +995,7 @@ const ContactsPage = () => {
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  className="px-3 py-1 border rounded"
+                  className="px-3 py-1 border rounded disabled:opacity-50"
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                 >
@@ -1014,11 +1012,10 @@ const ContactsPage = () => {
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
-                  
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded ${currentPage === pageNum ? 'bg-black text-white' : ''}`}
+                      className={`px-3 py-1 border rounded ${currentPage === pageNum ? 'bg-gray-200' : ''}`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
                       {pageNum}
@@ -1026,7 +1023,7 @@ const ContactsPage = () => {
                   );
                 })}
                 <button
-                  className="px-3 py-1 border rounded"
+                  className="px-3 py-1 border rounded disabled:opacity-50"
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
                 >
@@ -1041,36 +1038,66 @@ const ContactsPage = () => {
       {/* Import Modal */}
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-96">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Import Contracts</h3>
               <button onClick={closeImportModal} className="text-gray-500 hover:text-gray-700">
                 <FaTimes />
               </button>
             </div>
-            
-            {!importResult ? (
+
+            {importProgress ? (
+              <div className="text-center py-4">
+                <div className="text-blue-500 mb-2">{importProgress.message}</div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="bg-blue-500 h-2 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+            ) : importResult ? (
+              <div className={`p-4 rounded mb-4 ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {importResult.success ? (
+                  <>
+                    <p className="font-semibold">Import completed!</p>
+                    <p>Successfully imported: {importResult.imported}</p>
+                    {importResult.errorCount > 0 && (
+                      <p>Errors: {importResult.errorCount}</p>
+                    )}
+                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
+                      <div className="mt-2">
+                        <p className="font-semibold">Error details:</p>
+                        <ul className="text-xs max-h-32 overflow-y-auto">
+                          {importResult.errorMessages.map((error, index) => (
+                            <li key={index} className="mt-1">• {error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p>Import failed: {importResult.message}</p>
+                )}
+                <button
+                  onClick={closeImportModal}
+                  className="mt-4 px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+                >
+                  Close
+                </button>
+              </div>
+            ) : (
               <>
                 <div className="mb-4">
                   <p className="text-sm text-gray-600 mb-2">
-                    Upload an Excel or CSV file with your contract data. The file should include columns for:
+                    Upload an Excel or CSV file with contract data. The file should include columns for:
                     Subject, Customer ID, Contract Type, Contract Value, Start Date, End Date, Project, and Signature Status.
                   </p>
                   <input
-                    type="file"
                     ref={fileInputRef}
-                    onChange={handleFileChange}
+                    type="file"
                     accept=".xlsx,.xls,.csv"
+                    onChange={handleFileChange}
                     className="w-full border rounded p-2"
                   />
                 </div>
-                
-                {importProgress && (
-                  <div className="mb-4 p-2 bg-blue-50 text-blue-700 rounded text-sm">
-                    {importProgress.message}
-                  </div>
-                )}
-                
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={closeImportModal}
@@ -1080,50 +1107,12 @@ const ContactsPage = () => {
                   </button>
                   <button
                     onClick={handleImportSubmit}
-                    disabled={!importFile || importProgress}
-                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
                   >
                     Import
                   </button>
                 </div>
               </>
-            ) : (
-              <div className={`p-4 rounded ${importResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                {importResult.success ? (
-                  <>
-                    <p className="font-medium">Import completed successfully!</p>
-                    <p className="mt-2">{importResult.imported} contracts imported.</p>
-                    {importResult.errorCount > 0 && (
-                      <p className="mt-2">{importResult.errorCount} rows had errors and were skipped.</p>
-                    )}
-                    
-                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
-                      <div className="mt-3">
-                        <p className="font-medium">Error details:</p>
-                        <ul className="mt-1 text-sm max-h-40 overflow-auto">
-                          {importResult.errorMessages.map((error, index) => (
-                            <li key={index} className="mt-1">• {error}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <p className="font-medium">Import failed!</p>
-                    <p className="mt-2">{importResult.message}</p>
-                  </>
-                )}
-                
-                <div className="mt-4 flex justify-end">
-                  <button
-                    onClick={closeImportModal}
-                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
-                  >
-                    Close
-                  </button>
-                </div>
-              </div>
             )}
           </div>
         </div>
