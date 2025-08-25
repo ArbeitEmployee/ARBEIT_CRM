@@ -867,7 +867,6 @@ const ContactsPage = () => {
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>ID</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Subject</th>
                     {compactView ? (
                       <>
@@ -893,7 +892,7 @@ const ContactsPage = () => {
                 <tbody>
                   {currentData.length === 0 ? (
                     <tr>
-                      <td colSpan={compactView ? 7 : 11} className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={compactView ? 6 : 10} className="px-6 py-4 text-center text-gray-500">
                         {contacts.length === 0 ? "No contacts found. Create your first contact!" : "No matching contacts found."}
                       </td>
                     </tr>
@@ -914,7 +913,6 @@ const ContactsPage = () => {
                             />
                           </div>
                         </td>
-                        <td className="p-3 border-0">{contact._id.substring(0, 8)}...</td>
                         <td className="p-3 border-0">{contact.subject}</td>
                         {compactView ? (
                           <>
@@ -1012,6 +1010,7 @@ const ContactsPage = () => {
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
+                  
                   return (
                     <button
                       key={pageNum}
@@ -1025,7 +1024,7 @@ const ContactsPage = () => {
                 <button
                   className="px-3 py-1 border rounded disabled:opacity-50"
                   onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || totalPages === 0}
                 >
                   Next
                 </button>
@@ -1038,82 +1037,85 @@ const ContactsPage = () => {
       {/* Import Modal */}
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-96">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Import Contracts</h3>
-              <button onClick={closeImportModal} className="text-gray-500 hover:text-gray-700">
-                <FaTimes />
-              </button>
-            </div>
-
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Import Contracts</h2>
+            
             {importProgress ? (
-              <div className="text-center py-4">
-                <div className="text-blue-500 mb-2">{importProgress.message}</div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div className="bg-blue-500 h-2 rounded-full animate-pulse"></div>
-                </div>
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">{importProgress.message}</p>
+                {importProgress.status === 'uploading' && (
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div className="bg-blue-600 h-2.5 rounded-full animate-pulse"></div>
+                  </div>
+                )}
               </div>
             ) : importResult ? (
-              <div className={`p-4 rounded mb-4 ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              <div className={`mb-4 p-4 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                 {importResult.success ? (
                   <>
-                    <p className="font-semibold">Import completed!</p>
-                    <p>Successfully imported: {importResult.imported}</p>
+                    <p className="font-medium">Import completed successfully!</p>
+                    <p className="text-sm mt-1">Imported: {importResult.imported} contracts</p>
                     {importResult.errorCount > 0 && (
-                      <p>Errors: {importResult.errorCount}</p>
+                      <p className="text-sm">Errors: {importResult.errorCount}</p>
                     )}
+                    
                     {importResult.errorMessages && importResult.errorMessages.length > 0 && (
-                      <div className="mt-2">
-                        <p className="font-semibold">Error details:</p>
-                        <ul className="text-xs max-h-32 overflow-y-auto">
+                      <div className="mt-3 text-xs">
+                        <p className="font-medium">Error details:</p>
+                        <ul className="list-disc pl-5 mt-1">
                           {importResult.errorMessages.map((error, index) => (
-                            <li key={index} className="mt-1">• {error}</li>
+                            <li key={index}>{error}</li>
                           ))}
                         </ul>
                       </div>
                     )}
                   </>
                 ) : (
-                  <p>Import failed: {importResult.message}</p>
+                  <p>Error: {importResult.message}</p>
                 )}
-                <button
-                  onClick={closeImportModal}
-                  className="mt-4 px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
-                >
-                  Close
-                </button>
               </div>
             ) : (
               <>
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">
-                    Upload an Excel or CSV file with contract data. The file should include columns for:
-                    Subject, Customer ID, Contract Type, Contract Value, Start Date, End Date, Project, and Signature Status.
-                  </p>
+                  <p className="text-sm text-gray-600 mb-2">Select an Excel file (.xlsx) to import</p>
                   <input
-                    ref={fileInputRef}
                     type="file"
-                    accept=".xlsx,.xls,.csv"
+                    ref={fileInputRef}
                     onChange={handleFileChange}
-                    className="w-full border rounded p-2"
+                    accept=".xlsx, .xls"
+                    className="w-full border rounded px-3 py-2"
                   />
                 </div>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={closeImportModal}
-                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleImportSubmit}
-                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
-                  >
-                    Import
-                  </button>
+                
+                <div className="mb-4 p-3 bg-blue-50 rounded text-sm">
+                  <p className="font-medium mb-1">File format requirements:</p>
+                  <ul className="list-disc pl-5">
+                    <li>First row should contain column headers</li>
+                    <li>Required columns: Subject, Customer, Contract Type, Contract Value, Start Date, End Date, Project</li>
+                    <li>Customer should match existing customer company names</li>
+                  </ul>
                 </div>
               </>
             )}
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={closeImportModal}
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              >
+                {importResult ? 'Close' : 'Cancel'}
+              </button>
+              
+              {!importProgress && !importResult && (
+                <button
+                  onClick={handleImportSubmit}
+                  disabled={!importFile}
+                  className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                >
+                  Import
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

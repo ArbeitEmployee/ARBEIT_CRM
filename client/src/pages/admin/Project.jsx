@@ -630,7 +630,24 @@ const ProjectPage = () => {
                 <FaPlus /> New Project
               </button>
 
-              {/* Delete Selected button */}
+              
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={() => setCompactView(!compactView)}
+              >
+                {compactView ? "<<" : ">>"}
+              </button>
+            </div>
+          </div>
+
+          {/* White box for table */}
+          <div className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+            {/* Controls */}
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                {/* Delete Selected button */}
               {selectedProjects.length > 0 && (
                 <button
                   className="bg-red-600 text-white px-3 py-1 rounded"
@@ -652,22 +669,6 @@ const ProjectPage = () => {
                   Delete Selected ({selectedProjects.length})
                 </button>
               )}
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
-                onClick={() => setCompactView(!compactView)}
-              >
-                {compactView ? "<<" : ">>"}
-              </button>
-            </div>
-          </div>
-
-          {/* White box for table */}
-          <div className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
-            {/* Controls */}
-            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-              <div className="flex items-center gap-2">
                 {/* Entries per page */}
                 <select
                   className="border rounded px-2 py-1 text-sm"
@@ -771,7 +772,6 @@ const ProjectPage = () => {
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>ID</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project Name</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                     {compactView ? (
@@ -810,7 +810,6 @@ const ProjectPage = () => {
                             />
                           </div>
                         </td>
-                        <td className="p-3 border-0">{project._id}</td>
                         <td className="p-3 border-0 font-medium">{project.name}</td>
                         <td className="p-3 border-0">
                           {project.customer ? (
@@ -888,7 +887,7 @@ const ProjectPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={compactView ? 7 : 10} className="p-4 text-center text-gray-500">
+                      <td colSpan={compactView ? 6 : 9} className="p-4 text-center text-gray-500">
                         {projects.length === 0 ? "No projects found. Create your first project!" : "No projects match your search criteria."}
                       </td>
                     </tr>
