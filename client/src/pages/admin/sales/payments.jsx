@@ -221,7 +221,7 @@ const Payments = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4 pt-28">
+    <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Payments</h1>
