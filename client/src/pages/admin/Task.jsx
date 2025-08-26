@@ -51,6 +51,26 @@ const TaskPage = () => {
     "Complete"
   ];
 
+  // Format date from YYYY-MM-DD to DD-MM-YYYY
+  const formatDateForBackend = (dateString) => {
+    if (!dateString) return "";
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateString;
+  };
+
+  // Format date from DD-MM-YYYY to YYYY-MM-DD for input fields
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const parts = dateString.split('-');
+    if (parts.length === 3 && parts[2].length === 4) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateString;
+  };
+
   // Fetch tasks from API
   const fetchTasks = async () => {
     try {
@@ -163,17 +183,24 @@ const TaskPage = () => {
 
     setIsSaving(true);
     
+    // Format dates for backend
+    const taskData = {
+      ...newTask,
+      startDate: formatDateForBackend(newTask.startDate),
+      deadline: formatDateForBackend(newTask.deadline)
+    };
+    
     try {
       if (editingTask) {
         // Update existing task
-        await axios.put(`http://localhost:5000/api/tasks/${editingTask._id}`, newTask);
+        await axios.put(`http://localhost:5000/api/tasks/${editingTask._id}`, taskData);
         setShowNewTaskForm(false);
         setEditingTask(null);
         fetchTasks();
         alert("Task updated successfully!");
       } else {
         // Create new task
-        await axios.post("http://localhost:5000/api/tasks", newTask);
+        await axios.post("http://localhost:5000/api/tasks", taskData);
         setShowNewTaskForm(false);
         fetchTasks();
         alert("Task created successfully!");
@@ -205,8 +232,8 @@ const TaskPage = () => {
       customerId: task.customerId,
       customerName: task.customer ? task.customer.company : "",
       tags: task.tags || "",
-      startDate: task.startDate || "",
-      deadline: task.deadline || "",
+      startDate: formatDateForInput(task.startDate),
+      deadline: formatDateForInput(task.deadline),
       members: task.members || "",
       status: task.status
     });
@@ -380,8 +407,11 @@ const TaskPage = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      return `${parts[0]}/${parts[1]}/${parts[2]}`;
+    }
+    return dateString;
   };
 
   return (
