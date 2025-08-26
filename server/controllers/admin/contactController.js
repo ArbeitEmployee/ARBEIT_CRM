@@ -106,19 +106,36 @@ export const importContacts = async (req, res) => {
     const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    // Use header: 1 to get the raw values, then process dates
+    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
     if (!jsonData.length) {
       return res.status(400).json({ message: "CSV file is empty" });
     }
 
+    // Assuming the first row is headers
+    const headers = jsonData[0];
+    const dataRows = jsonData.slice(1);
+
+    // Map headers to expected keys for easier access
+    const headerMap = {
+      'Subject': 'Subject',
+      'Customer': 'Customer',
+      'Contract Type': 'Contract Type',
+      'Contract Value': 'Contract Value',
+      'Start Date': 'Start Date',
+      'End Date': 'End Date',
+      'Project': 'Project',
+      'Signature': 'Signature'
+    };
+
     // Validate required fields
     const requiredFields = ['Subject', 'Customer', 'Contract Type', 'Contract Value', 'Start Date', 'End Date', 'Project'];
-    const missingFields = requiredFields.filter(field => !jsonData[0].hasOwnProperty(field));
+    const missingFields = requiredFields.filter(field => !headers.includes(field));
     
     if (missingFields.length) {
       return res.status(400).json({ 
-        message: `Missing required fields: ${missingFields.join(', ')}` 
+        message: `Missing required fields in header: ${missingFields.join(', ')}` 
       });
     }
 
@@ -126,10 +143,16 @@ export const importContacts = async (req, res) => {
     const importedContacts = [];
     const errorMessages = [];
 
-    for (const [index, row] of jsonData.entries()) {
-      const rowNumber = index + 2; // Excel rows start at 1, header is row 1
+    for (const [index, rowArray] of dataRows.entries()) {
+      const rowNumber = index + 2; // Excel rows start at 1, header is row 1, data starts at row 2
       
-      // Skip if required fields are missing
+      // Create an object from the row array using headers
+      const row = {};
+      headers.forEach((header, i) => {
+        row[header] = rowArray[i];
+      });
+
+      // Skip if required fields are missing in the row
       if (!row.Subject || !row.Customer || !row['Contract Type'] || !row['Contract Value'] || 
           !row['Start Date'] || !row['End Date'] || !row.Project) {
         errorMessages.push(`Row ${rowNumber}: Missing required fields`);
@@ -160,18 +183,30 @@ export const importContacts = async (req, res) => {
         continue;
       }
 
-      // Parse dates
+      // Parse dates using XLSX.SSF.parse_date_code for numeric dates
       let startDate;
       let endDate;
       
       try {
-        startDate = new Date(row['Start Date']);
+        if (typeof row['Start Date'] === 'number') {
+          const dateObj = XLSX.SSF.parse_date_code(row['Start Date']);
+          startDate = new Date(dateObj.y, dateObj.m - 1, dateObj.d); // Month is 0-indexed in JS Date
+        } else {
+          startDate = new Date(row['Start Date']);
+        }
+        
         if (isNaN(startDate.getTime())) {
           errorMessages.push(`Row ${rowNumber}: Invalid Start Date format`);
           continue;
         }
         
-        endDate = new Date(row['End Date']);
+        if (typeof row['End Date'] === 'number') {
+          const dateObj = XLSX.SSF.parse_date_code(row['End Date']);
+          endDate = new Date(dateObj.y, dateObj.m - 1, dateObj.d); // Month is 0-indexed in JS Date
+        } else {
+          endDate = new Date(row['End Date']);
+        }
+
         if (isNaN(endDate.getTime())) {
           errorMessages.push(`Row ${rowNumber}: Invalid End Date format`);
           continue;
