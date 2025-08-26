@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
   FaTimes, FaEdit, FaTrash, FaChevronDown,
-  FaFileAlt, FaFolder, FaFilter
+  FaFileAlt, FaFilter, FaEye // Import FaEye icon
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
+import axios from "axios";
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -18,80 +19,72 @@ const KnowledgeBasePage = () => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showNewArticleForm, setShowNewArticleForm] = useState(false);
   const [articles, setArticles] = useState([]);
-  const [isSaving, setIsSaving] = useState(false);
-  const [stats, setStats] = useState({
-    totalArticles: 0,
-    published: 0,
-    draft: 0,
-    archived: 0
-  });
-  const [newArticle, setNewArticle] = useState({
-    title: "",
-    content: "",
-    group: "",
-    status: "Published"
-  });
-  const [editingArticle, setEditingArticle] = useState(null);
-  const [filterGroup, setFilterGroup] = useState("All");
-
-  const statusOptions = [
-    "Published",
-    "Draft",
-    "Archived"
-  ];
-
-  // Generate dummy groups
-  const groupOptions = [
+  const [groups, setGroups] = useState([
+    "All",
     "General",
     "Technical",
     "Sales",
     "Support",
     "HR",
     "Finance"
-  ];
+  ]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [newArticle, setNewArticle] = useState({
+    title: "",
+    content: "",
+    group: "",
+    dateCreated: ""
+  });
+  const [editingArticle, setEditingArticle] = useState(null);
+  const [viewingArticle, setViewingArticle] = useState(null); // New state for viewing article
+  const [filterGroup, setFilterGroup] = useState("All");
 
-  // Generate dummy data
-  useEffect(() => {
-    const dummyArticles = [];
-    const statuses = ["Published", "Draft", "Archived"];
-    
-    for (let i = 1; i <= 50; i++) {
-      const randomGroup = groupOptions[Math.floor(Math.random() * groupOptions.length)];
-      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-      const randomDate = new Date();
-      randomDate.setDate(randomDate.getDate() - Math.floor(Math.random() * 30));
-      
-      dummyArticles.push({
-        _id: `KB-${1000 + i}`,
-        title: `Knowledge Base Article ${i}`,
-        content: `This is the content of knowledge base article ${i}. It contains helpful information about various topics.`,
-        group: randomGroup,
-        status: randomStatus,
-        datePublished: randomDate.toLocaleDateString('en-GB') + " | " + 
-                      randomDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-      });
+  // Format date from YYYY-MM-DD to DD-MM-YYYY
+  const formatDateForBackend = (dateString) => {
+    if (!dateString) return "";
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
-    
-    setArticles(dummyArticles);
-    
-    // Calculate stats
-    setStats({
-      totalArticles: dummyArticles.length,
-      published: dummyArticles.filter(a => a.status === "Published").length,
-      draft: dummyArticles.filter(a => a.status === "Draft").length,
-      archived: dummyArticles.filter(a => a.status === "Archived").length
-    });
-  }, []);
+    return dateString;
+  };
+
+  // Format date from DD-MM-YYYY to YYYY-MM-DD for input fields
+  const formatDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const parts = dateString.split('-');
+    if (parts.length === 3 && parts[2].length === 4) {
+      return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    return dateString;
+  };
+
+  // Fetch articles from API
+  const fetchArticles = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:5000/api/knowledge-base", {
+        params: {
+          group: filterGroup !== "All" ? filterGroup : null,
+          search: searchTerm
+        }
+      });
+      setArticles(data.articles || []);
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      setArticles([]);
+    }
+  };
+
+  useEffect(() => {
+    fetchArticles();
+  }, [filterGroup]);
 
   // Search filter
   const filteredArticles = articles.filter(article => 
     article._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    article.group.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    article.status.toLowerCase().includes(searchTerm.toLowerCase())
-  ).filter(article => 
-    filterGroup === "All" || article.group === filterGroup
+    article.group.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Pagination
@@ -125,27 +118,25 @@ const KnowledgeBasePage = () => {
 
     setIsSaving(true);
     
-    // Simulate API call with timeout
-    setTimeout(() => {
+    // Format dates for backend
+    const articleData = {
+      ...newArticle,
+      dateCreated: formatDateForBackend(newArticle.dateCreated)
+    };
+    
+    try {
       if (editingArticle) {
         // Update existing article
-        setArticles(prev => prev.map(a => 
-          a._id === editingArticle._id 
-            ? { ...newArticle, _id: editingArticle._id, datePublished: new Date().toLocaleDateString('en-GB') + " | " + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) }
-            : a
-        ));
+        await axios.put(`http://localhost:5000/api/knowledge-base/${editingArticle._id}`, articleData);
         setShowNewArticleForm(false);
         setEditingArticle(null);
+        fetchArticles();
         alert("Article updated successfully!");
       } else {
         // Create new article
-        const newArticleWithId = {
-          ...newArticle,
-          _id: `KB-${1000 + articles.length + 1}`,
-          datePublished: new Date().toLocaleDateString('en-GB') + " | " + new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-        };
-        setArticles(prev => [...prev, newArticleWithId]);
+        await axios.post("http://localhost:5000/api/knowledge-base", articleData);
         setShowNewArticleForm(false);
+        fetchArticles();
         alert("Article created successfully!");
       }
       
@@ -154,11 +145,14 @@ const KnowledgeBasePage = () => {
         title: "",
         content: "",
         group: "",
-        status: "Published"
+        dateCreated: ""
       });
-      
+    } catch (error) {
+      console.error("Error saving article:", error);
+      alert(`Error saving article: ${error.response?.data?.message || error.message}`);
+    } finally {
       setIsSaving(false);
-    }, 500);
+    }
   };
 
   const handleEditArticle = (article) => {
@@ -167,19 +161,21 @@ const KnowledgeBasePage = () => {
       title: article.title,
       content: article.content,
       group: article.group,
-      status: article.status
+      dateCreated: formatDateForInput(article.dateCreated)
     });
     setShowNewArticleForm(true);
   };
 
   const handleDeleteArticle = async (id) => {
     if (window.confirm("Are you sure you want to delete this article?")) {
-      // Simulate API call with timeout
-      setTimeout(() => {
-        setArticles(prev => prev.filter(a => a._id !== id));
-        setSelectedArticles(prev => prev.filter(articleId => articleId !== id));
+      try {
+        await axios.delete(`http://localhost:5000/api/knowledge-base/${id}`);
+        fetchArticles();
         alert("Article deleted successfully!");
-      }, 500);
+      } catch (error) {
+        console.error("Error deleting article:", error);
+        alert(`Error deleting article: ${error.response?.data?.message || error.message}`);
+      }
     }
   };
 
@@ -189,8 +185,7 @@ const KnowledgeBasePage = () => {
       ID: article._id,
       "Article Name": article.title,
       Group: article.group,
-      "Date Published": article.datePublished,
-      Status: article.status
+      "Date Created": article.dateCreated
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -205,8 +200,7 @@ const KnowledgeBasePage = () => {
       ID: article._id,
       "Article Name": article.title,
       Group: article.group,
-      "Date Published": article.datePublished,
-      Status: article.status
+      "Date Created": article.dateCreated
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
@@ -230,16 +224,14 @@ const KnowledgeBasePage = () => {
       "ID",
       "Article Name",
       "Group",
-      "Date Published",
-      "Status"
+      "Date Created"
     ];
     
     const tableRows = filteredArticles.map(article => [
       article._id,
       article.title,
       article.group,
-      article.datePublished,
-      article.status
+      article.dateCreated
     ]);
 
     autoTable(doc,{
@@ -275,7 +267,7 @@ const KnowledgeBasePage = () => {
     
     // Table header
     printWindow.document.write('<thead><tr>');
-    ['ID', 'Article Name', 'Group', 'Date Published', 'Status'].forEach(header => {
+    ['ID', 'Article Name', 'Group', 'Date Created'].forEach(header => {
       printWindow.document.write(`<th>${header}</th>`);
     });
     printWindow.document.write('</tr></thead>');
@@ -288,8 +280,7 @@ const KnowledgeBasePage = () => {
         article._id,
         article.title,
         article.group,
-        article.datePublished,
-        article.status
+        article.dateCreated
       ].forEach(value => {
         printWindow.document.write(`<td>${value}</td>`);
       });
@@ -309,13 +300,13 @@ const KnowledgeBasePage = () => {
     setShowExportMenu(false);
   };
 
-  const getStatusColor = (status) => {
-    switch(status) {
-      case "Published": return "bg-green-100 text-green-800";
-      case "Draft": return "bg-yellow-100 text-yellow-800";
-      case "Archived": return "bg-gray-100 text-gray-800";
-      default: return "bg-gray-100 text-gray-800";
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      return `${parts[0]}/${parts[1]}/${parts[2]}`;
     }
+    return dateString;
   };
 
   return (
@@ -380,24 +371,21 @@ const KnowledgeBasePage = () => {
                   required
                 >
                   <option value="">Select Group</option>
-                  {groupOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {groups.filter(g => g !== "All").map(group => (
+                    <option key={group} value={group}>{group}</option>
                   ))}
                 </select>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select
-                  name="status"
-                  value={newArticle.status}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date Created</label>
+                <input
+                  type="date"
+                  name="dateCreated"
+                  value={newArticle.dateCreated}
                   onChange={handleNewArticleChange}
                   className="w-full border rounded px-3 py-2"
-                >
-                  {statusOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
+                />
               </div>
             </div>
           </div>
@@ -425,61 +413,6 @@ const KnowledgeBasePage = () => {
         </div>
       ) : (
         <>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            {/* Total Articles */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Total Articles</p>
-                  <p className="text-2xl font-bold">{stats.totalArticles}</p>
-                </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaFileAlt className="text-blue-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Published */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Published</p>
-                  <p className="text-2xl font-bold">{stats.published}</p>
-                </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaFileAlt className="text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Draft */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Draft</p>
-                  <p className="text-2xl font-bold">{stats.draft}</p>
-                </div>
-                <div className="bg-yellow-100 p-3 rounded-full">
-                  <FaFileAlt className="text-yellow-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Archived */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Archived</p>
-                  <p className="text-2xl font-bold">{stats.archived}</p>
-                </div>
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <FaFileAlt className="text-gray-600" />
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Top action buttons */}
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
@@ -488,12 +421,6 @@ const KnowledgeBasePage = () => {
                 onClick={() => setShowNewArticleForm(true)}
               >
                 <FaPlus /> New Article
-              </button>
-              <button 
-                className="px-3 py-1 text-sm rounded flex items-center gap-2 border"
-                onClick={() => {}}
-              >
-                <FaFolder /> New Group
               </button>
             </div>
             <div className="flex items-center gap-2">
@@ -517,12 +444,16 @@ const KnowledgeBasePage = () => {
                     className="bg-red-600 text-white px-3 py-1 rounded"
                     onClick={async () => {
                       if (window.confirm(`Delete ${selectedArticles.length} selected articles?`)) {
-                        // Simulate API call with timeout
-                        setTimeout(() => {
-                          setArticles(prev => prev.filter(a => !selectedArticles.includes(a._id)));
+                        try {
+                          await axios.post("http://localhost:5000/api/knowledge-base/bulk-delete", {
+                            articleIds: selectedArticles
+                          });
                           setSelectedArticles([]);
+                          fetchArticles();
                           alert("Selected articles deleted!");
-                        }, 500);
+                        } catch {
+                          alert("Error deleting selected articles.");
+                        }
                       }
                     }}
                   >
@@ -552,8 +483,7 @@ const KnowledgeBasePage = () => {
                     onChange={(e) => setFilterGroup(e.target.value)}
                     className="border-none focus:ring-0 p-0"
                   >
-                    <option value="All">All Groups</option>
-                    {groupOptions.map(group => (
+                    {groups.map(group => (
                       <option key={group} value={group}>{group}</option>
                     ))}
                   </select>
@@ -602,7 +532,7 @@ const KnowledgeBasePage = () => {
                 {/* Refresh button */}
                 <button
                   className="border px-2 py-1 rounded text-sm flex items-center"
-                  onClick={() => window.location.reload()}
+                  onClick={fetchArticles}
                 >
                   <FaSyncAlt />
                 </button>
@@ -646,13 +576,12 @@ const KnowledgeBasePage = () => {
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Group</th>
                     {compactView ? (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date Published</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date Created</th>
                         <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
                     ) : (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date Published</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date Created</th>
                         <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
                     )}
@@ -680,9 +609,17 @@ const KnowledgeBasePage = () => {
                         <td className="p-3 border-0">{article.group}</td>
                         {compactView ? (
                           <>
-                            <td className="p-3 border-0">{article.datePublished}</td>
+                            <td className="p-3 border-0">{formatDate(article.dateCreated)}</td>
                             <td className="p-3 rounded-r-lg border-0">
                               <div className="flex space-x-2">
+                                {/* View Button */}
+                                <button
+                                  onClick={() => setViewingArticle(article)}
+                                  className="text-blue-500 hover:text-blue-700"
+                                  title="View"
+                                >
+                                  <FaEye size={16} />
+                                </button>
                                 <button
                                   onClick={() => handleEditArticle(article)}
                                   className="text-blue-500 hover:text-blue-700"
@@ -702,14 +639,17 @@ const KnowledgeBasePage = () => {
                           </>
                         ) : (
                           <>
-                            <td className="p-3 border-0">{article.datePublished}</td>
-                            <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs ${getStatusColor(article.status)}`}>
-                                {article.status}
-                              </span>
-                            </td>
+                            <td className="p-3 border-0">{formatDate(article.dateCreated)}</td>
                             <td className="p-3 rounded-r-lg border-0">
                               <div className="flex space-x-2">
+                                {/* View Button */}
+                                <button
+                                  onClick={() => setViewingArticle(article)}
+                                  className="text-blue-500 hover:text-blue-700"
+                                  title="View"
+                                >
+                                  <FaEye size={16} />
+                                </button>
                                 <button
                                   onClick={() => handleEditArticle(article)}
                                   className="text-blue-500 hover:text-blue-700"
@@ -732,7 +672,7 @@ const KnowledgeBasePage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={compactView ? 5 : 6} className="p-4 text-center text-gray-500">
+                      <td colSpan={compactView ? 5 : 5} className="p-4 text-center text-gray-500">
                         {articles.length === 0 ? "No articles found. Create your first article!" : "No articles match your search criteria."}
                       </td>
                     </tr>
@@ -778,6 +718,39 @@ const KnowledgeBasePage = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* View Article Modal */}
+      {viewingArticle && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">{viewingArticle.title}</h2>
+              <button 
+                onClick={() => setViewingArticle(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <p><b>Group:</b> {viewingArticle.group}</p>
+              <p><b>Date Created:</b> {formatDate(viewingArticle.dateCreated)}</p>
+              <p><b>Content:</b></p>
+              <div className="border p-3 rounded-md bg-gray-50 max-h-60 overflow-y-auto">
+                {viewingArticle.content}
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button 
+                onClick={() => setViewingArticle(null)} 
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
