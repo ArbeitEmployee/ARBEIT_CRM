@@ -14,6 +14,8 @@ import ClientLogin from "../pages/client/login";
 import ClientRegistration from "../pages/client/registration";
 import ClientForgotPassword from "../pages/client/forgotPassword";
 import Home from "../pages/client/Home";
+
+//Admin Section
 import Customers from "../pages/admin/customers";
 import Proposals from "../pages/admin/sales/proposals";
 import Estimates from "../pages/admin/sales/estimates";
@@ -28,6 +30,12 @@ import ContactsPage from "../pages/admin/Contacts";
 import EstimateForm from "../pages/admin/sales/estimateForm";
 import ProjectsPage from "../pages/admin/Project";
 import TasksPage from "../pages/admin/Task";
+import SupportPage from "../pages/admin/Support";
+import LeadsPage from "../pages/admin/Leads";
+import EstimateRequestPage from "../pages/admin/EstimateRequest";
+import KnowledgeBase from "../pages/admin/KnowledgeBase";
+
+
 import InvoiceForm from "../pages/admin/sales/invoiceForm";
 import CreditNoteForm from "../pages/admin/sales/creditNoteForm";
 
@@ -37,7 +45,7 @@ import CreditNoteForm from "../pages/admin/sales/creditNoteForm";
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Redirect root to client home */}
+      {/* Redirect root to  admin */}
       <Route path="/" element={<Navigate to="/admin/login" replace />} />
 
       {/* Admin Auth Routes */}
@@ -61,20 +69,25 @@ const AppRoutes = () => {
               <Route path="sales/proposals" element={<Proposals/>} />
               <Route path="/proposals/new" element={<ProposalForm />} />
               <Route path="sales/estimates" element={<Estimates />} />
-               <Route path="/estimates/new" element={<EstimateForm />} />
+              <Route path="/estimates/new" element={<EstimateForm />} />
               <Route path="sales/invoices" element={<Invoices/>} />
-               <Route path="/invoices/new" element={<InvoiceForm/>} />
+              <Route path="/invoices/new" element={<InvoiceForm/>} />
               <Route path="sales/payments" element={<Payments/>} />
               <Route path="sales/creditNotes" element={<CreditNotes/>} />
 
               
-               <Route path="/credit-notes/new" element={<CreditNoteForm/>} />
+              <Route path="/credit-notes/new" element={<CreditNoteForm/>} />
               <Route path="sales/items" element={<Items/>} />
               <Route path="subscriptions" element={<SubscriptionPage />} />
               <Route path="expenses" element={<ExpensesPage />} />
               <Route path="contracts" element={<ContactsPage />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="tasks" element={<TasksPage />} />
+              <Route path="support" element={<SupportPage />} />
+              <Route path="leads" element={<LeadsPage />} />
+              <Route path="estimate-request" element={<EstimateRequestPage />} />
+              <Route path="knowledge-base" element={<KnowledgeBase />} />
+
               {/* Add more admin routes here */}
             </Routes>
           </AdminLayout>
