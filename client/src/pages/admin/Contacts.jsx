@@ -51,15 +51,13 @@ const ContactsPage = () => {
     signature: "Not Signed"
   });
   const [editingContact, setEditingContact] = useState(null);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [customerSearchResults, setCustomerSearchResults] = useState([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importFile, setImportFile] = useState(null);
   const [importProgress, setImportProgress] = useState(null);
   const [importResult, setImportResult] = useState(null);
-  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
-  const [customerSearchResults, setCustomerSearchResults] = useState([]);
-  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-  const [chartData, setChartData] = useState([]);
-  const [contractValueData, setContractValueData] = useState([]);
   const fileInputRef = useRef(null);
 
   const contractTypeOptions = [
@@ -80,8 +78,6 @@ const ContactsPage = () => {
         recentlyAdded: 0,
         trash: 0
       });
-      setChartData(data.chartData || []);
-      setContractValueData(data.contractValueData || []);
     } catch (error) {
       console.error("Error fetching contacts:", error);
       setContacts([]);
@@ -92,8 +88,6 @@ const ContactsPage = () => {
         recentlyAdded: 0,
         trash: 0
       });
-      setChartData([]);
-      setContractValueData([]);
     }
   };
 
@@ -103,7 +97,7 @@ const ContactsPage = () => {
 
   // Search customers by company name
   const searchCustomers = async (searchTerm) => {
-    if (searchTerm.length < 2) {
+    if (searchTerm.length < 1) {
       setCustomerSearchResults([]);
       return;
     }
@@ -153,11 +147,8 @@ const ContactsPage = () => {
   };
 
   const handleNewContactChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setNewContact(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+    const { name, value } = e.target;
+    setNewContact(prev => ({ ...prev, [name]: value }));
     
     if (name === "customerName") {
       setCustomerSearchTerm(value);
@@ -251,22 +242,6 @@ const ContactsPage = () => {
     }
   };
 
-  const handleBulkDelete = async () => {
-    if (selectedContacts.length === 0) return;
-    
-    if (window.confirm(`Are you sure you want to delete ${selectedContacts.length} selected contacts?`)) {
-      try {
-        await axios.post("http://localhost:5000/api/contacts/bulk-delete", { ids: selectedContacts });
-        setSelectedContacts([]);
-        fetchContacts();
-        alert("Selected contacts deleted successfully!");
-      } catch (error) {
-        console.error("Error bulk deleting contacts:", error);
-        alert(`Error deleting contacts: ${error.response?.data?.message || error.message}`);
-      }
-    }
-  };
-
   const handleImportClick = () => {
     setImportModalOpen(true);
     setImportFile(null);
@@ -295,12 +270,12 @@ const ContactsPage = () => {
           'Content-Type': 'multipart/form-data'
         }
       });
-
+      
       setImportProgress(null);
       setImportResult({
         success: true,
         imported: data.importedCount,
-        errorCount: data.errorMessages?.length || 0,
+        errorCount: data.errorCount,
         errorMessages: data.errorMessages
       });
       
@@ -311,7 +286,7 @@ const ContactsPage = () => {
       setImportProgress(null);
       setImportResult({
         success: false,
-        message: error.response?.data?.message || error.message || 'Import failed'
+        message: error.response?.data?.message || error.message
       });
     }
   };
@@ -334,8 +309,8 @@ const ContactsPage = () => {
       Customer: contact.customer ? contact.customer.company : "N/A",
       'Contract Type': contact.contractType,
       'Contract Value': contact.contractValue,
-      'Start Date': contact.startDate,
-      'End Date': contact.endDate,
+      'Start Date': contact.startDate ? new Date(contact.startDate).toLocaleDateString() : "N/A",
+      'End Date': contact.endDate ? new Date(contact.endDate).toLocaleDateString() : "N/A",
       Project: contact.project,
       Signature: contact.signature
     }));
@@ -354,8 +329,8 @@ const ContactsPage = () => {
       Customer: contact.customer ? contact.customer.company : "N/A",
       'Contract Type': contact.contractType,
       'Contract Value': contact.contractValue,
-      'Start Date': contact.startDate,
-      'End Date': contact.endDate,
+      'Start Date': contact.startDate ? new Date(contact.startDate).toLocaleDateString() : "N/A",
+      'End Date': contact.endDate ? new Date(contact.endDate).toLocaleDateString() : "N/A",
       Project: contact.project,
       Signature: contact.signature
     }));
@@ -395,8 +370,8 @@ const ContactsPage = () => {
       contact.customer ? contact.customer.company : "N/A",
       contact.contractType,
       `$${contact.contractValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-      contact.startDate,
-      contact.endDate,
+      contact.startDate ? new Date(contact.startDate).toLocaleDateString() : "N/A",
+      contact.endDate ? new Date(contact.endDate).toLocaleDateString() : "N/A",
       contact.project,
       contact.signature
     ]);
@@ -434,7 +409,7 @@ const ContactsPage = () => {
     
     // Table header
     printWindow.document.write('<thead><tr>');
-    ['ID', 'Subject', 'Customer', 'Contract Type', 'Contract Value', 'Start Date', 'End Date', 'Project', 'Signature'].forEach(header => {
+    ['Subject', 'Customer', 'Contract Type', 'Contract Value', 'Start Date', 'End Date', 'Project', 'Signature'].forEach(header => {
       printWindow.document.write(`<th>${header}</th>`);
     });
     printWindow.document.write('</tr></thead>');
@@ -444,13 +419,12 @@ const ContactsPage = () => {
     filteredContacts.forEach(contact => {
       printWindow.document.write('<tr>');
       [
-        contact._id,
         contact.subject,
         contact.customer ? contact.customer.company : "N/A",
         contact.contractType,
         `$${contact.contractValue.toLocaleString('en-US', { minimumFractionDigits: 2 })}`,
-        contact.startDate,
-        contact.endDate,
+        contact.startDate ? new Date(contact.startDate).toLocaleDateString() : "N/A",
+        contact.endDate ? new Date(contact.endDate).toLocaleDateString() : "N/A",
         contact.project,
         contact.signature
       ].forEach(value => {
@@ -480,8 +454,54 @@ const ContactsPage = () => {
     }).format(value);
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+  };
+
+  // Calculate chart data based on actual contacts
+  const chartData = [
+    { 
+      name: 'Express', 
+      value: contacts.filter(c => c.contractType === 'Express Contract').length, 
+      color: '#8884d8' 
+    },
+    { 
+      name: 'Standard', 
+      value: contacts.filter(c => c.contractType === 'Standard Contract').length, 
+      color: '#82ca9d' 
+    },
+    { 
+      name: 'Custom', 
+      value: contacts.filter(c => c.contractType === 'Custom Contract').length, 
+      color: '#ffc658' 
+    },
+  ];
+
+  const contractValueData = [
+    { 
+      type: 'Express Contract', 
+      value: contacts
+        .filter(c => c.contractType === 'Express Contract')
+        .reduce((sum, c) => sum + c.contractValue, 0) 
+    },
+    { 
+      type: 'Standard Contract', 
+      value: contacts
+        .filter(c => c.contractType === 'Standard Contract')
+        .reduce((sum, c) => sum + c.contractValue, 0) 
+    },
+    { 
+      type: 'Custom Contract', 
+      value: contacts
+        .filter(c => c.contractType === 'Custom Contract')
+        .reduce((sum, c) => sum + c.contractValue, 0) 
+    },
+  ];
+
   return (
-    <div className="bg-gray-100 min-h-screen p-4 ">
+    <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">{showNewContactForm ? (editingContact ? "Edit Contact" : "Add New Contact") : "Contracts"}</h1>
@@ -493,7 +513,7 @@ const ContactsPage = () => {
       </div>
 
       {showNewContactForm ? (
-        <div className="bg-white shadow-md rounded p-6 mb-6">
+        <div className="bg-white shadow-md rounded p-6 mb-6 border">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Contract Details</h2>
             <button 
@@ -536,10 +556,10 @@ const ContactsPage = () => {
                   />
                   {showCustomerDropdown && customerSearchResults.length > 0 && (
                     <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
-                      {customerSearchResults.map((customer) => (
+                      {customerSearchResults.map((customer, index) => (
                         <div
-                          key={customer._id}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
                           onClick={() => handleSelectCustomer(customer)}
                         >
                           <div className="font-medium">{customer.company}</div>
@@ -548,40 +568,57 @@ const ContactsPage = () => {
                       ))}
                     </div>
                   )}
+                  {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">No customers found</div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Type *</label>
-                <select
-                  name="contractType"
-                  value={newContact.contractType}
-                  onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
-                >
-                  {contractTypeOptions.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Value *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Project *</label>
                 <input
-                  type="number"
-                  name="contractValue"
-                  value={newContact.contractValue}
+                  type="text"
+                  name="project"
+                  value={newContact.project}
                   onChange={handleNewContactChange}
                   className="w-full border rounded px-3 py-2"
                   required
-                  min="0"
-                  step="0.01"
                 />
               </div>
             </div>
 
             {/* Right Column */}
             <div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Type</label>
+                <select
+                  name="contractType"
+                  value={newContact.contractType}
+                  onChange={handleNewContactChange}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  {contractTypeOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contract Value (USD) *</label>
+                <input
+                  type="number"
+                  name="contractValue"
+                  value={newContact.contractValue}
+                  onChange={handleNewContactChange}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="0.00"
+                  step="0.01"
+                  required
+                />
+              </div>
+
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Start Date *</label>
                 <input
@@ -607,19 +644,7 @@ const ContactsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project *</label>
-                <input
-                  type="text"
-                  name="project"
-                  value={newContact.project}
-                  onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
-                  required
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Signature Status *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Signature Status</label>
                 <select
                   name="signature"
                   value={newContact.signature}
@@ -639,88 +664,128 @@ const ContactsPage = () => {
                 setShowNewContactForm(false);
                 setEditingContact(null);
               }}
-              className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveContact}
               disabled={isSaving}
-              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+              className="px-4 py-2 bg-black text-white rounded text-sm hover:bg-gray-800 disabled:opacity-50"
             >
-              {isSaving ? "Saving..." : (editingContact ? "Update Contact" : "Save Contact")}
+              {isSaving ? "Saving..." : (editingContact ? "Update Contract" : "Save")}
             </button>
           </div>
         </div>
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
-            {[
-              { title: "Active", value: stats.active, color: "bg-blue-500" },
-              { title: "Expired", value: stats.expired, color: "bg-red-500" },
-              { title: "About to Expire", value: stats.aboutToExpire, color: "bg-yellow-500" },
-              { title: "Recently Added", value: stats.recentlyAdded, color: "bg-green-500" },
-              { title: "Trash", value: stats.trash, color: "bg-gray-500" }
-            ].map((stat, index) => (
-              <div key={index} className="bg-white shadow rounded-lg p-4 border border-black">
-                <div className="flex items-center">
-                  <div className={`${stat.color} w-4 h-4 rounded-full mr-3`}></div>
-                  <div>
-                    <p className="text-gray-600 text-sm">{stat.title}</p>
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                  </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+            {/* Active Contracts */}
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Active</p>
+                  <p className="text-2xl font-bold">{stats.active}</p>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <FaSyncAlt className="text-blue-600" />
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Expired Contracts */}
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Expired</p>
+                  <p className="text-2xl font-bold">{stats.expired}</p>
+                </div>
+                <div className="bg-red-100 p-3 rounded-full">
+                  <FaTimes className="text-red-600" />
+                </div>
+              </div>
+            </div>
+
+            {/* About to Expire */}
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">About to Expire</p>
+                  <p className="text-2xl font-bold">{stats.aboutToExpire}</p>
+                </div>
+                <div className="bg-yellow-100 p-3 rounded-full">
+                  <FaFilter className="text-yellow-600" />
+                </div>
+              </div>
+            </div>
+
+            {/* Recently Added */}
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Recently Added</p>
+                  <p className="text-2xl font-bold">{stats.recentlyAdded}</p>
+                </div>
+                <div className="bg-green-100 p-3 rounded-full">
+                  <FaPlus className="text-green-600" />
+                </div>
+              </div>
+            </div>
+
+            {/* Trash */}
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Trash</p>
+                  <p className="text-2xl font-bold">{stats.trash}</p>
+                </div>
+                <div className="bg-gray-100 p-3 rounded-full">
+                  <FaTrash className="text-gray-600" />
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Contract Type Distribution */}
-            <div className="bg-white shadow rounded-lg p-6 border border-black">
-              <h3 className="text-lg font-semibold mb-4">Contract Type Distribution</h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={chartData}
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                    >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => [`${value} contracts`, 'Count']} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
+            <div className="bg-white shadow rounded-lg p-4 border">
+              <h3 className="text-lg font-semibold mb-4">Contracts by Type</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {chartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-
-            {/* Contract Value by Type */}
-            <div className="bg-white shadow rounded-lg p-6 border border-black">
+            <div className="bg-white shadow rounded-lg p-4 border">
               <h3 className="text-lg font-semibold mb-4">Contract Value by Type</h3>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={contractValueData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="type" />
-                    <YAxis 
-                      tickFormatter={(value) => `$${value.toLocaleString()}`}
-                    />
-                    <Tooltip 
-                      formatter={(value) => [`$${value.toLocaleString()}`, 'Value']}
-                    />
-                    <Legend />
-                    <Bar dataKey="value" fill="#8884d8" name="Contract Value" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={contractValueData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="type" />
+                  <YAxis 
+                    tickFormatter={(value) => `$${value.toLocaleString('en-US', { maximumFractionDigits: 0 })}`} 
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`$${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`, 'Value']}
+                  />
+                  <Legend />
+                  <Bar dataKey="value" fill="#8884d8" name="Contract Value" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
@@ -733,11 +798,12 @@ const ContactsPage = () => {
               >
                 <FaPlus /> New Contract
               </button>
-              <button 
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+
+              <button
                 onClick={handleImportClick}
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
               >
-                Import Contracts
+                <FaFileImport /> Import
               </button>
             </div>
             <div className="flex items-center gap-2">
@@ -747,14 +813,11 @@ const ContactsPage = () => {
               >
                 {compactView ? "<<" : ">>"}
               </button>
-              <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
-                <FaFilter /> Filters
-              </button>
             </div>
           </div>
 
           {/* White box for table */}
-          <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+          <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"} border`}>
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
@@ -762,7 +825,20 @@ const ContactsPage = () => {
                 {selectedContacts.length > 0 && (
                   <button
                     className="bg-red-600 text-white px-3 py-1 rounded"
-                    onClick={handleBulkDelete}
+                    onClick={async () => {
+                      if (window.confirm(`Delete ${selectedContacts.length} selected contracts?`)) {
+                        try {
+                          await Promise.all(selectedContacts.map(id =>
+                            axios.delete(`http://localhost:5000/api/contacts/${id}`)
+                          ));
+                          setSelectedContacts([]);
+                          fetchContacts();
+                          alert("Selected contracts deleted!");
+                        } catch {
+                          alert("Error deleting selected contracts.");
+                        }
+                      }
+                    }}
                   >
                     Delete Selected ({selectedContacts.length})
                   </button>
@@ -849,9 +925,8 @@ const ContactsPage = () => {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto ">      
-                
-              <table className="w-full text-sm border-separate border-spacing-y-2 ">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
                     <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
@@ -868,16 +943,16 @@ const ContactsPage = () => {
                       />
                     </th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Subject</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                     {compactView ? (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Type</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Value</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>End Date</th>
                         <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
                     ) : (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Type</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Value</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
@@ -890,141 +965,127 @@ const ContactsPage = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {currentData.length === 0 ? (
-                    <tr>
-                      <td colSpan={compactView ? 6 : 10} className="px-6 py-4 text-center text-gray-500">
-                        {contacts.length === 0 ? "No contacts found. Create your first contact!" : "No matching contacts found."}
+                  {currentData.map((contact) => (
+                    <tr
+                      key={contact._id}
+                      className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                      style={{ color: 'black' }}
+                    >
+                      <td className="p-3 rounded-l-lg border-0">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedContacts.includes(contact._id)}
+                            onChange={() => toggleContactSelection(contact._id)}
+                            className="h-4 w-4"
+                          />
+                        </div>
                       </td>
-                    </tr>
-                  ) : (
-                    currentData.map((contact) => (
-                      <tr
-                        key={contact._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50"
-                        style={{ color: 'black' }}
-                      >
-                        <td className="p-3 rounded-l-lg border-0">
-                          <div className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={selectedContacts.includes(contact._id)}
-                              onChange={() => toggleContactSelection(contact._id)}
-                              className="h-4 w-4"
-                            />
+                      <td className="p-3 border-0">{contact.subject}</td>
+                      <td className="p-3 border-0">
+                        {contact.customer ? contact.customer.company : "N/A"}
+                        {contact.customer && (
+                          <div className="text-xs text-gray-500">
+                            {contact.customer.contact} • {contact.customer.email}
                           </div>
-                        </td>
-                        <td className="p-3 border-0">{contact.subject}</td>
-                        {compactView ? (
-                          <>
-                            <td className="p-3 border-0">
-                              {contact.customer ? contact.customer.company : "N/A"}
-                            </td>
-                            <td className="p-3 border-0">{contact.contractType}</td>
-                            <td className="p-3 border-0">{formatCurrency(contact.contractValue)}</td>
-                            <td className="p-3 rounded-r-lg border-0">
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => handleEditContact(contact)}
-                                  className="text-blue-500 hover:text-blue-700"
-                                  title="Edit"
-                                >
-                                  <FaEdit size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteContact(contact._id)}
-                                  className="text-red-500 hover:text-red-700"
-                                  title="Delete"
-                                >
-                                  <FaTrash size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="p-3 border-0">
-                              {contact.customer ? contact.customer.company : "N/A"}
-                            </td>
-                            <td className="p-3 border-0">{contact.contractType}</td>
-                            <td className="p-3 border-0">{formatCurrency(contact.contractValue)}</td>
-                            <td className="p-3 border-0">{contact.startDate}</td>
-                            <td className="p-3 border-0">{contact.endDate}</td>
-                            <td className="p-3 border-0">{contact.project}</td>
-                            <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs ${
-                                contact.signature === "Signed" 
-                                  ? "bg-green-100 text-green-800" 
-                                  : "bg-red-100 text-red-800"
-                              }`}>
-                                {contact.signature}
-                              </span>
-                            </td>
-                            <td className="p-3 rounded-r-lg border-0">
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => handleEditContact(contact)}
-                                  className="text-blue-500 hover:text-blue-700"
-                                  title="Edit"
-                                >
-                                  <FaEdit size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteContact(contact._id)}
-                                  className="text-red-500 hover:text-red-700"
-                                  title="Delete"
-                                >
-                                  <FaTrash size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </>
                         )}
-                      </tr>
-                    ))
-                  )}
+                      </td>
+                      {compactView ? (
+                        <>
+                          <td className="p-3 border-0">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              contact.contractType === "Express Contract" ? "bg-blue-100 text-blue-800" :
+                              contact.contractType === "Standard Contract" ? "bg-green-100 text-green-800" :
+                              "bg-yellow-100 text-yellow-800"
+                            }`}>
+                              {contact.contractType}
+                            </span>
+                          </td>
+                          <td className="p-3 border-0">{formatCurrency(contact.contractValue)}</td>
+                          <td className="p-3 border-0">{formatDate(contact.endDate)}</td>
+                          <td className="p-3 border-0 rounded-r-lg">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditContact(contact)}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <FaEdit />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteContact(contact._id)}
+                                className="text-red-600 hover:text-red-800"
+                              >
+                                <FaTrash />
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="p-3 border-0">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              contact.contractType === "Express Contract" ? "bg-blue-100 text-blue-800" :
+                              contact.contractType === "Standard Contract" ? "bg-green-100 text-green-800" :
+                              "bg-yellow-100 text-yellow-800"
+                            }`}>
+                              {contact.contractType}
+                            </span>
+                          </td>
+                          <td className="p-3 border-0">{formatCurrency(contact.contractValue)}</td>
+                          <td className="p-3 border-0">{formatDate(contact.startDate)}</td>
+                          <td className="p-3 border-0">{formatDate(contact.endDate)}</td>
+                          <td className="p-3 border-0">{contact.project}</td>
+                          <td className="p-3 border-0">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              contact.signature === "Signed" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                            }`}>
+                              {contact.signature}
+                            </span>
+                          </td>
+                          <td className="p-3 border-0 rounded-r-lg">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => handleEditContact(contact)}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                <FaEdit />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteContact(contact._id)}
+                                className="text-red-600 hover:text-red-800"
+                              >
+                                <FaTrash />
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <div>
+              <div className="text-sm text-gray-600">
                 Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredContacts.length)} of {filteredContacts.length} entries
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center space-x-2">
                 <button
-                  className="px-3 py-1 border rounded disabled:opacity-50"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
                 </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  
-                  return (
-                    <button
-                      key={pageNum}
-                      className={`px-3 py-1 border rounded ${currentPage === pageNum ? 'bg-gray-200' : ''}`}
-                      onClick={() => setCurrentPage(pageNum)}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
                 <button
-                  className="px-3 py-1 border rounded disabled:opacity-50"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
                 >
                   Next
                 </button>
@@ -1042,75 +1103,72 @@ const ContactsPage = () => {
             
             {importProgress ? (
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">{importProgress.message}</p>
-                {importProgress.status === 'uploading' && (
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full animate-pulse"></div>
+                <p className="text-gray-600">{importProgress.message}</p>
+                {importProgress.status === 'processing' && (
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${importProgress.progress}%` }}></div>
                   </div>
                 )}
               </div>
             ) : importResult ? (
-              <div className={`mb-4 p-4 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              <div className={`mb-4 p-4 rounded border ${
+                importResult.success ? "bg-green-100 border-green-400 text-green-800" : "bg-red-100 border-red-400 text-red-800"
+              }`}>
                 {importResult.success ? (
                   <>
-                    <p className="font-medium">Import completed successfully!</p>
-                    <p className="text-sm mt-1">Imported: {importResult.imported} contracts</p>
+                    <p className="font-semibold">Import completed successfully!</p>
+                    <p className="mt-2">Imported: {importResult.imported} contracts</p>
                     {importResult.errorCount > 0 && (
-                      <p className="text-sm">Errors: {importResult.errorCount}</p>
+                      <p className="mt-2">Failed: {importResult.errorCount} contracts</p>
                     )}
-                    
                     {importResult.errorMessages && importResult.errorMessages.length > 0 && (
-                      <div className="mt-3 text-xs">
-                        <p className="font-medium">Error details:</p>
+                      <div className="mt-2">
+                        <p className="font-semibold">Errors:</p>
                         <ul className="list-disc pl-5 mt-1">
                           {importResult.errorMessages.map((error, index) => (
-                            <li key={index}>{error}</li>
+                            <li key={index} className="text-sm">{error}</li>
                           ))}
                         </ul>
                       </div>
                     )}
                   </>
                 ) : (
-                  <p>Error: {importResult.message}</p>
+                  <>
+                    <p className="font-semibold">Import failed!</p>
+                    <p className="mt-2">{importResult.message}</p>
+                  </>
                 )}
               </div>
             ) : (
               <>
+                <p className="text-gray-600 mb-4">Upload an Excel file to import contracts.</p>
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">Select an Excel file (.xlsx) to import</p>
                   <input
                     type="file"
-                    ref={fileInputRef}
+                    accept=".xlsx,.xls"
                     onChange={handleFileChange}
-                    accept=".xlsx, .xls"
-                    className="w-full border rounded px-3 py-2"
+                    ref={fileInputRef}
+                    className="w-full border rounded p-2"
                   />
                 </div>
-                
-                <div className="mb-4 p-3 bg-blue-50 rounded text-sm">
-                  <p className="font-medium mb-1">File format requirements:</p>
-                  <ul className="list-disc pl-5">
-                    <li>First row should contain column headers</li>
-                    <li>Required columns: Subject, Customer, Contract Type, Contract Value, Start Date, End Date, Project</li>
-                    <li>Customer should match existing customer company names</li>
-                  </ul>
-                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  The Excel file should have columns: Subject, Customer, Contract Type, Contract Value, Start Date, End Date, Project, Signature
+                </p>
               </>
             )}
-            
+
             <div className="flex justify-end space-x-3">
               <button
                 onClick={closeImportModal}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
               >
-                {importResult ? 'Close' : 'Cancel'}
+                {importResult ? "Close" : "Cancel"}
               </button>
-              
-              {!importProgress && !importResult && (
+              {!importResult && !importProgress && (
                 <button
                   onClick={handleImportSubmit}
                   disabled={!importFile}
-                  className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                  className="px-4 py-2 bg-black text-white rounded text-sm hover:bg-gray-800 disabled:opacity-50"
                 >
                   Import
                 </button>

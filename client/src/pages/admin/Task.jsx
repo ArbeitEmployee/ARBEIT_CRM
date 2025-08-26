@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect} from "react";
 import { 
-  FaPlus, FaFilter, FaSearch, FaSyncAlt, FaChevronRight, 
-  FaTimes, FaEdit, FaTrash, FaChevronDown, FaFileImport,
+  FaPlus, FaSearch, FaSyncAlt, FaChevronRight, 
+  FaTimes, FaEdit, FaTrash, FaChevronDown,
   FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
@@ -13,7 +13,7 @@ import autoTable from 'jspdf-autotable';
 const TaskPage = () => {
   const [selectedTasks, setSelectedTasks] = useState([]);
   const [compactView, setCompactView] = useState(false);
-  const [entriesPerPage, setEntriesPerPage] = useState(10);
+  const [entriesPerPage, setEntriesPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [showExportMenu, setShowExportMenu] = useState(false);
@@ -30,7 +30,8 @@ const TaskPage = () => {
   });
   const [newTask, setNewTask] = useState({
     projectName: "",
-    customer: "",
+    customerId: "",
+    customerName: "",
     tags: "",
     startDate: "",
     deadline: "",
@@ -38,12 +39,9 @@ const TaskPage = () => {
     status: "Not Started"
   });
   const [editingTask, setEditingTask] = useState(null);
-  const [hoveredRow, setHoveredRow] = useState(null);
-  const [importModalOpen, setImportModalOpen] = useState(false);
-  const [importFile, setImportFile] = useState(null);
-  const [importProgress, setImportProgress] = useState(null);
-  const [importResult, setImportResult] = useState(null);
-  const fileInputRef = useRef(null);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [customerSearchResults, setCustomerSearchResults] = useState([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
   const statusOptions = [
     "Not Started",
@@ -56,125 +54,15 @@ const TaskPage = () => {
   // Fetch tasks from API
   const fetchTasks = async () => {
     try {
-      // For demo purposes, using dummy data based on the image
-      setTasks([
-        {
-          _id: "001",
-          projectName: "Build Website",
-          customer: "Arbite, Muslime",
-          tags: "warm",
-          startDate: "20-08-2025",
-          deadline: "20-09-2025",
-          members: "🌬️🌬️🌬️",
-          status: "In Progress"
-        },
-        {
-          _id: "002",
-          projectName: "Mobile App Development",
-          customer: "TechCorp Inc.",
-          tags: "urgent",
-          startDate: "15-08-2025",
-          deadline: "30-09-2025",
-          members: "🌬️🌬️",
-          status: "Not Started"
-        },
-        {
-          _id: "003",
-          projectName: "SEO Optimization",
-          customer: "Local Business",
-          tags: "ongoing",
-          startDate: "01-08-2025",
-          deadline: "01-10-2025",
-          members: "🌬️",
-          status: "Testing"
-        },
-        {
-          _id: "004",
-          projectName: "UI/UX Redesign",
-          customer: "StartUp Co.",
-          tags: "design",
-          startDate: "10-08-2025",
-          deadline: "15-09-2025",
-          members: "🌬️🌬️🌬️🌬️",
-          status: "Feedback"
-        },
-        {
-          _id: "005",
-          projectName: "Backend API",
-          customer: "DevTeam LLC",
-          tags: "development",
-          startDate: "05-08-2025",
-          deadline: "25-09-2025",
-          members: "🌬️🌬️",
-          status: "Complete"
-        },
-        {
-          _id: "006",
-          projectName: "Content Creation",
-          customer: "Marketing Agency",
-          tags: "writing",
-          startDate: "12-08-2025",
-          deadline: "12-10-2025",
-          members: "🌬️🌬️🌬️",
-          status: "In Progress"
-        },
-        {
-          _id: "007",
-          projectName: "Database Migration",
-          customer: "Finance Corp",
-          tags: "technical",
-          startDate: "18-08-2025",
-          deadline: "18-09-2025",
-          members: "🌬️🌬️🌬️🌬️🌬️",
-          status: "Not Started"
-        },
-        {
-          _id: "008",
-          projectName: "Security Audit",
-          customer: "Banking Ltd",
-          tags: "security",
-          startDate: "22-08-2025",
-          deadline: "22-10-2025",
-          members: "🌬️🌬️",
-          status: "Testing"
-        },
-        {
-          _id: "009",
-          projectName: "Payment Integration",
-          customer: "E-commerce Store",
-          tags: "finance",
-          startDate: "25-08-2025",
-          deadline: "05-10-2025",
-          members: "🌬️🌬️🌬️",
-          status: "In Progress"
-        },
-        {
-          _id: "010",
-          projectName: "Analytics Dashboard",
-          customer: "Data Insights Co.",
-          tags: "data",
-          startDate: "28-08-2025",
-          deadline: "28-09-2025",
-          members: "🌬️🌬️🌬️🌬️",
-          status: "Feedback"
-        }
-      ]);
-      
-      // Calculate stats
-      const totalTasks = 10;
-      const notStarted = 2;
-      const inProgress = 3;
-      const testing = 2;
-      const feedback = 2;
-      const complete = 1;
-      
-      setStats({
-        totalTasks,
-        notStarted,
-        inProgress,
-        testing,
-        feedback,
-        complete
+      const { data } = await axios.get("http://localhost:5000/api/tasks");
+      setTasks(data.tasks || []);
+      setStats(data.stats || {
+        totalTasks: 0,
+        notStarted: 0,
+        inProgress: 0,
+        testing: 0,
+        feedback: 0,
+        complete: 0
       });
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -194,12 +82,38 @@ const TaskPage = () => {
     fetchTasks();
   }, []);
 
+  // Search customers by company name
+  const searchCustomers = async (searchTerm) => {
+    if (searchTerm.length < 1) {
+      setCustomerSearchResults([]);
+      return;
+    }
+    
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/tasks/customers/search?q=${searchTerm}`);
+      setCustomerSearchResults(data);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+      setCustomerSearchResults([]);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (customerSearchTerm) {
+        searchCustomers(customerSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [customerSearchTerm]);
+
   // Search filter
   const filteredTasks = tasks.filter(task => 
     task._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.tags.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (task.customer && task.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (task.tags && task.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
     task.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -222,12 +136,27 @@ const TaskPage = () => {
   const handleNewTaskChange = (e) => {
     const { name, value } = e.target;
     setNewTask(prev => ({ ...prev, [name]: value }));
+    
+    if (name === "customerName") {
+      setCustomerSearchTerm(value);
+      setShowCustomerDropdown(true);
+    }
+  };
+
+  const handleSelectCustomer = (customer) => {
+    setNewTask(prev => ({
+      ...prev,
+      customerId: customer._id,
+      customerName: customer.company
+    }));
+    setShowCustomerDropdown(false);
+    setCustomerSearchTerm("");
   };
 
   const handleSaveTask = async () => {
     if (isSaving) return;
     
-    if (!newTask.projectName || !newTask.customer) {
+    if (!newTask.projectName || !newTask.customerId) {
       alert("Please fill in all required fields (Project Name, Customer)");
       return;
     }
@@ -237,12 +166,14 @@ const TaskPage = () => {
     try {
       if (editingTask) {
         // Update existing task
+        await axios.put(`http://localhost:5000/api/tasks/${editingTask._id}`, newTask);
         setShowNewTaskForm(false);
         setEditingTask(null);
         fetchTasks();
         alert("Task updated successfully!");
       } else {
         // Create new task
+        await axios.post("http://localhost:5000/api/tasks", newTask);
         setShowNewTaskForm(false);
         fetchTasks();
         alert("Task created successfully!");
@@ -251,7 +182,8 @@ const TaskPage = () => {
       // Reset form
       setNewTask({
         projectName: "",
-        customer: "",
+        customerId: "",
+        customerName: "",
         tags: "",
         startDate: "",
         deadline: "",
@@ -270,11 +202,12 @@ const TaskPage = () => {
     setEditingTask(task);
     setNewTask({
       projectName: task.projectName,
-      customer: task.customer,
-      tags: task.tags,
-      startDate: task.startDate,
-      deadline: task.deadline,
-      members: task.members,
+      customerId: task.customerId,
+      customerName: task.customer ? task.customer.company : "",
+      tags: task.tags || "",
+      startDate: task.startDate || "",
+      deadline: task.deadline || "",
+      members: task.members || "",
       status: task.status
     });
     setShowNewTaskForm(true);
@@ -283,6 +216,7 @@ const TaskPage = () => {
   const handleDeleteTask = async (id) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
       try {
+        await axios.delete(`http://localhost:5000/api/tasks/${id}`);
         fetchTasks();
         alert("Task deleted successfully!");
       } catch (error) {
@@ -292,54 +226,12 @@ const TaskPage = () => {
     }
   };
 
-  const handleImportClick = () => {
-    setImportModalOpen(true);
-    setImportFile(null);
-    setImportProgress(null);
-    setImportResult(null);
-  };
-
-  const handleFileChange = (e) => {
-    setImportFile(e.target.files[0]);
-  };
-
-  const handleImportSubmit = async () => {
-    if (!importFile) {
-      alert("Please select a file to import");
-      return;
-    }
-
-    // Simulate API call
-    setTimeout(() => {
-      setImportProgress(null);
-      setImportResult({
-        success: true,
-        imported: 5,
-        errorCount: 0,
-        errorMessages: []
-      });
-      
-      // Refresh task list
-      fetchTasks();
-    }, 1500);
-  };
-
-  const closeImportModal = () => {
-    setImportModalOpen(false);
-    setImportFile(null);
-    setImportProgress(null);
-    setImportResult(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
   // Export functions
   const exportToExcel = () => {
     const dataToExport = filteredTasks.map(task => ({
       ID: task._id,
       "Project Name": task.projectName,
-      Customer: task.customer,
+      Customer: task.customer ? task.customer.company : "N/A",
       Tags: task.tags,
       "Start Date": task.startDate,
       Deadline: task.deadline,
@@ -358,7 +250,7 @@ const TaskPage = () => {
     const dataToExport = filteredTasks.map(task => ({
       ID: task._id,
       "Project Name": task.projectName,
-      Customer: task.customer,
+      Customer: task.customer ? task.customer.company : "N/A",
       Tags: task.tags,
       "Start Date": task.startDate,
       Deadline: task.deadline,
@@ -397,7 +289,7 @@ const TaskPage = () => {
     const tableRows = filteredTasks.map(task => [
       task._id,
       task.projectName,
-      task.customer,
+      task.customer ? task.customer.company : "N/A",
       task.tags,
       task.startDate,
       task.deadline,
@@ -450,7 +342,7 @@ const TaskPage = () => {
       [
         task._id,
         task.projectName,
-        task.customer,
+        task.customer ? task.customer.company : "N/A",
         task.tags,
         task.startDate,
         task.deadline,
@@ -486,15 +378,10 @@ const TaskPage = () => {
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch(status) {
-      case "Not Started": return <FaClock className="text-gray-500" />;
-      case "In Progress": return <FaSyncAlt className="text-blue-500" />;
-      case "Testing": return <FaPauseCircle className="text-yellow-500" />;
-      case "Feedback": return <FaBan className="text-purple-500" />;
-      case "Complete": return <FaCheckCircle className="text-green-500" />;
-      default: return <FaClock className="text-gray-500" />;
-    }
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
   };
 
   return (
@@ -510,7 +397,7 @@ const TaskPage = () => {
       </div>
 
       {showNewTaskForm ? (
-        <div className="bg-white shadow-md rounded p-6 mb-6">
+        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Task Details</h2>
             <button 
@@ -541,14 +428,36 @@ const TaskPage = () => {
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                <input
-                  type="text"
-                  name="customer"
-                  value={newTask.customer}
-                  onChange={handleNewTaskChange}
-                  className="w-full border rounded px-3 py-2"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="customerName"
+                    value={newTask.customerName}
+                    onChange={handleNewTaskChange}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                    placeholder="Search customer by company name..."
+                  />
+                  {showCustomerDropdown && customerSearchResults.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                      {customerSearchResults.map((customer, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelectCustomer(customer)}
+                        >
+                          <div className="font-medium">{customer.company}</div>
+                          <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">No customers found</div>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="mb-4">
@@ -583,24 +492,22 @@ const TaskPage = () => {
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
                 <input
-                  type="text"
+                  type="date"
                   name="startDate"
                   value={newTask.startDate}
                   onChange={handleNewTaskChange}
                   className="w-full border rounded px-3 py-2"
-                  placeholder="DD-MM-YYYY"
                 />
               </div>
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
                 <input
-                  type="text"
+                  type="date"
                   name="deadline"
                   value={newTask.deadline}
                   onChange={handleNewTaskChange}
                   className="w-full border rounded px-3 py-2"
-                  placeholder="DD-MM-YYYY"
                 />
               </div>
 
@@ -633,7 +540,7 @@ const TaskPage = () => {
               type="button"
               onClick={handleSaveTask}
               className="px-4 py-2 bg-black text-white rounded text-sm"
-              disabled={!newTask.projectName || !newTask.customer || isSaving}
+              disabled={!newTask.projectName || !newTask.customerId || isSaving}
             >
               {isSaving ? "Saving..." : "Save"}
             </button>
@@ -722,75 +629,67 @@ const TaskPage = () => {
             </div>
           </div>
 
+          {/* Top action buttons */}
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <button 
+                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+                onClick={() => setShowNewTaskForm(true)}
+              >
+                <FaPlus /> New Task
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={() => setCompactView(!compactView)}
+              >
+                {compactView ? "<<" : ">>"}
+              </button>
+            </div>
+          </div>
+
           {/* White box for table */}
-          <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`} 
-               style={{ borderRadius: '8px', border: '1px solid #E0E0E0', backgroundColor: '#F2F4F7' }}>
+          <div className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                {/* Entries per page */}
-                <div className="flex items-center gap-2">
-                  <select
-                    className="border rounded px-2 py-1 text-sm"
-                    value={entriesPerPage}
-                    onChange={(e) => {
-                      setEntriesPerPage(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                  >
-                    <option value={5}>5</option>
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </div>
-                
-                {/* Filter button */}
-                <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
-                  <FaFilter /> Filter
-                </button>
-                
-                {/* Search */}
-                <div className="relative">
-                  <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="border rounded pl-8 pr-3 py-1 text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {/* Arrow button */}
+                {/* Delete Selected button */}
+              {selectedTasks.length > 0 && (
                 <button
-                  className="border px-3 py-1 text-sm rounded flex items-center gap-2"
-                  onClick={() => setCompactView(!compactView)}
+                  className="bg-red-600 text-white px-3 py-1 rounded"
+                  onClick={async () => {
+                    if (window.confirm(`Delete ${selectedTasks.length} selected tasks?`)) {
+                      try {
+                        await Promise.all(selectedTasks.map(id =>
+                          axios.delete(`http://localhost:5000/api/tasks/${id}`)
+                        ));
+                        setSelectedTasks([]);
+                        fetchTasks();
+                        alert("Selected tasks deleted!");
+                      } catch {
+                        alert("Error deleting selected tasks.");
+                      }
+                    }
+                  }}
                 >
-                  {compactView ? "<<" : ">>"}
+                  Delete Selected ({selectedTasks.length})
                 </button>
-
-                {/* New Task button */}
-                <button 
-                  className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
-                  onClick={() => setShowNewTaskForm(true)}
+              )}
+                {/* Entries per page */}
+                <select
+                  className="border rounded px-2 py-1 text-sm"
+                  value={entriesPerPage}
+                  onChange={(e) => {
+                    setEntriesPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
                 >
-                  <FaPlus /> New Task
-                </button>
-                
-                {/* Import Tasks button */}
-                <button 
-                  className="border px-3 py-1 text-sm rounded flex items-center gap-2"
-                  onClick={handleImportClick}
-                >
-                  <FaFileImport /> Import Tasks
-                </button>
+                  <option value={5}>5</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
                 
                 {/* Export button */}
                 <div className="relative">
@@ -840,32 +739,25 @@ const TaskPage = () => {
                   <FaSyncAlt />
                 </button>
               </div>
+
+              {/* Search */}
+              <div className="relative">
+                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                />
+              </div>
             </div>
 
             {/* Table */}
             <div className="overflow-x-auto">
-              {/* Bulk delete button */}
-              {selectedTasks.length > 0 && (
-                <div className="p-2 border bg-red-50 mb-2 rounded-lg">
-                  <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
-                    onClick={async () => {
-                      if (window.confirm(`Delete ${selectedTasks.length} selected tasks?`)) {
-                        try {
-                          setSelectedTasks([]);
-                          fetchTasks();
-                          alert("Selected tasks deleted!");
-                        } catch {
-                          alert("Error deleting selected tasks.");
-                        }
-                      }
-                    }}
-                  >
-                    Delete Selected ({selectedTasks.length})
-                  </button>
-                </div>
-              )}
-              
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
@@ -875,98 +767,133 @@ const TaskPage = () => {
                         checked={selectedTasks.length === currentData.length && currentData.length > 0}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedTasks(currentData.map(c => c._id));
+                            setSelectedTasks(currentData.map((task) => task._id));
                           } else {
                             setSelectedTasks([]);
                           }
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>ID</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project Name</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                     {compactView ? (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
                     ) : (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Members</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
                     )}
                   </tr>
                 </thead>
-                
                 <tbody>
-                  {currentData.map((task) => (
-                    <tr 
-                      key={task._id} 
-                      className="hover:bg-gray-50 relative"
-                      onMouseEnter={() => setHoveredRow(task._id)}
-                      onMouseLeave={() => setHoveredRow(null)}
-                      style={{ backgroundColor: 'white', color: 'black' }}
-                    >
-                      <td className="p-3 rounded-l-lg border-0">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedTasks.includes(task._id)}
-                            onChange={() => toggleTaskSelection(task._id)}
-                            className="h-4 w-4"
-                          />
-                          {hoveredRow === task._id && (
-                            <div className="absolute left-8 flex space-x-1 bg-white shadow-md rounded p-1 z-10">
-                              <button 
-                                onClick={() => handleEditTask(task)}
-                                className="text-blue-500 hover:text-blue-700 p-1"
-                                title="Edit"
-                              >
-                                <FaEdit size={14} />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteTask(task._id)}
-                                className="text-red-500 hover:text-red-700 p-1"
-                                title="Delete"
-                              >
-                                <FaTrash size={14} />
-                              </button>
+                  {currentData.length > 0 ? (
+                    currentData.map((task) => (
+                      <tr
+                        key={task._id}
+                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                        style={{ color: 'black' }}
+                      >
+                        <td className="p-3 rounded-l-lg border-0">
+                          <div className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedTasks.includes(task._id)}
+                              onChange={() => toggleTaskSelection(task._id)}
+                              className="h-4 w-4"
+                            />
+                          </div>
+                        </td>
+                        <td className="p-3 border-0 font-medium">{task.projectName}</td>
+                        <td className="p-3 border-0">
+                          {task.customer ? (
+                            <div>
+                              <div className="font-medium">{task.customer.company}</div>
+                              <div className="text-xs text-gray-500">
+                                {task.customer.contact} • {task.customer.email}
+                              </div>
                             </div>
+                          ) : (
+                            "N/A"
                           )}
-                        </div>
+                        </td>
+                        {compactView ? (
+                          <>
+                            <td className="p-3 border-0">
+                              <span className={`px-2 py-1 rounded text-xs ${getStatusColor(task.status)}`}>
+                                {task.status}
+                              </span>
+                            </td>
+                            <td className="p-3 border-0">
+                              {formatDate(task.deadline)}
+                            </td>
+                            <td className="p-3 rounded-r-lg border-0">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditTask(task)}
+                                  className="text-blue-500 hover:text-blue-700"
+                                  title="Edit"
+                                >
+                                  <FaEdit size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteTask(task._id)}
+                                  className="text-red-500 hover:text-red-700"
+                                  title="Delete"
+                                >
+                                  <FaTrash size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className="p-3 border-0">{task.tags || "-"}</td>
+                            <td className="p-3 border-0">{formatDate(task.startDate)}</td>
+                            <td className="p-3 border-0">{formatDate(task.deadline)}</td>
+                            <td className="p-3 border-0">{task.members || "-"}</td>
+                            <td className="p-3 border-0">
+                              <span className={`px-2 py-1 rounded text-xs ${getStatusColor(task.status)}`}>
+                                {task.status}
+                              </span>
+                            </td>
+                            <td className="p-3 rounded-r-lg border-0">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditTask(task)}
+                                  className="text-blue-500 hover:text-blue-700"
+                                  title="Edit"
+                                >
+                                  <FaEdit size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteTask(task._id)}
+                                  className="text-red-500 hover:text-red-700"
+                                  title="Delete"
+                                >
+                                  <FaTrash size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={compactView ? 6 : 9} className="p-4 text-center text-gray-500">
+                        {tasks.length === 0 ? "No tasks found. Create your first task!" : "No tasks match your search criteria."}
                       </td>
-                      <td className="p-3 border-0">{task._id}</td>
-                      <td className="p-3 border-0">{task.projectName}</td>
-                      <td className="p-3 border-0">{task.customer}</td>
-                      {compactView ? (
-                        <>
-                          <td className="p-3 border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(task.status)} flex items-center gap-1`}>
-                              {getStatusIcon(task.status)} {task.status}
-                            </span>
-                          </td>
-                          <td className="p-3 rounded-r-lg border-0">{task.deadline}</td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="p-3 border-0">{task.tags}</td>
-                          <td className="p-3 border-0">{task.startDate}</td>
-                          <td className="p-3 border-0">{task.deadline}</td>
-                          <td className="p-3 border-0">{task.members}</td>
-                          <td className="p-3 rounded-r-lg border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(task.status)} flex items-center gap-1`}>
-                              {getStatusIcon(task.status)} {task.status}
-                            </span>
-                          </td>
-                        </>
-                      )}
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1008,111 +935,6 @@ const TaskPage = () => {
             </div>
           </div>
         </>
-      )}
-      {/* Import Tasks Modal */}
-      {importModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Import Tasks</h2>
-              <button onClick={closeImportModal} className="text-gray-500 hover:text-gray-700">
-                <FaTimes />
-              </button>
-            </div>
-
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">
-                Your CSV data should include <strong>Project Name</strong>, <strong>Customer</strong>, and <strong>Status</strong> columns.
-              </p>
-              
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={handleFileChange}
-                  accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
-                  className="hidden"
-                  id="import-file"
-                />
-                <label
-                  htmlFor="import-file"
-                  className="cursor-pointer block"
-                >
-                  {importFile ? (
-                    <div className="text-green-600">
-                      <p>Selected file: {importFile.name}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {(importFile.size / 1024).toFixed(2)} KB
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <HiOutlineDownload className="mx-auto text-3xl text-gray-400 mb-2" />
-                      <p className="text-sm text-gray-600">
-                        Drag and drop your CSV file here, or click to browse
-                      </p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Only CSV files are accepted
-                      </p>
-                    </>
-                  )}
-                </label>
-              </div>
-            </div>
-
-            {importProgress && (
-              <div className="mb-4 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                <p>{importProgress.message}</p>
-              </div>
-            )}
-
-            {importResult && (
-              <div className={`mb-4 p-3 rounded text-sm ${
-                  importResult.success && (!importResult.errorCount || importResult.errorCount === 0)
-                    ? 'bg-green-50 text-green-800'
-                    : 'bg-red-50 text-red-800'
-                }`}>
-                {importResult.success ? (
-                  <>
-                    <p>Import completed with {importResult.imported} successful and {importResult.errorCount} failed.</p>
-                    {importResult.errorCount > 0 && (
-                      <details className="mt-2">
-                        <summary className="cursor-pointer text-sm">Show error details</summary>
-                        <div className="bg-white p-2 mt-1 rounded border text-xs max-h-32 overflow-auto">
-                          {importResult.errorMessages?.map((msg, i) => (
-                            <p key={i}>{msg}</p>
-                          ))}
-                        </div>
-                      </details>
-                    )}
-                  </>
-                ) : (
-                  <p>Error: {importResult.message}</p>
-                )}
-              </div>
-            )}
-
-            <div className="flex justify-end space-x-3 mt-4">
-              <button
-                onClick={closeImportModal}
-                className="px-4 py-2 border rounded text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleImportSubmit}
-                disabled={!importFile || importProgress}
-                className={`px-4 py-2 rounded text-sm ${
-                  !importFile || importProgress
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-black text-white'
-                }`}
-              >
-                {importProgress ? 'Importing...' : 'Import'}
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

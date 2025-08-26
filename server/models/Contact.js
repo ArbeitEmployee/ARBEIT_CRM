@@ -14,51 +14,31 @@ const contactSchema = new mongoose.Schema({
   },
   contractType: {
     type: String,
-    required: [true, "Contract type is required"],
-    enum: [
-      "Express Contract",
-      "Standard Contract",
-      "Custom Contract"
-    ],
+    required: true,
+    enum: ["Express Contract", "Standard Contract", "Custom Contract"],
     default: "Express Contract"
   },
   contractValue: {
     type: Number,
-    required: [true, "Contract value is required"],
-    min: [0, "Contract value cannot be negative"],
-    default: 0
+    required: true,
+    min: [0, "Contract value cannot be negative"]
   },
   startDate: {
-    type: String,
-    required: [true, "Start date is required"],
-    validate: {
-      validator: function(v) {
-        // Accept both DD-MM-YYYY and YYYY-MM-DD formats
-        return /^\d{2}-\d{2}-\d{4}$/.test(v) || /^\d{4}-\d{2}-\d{2}$/.test(v);
-      },
-      message: "Date format should be DD-MM-YYYY or YYYY-MM-DD"
-    }
+    type: Date,
+    required: true
   },
   endDate: {
-    type: String,
-    required: [true, "End date is required"],
-    validate: {
-      validator: function(v) {
-        // Accept both DD-MM-YYYY and YYYY-MM-DD formats
-        return /^\d{2}-\d{2}-\d{4}$/.test(v) || /^\d{4}-\d{2}-\d{2}$/.test(v);
-      },
-      message: "Date format should be DD-MM-YYYY or YYYY-MM-DD"
-    }
+    type: Date,
+    required: true
   },
   project: {
     type: String,
-    required: [true, "Project is required"],
+    required: [true, "Project name is required"],
     trim: true,
     maxlength: [100, "Project name cannot exceed 100 characters"]
   },
   signature: {
     type: String,
-    required: [true, "Signature status is required"],
     enum: ["Signed", "Not Signed"],
     default: "Not Signed"
   }
@@ -69,7 +49,6 @@ const contactSchema = new mongoose.Schema({
 // Add indexes for better performance
 contactSchema.index({ customerId: 1 });
 contactSchema.index({ contractType: 1 });
-contactSchema.index({ startDate: 1 });
 contactSchema.index({ endDate: 1 });
 
 contactSchema.virtual('customer', {

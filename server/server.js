@@ -14,6 +14,7 @@ import subscriptionRoutes from "./routes/admin/subscriptionRoutes.js";
 import expenseRoutes from "./routes/admin/expenseRoutes.js";
 import contactRoutes from "./routes/admin/contactRoutes.js";
 import projectRoutes from "./routes/admin/projectRoutes.js";
+import taskRoutes from "./routes/admin/taskRoutes.js";
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/projects", projectRoutes);
+app.use("/api/tasks", taskRoutes);
 
 
 

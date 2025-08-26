@@ -5,8 +5,7 @@ import {
   updateContact,
   deleteContact,
   importContacts,
-  searchCustomers,
-  bulkDeleteContacts
+  searchCustomers
 } from "../../controllers/admin/contactController.js";
 import multer from "multer";
 
@@ -24,9 +23,6 @@ router.route("/import")
 
 router.route("/customers/search")
   .get(searchCustomers);
-
-router.route("/bulk-delete")
-  .post(bulkDeleteContacts);
 
 router.route("/:id")
   .put(updateContact)
