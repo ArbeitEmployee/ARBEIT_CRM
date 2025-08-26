@@ -19,7 +19,8 @@ const KnowledgeBasePage = () => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showNewArticleForm, setShowNewArticleForm] = useState(false);
   const [articles, setArticles] = useState([]);
-  const [groups, setGroups] = useState([
+  // Removed useState for groups as it's static and setGroups was unused
+  const groups = [
     "All",
     "General",
     "Technical",
@@ -27,7 +28,7 @@ const KnowledgeBasePage = () => {
     "Support",
     "HR",
     "Finance"
-  ]);
+  ];
   const [isSaving, setIsSaving] = useState(false);
   const [newArticle, setNewArticle] = useState({
     title: "",
@@ -60,6 +61,8 @@ const KnowledgeBasePage = () => {
   };
 
   // Fetch articles from API
+  // Moved inside useEffect or wrapped in useCallback for better dependency management
+  // For simplicity, we'll make useEffect depend on filterGroup and searchTerm
   const fetchArticles = async () => {
     try {
       const { data } = await axios.get("http://localhost:5000/api/knowledge-base", {
@@ -77,7 +80,7 @@ const KnowledgeBasePage = () => {
 
   useEffect(() => {
     fetchArticles();
-  }, [filterGroup]);
+  }, [filterGroup, searchTerm]); // Added searchTerm to dependency array
 
   // Search filter
   const filteredArticles = articles.filter(article => 
@@ -121,7 +124,7 @@ const KnowledgeBasePage = () => {
     // Format dates for backend
     const articleData = {
       ...newArticle,
-      dateCreated: formatDateForBackend(newArticle.dateCreated)
+      dateCreated: newArticle.dateCreated ? formatDateForBackend(newArticle.dateCreated) : "" // Ensure date is formatted or empty
     };
     
     try {
@@ -161,7 +164,7 @@ const KnowledgeBasePage = () => {
       title: article.title,
       content: article.content,
       group: article.group,
-      dateCreated: formatDateForInput(article.dateCreated)
+      dateCreated: formatDateForInput(article.dateCreated) // Format for input field
     });
     setShowNewArticleForm(true);
   };
