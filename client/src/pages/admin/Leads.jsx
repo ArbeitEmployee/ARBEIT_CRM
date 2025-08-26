@@ -4,7 +4,7 @@ import {
   FaTimes, FaEdit, FaTrash, FaChevronDown,
   FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare,
   FaUser, FaBuilding, FaEnvelope, FaPhone, FaDollarSign, FaTag, FaUserCheck,
-  FaFileImport
+  FaFileImport, FaFilter // <--- ADDED FaFilter HERE
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
@@ -642,24 +642,22 @@ const LeadsPage = () => {
             </div>
           </div>
 
-          <div className="flex justify-end space-x-3">
+          <div className="flex justify-end gap-3">
             <button
-              type="button"
               onClick={() => {
                 setShowNewLeadForm(false);
                 setEditingLead(null);
               }}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
             >
               Cancel
             </button>
             <button
-              type="button"
               onClick={handleSaveLead}
               disabled={isSaving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
             >
-              {isSaving ? "Saving..." : (editingLead ? "Update Lead" : "Create Lead")}
+              {isSaving ? 'Saving...' : (editingLead ? 'Update Lead' : 'Save Lead')}
             </button>
           </div>
         </div>
@@ -752,185 +750,197 @@ const LeadsPage = () => {
             </div>
           </div>
 
-          {/* Action Bar */}
-          <div className="bg-white shadow-md rounded-lg p-4 mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FaSearch className="text-gray-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search leads..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 pr-4 py-2 border rounded-lg w-full sm:w-64"
-                  />
-                </div>
+          {/* Top action buttons */}
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <button 
+                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+                onClick={() => setShowNewLeadForm(true)}
+              >
+                <FaPlus /> New Lead
+              </button>
+              <button 
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={handleImportClick}
+              >
+                Import Leads
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={() => setCompactView(!compactView)}
+              >
+                {compactView ? "<<" : ">>"}
+              </button>
+              <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
+                <FaFilter /> Filters
+              </button>
+            </div>
+          </div>
 
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="compactView"
-                    checked={compactView}
-                    onChange={() => setCompactView(!compactView)}
-                    className="rounded"
-                  />
-                  <label htmlFor="compactView" className="text-sm text-gray-600">
-                    Compact View
-                  </label>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-3">
+          {/* White box for table */}
+          <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+            {/* Controls */}
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                {/* Delete Selected button */}
                 {selectedLeads.length > 0 && (
                   <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
                     onClick={handleBulkDelete}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center"
                   >
-                    <FaTrash className="mr-2" />
                     Delete Selected ({selectedLeads.length})
                   </button>
                 )}
 
+                {/* Entries per page */}
+                <select
+                  className="border rounded px-2 py-1 text-sm"
+                  value={entriesPerPage}
+                  onChange={(e) => {
+                    setEntriesPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value={5}>5</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+                
+                {/* Export button */}
                 <div className="relative">
                   <button
-                    onClick={() => setShowExportMenu(!showExportMenu)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
+                    onClick={() => setShowExportMenu((prev) => !prev)}
+                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
                   >
-                    <HiOutlineDownload className="mr-2" />
-                    Export
-                    <FaChevronDown className="ml-2 text-xs" />
+                    <HiOutlineDownload /> Export
                   </button>
 
+                  {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10">
-                      <div className="py-1">
-                        <button
-                          onClick={exportToExcel}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Export to Excel
-                        </button>
-                        <button
-                          onClick={exportToCSV}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Export to CSV
-                        </button>
-                        <button
-                          onClick={exportToPDF}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Export to PDF
-                        </button>
-                        <button
-                          onClick={printTable}
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        >
-                          Print
-                        </button>
-                      </div>
+                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={exportToExcel}
+                      >
+                        Excel
+                      </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={exportToCSV}
+                      >
+                        CSV
+                      </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={exportToPDF}
+                      >
+                        PDF
+                      </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={printTable}
+                      >
+                        Print
+                      </button>
                     </div>
                   )}
                 </div>
 
+                {/* Refresh button */}
                 <button
-                  onClick={handleImportClick}
-                  className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center"
+                  className="border px-2 py-1 rounded text-sm flex items-center"
+                  onClick={fetchLeads}
                 >
-                  <FaFileImport className="mr-2" />
-                  Import
-                </button>
-
-                <button
-                  onClick={() => setShowNewLeadForm(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
-                >
-                  <FaPlus className="mr-2" />
-                  New Lead
+                  <FaSyncAlt />
                 </button>
               </div>
-            </div>
-          </div>
 
-          {/* Leads Table */}
-          <div className="bg-white shadow-md rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              {/* Search */}
+              <div className="relative">
+                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">      
+              <table className="w-full text-sm border-separate border-spacing-y-2">
+                <thead>
+                  <tr className="text-left">
+                    <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
                       <input
                         type="checkbox"
                         checked={selectedLeads.length === currentData.length && currentData.length > 0}
-                        onChange={() => {
-                          if (selectedLeads.length === currentData.length) {
-                            setSelectedLeads([]);
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedLeads(currentData.map(c => c._id));
                           } else {
-                            setSelectedLeads(currentData.map(lead => lead._id));
+                            setSelectedLeads([]);
                           }
                         }}
-                        className="rounded"
                       />
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Company
-                    </th>
-                    {!compactView && (
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Name</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Company</th>
+                    {compactView ? (
                       <>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Email
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Phone
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Value
-                        </th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                      </>
+                    ) : (
+                      <>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Email</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Phone</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Value</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Source</th>
+                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
                     )}
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    {!compactView && (
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Source
-                      </th>
-                    )}
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody>
                   {currentData.length === 0 ? (
                     <tr>
-                      <td colSpan={compactView ? 6 : 9} className="px-6 py-4 text-center text-gray-500">
+                      <td colSpan={compactView ? 5 : 9} className="p-3 text-center text-gray-500">
                         {leads.length === 0 ? "No leads found. Click 'New Lead' to get started." : "No matching leads found."}
                       </td>
                     </tr>
                   ) : (
                     currentData.map((lead) => (
-                      <tr key={lead._id} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <input
-                            type="checkbox"
-                            checked={selectedLeads.includes(lead._id)}
-                            onChange={() => toggleLeadSelection(lead._id)}
-                            className="rounded"
-                          />
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      <tr
+                        key={lead._id}
+                        className="bg-white shadow rounded-lg hover:bg-gray-50"
+                        style={{ color: 'black' }}
+                      >
+                        <td className="p-3 rounded-l-lg border-0">
                           <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                              <FaUser className="text-blue-600" />
+                            <input
+                              type="checkbox"
+                              checked={selectedLeads.includes(lead._id)}
+                              onChange={() => toggleLeadSelection(lead._id)}
+                              className="h-4 w-4"
+                            />
+                          </div>
+                        </td>
+                        <td className="p-3 border-0">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <FaUser className="text-blue-600 text-sm" />
                             </div>
-                            <div className="ml-4">
+                            <div className="ml-2">
                               <div className="text-sm font-medium text-gray-900">{lead.name}</div>
                               {lead.customer && (
                                 <div className="text-xs text-green-600">Customer Linked</div>
@@ -938,46 +948,64 @@ const LeadsPage = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{lead.company}</div>
-                        </td>
-                        {!compactView && (
+                        <td className="p-3 border-0">{lead.company}</td>
+                        {compactView ? (
                           <>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{lead.email}</div>
+                            <td className="p-3 border-0">
+                              <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(lead.status)}`}>
+                                {lead.status}
+                              </span>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{lead.phone || "-"}</div>
+                            <td className="p-3 rounded-r-lg border-0">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditLead(lead)}
+                                  className="text-blue-500 hover:text-blue-700"
+                                  title="Edit"
+                                >
+                                  <FaEdit size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteLead(lead._id)}
+                                  className="text-red-500 hover:text-red-700"
+                                  title="Delete"
+                                >
+                                  <FaTrash size={16} />
+                                </button>
+                              </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{formatCurrency(lead.value)}</div>
+                          </>
+                        ) : (
+                          <>
+                            <td className="p-3 border-0">{lead.email}</td>
+                            <td className="p-3 border-0">{lead.phone || "-"}</td>
+                            <td className="p-3 border-0">{formatCurrency(lead.value)}</td>
+                            <td className="p-3 border-0">
+                              <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(lead.status)}`}>
+                                {lead.status}
+                              </span>
+                            </td>
+                            <td className="p-3 border-0">{lead.source || "-"}</td>
+                            <td className="p-3 rounded-r-lg border-0">
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditLead(lead)}
+                                  className="text-blue-500 hover:text-blue-700"
+                                  title="Edit"
+                                >
+                                  <FaEdit size={16} />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteLead(lead._id)}
+                                  className="text-red-500 hover:text-red-700"
+                                  title="Delete"
+                                >
+                                  <FaTrash size={16} />
+                                </button>
+                              </div>
                             </td>
                           </>
                         )}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(lead.status)}`}>
-                            {lead.status}
-                          </span>
-                        </td>
-                        {!compactView && (
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {lead.source || "-"}
-                          </td>
-                        )}
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <button
-                            onClick={() => handleEditLead(lead)}
-                            className="text-blue-600 hover:text-blue-900 mr-3"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteLead(lead._id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <FaTrash />
-                          </button>
-                        </td>
                       </tr>
                     ))
                   )}
@@ -986,67 +1014,47 @@ const LeadsPage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-between">
-              <div className="text-sm text-gray-700 mb-4 sm:mb-0">
-                Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
-                <span className="font-medium">
-                  {Math.min(startIndex + entriesPerPage, filteredLeads.length)}
-                </span>{" "}
-                of <span className="font-medium">{filteredLeads.length}</span> results
+            <div className="flex items-center justify-between mt-4">
+              <div>
+                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredLeads.length)} of {filteredLeads.length} entries
               </div>
-
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center">
-                  <span className="text-sm text-gray-700 mr-2">Show</span>
-                  <select
-                    value={entriesPerPage}
-                    onChange={(e) => {
-                      setEntriesPerPage(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    className="border rounded px-2 py-1 text-sm"
-                  >
-                    <option value={10}>10</option>
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                  <span className="text-sm text-gray-700 ml-2">entries</span>
-                </div>
-
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => setCurrentPage(1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded text-sm disabled:opacity-50"
-                  >
-                    First
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="px-3 py-1 border rounded text-sm disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <span className="px-3 py-1 border rounded text-sm">
-                    {currentPage}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded text-sm disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-1 border rounded text-sm disabled:opacity-50"
-                  >
-                    Last
-                  </button>
-                </div>
+              <div className="flex items-center gap-1">
+                <button
+                  className="px-3 py-1 border rounded"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`px-3 py-1 border rounded ${currentPage === pageNum ? 'bg-black text-white' : ''}`}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                <button
+                  className="px-3 py-1 border rounded"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  Next
+                </button>
               </div>
             </div>
           </div>
@@ -1083,22 +1091,22 @@ const LeadsPage = () => {
                 </div>
 
                 {importProgress && (
-                  <div className="mb-4 p-3 bg-blue-50 text-blue-700 rounded">
+                  <div className="mb-4 p-2 bg-blue-50 text-blue-700 rounded text-sm">
                     {importProgress.message}
                   </div>
                 )}
 
-                <div className="flex justify-end space-x-3">
+                <div className="flex justify-end gap-2">
                   <button
                     onClick={closeImportModal}
-                    className="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50"
+                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleImportSubmit}
                     disabled={!importFile || importProgress}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
                   >
                     Import
                   </button>
@@ -1108,21 +1116,23 @@ const LeadsPage = () => {
               <>
                 {importResult.success ? (
                   <div className="mb-4">
-                    <div className="p-3 bg-green-50 text-green-700 rounded mb-4">
-                      <p className="font-semibold">Import completed successfully!</p>
-                      <p>{importResult.imported} leads imported</p>
-                      {importResult.errorCount > 0 && (
-                        <p>{importResult.errorCount} errors occurred</p>
-                      )}
+                    <div className="p-3 bg-green-50 text-green-700 rounded mb-3">
+                      <p className="font-medium">Import completed successfully!</p>
+                      <p className="text-sm mt-1">
+                        Imported {importResult.imported} leads.
+                        {importResult.errorCount > 0 && (
+                          <span> {importResult.errorCount} rows had errors.</span>
+                        )}
+                      </p>
                     </div>
 
                     {importResult.errorCount > 0 && (
                       <div className="mb-4">
-                        <h4 className="font-semibold mb-2">Errors:</h4>
-                        <div className="max-h-40 overflow-y-auto text-sm">
+                        <p className="font-medium text-sm mb-1">Error details:</p>
+                        <div className="max-h-40 overflow-y-auto text-xs">
                           {importResult.errorMessages.map((error, index) => (
-                            <div key={index} className="text-red-600 mb-1">
-                              {error}
+                            <div key={index} className="p-2 border-b">
+                              <p className="text-red-600">{error}</p>
                             </div>
                           ))}
                         </div>
@@ -1130,16 +1140,16 @@ const LeadsPage = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="mb-4 p-3 bg-red-50 text-red-700 rounded">
-                    <p className="font-semibold">Import failed!</p>
-                    <p>{importResult.message}</p>
+                  <div className="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-200">
+                    <p className="font-medium">Import failed!</p>
+                    <p className="text-sm mt-1">{importResult.message}</p>
                   </div>
                 )}
 
                 <div className="flex justify-end">
                   <button
                     onClick={closeImportModal}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
                   >
                     Close
                   </button>
