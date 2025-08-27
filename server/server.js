@@ -17,6 +17,7 @@ import projectRoutes from "./routes/admin/projectRoutes.js";
 import taskRoutes from "./routes/admin/taskRoutes.js";
 import knowledgeBaseRoutes from "./routes/admin/knowledgeBaseRoutes.js";
 import leadRoutes from "./routes/admin/leadRoutes.js";
+import supportRoutes from "./routes/admin/supportRoutes.js";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/knowledge-base", knowledgeBaseRoutes);
 app.use("/api/leads", leadRoutes);
+app.use("/api/support", supportRoutes);
 
 
 

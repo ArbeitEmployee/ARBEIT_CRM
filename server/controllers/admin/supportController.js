@@ -1,0 +1,200 @@
+import Support from "../../models/Support.js";
+import Customer from "../../models/Customer.js";
+import XLSX from "xlsx";
+
+// @desc    Get all support tickets with customer details
+// @route   GET /api/support
+// @access  Public
+export const getSupportTickets = async (req, res) => {
+  try {
+    const tickets = await Support.find({})
+      .populate('customer', 'company contact email phone')
+      .sort({ createdAt: -1 });
+    
+    // Calculate stats
+    const totalTickets = await Support.countDocuments();
+    const open = await Support.countDocuments({ status: "Open" });
+    const answered = await Support.countDocuments({ status: "Answered" });
+    const onHold = await Support.countDocuments({ status: "On Hold" });
+    const closed = await Support.countDocuments({ status: "Closed" });
+    const inProgress = await Support.countDocuments({ status: "In Progress" });
+    
+    res.json({
+      tickets,
+      stats: {
+        totalTickets,
+        open,
+        answered,
+        onHold,
+        closed,
+        inProgress
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching support tickets:", error);
+    res.status(500).json({ message: "Server error while fetching support tickets" });
+  }
+};
+
+// @desc    Create a support ticket
+// @route   POST /api/support
+// @access  Public
+export const createSupportTicket = async (req, res) => {
+  try {
+    const { subject, description, customerId } = req.body;
+    
+    if (!subject || !description || !customerId) {
+      return res.status(400).json({ 
+        message: "Subject, description and customer are required fields" 
+      });
+    }
+
+    // Check if customer exists
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    const ticket = new Support({
+      subject,
+      description,
+      customerId,
+      tags: req.body.tags || "",
+      service: req.body.service || "GENERAL",
+      department: req.body.department || "Support",
+      priority: req.body.priority || "Medium",
+      status: req.body.status || "Open",
+      created: new Date() // Set created date with current timestamp
+    });
+
+    const createdTicket = await ticket.save();
+    const populatedTicket = await Support.findById(createdTicket._id)
+      .populate('customer', 'company contact email phone');
+      
+    res.status(201).json(populatedTicket);
+  } catch (error) {
+    console.error("Error creating support ticket:", error);
+    res.status(400).json({ 
+      message: error.message.includes("validation failed") 
+        ? "Validation error: " + error.message 
+        : error.message 
+    });
+  }
+};
+
+// @desc    Update a support ticket
+// @route   PUT /api/support/:id
+// @access  Public
+export const updateSupportTicket = async (req, res) => {
+  try {
+    const { subject, description, customerId } = req.body;
+    
+    if (!subject || !description || !customerId) {
+      return res.status(400).json({ 
+        message: "Subject, description and customer are required fields" 
+      });
+    }
+
+    // Check if customer exists
+    const customer = await Customer.findById(customerId);
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+
+    const ticket = await Support.findById(req.params.id);
+    
+    if (!ticket) {
+      return res.status(404).json({ message: "Support ticket not found" });
+    }
+
+    ticket.subject = subject;
+    ticket.description = description;
+    ticket.customerId = customerId;
+    ticket.tags = req.body.tags || "";
+    ticket.service = req.body.service || "GENERAL";
+    ticket.department = req.body.department || "Support";
+    ticket.priority = req.body.priority || "Medium";
+    ticket.status = req.body.status || "Open";
+    ticket.lastReply = req.body.lastReply || ticket.lastReply;
+
+    const updatedTicket = await ticket.save();
+    const populatedTicket = await Support.findById(updatedTicket._id)
+      .populate('customer', 'company contact email phone');
+      
+    res.json(populatedTicket);
+  } catch (error) {
+    console.error("Error updating support ticket:", error);
+    res.status(400).json({ 
+      message: error.message.includes("validation failed") 
+        ? "Validation error: " + error.message 
+        : error.message 
+    });
+  }
+};
+
+// @desc    Delete a support ticket
+// @route   DELETE /api/support/:id
+// @access  Public
+export const deleteSupportTicket = async (req, res) => {
+  try {
+    const ticket = await Support.findById(req.params.id);
+    
+    if (!ticket) {
+      return res.status(404).json({ message: "Support ticket not found" });
+    }
+
+    await Support.deleteOne({ _id: req.params.id });
+    res.json({ message: "Support ticket removed successfully" });
+  } catch (error) {
+    console.error("Error deleting support ticket:", error);
+    res.status(500).json({ message: "Server error while deleting support ticket" });
+  }
+};
+
+// @desc    Search customers by company name for support
+// @route   GET /api/support/customers/search
+// @access  Public
+export const searchCustomers = async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    if (!q || q.length < 2) {
+      return res.json([]);
+    }
+
+    const customers = await Customer.find({
+      company: { $regex: q, $options: 'i' }
+    }).select('company contact email phone').limit(10);
+    
+    res.json(customers);
+  } catch (error) {
+    console.error("Error searching customers:", error);
+    res.status(500).json({ message: "Server error while searching customers" });
+  }
+};
+
+// @desc    Bulk delete support tickets
+// @route   POST /api/support/bulk-delete
+// @access  Public
+export const bulkDeleteSupportTickets = async (req, res) => {
+  try {
+    const { ticketIds } = req.body;
+    
+    if (!ticketIds || !Array.isArray(ticketIds) || ticketIds.length === 0) {
+      return res.status(400).json({ message: "Ticket IDs are required" });
+    }
+
+    const result = await Support.deleteMany({ _id: { $in: ticketIds } });
+    
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "No support tickets found to delete" });
+    }
+
+    res.json({ 
+      message: `${result.deletedCount} support ticket(s) deleted successfully` 
+    });
+  } catch (error) {
+    console.error("Error bulk deleting support tickets:", error);
+    res.status(500).json({ message: "Server error while bulk deleting support tickets" });
+  }
+};

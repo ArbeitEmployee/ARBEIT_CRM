@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
-  FaTimes, FaEdit, FaTrash, FaChevronDown,
+  FaTimes, FaEdit, FaTrash, FaEye, // Added FaEye
   FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare,
   FaExclamationTriangle, FaExclamationCircle
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
+import axios from "axios";
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -34,178 +35,89 @@ const SupportPage = () => {
     tags: "",
     service: "",
     department: "",
-    contact: "",
-    priority: "Medium"
+    customerId: "",
+    customerName: "",
+    priority: "Medium",
+    status: "Open"
   });
   const [editingTicket, setEditingTicket] = useState(null);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [customerSearchResults, setCustomerSearchResults] = useState([]);
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false); // New state for description modal
+  const [currentDescription, setCurrentDescription] = useState(""); // New state for current description
 
   const priorityOptions = ["Low", "Medium", "High", "Urgent"];
   const statusOptions = ["Open", "Answered", "On Hold", "Closed", "In Progress"];
   const serviceOptions = ["FIELD", "STRATEGY", "TECHNICAL", "BILLING", "GENERAL"];
   const departmentOptions = ["Marketing", "Sales", "Support", "Development", "Operations"];
 
-  // Dummy data for tickets
-  const dummyTickets = [
-    {
-      _id: "#001",
-      subject: "Website loading issues",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-      tags: "UI,BUG,URGENT",
-      service: "FIELD",
-      department: "Marketing",
-      contact: "John Doe - john@example.com",
-      priority: "High",
-      status: "Open",
-      created: "21-08-2025",
-      lastReply: "No Reply Yet"
-    },
-    {
-      _id: "#002",
-      subject: "Payment processing error",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-      tags: "BILLING,ISSUE",
-      service: "STRATEGY",
-      department: "Sales",
-      contact: "Jane Smith - jane@example.com",
-      priority: "Urgent",
-      status: "Answered",
-      created: "20-08-2025",
-      lastReply: "22-08-2025"
-    },
-    {
-      _id: "#003",
-      subject: "Feature request - Dark mode",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-      tags: "ENHANCEMENT,UI",
-      service: "TECHNICAL",
-      department: "Development",
-      contact: "Mike Johnson - mike@example.com",
-      priority: "Medium",
-      status: "On Hold",
-      created: "19-08-2025",
-      lastReply: "20-08-2025"
-    },
-    {
-      _id: "#004",
-      subject: "Password reset not working",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-      tags: "SECURITY,BUG",
-      service: "TECHNICAL",
-      department: "Support",
-      contact: "Sarah Wilson - sarah@example.com",
-      priority: "High",
-      status: "In Progress",
-      created: "18-08-2025",
-      lastReply: "19-08-2025"
-    },
-    {
-      _id: "#005",
-      subject: "Invoice discrepancy",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-      tags: "BILLING",
-      service: "BILLING",
-      department: "Operations",
-      contact: "Robert Brown - robert@example.com",
-      priority: "Low",
-      status: "Closed",
-      created: "17-08-2025",
-      lastReply: "18-08-2025"
-    },
-    {
-      _id: "#006",
-      subject: "Mobile app crash on iOS",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-      tags: "BUG,MOBILE,URGENT",
-      service: "TECHNICAL",
-      department: "Development",
-      contact: "Lisa Davis - lisa@example.com",
-      priority: "Urgent",
-      status: "Open",
-      created: "16-08-2025",
-      lastReply: "No Reply Yet"
-    },
-    {
-      _id: "#007",
-      subject: "API integration documentation",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-      tags: "DOCUMENTATION,API",
-      service: "TECHNICAL",
-      department: "Development",
-      contact: "David Miller - david@example.com",
-      priority: "Medium",
-      status: "Answered",
-      created: "15-08-2025",
-      lastReply: "16-08-2025"
-    },
-    {
-      _id: "#008",
-      subject: "Subscription upgrade issue",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-      tags: "BILLING,UPGRADE",
-      service: "BILLING",
-      department: "Sales",
-      contact: "Amy Wilson - amy@example.com",
-      priority: "High",
-      status: "On Hold",
-      created: "14-08-2025",
-      lastReply: "15-08-2025"
-    },
-    {
-      _id: "#009",
-      subject: "Performance optimization",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-      tags: "PERFORMANCE",
-      service: "TECHNICAL",
-      department: "Development",
-      contact: "Chris Taylor - chris@example.com",
-      priority: "Medium",
-      status: "In Progress",
-      created: "13-08-2025",
-      lastReply: "14-08-2025"
-    },
-    {
-      _id: "#010",
-      subject: "Training materials request",
-      description: "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor.",
-      tags: "DOCUMENTATION,TRAINING",
-      service: "GENERAL",
-      department: "Support",
-      contact: "Emily Clark - emily@example.com",
-      priority: "Low",
-      status: "Closed",
-      created: "12-08-2025",
-      lastReply: "13-08-2025"
+  // Fetch tickets from API
+  const fetchTickets = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:5000/api/support");
+      setTickets(data.tickets || []);
+      setStats(data.stats || {
+        totalTickets: 0,
+        open: 0,
+        answered: 0,
+        onHold: 0,
+        closed: 0,
+        inProgress: 0
+      });
+    } catch (error) {
+      console.error("Error fetching support tickets:", error);
+      setTickets([]);
+      setStats({
+        totalTickets: 0,
+        open: 0,
+        answered: 0,
+        onHold: 0,
+        closed: 0,
+        inProgress: 0
+      });
     }
-  ];
+  };
 
-  // Initialize with dummy data
   useEffect(() => {
-    setTickets(dummyTickets);
-    calculateStats(dummyTickets);
+    fetchTickets();
   }, []);
 
-  // Calculate statistics
-  const calculateStats = (ticketsData) => {
-    const stats = {
-      totalTickets: ticketsData.length,
-      open: ticketsData.filter(t => t.status === "Open").length,
-      answered: ticketsData.filter(t => t.status === "Answered").length,
-      onHold: ticketsData.filter(t => t.status === "On Hold").length,
-      closed: ticketsData.filter(t => t.status === "Closed").length,
-      inProgress: ticketsData.filter(t => t.status === "In Progress").length
-    };
-    setStats(stats);
+  // Search customers by company name
+  const searchCustomers = async (searchTerm) => {
+    if (searchTerm.length < 1) {
+      setCustomerSearchResults([]);
+      return;
+    }
+    
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/support/customers/search?q=${searchTerm}`);
+      setCustomerSearchResults(data);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+      setCustomerSearchResults([]);
+    }
   };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (customerSearchTerm) {
+        searchCustomers(customerSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [customerSearchTerm]);
 
   // Search filter
   const filteredTickets = tickets.filter(ticket =>
-    ticket._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    // ticket._id.toLowerCase().includes(searchTerm.toLowerCase()) || // Removed ID from search
     ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (ticket.description && ticket.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (ticket.tags && ticket.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
     ticket.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ticket.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ticket.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (ticket.customer && ticket.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
     ticket.priority.toLowerCase().includes(searchTerm.toLowerCase()) ||
     ticket.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -229,13 +141,28 @@ const SupportPage = () => {
   const handleNewTicketChange = (e) => {
     const { name, value } = e.target;
     setNewTicket(prev => ({ ...prev, [name]: value }));
+    
+    if (name === "customerName") {
+      setCustomerSearchTerm(value);
+      setShowCustomerDropdown(true);
+    }
+  };
+
+  const handleSelectCustomer = (customer) => {
+    setNewTicket(prev => ({
+      ...prev,
+      customerId: customer._id,
+      customerName: customer.company
+    }));
+    setShowCustomerDropdown(false);
+    setCustomerSearchTerm("");
   };
 
   const handleSaveTicket = async () => {
     if (isSaving) return;
     
-    if (!newTicket.subject || !newTicket.description) {
-      alert("Please fill in all required fields (Subject, Description)");
+    if (!newTicket.subject || !newTicket.description || !newTicket.customerId) {
+      alert("Please fill in all required fields (Subject, Description, Customer)");
       return;
     }
 
@@ -244,29 +171,16 @@ const SupportPage = () => {
     try {
       if (editingTicket) {
         // Update existing ticket
-        const updatedTickets = tickets.map(ticket =>
-          ticket._id === editingTicket._id
-            ? { ...editingTicket, ...newTicket }
-            : ticket
-        );
-        setTickets(updatedTickets);
-        calculateStats(updatedTickets);
+        await axios.put(`http://localhost:5000/api/support/${editingTicket._id}`, newTicket);
         setShowNewTicketForm(false);
         setEditingTicket(null);
+        fetchTickets();
         alert("Ticket updated successfully!");
       } else {
         // Create new ticket
-        const newId = `#${String(tickets.length + 1).padStart(3, '0')}`;
-        const newTicketData = {
-          _id: newId,
-          ...newTicket,
-          created: new Date().toLocaleDateString('en-GB'),
-          lastReply: "No Reply Yet"
-        };
-        const updatedTickets = [...tickets, newTicketData];
-        setTickets(updatedTickets);
-        calculateStats(updatedTickets);
+        await axios.post("http://localhost:5000/api/support", newTicket);
         setShowNewTicketForm(false);
+        fetchTickets();
         alert("Ticket created successfully!");
       }
       
@@ -277,12 +191,14 @@ const SupportPage = () => {
         tags: "",
         service: "",
         department: "",
-        contact: "",
-        priority: "Medium"
+        customerId: "",
+        customerName: "",
+        priority: "Medium",
+        status: "Open"
       });
     } catch (error) {
       console.error("Error saving ticket:", error);
-      alert(`Error saving ticket: ${error.message}`);
+      alert(`Error saving ticket: ${error.response?.data?.message || error.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -296,8 +212,10 @@ const SupportPage = () => {
       tags: ticket.tags || "",
       service: ticket.service,
       department: ticket.department,
-      contact: ticket.contact,
-      priority: ticket.priority
+      customerId: ticket.customerId,
+      customerName: ticket.customer ? ticket.customer.company : "",
+      priority: ticket.priority,
+      status: ticket.status
     });
     setShowNewTicketForm(true);
   };
@@ -305,30 +223,40 @@ const SupportPage = () => {
   const handleDeleteTicket = async (id) => {
     if (window.confirm("Are you sure you want to delete this ticket?")) {
       try {
-        const updatedTickets = tickets.filter(ticket => ticket._id !== id);
-        setTickets(updatedTickets);
-        calculateStats(updatedTickets);
+        await axios.delete(`http://localhost:5000/api/support/${id}`);
+        fetchTickets();
         alert("Ticket deleted successfully!");
       } catch (error) {
         console.error("Error deleting ticket:", error);
-        alert(`Error deleting ticket: ${error.message}`);
+        alert(`Error deleting ticket: ${error.response?.data?.message || error.message}`);
       }
     }
+  };
+
+  const handleViewDescription = (description) => {
+    setCurrentDescription(description);
+    setShowDescriptionModal(true);
+  };
+
+  // Helper function to format date and time
+  const formatDateTime = (dateString) => {
+    const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+    return new Date(dateString).toLocaleDateString('en-GB', options);
   };
 
   // Export functions
   const exportToExcel = () => {
     const dataToExport = filteredTickets.map(ticket => ({
-      ID: ticket._id,
+      // ID: ticket._id, // Removed ID from export
       Subject: ticket.subject,
       Description: ticket.description,
       Tags: ticket.tags,
       Service: ticket.service,
       Department: ticket.department,
-      Contact: ticket.contact,
+      Customer: ticket.customer ? ticket.customer.company : "N/A",
       Priority: ticket.priority,
       Status: ticket.status,
-      Created: ticket.created,
+      Created: formatDateTime(ticket.created), // Formatted date
       "Last Reply": ticket.lastReply
     }));
 
@@ -341,16 +269,16 @@ const SupportPage = () => {
 
   const exportToCSV = () => {
     const dataToExport = filteredTickets.map(ticket => ({
-      ID: ticket._id,
+      // ID: ticket._id, // Removed ID from export
       Subject: ticket.subject,
       Description: ticket.description,
       Tags: ticket.tags,
       Service: ticket.service,
       Department: ticket.department,
-      Contact: ticket.contact,
+      Customer: ticket.customer ? ticket.customer.company : "N/A",
       Priority: ticket.priority,
       Status: ticket.status,
-      Created: ticket.created,
+      Created: formatDateTime(ticket.created), // Formatted date
       "Last Reply": ticket.lastReply
     }));
 
@@ -372,12 +300,12 @@ const SupportPage = () => {
     const doc = new jsPDF();
 
     const tableColumn = [
-      "ID",
+      // "ID", // Removed ID from PDF export
       "Subject",
       "Tags",
       "Service",
       "Department",
-      "Contact",
+      "Customer",
       "Priority",
       "Status",
       "Created",
@@ -385,15 +313,15 @@ const SupportPage = () => {
     ];
     
     const tableRows = filteredTickets.map(ticket => [
-      ticket._id,
+      // ticket._id, // Removed ID from PDF export
       ticket.subject.length > 20 ? ticket.subject.substring(0, 20) + '...' : ticket.subject,
       ticket.tags,
       ticket.service,
       ticket.department,
-      ticket.contact.length > 20 ? ticket.contact.substring(0, 20) + '...' : ticket.contact,
+      ticket.customer ? ticket.customer.company : "N/A",
       ticket.priority,
       ticket.status,
-      ticket.created,
+      formatDateTime(ticket.created), // Formatted date
       ticket.lastReply
     ]);
 
@@ -430,7 +358,8 @@ const SupportPage = () => {
     
     // Table header
     printWindow.document.write('<thead><tr>');
-    ['ID', 'Subject', 'Tags', 'Service', 'Department', 'Contact', 'Priority', 'Status', 'Created', 'Last Reply'].forEach(header => {
+    // ['ID', 'Subject', 'Tags', 'Service', 'Department', 'Customer', 'Priority', 'Status', 'Created', 'Last Reply'].forEach(header => { // Removed ID from print
+    ['Subject', 'Tags', 'Service', 'Department', 'Customer', 'Priority', 'Status', 'Created', 'Last Reply'].forEach(header => {
       printWindow.document.write(`<th>${header}</th>`);
     });
     printWindow.document.write('</tr></thead>');
@@ -440,15 +369,15 @@ const SupportPage = () => {
     filteredTickets.forEach(ticket => {
       printWindow.document.write('<tr>');
       [
-        ticket._id,
+        // ticket._id, // Removed ID from print
         ticket.subject,
         ticket.tags,
         ticket.service,
         ticket.department,
-        ticket.contact,
+        ticket.customer ? ticket.customer.company : "N/A",
         ticket.priority,
         ticket.status,
-        ticket.created,
+        formatDateTime(ticket.created), // Formatted date
         ticket.lastReply
       ].forEach(value => {
         printWindow.document.write(`<td>${value}</td>`);
@@ -544,6 +473,40 @@ const SupportPage = () => {
               </div>
 
               <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    name="customerName"
+                    value={newTicket.customerName}
+                    onChange={handleNewTicketChange}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                    placeholder="Search customer by company name..."
+                  />
+                  {showCustomerDropdown && customerSearchResults.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                      {customerSearchResults.map((customer, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelectCustomer(customer)}
+                        >
+                          <div className="font-medium">{customer.company}</div>
+                          <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">No customers found</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
                 <input
                   type="text"
@@ -589,18 +552,6 @@ const SupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Contact</label>
-                <input
-                  type="text"
-                  name="contact"
-                  value={newTicket.contact}
-                  onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
-                  placeholder="Name - email@example.com"
-                />
-              </div>
-
-              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
                 <select
                   name="priority"
@@ -609,6 +560,20 @@ const SupportPage = () => {
                   className="w-full border rounded px-3 py-2"
                 >
                   {priorityOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  name="status"
+                  value={newTicket.status}
+                  onChange={handleNewTicketChange}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  {statusOptions.map(option => (
                     <option key={option} value={option}>{option}</option>
                   ))}
                 </select>
@@ -631,7 +596,7 @@ const SupportPage = () => {
               type="button"
               onClick={handleSaveTicket}
               className="px-4 py-2 bg-black text-white rounded text-sm"
-              disabled={!newTicket.subject || !newTicket.description || isSaving}
+              disabled={!newTicket.subject || !newTicket.description || !newTicket.customerId || isSaving}
             >
               {isSaving ? "Saving..." : "Save"}
             </button>
@@ -752,10 +717,11 @@ const SupportPage = () => {
                   onClick={async () => {
                     if (window.confirm(`Delete ${selectedTickets.length} selected tickets?`)) {
                       try {
-                        const updatedTickets = tickets.filter(ticket => !selectedTickets.includes(ticket._id));
-                        setTickets(updatedTickets);
-                        calculateStats(updatedTickets);
+                        await axios.post("http://localhost:5000/api/support/bulk-delete", {
+                          ticketIds: selectedTickets
+                        });
                         setSelectedTickets([]);
+                        fetchTickets();
                         alert("Selected tickets deleted!");
                       } catch {
                         alert("Error deleting selected tickets.");
@@ -790,63 +756,57 @@ const SupportPage = () => {
                   >
                     <HiOutlineDownload /> Export
                   </button>
-
-                  {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute right-0 mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                       >
                         Excel
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToCSV}
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                       >
                         CSV
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToPDF}
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                       >
                         PDF
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={printTable}
+                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                       >
                         Print
                       </button>
                     </div>
                   )}
                 </div>
-
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {/* Search input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className="border rounded pl-8 pr-3 py-1 text-sm"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                  <FaSearch className="absolute left-2 top-2.5 transform text-gray-400 text-sm" />
+                </div>
+                
                 {/* Refresh button */}
                 <button
+                  onClick={fetchTickets}
                   className="border px-2 py-1 rounded text-sm flex items-center"
-                  onClick={() => {
-                    setTickets(dummyTickets);
-                    calculateStats(dummyTickets);
-                  }}
                 >
                   <FaSyncAlt />
                 </button>
-              </div>
-
-              {/* Search */}
-              <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
-                />
               </div>
             </div>
 
@@ -861,136 +821,96 @@ const SupportPage = () => {
                         checked={selectedTickets.length === currentData.length && currentData.length > 0}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedTickets(currentData.map((ticket) => ticket._id));
+                            setSelectedTickets(currentData.map(ticket => ticket._id));
                           } else {
                             setSelectedTickets([]);
                           }
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>ID</th>
+                    {/* <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>ID</th> */} {/* Removed ID column */}
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Subject</th>
-                    {compactView ? (
-                      <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Priority</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Service</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Department</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contact</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Priority</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Last Reply</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
-                      </>
-                    )}
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Service</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Department</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Priority</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Last Reply</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentData.length > 0 ? (
                     currentData.map((ticket) => (
-                      <tr
-                        key={ticket._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                        style={{ color: 'black' }}
-                      >
+                      <tr key={ticket._id} className="bg-white shadow rounded-lg hover:bg-gray-50 relative" style={{ color: 'black' }}>
                         <td className="p-3 rounded-l-lg border-0">
-                          <div className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={selectedTickets.includes(ticket._id)}
-                              onChange={() => toggleTicketSelection(ticket._id)}
-                              className="h-4 w-4"
-                            />
-                          </div>
+                          <input
+                            type="checkbox"
+                            checked={selectedTickets.includes(ticket._id)}
+                            onChange={() => toggleTicketSelection(ticket._id)}
+                            className="h-4 w-4"
+                          />
                         </td>
-                        <td className="p-3 border-0 font-medium">{ticket._id}</td>
+                        {/* <td className="p-3 border-0 text-sm">{ticket._id}</td> */} {/* Removed ID cell */}
+                        <td className="p-3 border-0 text-sm">{ticket.subject}</td>
+                        <td className="p-3 border-0 text-sm">{ticket.tags}</td>
+                        <td className="p-3 border-0 text-sm">{ticket.service}</td>
+                        <td className="p-3 border-0 text-sm">{ticket.department}</td>
+                        <td className="p-3 border-0 text-sm">
+                          {ticket.customer ? (
+                            <div>
+                              <div className="font-medium">{ticket.customer.company}</div>
+                              <div className="text-xs text-gray-500">{ticket.customer.contact}</div>
+                            </div>
+                          ) : (
+                            "N/A"
+                          )}
+                        </td>
                         <td className="p-3 border-0">
-                          <div className="font-medium">{ticket.subject}</div>
-                          <div className="text-xs text-gray-500 mt-1 line-clamp-2">
-                            {ticket.description}
+                          <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(ticket.priority)}`}>
+                            {ticket.priority}
+                          </span>
+                        </td>
+                        <td className="p-3 border-0">
+                          <span className={`px-2 py-1 rounded text-xs ${getStatusColor(ticket.status)}`}>
+                            {ticket.status}
+                          </span>
+                        </td>
+                        <td className="p-3 border-0 text-sm">{formatDateTime(ticket.created)}</td> {/* Formatted date */}
+                        <td className="p-3 border-0 text-sm">{ticket.lastReply}</td>
+                        <td className="p-3 rounded-r-lg border-0">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleViewDescription(ticket.description)}
+                              className="text-gray-500 hover:text-gray-700"
+                              title="View Description"
+                            >
+                              <FaEye size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleEditTicket(ticket)}
+                              className="text-blue-500 hover:text-blue-700"
+                              title="Edit"
+                            >
+                              <FaEdit size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteTicket(ticket._id)}
+                              className="text-red-500 hover:text-red-700"
+                              title="Delete"
+                            >
+                              <FaTrash size={16} />
+                            </button>
                           </div>
                         </td>
-                        {compactView ? (
-                          <>
-                            <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(ticket.priority)}`}>
-                                {ticket.priority}
-                              </span>
-                            </td>
-                            <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs ${getStatusColor(ticket.status)}`}>
-                                {ticket.status}
-                              </span>
-                            </td>
-                            <td className="p-3 rounded-r-lg border-0">
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => handleEditTicket(ticket)}
-                                  className="text-blue-500 hover:text-blue-700"
-                                  title="Edit"
-                                >
-                                  <FaEdit size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteTicket(ticket._id)}
-                                  className="text-red-500 hover:text-red-700"
-                                  title="Delete"
-                                >
-                                  <FaTrash size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="p-3 border-0">{ticket.tags || "-"}</td>
-                            <td className="p-3 border-0">{ticket.service}</td>
-                            <td className="p-3 border-0">{ticket.department}</td>
-                            <td className="p-3 border-0">{ticket.contact}</td>
-                            <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(ticket.priority)}`}>
-                                {ticket.priority}
-                              </span>
-                            </td>
-                            <td className="p-3 border-0">{ticket.created}</td>
-                            <td className="p-3 border-0">{ticket.lastReply}</td>
-                            <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs ${getStatusColor(ticket.status)}`}>
-                                {ticket.status}
-                              </span>
-                            </td>
-                            <td className="p-3 rounded-r-lg border-0">
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => handleEditTicket(ticket)}
-                                  className="text-blue-500 hover:text-blue-700"
-                                  title="Edit"
-                                >
-                                  <FaEdit size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteTicket(ticket._id)}
-                                  className="text-red-500 hover:text-red-700"
-                                  title="Delete"
-                                >
-                                  <FaTrash size={16} />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        )}
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={compactView ? 6 : 13} className="p-4 text-center">
-                        No tickets found
+                      <td colSpan="11" className="p-4 text-center text-gray-500"> {/* Adjusted colspan */}
+                        {searchTerm ? "No matching tickets found" : "No support tickets available"}
                       </td>
                     </tr>
                   )}
@@ -999,26 +919,21 @@ const SupportPage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-              <div className="text-sm text-gray-700">
-                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredTickets.length)} of {filteredTickets.length} entries
-              </div>
-              <div className="flex gap-1">
+            <div className="flex justify-between items-center mt-4 text-sm">
+              <span>
+                Showing {startIndex + 1} to{" "}
+                {Math.min(startIndex + entriesPerPage, filteredTickets.length)} of{" "}
+                {filteredTickets.length} entries
+              </span>
+              <div className="flex items-center gap-2">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage(1)}
+                  className="px-2 py-1 border rounded disabled:opacity-50"
                   disabled={currentPage === 1}
-                >
-                  First
-                </button>
-                <button
-                  className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((prev) => prev - 1)}
                 >
                   Previous
                 </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                {Array.from({ length: totalPages }, (_, i) => {
                   let pageNum;
                   if (totalPages <= 5) {
                     pageNum = i + 1;
@@ -1032,9 +947,7 @@ const SupportPage = () => {
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        currentPage === pageNum ? "bg-black text-white" : ""
-                      }`}
+                      className={`px-3 py-1 border rounded ${currentPage === pageNum ? "bg-gray-200" : ""}`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
                       {pageNum}
@@ -1042,14 +955,14 @@ const SupportPage = () => {
                   );
                 })}
                 <button
-                  className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  className="px-2 py-1 border rounded disabled:opacity-50"
                   disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((prev) => prev + 1)}
                 >
                   Next
                 </button>
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="px-2 py-1 border rounded disabled:opacity-50"
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={currentPage === totalPages}
                 >
@@ -1059,6 +972,32 @@ const SupportPage = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Description Modal */}
+      {showDescriptionModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Ticket Description</h2>
+              <button
+                onClick={() => setShowDescriptionModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <p className="text-gray-700 whitespace-pre-wrap">{currentDescription}</p>
+            <div className="mt-6 text-right">
+              <button
+                onClick={() => setShowDescriptionModal(false)}
+                className="px-4 py-2 bg-black text-white rounded text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
