@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+// FileName: EstimateRequest.jsx
+import { useState, useEffect, useCallback } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
-  FaTimes, FaEdit, FaTrash, FaChevronDown,
-  FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare,
-  FaFileInvoiceDollar
+  FaTimes, FaEdit, FaTrash, FaEye, FaBan, FaCheckCircle, FaClock, FaFileInvoiceDollar
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
@@ -30,22 +29,24 @@ const EstimateRequestPage = () => {
     expired: 0
   });
   const [newEstimate, setNewEstimate] = useState({
-    estimateNumber: "",
+    // estimateNumber: "", // Removed
     customerId: "",
     customerName: "",
     customerEmail: "",
     customerPhone: "",
     projectName: "",
     amount: "",
-    tags: "",
+    // tags: "", // Removed
     createdDate: new Date().toISOString().split('T')[0],
-    validUntil: "",
-    status: "Draft"
+    // validUntil: "", // Removed
+    status: "Draft",
+    notes: "" // Added notes field
   });
   const [editingEstimate, setEditingEstimate] = useState(null);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [customerSearchResults, setCustomerSearchResults] = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [viewingEstimate, setViewingEstimate] = useState(null); // New state for viewing estimate
 
   const statusOptions = [
     "Draft",
@@ -55,139 +56,42 @@ const EstimateRequestPage = () => {
     "Expired"
   ];
 
-  // Format date from YYYY-MM-DD to DD-MM-YYYY
+  // Format date from YYYY-MM-DD to DD-MM-YYYY for backend
   const formatDateForBackend = (dateString) => {
     if (!dateString) return "";
-    const parts = dateString.split('-');
-    if (parts.length === 3) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
-    return dateString;
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${year}-${month}-${day}`; // YYYY-MM-DD for backend
   };
 
-  // Format date from DD-MM-YYYY to YYYY-MM-DD for input fields
+  // Format date from ISO string to YYYY-MM-DD for input fields
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
-    const parts = dateString.split('-');
-    if (parts.length === 3 && parts[2].length === 4) {
-      return `${parts[2]}-${parts[1]}-${parts[0]}`;
-    }
-    return dateString;
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
   };
 
-  // Generate a unique estimate number
-  const generateEstimateNumber = () => {
-    const prefix = "EST";
-    const timestamp = new Date().getTime().toString().slice(-6);
-    return `${prefix}-${timestamp}`;
-  };
 
-  // Fetch estimates from API (using dummy data for this example)
-  const fetchEstimates = async () => {
+  // Fetch estimates from API
+  const fetchEstimates = useCallback(async () => {
     try {
-      // In a real application, you would fetch from an API
-      // const { data } = await axios.get("http://localhost:5000/api/estimates");
-      
-      // Using dummy data for demonstration
-      const dummyEstimates = [
-        {
-          _id: "1",
-          estimateNumber: "EST-001",
-          customerId: "CUST001",
-          customer: {
-            company: "Acme Corp",
-            contact: "John Doe",
-            email: "john@acme.com",
-            phone: "555-1234"
-          },
-          projectName: "Website Redesign",
-          amount: 2500,
-          tags: "urgent, design",
-          createdDate: "2023-10-15",
-          validUntil: "2023-11-15",
-          status: "Sent"
-        },
-        {
-          _id: "2",
-          estimateNumber: "EST-002",
-          customerId: "CUST002",
-          customer: {
-            company: "XYZ Ltd",
-            contact: "Jane Smith",
-            email: "jane@xyz.com",
-            phone: "555-5678"
-          },
-          projectName: "Mobile App Development",
-          amount: 5000,
-          tags: "development",
-          createdDate: "2023-10-10",
-          validUntil: "2023-11-10",
-          status: "Accepted"
-        },
-        {
-          _id: "3",
-          estimateNumber: "EST-003",
-          customerId: "CUST003",
-          customer: {
-            company: "ABC Inc",
-            contact: "Bob Johnson",
-            email: "bob@abc.com",
-            phone: "555-9012"
-          },
-          projectName: "SEO Optimization",
-          amount: 1200,
-          tags: "marketing",
-          createdDate: "2023-10-05",
-          validUntil: "2023-11-05",
-          status: "Draft"
-        },
-        {
-          _id: "4",
-          estimateNumber: "EST-004",
-          customerId: "CUST004",
-          customer: {
-            company: "Tech Solutions",
-            contact: "Alice Brown",
-            email: "alice@tech.com",
-            phone: "555-3456"
-          },
-          projectName: "E-commerce Platform",
-          amount: 7500,
-          tags: "urgent, development",
-          createdDate: "2023-10-01",
-          validUntil: "2023-11-01",
-          status: "Rejected"
-        },
-        {
-          _id: "5",
-          estimateNumber: "EST-005",
-          customerId: "CUST005",
-          customer: {
-            company: "Global Services",
-            contact: "Charlie Wilson",
-            email: "charlie@global.com",
-            phone: "555-7890"
-          },
-          projectName: "CRM Implementation",
-          amount: 3000,
-          tags: "business",
-          createdDate: "2023-09-25",
-          validUntil: "2023-10-25",
-          status: "Expired"
+      const { data } = await axios.get("http://localhost:5000/api/estimate-requests", {
+        params: {
+          search: searchTerm,
+          // You can add status filter here if needed
         }
-      ];
-
-      const dummyStats = {
-        totalEstimates: 5,
-        draft: 1,
-        sent: 1,
-        accepted: 1,
-        rejected: 1,
-        expired: 1
-      };
-
-      setEstimates(dummyEstimates);
-      setStats(dummyStats);
+      });
+      setEstimates(data.estimates || []);
+      setStats(data.stats || {
+        totalEstimates: 0,
+        draft: 0,
+        sent: 0,
+        accepted: 0,
+        rejected: 0,
+        expired: 0
+      });
     } catch (error) {
       console.error("Error fetching estimates:", error);
       setEstimates([]);
@@ -200,58 +104,26 @@ const EstimateRequestPage = () => {
         expired: 0
       });
     }
-  };
+  }, [searchTerm]); // Re-fetch when searchTerm changes
 
   useEffect(() => {
     fetchEstimates();
-  }, []);
+  }, [fetchEstimates]);
 
   // Search customers by company name
-  const searchCustomers = async (searchTerm) => {
-    if (searchTerm.length < 1) {
+  const searchCustomers = useCallback(async (searchTerm) => {
+    if (searchTerm.length < 2) {
       setCustomerSearchResults([]);
       return;
     }
-    
     try {
-      // In a real application, you would fetch from an API
-      // const { data } = await axios.get(`http://localhost:5000/api/estimates/customers/search?q=${searchTerm}`);
-      
-      // Using dummy data for demonstration
-      const dummyCustomers = [
-        {
-          _id: "CUST001",
-          company: "Acme Corp",
-          contact: "John Doe",
-          email: "john@acme.com",
-          phone: "555-1234"
-        },
-        {
-          _id: "CUST002",
-          company: "XYZ Ltd",
-          contact: "Jane Smith",
-          email: "jane@xyz.com",
-          phone: "555-5678"
-        },
-        {
-          _id: "CUST003",
-          company: "ABC Inc",
-          contact: "Bob Johnson",
-          email: "bob@abc.com",
-          phone: "555-9012"
-        }
-      ].filter(customer => 
-        customer.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-
-      setCustomerSearchResults(dummyCustomers);
+      const { data } = await axios.get(`http://localhost:5000/api/estimate-requests/customers/search?q=${searchTerm}`);
+      setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
       setCustomerSearchResults([]);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -261,14 +133,14 @@ const EstimateRequestPage = () => {
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [customerSearchTerm]);
+  }, [customerSearchTerm, searchCustomers]);
 
-  // Search filter
-  const filteredEstimates = estimates.filter(estimate => 
-    estimate.estimateNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  // Search filter (client-side for now, can be moved to backend)
+  const filteredEstimates = estimates.filter(estimate =>
+    // estimate.estimateNumber.toLowerCase().includes(searchTerm.toLowerCase()) || // Removed
     estimate.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (estimate.customer && estimate.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (estimate.tags && estimate.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    // (estimate.tags && estimate.tags.toLowerCase().includes(searchTerm.toLowerCase())) || // Removed
     estimate.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
     estimate.amount.toString().includes(searchTerm)
   );
@@ -292,7 +164,7 @@ const EstimateRequestPage = () => {
   const handleNewEstimateChange = (e) => {
     const { name, value } = e.target;
     setNewEstimate(prev => ({ ...prev, [name]: value }));
-    
+
     if (name === "customerName") {
       setCustomerSearchTerm(value);
       setShowCustomerDropdown(true);
@@ -313,50 +185,48 @@ const EstimateRequestPage = () => {
 
   const handleSaveEstimate = async () => {
     if (isSaving) return;
-    
-    if (!newEstimate.projectName || !newEstimate.customerId) {
-      alert("Please fill in all required fields (Project Name, Customer)");
+
+    if (!newEstimate.projectName || !newEstimate.customerId || !newEstimate.amount || !newEstimate.createdDate) {
+      alert("Please fill in all required fields (Project Name, Customer, Amount, Created Date)");
       return;
     }
 
     setIsSaving(true);
-    
-    // Format dates for backend
+
     const estimateData = {
       ...newEstimate,
-      estimateNumber: newEstimate.estimateNumber || generateEstimateNumber(),
-      validUntil: formatDateForBackend(newEstimate.validUntil)
+      // estimateNumber: newEstimate.estimateNumber || generateEstimateNumber(), // Removed
+      createdDate: formatDateForBackend(newEstimate.createdDate),
+      // validUntil: newEstimate.validUntil ? formatDateForBackend(newEstimate.validUntil) : null, // Removed
     };
-    
+
     try {
       if (editingEstimate) {
-        // Update existing estimate
-        // await axios.put(`http://localhost:5000/api/estimates/${editingEstimate._id}`, estimateData);
-        setShowNewEstimateForm(false);
-        setEditingEstimate(null);
-        fetchEstimates();
+        await axios.put(`http://localhost:5000/api/estimate-requests/${editingEstimate._id}`, estimateData);
         alert("Estimate updated successfully!");
       } else {
-        // Create new estimate
-        // await axios.post("http://localhost:5000/api/estimates", estimateData);
-        setShowNewEstimateForm(false);
-        fetchEstimates();
+        await axios.post("http://localhost:5000/api/estimate-requests", estimateData);
         alert("Estimate created successfully!");
       }
-      
+
+      setShowNewEstimateForm(false);
+      setEditingEstimate(null);
+      fetchEstimates(); // Re-fetch data after save
+
       // Reset form
       setNewEstimate({
-        estimateNumber: "",
+        // estimateNumber: "", // Removed
         customerId: "",
         customerName: "",
         customerEmail: "",
         customerPhone: "",
         projectName: "",
         amount: "",
-        tags: "",
+        // tags: "", // Removed
         createdDate: new Date().toISOString().split('T')[0],
-        validUntil: "",
-        status: "Draft"
+        // validUntil: "", // Removed
+        status: "Draft",
+        notes: ""
       });
     } catch (error) {
       console.error("Error saving estimate:", error);
@@ -369,17 +239,18 @@ const EstimateRequestPage = () => {
   const handleEditEstimate = (estimate) => {
     setEditingEstimate(estimate);
     setNewEstimate({
-      estimateNumber: estimate.estimateNumber,
+      // estimateNumber: estimate.estimateNumber, // Removed
       customerId: estimate.customerId,
       customerName: estimate.customer ? estimate.customer.company : "",
       customerEmail: estimate.customer ? estimate.customer.email : "",
       customerPhone: estimate.customer ? estimate.customer.phone : "",
       projectName: estimate.projectName,
       amount: estimate.amount,
-      tags: estimate.tags || "",
+      // tags: estimate.tags || "", // Removed
       createdDate: formatDateForInput(estimate.createdDate),
-      validUntil: formatDateForInput(estimate.validUntil),
-      status: estimate.status
+      // validUntil: estimate.validUntil ? formatDateForInput(estimate.validUntil) : "", // Removed
+      status: estimate.status,
+      notes: estimate.notes || ""
     });
     setShowNewEstimateForm(true);
   };
@@ -387,7 +258,7 @@ const EstimateRequestPage = () => {
   const handleDeleteEstimate = async (id) => {
     if (window.confirm("Are you sure you want to delete this estimate?")) {
       try {
-        // await axios.delete(`http://localhost:5000/api/estimates/${id}`);
+        await axios.delete(`http://localhost:5000/api/estimate-requests/${id}`);
         fetchEstimates();
         alert("Estimate deleted successfully!");
       } catch (error) {
@@ -397,19 +268,36 @@ const EstimateRequestPage = () => {
     }
   };
 
+  const handleBulkDeleteEstimates = async () => {
+    if (window.confirm(`Are you sure you want to delete ${selectedEstimates.length} selected estimates?`)) {
+      try {
+        await axios.post("http://localhost:5000/api/estimate-requests/bulk-delete", {
+          estimateIds: selectedEstimates
+        });
+        setSelectedEstimates([]);
+        fetchEstimates();
+        alert("Selected estimates deleted successfully!");
+      } catch (error) {
+        console.error("Error deleting selected estimates:", error);
+        alert(`Error deleting selected estimates: ${error.response?.data?.message || error.message}`);
+      }
+    }
+  };
+
   // Export functions
   const exportToExcel = () => {
     const dataToExport = filteredEstimates.map(estimate => ({
-      "Estimate #": estimate.estimateNumber,
+      // "Estimate #": estimate.estimateNumber, // Removed
       "Project Name": estimate.projectName,
       Customer: estimate.customer ? estimate.customer.company : "N/A",
       "Customer Email": estimate.customer ? estimate.customer.email : "N/A",
       "Customer Phone": estimate.customer ? estimate.customer.phone : "N/A",
       Amount: estimate.amount,
-      Tags: estimate.tags,
-      "Created Date": estimate.createdDate,
-      "Valid Until": estimate.validUntil,
-      Status: estimate.status
+      // Tags: estimate.tags, // Removed
+      "Created Date": new Date(estimate.createdDate).toLocaleDateString(),
+      // "Valid Until": estimate.validUntil ? new Date(estimate.validUntil).toLocaleDateString() : "N/A", // Removed
+      Status: estimate.status,
+      Notes: estimate.notes
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -421,23 +309,24 @@ const EstimateRequestPage = () => {
 
   const exportToCSV = () => {
     const dataToExport = filteredEstimates.map(estimate => ({
-      "Estimate #": estimate.estimateNumber,
+      // "Estimate #": estimate.estimateNumber, // Removed
       "Project Name": estimate.projectName,
       Customer: estimate.customer ? estimate.customer.company : "N/A",
       "Customer Email": estimate.customer ? estimate.customer.email : "N/A",
       "Customer Phone": estimate.customer ? estimate.customer.phone : "N/A",
       Amount: estimate.amount,
-      Tags: estimate.tags,
-      "Created Date": estimate.createdDate,
-      "Valid Until": estimate.validUntil,
-      Status: estimate.status
+      // Tags: estimate.tags, // Removed
+      "Created Date": new Date(estimate.createdDate).toLocaleDateString(),
+      // "Valid Until": estimate.validUntil ? new Date(estimate.validUntil).toLocaleDateString() : "N/A", // Removed
+      Status: estimate.status,
+      Notes: estimate.notes
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', 'Estimates.csv');
     link.style.visibility = 'hidden';
@@ -451,26 +340,26 @@ const EstimateRequestPage = () => {
     const doc = new jsPDF();
 
     const tableColumn = [
-      "Estimate #",
+      // "Estimate #", // Removed
       "Project Name",
       "Customer",
       "Amount",
       "Created Date",
-      "Valid Until",
+      // "Valid Until", // Removed
       "Status"
     ];
-    
+
     const tableRows = filteredEstimates.map(estimate => [
-      estimate.estimateNumber,
+      // estimate.estimateNumber, // Removed
       estimate.projectName,
       estimate.customer ? estimate.customer.company : "N/A",
       `$${estimate.amount}`,
-      estimate.createdDate,
-      estimate.validUntil,
+      new Date(estimate.createdDate).toLocaleDateString(),
+      // estimate.validUntil ? new Date(estimate.validUntil).toLocaleDateString() : "N/A", // Removed
       estimate.status
     ]);
 
-    autoTable(doc,{
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       margin: { top: 20 },
@@ -500,25 +389,26 @@ const EstimateRequestPage = () => {
     printWindow.document.write('</head><body>');
     printWindow.document.write('<h1>Estimate Requests</h1>');
     printWindow.document.write('<table>');
-    
+
     // Table header
     printWindow.document.write('<thead><tr>');
-    ['Estimate #', 'Project Name', 'Customer', 'Amount', 'Created Date', 'Valid Until', 'Status'].forEach(header => {
+    // ['Estimate #', 'Project Name', 'Customer', 'Amount', 'Created Date', 'Valid Until', 'Status'].forEach(header => { // Original
+    ['Project Name', 'Customer', 'Amount', 'Created Date', 'Status'].forEach(header => { // Modified
       printWindow.document.write(`<th>${header}</th>`);
     });
     printWindow.document.write('</tr></thead>');
-    
+
     // Table body
     printWindow.document.write('<tbody>');
     filteredEstimates.forEach(estimate => {
       printWindow.document.write('<tr>');
       [
-        estimate.estimateNumber,
+        // estimate.estimateNumber, // Removed
         estimate.projectName,
         estimate.customer ? estimate.customer.company : "N/A",
         `$${estimate.amount}`,
-        estimate.createdDate,
-        estimate.validUntil,
+        new Date(estimate.createdDate).toLocaleDateString(),
+        // estimate.validUntil ? new Date(estimate.validUntil).toLocaleDateString() : "N/A", // Removed
         estimate.status
       ].forEach(value => {
         printWindow.document.write(`<td>${value}</td>`);
@@ -526,12 +416,12 @@ const EstimateRequestPage = () => {
       printWindow.document.write('</tr>');
     });
     printWindow.document.write('</tbody>');
-    
+
     printWindow.document.write('</table>');
     printWindow.document.write('<p class="no-print">Printed on: ' + new Date().toLocaleString() + '</p>');
     printWindow.document.write('</body></html>');
     printWindow.document.close();
-    
+
     setTimeout(() => {
       printWindow.print();
       printWindow.close();
@@ -550,13 +440,9 @@ const EstimateRequestPage = () => {
     }
   };
 
-  const formatDate = (dateString) => {
+  const displayDate = (dateString) => {
     if (!dateString) return "N/A";
-    const parts = dateString.split('-');
-    if (parts.length === 3) {
-      return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-    return dateString;
+    return new Date(dateString).toLocaleDateString('en-GB'); // DD/MM/YYYY
   };
 
   const formatCurrency = (amount) => {
@@ -582,10 +468,24 @@ const EstimateRequestPage = () => {
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Estimate Details</h2>
-            <button 
+            <button
               onClick={() => {
                 setShowNewEstimateForm(false);
                 setEditingEstimate(null);
+                setNewEstimate({ // Reset form on cancel
+                  // estimateNumber: "", // Removed
+                  customerId: "",
+                  customerName: "",
+                  customerEmail: "",
+                  customerPhone: "",
+                  projectName: "",
+                  amount: "",
+                  // tags: "", // Removed
+                  createdDate: new Date().toISOString().split('T')[0],
+                  // validUntil: "", // Removed
+                  status: "Draft",
+                  notes: ""
+                });
               }}
               className="text-gray-500 hover:text-gray-700"
             >
@@ -596,7 +496,8 @@ const EstimateRequestPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Left Column */}
             <div>
-              <div className="mb-4">
+              {/* Estimate Number field removed */}
+              {/* <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Estimate Number</label>
                 <input
                   type="text"
@@ -606,7 +507,7 @@ const EstimateRequestPage = () => {
                   className="w-full border rounded px-3 py-2"
                   placeholder="Will be auto-generated if empty"
                 />
-              </div>
+              </div> */}
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
@@ -662,6 +563,7 @@ const EstimateRequestPage = () => {
                   value={newEstimate.customerEmail}
                   onChange={handleNewEstimateChange}
                   className="w-full border rounded px-3 py-2"
+                  readOnly // Make read-only as it's populated from customer selection
                 />
               </div>
 
@@ -673,6 +575,7 @@ const EstimateRequestPage = () => {
                   value={newEstimate.customerPhone}
                   onChange={handleNewEstimateChange}
                   className="w-full border rounded px-3 py-2"
+                  readOnly // Make read-only as it's populated from customer selection
                 />
               </div>
             </div>
@@ -680,7 +583,7 @@ const EstimateRequestPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
                 <input
                   type="number"
                   name="amount"
@@ -689,10 +592,12 @@ const EstimateRequestPage = () => {
                   className="w-full border rounded px-3 py-2"
                   placeholder="0.00"
                   step="0.01"
+                  required
                 />
               </div>
 
-              <div className="mb-4">
+              {/* Tags field removed */}
+              {/* <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
                 <input
                   type="text"
@@ -702,20 +607,22 @@ const EstimateRequestPage = () => {
                   className="w-full border rounded px-3 py-2"
                   placeholder="e.g., urgent, design, development"
                 />
-              </div>
+              </div> */}
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Created Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Created Date *</label>
                 <input
                   type="date"
                   name="createdDate"
                   value={newEstimate.createdDate}
                   onChange={handleNewEstimateChange}
                   className="w-full border rounded px-3 py-2"
+                  required
                 />
               </div>
 
-              <div className="mb-4">
+              {/* Valid Until field removed */}
+              {/* <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Valid Until</label>
                 <input
                   type="date"
@@ -724,7 +631,7 @@ const EstimateRequestPage = () => {
                   onChange={handleNewEstimateChange}
                   className="w-full border rounded px-3 py-2"
                 />
-              </div>
+              </div> */}
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
@@ -742,12 +649,38 @@ const EstimateRequestPage = () => {
             </div>
           </div>
 
+          {/* Notes/Content Field */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Notes/Content</label>
+            <textarea
+              name="notes"
+              value={newEstimate.notes}
+              onChange={handleNewEstimateChange}
+              className="w-full border rounded px-3 py-2 h-32"
+              placeholder="Add any relevant notes or detailed content for the estimate..."
+            />
+          </div>
+
           <div className="flex justify-end space-x-3">
             <button
               type="button"
               onClick={() => {
                 setShowNewEstimateForm(false);
                 setEditingEstimate(null);
+                setNewEstimate({ // Reset form on cancel
+                  // estimateNumber: "", // Removed
+                  customerId: "",
+                  customerName: "",
+                  customerEmail: "",
+                  customerPhone: "",
+                  projectName: "",
+                  amount: "",
+                  // tags: "", // Removed
+                  createdDate: new Date().toISOString().split('T')[0],
+                  // validUntil: "", // Removed
+                  status: "Draft",
+                  notes: ""
+                });
               }}
               className="px-4 py-2 border rounded text-sm"
             >
@@ -757,7 +690,7 @@ const EstimateRequestPage = () => {
               type="button"
               onClick={handleSaveEstimate}
               className="px-4 py-2 bg-black text-white rounded text-sm"
-              disabled={!newEstimate.projectName || !newEstimate.customerId || isSaving}
+              disabled={!newEstimate.projectName || !newEstimate.customerId || !newEstimate.amount || !newEstimate.createdDate || isSaving}
             >
               {isSaving ? "Saving..." : "Save"}
             </button>
@@ -801,7 +734,7 @@ const EstimateRequestPage = () => {
                   <p className="text-2xl font-bold">{stats.sent}</p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-full">
-                  <FaSyncAlt className="text-blue-600" />
+                  <FaCheckCircle className="text-blue-600" /> {/* Changed icon for Sent */}
                 </div>
               </div>
             </div>
@@ -840,7 +773,7 @@ const EstimateRequestPage = () => {
                   <p className="text-2xl font-bold">{stats.expired}</p>
                 </div>
                 <div className="bg-yellow-100 p-3 rounded-full">
-                  <FaPauseCircle className="text-yellow-600" />
+                  <FaClock className="text-yellow-600" /> {/* Changed icon for Expired */}
                 </div>
               </div>
             </div>
@@ -849,7 +782,7 @@ const EstimateRequestPage = () => {
           {/* Top action buttons */}
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
                 onClick={() => setShowNewEstimateForm(true)}
               >
@@ -875,20 +808,7 @@ const EstimateRequestPage = () => {
               {selectedEstimates.length > 0 && (
                 <button
                   className="bg-red-600 text-white px-3 py-1 rounded"
-                  onClick={async () => {
-                    if (window.confirm(`Delete ${selectedEstimates.length} selected estimates?`)) {
-                      try {
-                        // await Promise.all(selectedEstimates.map(id =>
-                        //   axios.delete(`http://localhost:5000/api/estimates/${id}`)
-                        // ));
-                        setSelectedEstimates([]);
-                        fetchEstimates();
-                        alert("Selected estimates deleted!");
-                      } catch {
-                        alert("Error deleting selected estimates.");
-                      }
-                    }
-                  }}
+                  onClick={handleBulkDeleteEstimates}
                 >
                   Delete Selected ({selectedEstimates.length})
                 </button>
@@ -907,7 +827,7 @@ const EstimateRequestPage = () => {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-                
+
                 {/* Export button */}
                 <div className="relative">
                   <button
@@ -991,7 +911,7 @@ const EstimateRequestPage = () => {
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Estimate #</th>
+                    {/* <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Estimate #</th> */}
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project Name</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                     {compactView ? (
@@ -1005,9 +925,9 @@ const EstimateRequestPage = () => {
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer Email</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer Phone</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
+                        {/* <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th> */}
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created Date</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Valid Until</th>
+                        {/* <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Valid Until</th> */}
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
                         <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
@@ -1017,7 +937,7 @@ const EstimateRequestPage = () => {
                 <tbody>
                   {currentData.length === 0 ? (
                     <tr>
-                      <td colSpan={compactView ? 7 : 12} className="text-center py-4">
+                      <td colSpan={compactView ? 6 : 10} className="text-center py-4"> {/* Adjusted colspan */}
                         {searchTerm ? "No matching estimates found." : "No estimates available."}
                       </td>
                     </tr>
@@ -1031,7 +951,7 @@ const EstimateRequestPage = () => {
                             onChange={() => toggleEstimateSelection(estimate._id)}
                           />
                         </td>
-                        <td className="p-3 bg-white">{estimate.estimateNumber}</td>
+                        {/* <td className="p-3 bg-white">{estimate.estimateNumber}</td> */}
                         <td className="p-3 bg-white">{estimate.projectName}</td>
                         <td className="p-3 bg-white">
                           {estimate.customer ? estimate.customer.company : "N/A"}
@@ -1047,14 +967,23 @@ const EstimateRequestPage = () => {
                             <td className="p-3 bg-white rounded-r-lg">
                               <div className="flex items-center gap-2">
                                 <button
+                                  onClick={() => setViewingEstimate(estimate)}
+                                  className="text-blue-600 hover:text-blue-800"
+                                  title="View"
+                                >
+                                  <FaEye />
+                                </button>
+                                <button
                                   onClick={() => handleEditEstimate(estimate)}
                                   className="text-blue-600 hover:text-blue-800"
+                                  title="Edit"
                                 >
                                   <FaEdit />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteEstimate(estimate._id)}
                                   className="text-red-600 hover:text-red-800"
+                                  title="Delete"
                                 >
                                   <FaTrash />
                                 </button>
@@ -1070,15 +999,15 @@ const EstimateRequestPage = () => {
                               {estimate.customer ? estimate.customer.phone : "N/A"}
                             </td>
                             <td className="p-3 bg-white">{formatCurrency(estimate.amount)}</td>
-                            <td className="p-3 bg-white">
+                            {/* <td className="p-3 bg-white">
                               {estimate.tags && estimate.tags.split(',').map((tag, index) => (
                                 <span key={index} className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded mr-1 mb-1">
                                   {tag.trim()}
                                 </span>
                               ))}
-                            </td>
-                            <td className="p-3 bg-white">{formatDate(estimate.createdDate)}</td>
-                            <td className="p-3 bg-white">{formatDate(estimate.validUntil)}</td>
+                            </td> */}
+                            <td className="p-3 bg-white">{displayDate(estimate.createdDate)}</td>
+                            {/* <td className="p-3 bg-white">{displayDate(estimate.validUntil)}</td> */}
                             <td className="p-3 bg-white">
                               <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(estimate.status)}`}>
                                 {estimate.status}
@@ -1087,14 +1016,23 @@ const EstimateRequestPage = () => {
                             <td className="p-3 bg-white rounded-r-lg">
                               <div className="flex items-center gap-2">
                                 <button
+                                  onClick={() => setViewingEstimate(estimate)}
+                                  className="text-blue-600 hover:text-blue-800"
+                                  title="View"
+                                >
+                                  <FaEye />
+                                </button>
+                                <button
                                   onClick={() => handleEditEstimate(estimate)}
                                   className="text-blue-600 hover:text-blue-800"
+                                  title="Edit"
                                 >
                                   <FaEdit />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteEstimate(estimate._id)}
                                   className="text-red-600 hover:text-red-800"
+                                  title="Delete"
                                 >
                                   <FaTrash />
                                 </button>
@@ -1165,6 +1103,46 @@ const EstimateRequestPage = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* View Estimate Modal */}
+      {viewingEstimate && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Estimate Details</h2> {/* Changed title */}
+              <button
+                onClick={() => setViewingEstimate(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="space-y-3 text-sm">
+              <p><b>Project Name:</b> {viewingEstimate.projectName}</p>
+              <p><b>Customer:</b> {viewingEstimate.customer ? viewingEstimate.customer.company : "N/A"}</p>
+              <p><b>Customer Email:</b> {viewingEstimate.customer ? viewingEstimate.customer.email : "N/A"}</p>
+              <p><b>Customer Phone:</b> {viewingEstimate.customer ? viewingEstimate.customer.phone : "N/A"}</p>
+              <p><b>Amount:</b> {formatCurrency(viewingEstimate.amount)}</p>
+              {/* <p><b>Tags:</b> {viewingEstimate.tags || "N/A"}</p> */}
+              <p><b>Created Date:</b> {displayDate(viewingEstimate.createdDate)}</p>
+              {/* <p><b>Valid Until:</b> {displayDate(viewingEstimate.validUntil)}</p> */}
+              <p><b>Status:</b> <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(viewingEstimate.status)}`}>{viewingEstimate.status}</span></p>
+              <p><b>Notes/Content:</b></p>
+              <div className="border p-3 rounded-md bg-gray-50 max-h-60 overflow-y-auto">
+                {viewingEstimate.notes || "No notes available."}
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setViewingEstimate(null)}
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
