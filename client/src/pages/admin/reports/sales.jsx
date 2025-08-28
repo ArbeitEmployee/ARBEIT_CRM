@@ -48,13 +48,16 @@ const [customersLoading, setCustomersLoading] = useState(false);
 const [selectedCustomers, setSelectedCustomers] = useState([]);
 const [incomeData, setIncomeData] = useState([]);
 const [incomeLoading, setIncomeLoading] = useState(false);
-
+const [customerGroupsData, setCustomerGroupsData] = useState([]);
 
 useEffect(() => {
   if (activeChart === "totalIncome") {
     fetchIncomeData();
   } else if (activeChart === "paymentModes") {
     fetchPaymentModesData();
+  }
+   else if (activeChart === "customerValue") {
+    fetchCustomerGroupsData();
   }
 }, [activeChart]);
 
@@ -393,6 +396,92 @@ const fetchPaymentModesData = async () => {
       setIncomeLoading(false);
     }
   };
+
+
+  const fetchCustomerGroupsData = async () => {
+  setIncomeLoading(true);
+  try {
+    // Fetch customers data
+    const customersResponse = await axios.get("http://localhost:5000/api/customers");
+    const customers = customersResponse.data.customers || [];
+    
+    // Fetch invoices data to get payment information
+    const invoicesResponse = await axios.get("http://localhost:5000/api/admin/invoices");
+    const invoices = invoicesResponse.data.data || invoicesResponse.data || [];
+    
+    // Filter paid and partially paid invoices
+    const paymentInvoices = invoices.filter(
+      invoice => invoice.status === "Paid" || invoice.status === "Partiallypaid"
+    );
+    
+    // Create a mapping of customer names to their groups
+    const customerToGroupsMap = {};
+    customers.forEach(customer => {
+      if (customer.company && customer.groups && customer.groups.length > 0) {
+        customerToGroupsMap[customer.company] = customer.groups;
+      }
+    });
+    
+    // Group payments by customer group
+    const groupPayments = {};
+    
+    paymentInvoices.forEach(invoice => {
+      const customerName = invoice.customer;
+      const customerGroups = customerToGroupsMap[customerName] || ["Ungrouped"];
+      
+      // Use paidAmount if available, otherwise use total for paid invoices
+      const amount = invoice.status === "Partiallypaid" ? 
+        (invoice.paidAmount || 0) : 
+        (invoice.total || 0);
+      
+      // Add amount to each group this customer belongs to
+      customerGroups.forEach(group => {
+        if (!groupPayments[group]) {
+          groupPayments[group] = 0;
+        }
+        groupPayments[group] += amount;
+      });
+    });
+    
+    // Filter out "Ungrouped" category as requested
+    delete groupPayments["Ungrouped"];
+    
+    // Convert to array format for the chart, sorted by amount (descending)
+    const chartData = Object.keys(groupPayments)
+      .map(group => ({
+        name: group,
+        value: groupPayments[group],
+        count: 0 // We'll calculate customer count per group
+      }))
+      .sort((a, b) => b.value - a.value);
+    
+    // Calculate customer count per group
+    const groupCustomerCount = {};
+    customers.forEach(customer => {
+      if (customer.groups && customer.groups.length > 0) {
+        customer.groups.forEach(group => {
+          if (group !== "Ungrouped") {
+            if (!groupCustomerCount[group]) {
+              groupCustomerCount[group] = 0;
+            }
+            groupCustomerCount[group] += 1;
+          }
+        });
+      }
+    });
+    
+    // Add customer count to chart data
+    chartData.forEach(item => {
+      item.count = groupCustomerCount[item.name] || 0;
+    });
+    
+    setCustomerGroupsData(chartData);
+  } catch (error) {
+    console.error("Error fetching customer groups data:", error);
+  } finally {
+    setIncomeLoading(false);
+  }
+};
 
 
 
@@ -927,21 +1016,135 @@ const toggleCustomerSelection = (id) => {
         );
       
       case "paymentModes":
+  return (
+    <div className="p-6 bg-white rounded border">
+      <h3 className="text-lg font-semibold mb-4">Payment Modes Report</h3>
+      
+      {incomeLoading ? (
+        <div className="text-center py-8">Loading payment modes data...</div>
+      ) : incomeData.length > 0 ? (
+        <div>
+          <div className="mb-4 flex justify-between items-center">
+            <div>
+              <h4 className="font-medium">Payment Methods Distribution</h4>
+              <p className="text-sm text-gray-500">Payments by method type</p>
+            </div>
+            <button 
+              onClick={fetchPaymentModesData}
+              className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200"
+            >
+              <FaSyncAlt className="text-xs" /> Refresh
+            </button>
+          </div>
+          
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={incomeData}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value, name) => {
+                    if (name === "Number of Payments") {
+                      return [value, 'Times Used'];
+                    } else {
+                      return [`$${value.toLocaleString()}`, 'Total Amount'];
+                    }
+                  }}
+                  labelFormatter={(label) => `Payment Method: ${label}`}
+                />
+                <Legend />
+                <Bar 
+                  dataKey="count" 
+                  fill="#4f46e5" 
+                  name="Number of Payments"
+                  radius={[4, 4, 0, 0]}
+                />
+                <Bar 
+                  dataKey="amount" 
+                  fill="#10b981" 
+                  name="Total Amount"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+          
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h5 className="font-medium text-blue-800">Total Payments</h5>
+              <p className="text-2xl font-bold text-blue-900">
+                {incomeData.reduce((sum, item) => sum + item.count, 0)}
+              </p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h5 className="font-medium text-green-800">Total Amount</h5>
+              <p className="text-2xl font-bold text-green-900">
+                {formatCurrency(incomeData.reduce((sum, item) => sum + item.amount, 0))}
+              </p>
+            </div>
+          </div>
+          
+          <div className="mt-6">
+            <h5 className="font-medium mb-3">Payment Methods Breakdown</h5>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {incomeData.map((item, index) => (
+                <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">{item.name}</span>
+                    <span className={`px-2 py-1 rounded text-xs ${
+                      item.name === "Bank" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
+                    }`}>
+                      {((item.count / incomeData.reduce((sum, i) => sum + i.count, 0)) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <span className="text-sm text-gray-500">Times Used:</span>
+                      <p className="font-semibold">{item.count}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Amount:</span>
+                      <p className="font-semibold">{formatCurrency(item.amount)}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="text-center py-8 text-gray-500">
+          No payment data available
+        </div>
+      )}
+    </div>
+  );
+      
+      case "customerValue":
       return (
         <div className="p-6 bg-white rounded border">
-          <h3 className="text-lg font-semibold mb-4">Payment Modes Report</h3>
+          <h3 className="text-lg font-semibold mb-4">Total Value by Customer Group</h3>
           
           {incomeLoading ? (
-            <div className="text-center py-8">Loading payment modes data...</div>
-          ) : incomeData.length > 0 ? (
+            <div className="text-center py-8">Loading customer groups data...</div>
+          ) : customerGroupsData.length > 0 ? (
             <div>
               <div className="mb-4 flex justify-between items-center">
                 <div>
-                  <h4 className="font-medium">Payment Methods Distribution</h4>
-                  <p className="text-sm text-gray-500">Payments by method type</p>
+                  <h4 className="font-medium">Revenue by Customer Group</h4>
+                  <p className="text-sm text-gray-500">Total payments received by customer group</p>
                 </div>
                 <button 
-                  onClick={fetchPaymentModesData}
+                  onClick={fetchCustomerGroupsData}
                   className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200"
                 >
                   <FaSyncAlt className="text-xs" /> Refresh
@@ -951,7 +1154,7 @@ const toggleCustomerSelection = (id) => {
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={incomeData}
+                    data={customerGroupsData}
                     margin={{
                       top: 5,
                       right: 30,
@@ -961,27 +1164,18 @@ const toggleCustomerSelection = (id) => {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="name" />
-                    <YAxis />
+                    <YAxis 
+                      tickFormatter={(value) => `$${value.toLocaleString()}`}
+                    />
                     <Tooltip 
-                      formatter={(value, name) => {
-                        if (name === "count") {
-                          return [value, 'Number of Payments'];
-                        } else {
-                          return [`$${value.toLocaleString()}`, 'Amount'];
-                        }
-                      }}
+                      formatter={(value) => [`$${value.toLocaleString()}`, 'Total Revenue']}
+                      labelFormatter={(label) => `Customer Group: ${label}`}
                     />
                     <Legend />
                     <Bar 
-                      dataKey="count" 
+                      dataKey="value" 
                       fill="#4f46e5" 
-                      name="Number of Payments"
-                      radius={[4, 4, 0, 0]}
-                    />
-                    <Bar 
-                      dataKey="amount" 
-                      fill="#10b981" 
-                      name="Total Amount"
+                      name="Total Revenue"
                       radius={[4, 4, 0, 0]}
                     />
                   </BarChart>
@@ -990,40 +1184,38 @@ const toggleCustomerSelection = (id) => {
               
               <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-blue-800">Total Payments</h5>
+                  <h5 className="font-medium text-blue-800">Total Revenue</h5>
                   <p className="text-2xl font-bold text-blue-900">
-                    {incomeData.reduce((sum, item) => sum + item.count, 0)}
+                    {formatCurrency(customerGroupsData.reduce((sum, item) => sum + item.value, 0))}
                   </p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-green-800">Total Amount</h5>
+                  <h5 className="font-medium text-green-800">Average per Group</h5>
                   <p className="text-2xl font-bold text-green-900">
-                    {formatCurrency(incomeData.reduce((sum, item) => sum + item.amount, 0))}
+                    {formatCurrency(customerGroupsData.reduce((sum, item) => sum + item.value, 0) / (customerGroupsData.length || 1))}
                   </p>
                 </div>
               </div>
               
               <div className="mt-6">
-                <h5 className="font-medium mb-3">Payment Methods Breakdown</h5>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {incomeData.map((item, index) => (
+                <h5 className="font-medium mb-3">Customer Groups Breakdown</h5>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {customerGroupsData.map((item, index) => (
                     <div key={index} className="bg-gray-50 p-4 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium">{item.name}</span>
-                        <span className={`px-2 py-1 rounded text-xs ${
-                          item.name === "Bank" ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
-                        }`}>
-                          {((item.count / incomeData.reduce((sum, i) => sum + i.count, 0)) * 100).toFixed(1)}%
+                        <span className="px-2 py-1 rounded text-xs bg-purple-100 text-purple-800">
+                          {((item.value / customerGroupsData.reduce((sum, i) => sum + i.value, 0)) * 100).toFixed(1)}%
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <span className="text-sm text-gray-500">Payments:</span>
-                          <p className="font-semibold">{item.count}</p>
+                          <span className="text-sm text-gray-500">Revenue:</span>
+                          <p className="font-semibold">{formatCurrency(item.value)}</p>
                         </div>
                         <div>
-                          <span className="text-sm text-gray-500">Amount:</span>
-                          <p className="font-semibold">{formatCurrency(item.amount)}</p>
+                          <span className="text-sm text-gray-500">Customers:</span>
+                          <p className="font-semibold">{item.count}</p>
                         </div>
                       </div>
                     </div>
@@ -1033,21 +1225,12 @@ const toggleCustomerSelection = (id) => {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
-              No payment data available
+              No customer group data available or all customers are ungrouped
             </div>
           )}
         </div>
       );
-      
-      case "customerValue":
-        return (
-          <div className="p-6 bg-white rounded border">
-            <h3 className="text-lg font-semibold mb-4">Total Value by Customer Report</h3>
-            <div className="text-gray-500 text-center">
-              Customer Value chart and data will be displayed here
-            </div>
-          </div>
-        );
+    
       
       default:
         return (
