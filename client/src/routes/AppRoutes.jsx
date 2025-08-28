@@ -39,6 +39,7 @@ import KnowledgeBase from "../pages/admin/KnowledgeBase";
 import InvoiceForm from "../pages/admin/sales/invoiceForm";
 import CreditNoteForm from "../pages/admin/sales/creditNoteForm";
 import SalesReports from "../pages/admin/reports/sales";
+import ExpenseReports from "../pages/admin/reports/expenses";
 
 
 
@@ -76,6 +77,7 @@ const AppRoutes = () => {
               <Route path="sales/payments" element={<Payments/>} />
               <Route path="sales/creditNotes" element={<CreditNotes/>} />
               <Route path="reports/sales" element={<SalesReports />} />
+              <Route path="reports/expenses" element={<ExpenseReports />} />
               
               <Route path="/credit-notes/new" element={<CreditNoteForm/>} />
               <Route path="sales/items" element={<Items/>} />
