@@ -1,7 +1,7 @@
 import { useState, useEffect} from "react";
 import { 
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight, 
-  FaTimes, FaEdit, FaTrash, FaChevronDown,
+  FaTimes, FaEdit, FaTrash, FaEye,
   FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
@@ -30,18 +30,17 @@ const TaskPage = () => {
   });
   const [newTask, setNewTask] = useState({
     projectName: "",
-    customerId: "",
-    customerName: "",
+    priority: "Medium",
     tags: "",
     startDate: "",
     deadline: "",
     members: "",
-    status: "Not Started"
+    status: "Not Started",
+    description: ""
   });
   const [editingTask, setEditingTask] = useState(null);
-  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
-  const [customerSearchResults, setCustomerSearchResults] = useState([]);
-  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
+  const [currentDescription, setCurrentDescription] = useState("");
 
   const statusOptions = [
     "Not Started",
@@ -49,6 +48,13 @@ const TaskPage = () => {
     "Testing",
     "Feedback",
     "Complete"
+  ];
+
+  const priorityOptions = [
+    "Urgent",
+    "High",
+    "Medium",
+    "Low"
   ];
 
   // Format date from YYYY-MM-DD to DD-MM-YYYY
@@ -102,39 +108,13 @@ const TaskPage = () => {
     fetchTasks();
   }, []);
 
-  // Search customers by company name
-  const searchCustomers = async (searchTerm) => {
-    if (searchTerm.length < 1) {
-      setCustomerSearchResults([]);
-      return;
-    }
-    
-    try {
-      const { data } = await axios.get(`http://localhost:5000/api/tasks/customers/search?q=${searchTerm}`);
-      setCustomerSearchResults(data);
-    } catch (error) {
-      console.error("Error searching customers:", error);
-      setCustomerSearchResults([]);
-    }
-  };
-
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      if (customerSearchTerm) {
-        searchCustomers(customerSearchTerm);
-      }
-    }, 300);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [customerSearchTerm]);
-
   // Search filter
   const filteredTasks = tasks.filter(task => 
     task._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (task.customer && task.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (task.tags && task.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    task.status.toLowerCase().includes(searchTerm.toLowerCase())
+    task.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    task.priority.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Pagination
@@ -156,28 +136,13 @@ const TaskPage = () => {
   const handleNewTaskChange = (e) => {
     const { name, value } = e.target;
     setNewTask(prev => ({ ...prev, [name]: value }));
-    
-    if (name === "customerName") {
-      setCustomerSearchTerm(value);
-      setShowCustomerDropdown(true);
-    }
-  };
-
-  const handleSelectCustomer = (customer) => {
-    setNewTask(prev => ({
-      ...prev,
-      customerId: customer._id,
-      customerName: customer.company
-    }));
-    setShowCustomerDropdown(false);
-    setCustomerSearchTerm("");
   };
 
   const handleSaveTask = async () => {
     if (isSaving) return;
     
-    if (!newTask.projectName || !newTask.customerId) {
-      alert("Please fill in all required fields (Project Name, Customer)");
+    if (!newTask.projectName) {
+      alert("Please fill in all required fields (Subject)");
       return;
     }
 
@@ -209,13 +174,13 @@ const TaskPage = () => {
       // Reset form
       setNewTask({
         projectName: "",
-        customerId: "",
-        customerName: "",
+        priority: "Medium",
         tags: "",
         startDate: "",
         deadline: "",
         members: "",
-        status: "Not Started"
+        status: "Not Started",
+        description: ""
       });
     } catch (error) {
       console.error("Error saving task:", error);
@@ -229,13 +194,13 @@ const TaskPage = () => {
     setEditingTask(task);
     setNewTask({
       projectName: task.projectName,
-      customerId: task.customerId,
-      customerName: task.customer ? task.customer.company : "",
+      priority: task.priority,
       tags: task.tags || "",
       startDate: formatDateForInput(task.startDate),
       deadline: formatDateForInput(task.deadline),
       members: task.members || "",
-      status: task.status
+      status: task.status,
+      description: task.description || ""
     });
     setShowNewTaskForm(true);
   };
@@ -253,17 +218,23 @@ const TaskPage = () => {
     }
   };
 
+  const handleViewDescription = (description) => {
+    setCurrentDescription(description);
+    setShowDescriptionModal(true);
+  };
+
   // Export functions
   const exportToExcel = () => {
     const dataToExport = filteredTasks.map(task => ({
       ID: task._id,
-      "Project Name": task.projectName,
-      Customer: task.customer ? task.customer.company : "N/A",
+      "Subject": task.projectName,
+      Priority: task.priority,
       Tags: task.tags,
       "Start Date": task.startDate,
       Deadline: task.deadline,
       Members: task.members,
-      Status: task.status
+      Status: task.status,
+      Description: task.description
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -276,13 +247,14 @@ const TaskPage = () => {
   const exportToCSV = () => {
     const dataToExport = filteredTasks.map(task => ({
       ID: task._id,
-      "Project Name": task.projectName,
-      Customer: task.customer ? task.customer.company : "N/A",
+      "Subject": task.projectName,
+      Priority: task.priority,
       Tags: task.tags,
       "Start Date": task.startDate,
       Deadline: task.deadline,
       Members: task.members,
-      Status: task.status
+      Status: task.status,
+      Description: task.description
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
@@ -304,24 +276,26 @@ const TaskPage = () => {
 
     const tableColumn = [
       "ID",
-      "Project Name",
-      "Customer",
+      "Subject",
+      "Priority",
       "Tags",
       "Start Date",
       "Deadline",
       "Members",
-      "Status"
+      "Status",
+      "Description"
     ];
     
     const tableRows = filteredTasks.map(task => [
       task._id,
       task.projectName,
-      task.customer ? task.customer.company : "N/A",
+      task.priority,
       task.tags,
       task.startDate,
       task.deadline,
       task.members,
-      task.status
+      task.status,
+      task.description
     ]);
 
     autoTable(doc,{
@@ -357,7 +331,7 @@ const TaskPage = () => {
     
     // Table header
     printWindow.document.write('<thead><tr>');
-    ['ID', 'Project Name', 'Customer', 'Tags', 'Start Date', 'Deadline', 'Members', 'Status'].forEach(header => {
+    ['ID', 'Subject', 'Priority', 'Tags', 'Start Date', 'Deadline', 'Members', 'Status', 'Description'].forEach(header => {
       printWindow.document.write(`<th>${header}</th>`);
     });
     printWindow.document.write('</tr></thead>');
@@ -369,12 +343,13 @@ const TaskPage = () => {
       [
         task._id,
         task.projectName,
-        task.customer ? task.customer.company : "N/A",
+        task.priority,
         task.tags,
         task.startDate,
         task.deadline,
         task.members,
-        task.status
+        task.status,
+        task.description
       ].forEach(value => {
         printWindow.document.write(`<td>${value}</td>`);
       });
@@ -401,6 +376,16 @@ const TaskPage = () => {
       case "Testing": return "bg-yellow-100 text-yellow-800";
       case "Feedback": return "bg-purple-100 text-purple-800";
       case "Complete": return "bg-green-100 text-green-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch(priority) {
+      case "Urgent": return "bg-red-100 text-red-800";
+      case "High": return "bg-orange-100 text-orange-800";
+      case "Medium": return "bg-yellow-100 text-yellow-800";
+      case "Low": return "bg-green-100 text-green-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
@@ -445,7 +430,7 @@ const TaskPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
                 <input
                   type="text"
                   name="projectName"
@@ -457,37 +442,17 @@ const TaskPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    name="customerName"
-                    value={newTask.customerName}
-                    onChange={handleNewTaskChange}
-                    className="w-full border rounded px-3 py-2"
-                    required
-                    placeholder="Search customer by company name..."
-                  />
-                  {showCustomerDropdown && customerSearchResults.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
-                      {customerSearchResults.map((customer, index) => (
-                        <div
-                          key={index}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                          onClick={() => handleSelectCustomer(customer)}
-                        >
-                          <div className="font-medium">{customer.company}</div>
-                          <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                      <div className="px-3 py-2 text-gray-500">No customers found</div>
-                    </div>
-                  )}
-                </div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <select
+                  name="priority"
+                  value={newTask.priority}
+                  onChange={handleNewTaskChange}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  {priorityOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="mb-4">
@@ -555,6 +520,17 @@ const TaskPage = () => {
             </div>
           </div>
 
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              name="description"
+              value={newTask.description}
+              onChange={handleNewTaskChange}
+              className="w-full border rounded px-3 py-2 h-24"
+              placeholder="Enter task description..."
+            ></textarea>
+          </div>
+
           <div className="flex justify-end space-x-3">
             <button
               type="button"
@@ -570,7 +546,7 @@ const TaskPage = () => {
               type="button"
               onClick={handleSaveTask}
               className="px-4 py-2 bg-black text-white rounded text-sm"
-              disabled={!newTask.projectName || !newTask.customerId || isSaving}
+              disabled={!newTask.projectName || isSaving}
             >
               {isSaving ? "Saving..." : "Save"}
             </button>
@@ -804,8 +780,8 @@ const TaskPage = () => {
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project Name</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Subject</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Priority</th>
                     {compactView ? (
                       <>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
@@ -844,16 +820,9 @@ const TaskPage = () => {
                         </td>
                         <td className="p-3 border-0 font-medium">{task.projectName}</td>
                         <td className="p-3 border-0">
-                          {task.customer ? (
-                            <div>
-                              <div className="font-medium">{task.customer.company}</div>
-                              <div className="text-xs text-gray-500">
-                                {task.customer.contact} • {task.customer.email}
-                              </div>
-                            </div>
-                          ) : (
-                            "N/A"
-                          )}
+                          <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(task.priority)}`}>
+                            {task.priority}
+                          </span>
                         </td>
                         {compactView ? (
                           <>
@@ -867,6 +836,13 @@ const TaskPage = () => {
                             </td>
                             <td className="p-3 rounded-r-lg border-0">
                               <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleViewDescription(task.description)}
+                                  className="text-gray-500 hover:text-gray-700"
+                                  title="View Description"
+                                >
+                                  <FaEye size={16} />
+                                </button>
                                 <button
                                   onClick={() => handleEditTask(task)}
                                   className="text-blue-500 hover:text-blue-700"
@@ -897,6 +873,13 @@ const TaskPage = () => {
                             </td>
                             <td className="p-3 rounded-r-lg border-0">
                               <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleViewDescription(task.description)}
+                                  className="text-gray-500 hover:text-gray-700"
+                                  title="View Description"
+                                >
+                                  <FaEye size={16} />
+                                </button>
                                 <button
                                   onClick={() => handleEditTask(task)}
                                   className="text-blue-500 hover:text-blue-700"
@@ -966,8 +949,35 @@ const TaskPage = () => {
           </div>
         </>
       )}
+
+      {/* Description Modal */}
+      {showDescriptionModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Task Description</h2>
+              <button
+                onClick={() => setShowDescriptionModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <p className="text-gray-700 whitespace-pre-wrap">{currentDescription || "No description provided."}</p>
+            <div className="mt-6 text-right">
+              <button
+                onClick={() => setShowDescriptionModal(false)}
+                className="px-4 py-2 bg-black text-white rounded text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default TaskPage;
+

@@ -5,7 +5,6 @@ import {
   updateTask,
   deleteTask,
   importTasks,
-  searchCustomers,
   bulkDeleteTasks
 } from "../../controllers/admin/taskController.js";
 import multer from "multer";
@@ -25,11 +24,9 @@ router.route("/import")
 router.route("/bulk-delete")
   .post(bulkDeleteTasks);
 
-router.route("/customers/search")
-  .get(searchCustomers);
-
 router.route("/:id")
   .put(updateTask)
   .delete(deleteTask);
 
 export default router;
+

@@ -1,14 +1,12 @@
 import Task from "../../models/Task.js";
-import Customer from "../../models/Customer.js";
 import XLSX from "xlsx";
 
-// @desc    Get all tasks with customer details
+// @desc    Get all tasks
 // @route   GET /api/tasks
 // @access  Public
 export const getTasks = async (req, res) => {
   try {
     const tasks = await Task.find({})
-      .populate('customer', 'company contact email phone')
       .sort({ createdAt: -1 });
     
     // Calculate stats
@@ -41,35 +39,28 @@ export const getTasks = async (req, res) => {
 // @access  Public
 export const createTask = async (req, res) => {
   try {
-    const { projectName, customerId } = req.body;
+    const { projectName } = req.body;
     
-    if (!projectName || !customerId) {
+    if (!projectName) {
       return res.status(400).json({ 
-        message: "Project name and customer are required fields" 
+        message: "Subject is a required field" 
       });
-    }
-
-    // Check if customer exists
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
     }
 
     const task = new Task({
       projectName,
-      customerId,
+      priority: req.body.priority || "Medium",
       tags: req.body.tags || "",
       startDate: req.body.startDate || "",
       deadline: req.body.deadline || "",
       members: req.body.members || "",
-      status: req.body.status || "Not Started"
+      status: req.body.status || "Not Started",
+      description: req.body.description || ""
     });
 
     const createdTask = await task.save();
-    const populatedTask = await Task.findById(createdTask._id)
-      .populate('customer', 'company contact email phone');
       
-    res.status(201).json(populatedTask);
+    res.status(201).json(createdTask);
   } catch (error) {
     console.error("Error creating task:", error);
     res.status(400).json({ 
@@ -99,7 +90,7 @@ export const importTasks = async (req, res) => {
     }
 
     // Validate required fields
-    const requiredFields = ['Project Name', 'Customer'];
+    const requiredFields = ['Subject'];
     const missingFields = requiredFields.filter(field => !jsonData[0].hasOwnProperty(field));
     
     if (missingFields.length) {
@@ -116,24 +107,8 @@ export const importTasks = async (req, res) => {
       const rowNumber = index + 2; // Excel rows start at 1, header is row 1
       
       // Skip if required fields are missing
-      if (!row['Project Name'] || !row.Customer) {
-        errorMessages.push(`Row ${rowNumber}: Missing required fields`);
-        continue;
-      }
-
-      // Find customer by company name
-      let customer;
-      try {
-        customer = await Customer.findOne({ 
-          company: { $regex: new RegExp(row.Customer, 'i') } 
-        });
-        
-        if (!customer) {
-          errorMessages.push(`Row ${rowNumber}: Customer "${row.Customer}" not found`);
-          continue;
-        }
-      } catch (error) {
-        errorMessages.push(`Row ${rowNumber}: Error finding customer - ${error.message}`);
+      if (!row['Subject']) {
+        errorMessages.push(`Row ${rowNumber}: Missing required field 'Subject'`);
         continue;
       }
 
@@ -147,23 +122,32 @@ export const importTasks = async (req, res) => {
         continue;
       }
 
+      // Validate priority
+      const validPriorities = [
+        "Urgent", "High", "Medium", "Low"
+      ];
+
+      if (row.Priority && !validPriorities.includes(row.Priority)) {
+        errorMessages.push(`Row ${rowNumber}: Invalid priority "${row.Priority}"`);
+        continue;
+      }
+
       const taskData = {
-        projectName: row['Project Name'],
-        customerId: customer._id,
+        projectName: row['Subject'],
+        priority: row.Priority || "Medium",
         tags: row.Tags || "",
         startDate: row['Start Date'] || "",
         deadline: row.Deadline || "",
         members: row.Members || "",
-        status: row.Status || "Not Started"
+        status: row.Status || "Not Started",
+        description: row.Description || ""
       };
 
       try {
         const task = new Task(taskData);
         const savedTask = await task.save();
-        const populatedTask = await Task.findById(savedTask._id)
-          .populate('customer', 'company contact email phone');
           
-        importedTasks.push(populatedTask);
+        importedTasks.push(savedTask);
       } catch (error) {
         const errorMsg = error.message.includes("validation failed") 
           ? `Row ${rowNumber}: Validation error - ${error.message.split(': ')[2]}`
@@ -195,18 +179,12 @@ export const importTasks = async (req, res) => {
 // @access  Public
 export const updateTask = async (req, res) => {
   try {
-    const { projectName, customerId } = req.body;
+    const { projectName } = req.body;
     
-    if (!projectName || !customerId) {
+    if (!projectName) {
       return res.status(400).json({ 
-        message: "Project name and customer are required fields" 
+        message: "Subject is a required field" 
       });
-    }
-
-    // Check if customer exists
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
     }
 
     const task = await Task.findById(req.params.id);
@@ -216,18 +194,17 @@ export const updateTask = async (req, res) => {
     }
 
     task.projectName = projectName;
-    task.customerId = customerId;
+    task.priority = req.body.priority || task.priority;
     task.tags = req.body.tags || "";
     task.startDate = req.body.startDate || "";
     task.deadline = req.body.deadline || "";
     task.members = req.body.members || "";
     task.status = req.body.status || "Not Started";
+    task.description = req.body.description || "";
 
     const updatedTask = await task.save();
-    const populatedTask = await Task.findById(updatedTask._id)
-      .populate('customer', 'company contact email phone');
       
-    res.json(populatedTask);
+    res.json(updatedTask);
   } catch (error) {
     console.error("Error updating task:", error);
     res.status(400).json({ 
@@ -257,28 +234,6 @@ export const deleteTask = async (req, res) => {
   }
 };
 
-// @desc    Search customers by company name
-// @route   GET /api/tasks/customers/search
-// @access  Public
-export const searchCustomers = async (req, res) => {
-  try {
-    const { q } = req.query;
-    
-    if (!q || q.length < 2) {
-      return res.json([]);
-    }
-
-    const customers = await Customer.find({
-      company: { $regex: q, $options: 'i' }
-    }).select('company contact email phone').limit(10);
-    
-    res.json(customers);
-  } catch (error) {
-    console.error("Error searching customers:", error);
-    res.status(500).json({ message: "Server error while searching customers" });
-  }
-};
-
 // @desc    Bulk delete tasks
 // @route   POST /api/tasks/bulk-delete
 // @access  Public
@@ -304,3 +259,4 @@ export const bulkDeleteTasks = async (req, res) => {
     res.status(500).json({ message: "Server error while bulk deleting tasks" });
   }
 };
+
