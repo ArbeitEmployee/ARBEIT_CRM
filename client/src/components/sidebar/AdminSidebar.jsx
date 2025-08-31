@@ -25,6 +25,7 @@ const AdminSideBar = ({ isOpen }) => {
   const menuItems = [
     { label: "Dashboard", icon: <FaTachometerAlt />, path: "/admin/dashboard" },
     { label: "Customers", icon: <FaUsers />, path: "/admin/customers" },
+      { label: "Staffs", icon: <FaUsers />, path: "/admin/staffs" },
     {
       label: "Sales",
       icon: <FaChartLine />,

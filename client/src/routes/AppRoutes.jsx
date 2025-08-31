@@ -45,7 +45,7 @@ import ExpenseReports from "../pages/admin/reports/expenses";
 import ExpensesVsIncome from "../pages/admin/reports/expenses-vs-income";
 import LeadsReport from "../pages/admin/reports/LeadsReport";
 import KbArticlesReport from "../pages/admin/reports/kbArticles";
-
+import StaffsPage from "../pages/admin/staffs";
 
 
 const AppRoutes = () => {
@@ -72,6 +72,7 @@ const AppRoutes = () => {
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="customers" element={<Customers />} />
+              <Route path="staffs" element={<StaffsPage/>} />
               <Route path="sales/proposals" element={<Proposals/>} />
               <Route path="/proposals/new" element={<ProposalForm />} />
               <Route path="sales/estimates" element={<Estimates />} />
