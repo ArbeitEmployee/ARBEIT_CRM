@@ -14,6 +14,8 @@ import ClientLogin from "../pages/client/login";
 import ClientRegistration from "../pages/client/registration";
 import ClientForgotPassword from "../pages/client/forgotPassword";
 import Home from "../pages/client/Home";
+import ClientKnowledgeBasePage from "../pages/client/ClientKnowledgeBase";
+//import ClientKnowledgeBasePage from "../pages/client/ClientKnowledgeBase";
 
 //Admin Section
 import Customers from "../pages/admin/customers";
@@ -110,7 +112,9 @@ const AppRoutes = () => {
             <Routes>
               <Route index element={<Home />} />
               <Route path="home" element={<Home />} />
-              {/* Add more client routes here */}
+              <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />
+              
+              {/* Add more client routes here  <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />*/}
             </Routes>
           </ClientLayout>
         }

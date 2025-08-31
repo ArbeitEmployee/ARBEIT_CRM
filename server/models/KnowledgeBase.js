@@ -26,7 +26,16 @@ const knowledgeBaseSchema = new mongoose.Schema({
       },
       message: "Date must be in DD-MM-YYYY or MM-DD-YYYY format"
     }
-  }
+  },
+  votes: {
+    helpful: { type: Number, default: 0 },
+    notHelpful: { type: Number, default: 0 }
+  },
+  userVotes: [{
+    userId: String,
+    voteType: String, // 'helpful' or 'notHelpful'
+    votedAt: { type: Date, default: Date.now }
+  }]
 }, {
   timestamps: true
 });
