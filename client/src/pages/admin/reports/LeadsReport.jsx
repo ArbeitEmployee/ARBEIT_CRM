@@ -3,26 +3,50 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell // Added PieChart, Pie, Cell for the circle graph
+  PieChart, Pie, Cell
 } from 'recharts';
 import { FaChevronRight } from "react-icons/fa";
 
 const LeadsReport = () => {
   const [sourceChartData, setSourceChartData] = useState([]);
-  const [weekdayChartData, setWeekdayChartData] = useState([]);
+  const [weekConversionData, setWeekConversionData] = useState([]);
+  const [dailyLeadsData, setDailyLeadsData] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   // Define an array of colors for the Pie Chart segments
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28DFF', '#FF6B6B', '#6BFF6B'];
 
+  // Month options
+  const months = [
+    { value: 1, label: 'January' },
+    { value: 2, label: 'February' },
+    { value: 3, label: 'March' },
+    { value: 4, label: 'April' },
+    { value: 5, label: 'May' },
+    { value: 6, label: 'June' },
+    { value: 7, label: 'July' },
+    { value: 8, label: 'August' },
+    { value: 9, label: 'September' },
+    { value: 10, label: 'October' },
+    { value: 11, label: 'November' },
+    { value: 12, label: 'December' }
+  ];
+
+  // Generate year options (last 5 years and next 5 years)
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
+
   useEffect(() => {
     const fetchReportData = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get("http://localhost:5000/api/reports/leads");
+        const { data } = await axios.get(`http://localhost:5000/api/reports/leads?month=${selectedMonth}&year=${selectedYear}`);
         setSourceChartData(data.sourceChartData || []);
-        setWeekdayChartData(data.weekdayChartData || []);
+        setWeekConversionData(data.weekConversionData || []);
+        setDailyLeadsData(data.dailyLeadsData || []);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching report data:", err);
@@ -32,7 +56,7 @@ const LeadsReport = () => {
     };
 
     fetchReportData();
-  }, []);
+  }, [selectedMonth, selectedYear]);
 
   if (loading) {
     return <div className="p-4 text-center">Loading reports...</div>;
@@ -56,10 +80,10 @@ const LeadsReport = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Leads by Source Chart (Now a Pie Chart) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Leads by Source Chart (Pie Chart) */}
         <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Leads by Source</h2>
+          <h2 className="text-xl font-semibold mb-4">Leads by Source (This Week)</h2>
           {sourceChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -68,10 +92,10 @@ const LeadsReport = () => {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  outerRadius={120} // Adjust outerRadius as needed
+                  outerRadius={120}
                   fill="#8884d8"
                   dataKey="value"
-                  nameKey="name" // Use nameKey for the legend and tooltip to show the source name
+                  nameKey="name"
                 >
                   {
                     sourceChartData.map((entry, index) => (
@@ -84,17 +108,17 @@ const LeadsReport = () => {
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-gray-500">No source data available.</p>
+            <p className="text-gray-500">No source data available for this week.</p>
           )}
         </div>
 
-        {/* Last Contact by Weekday Chart (Remains a Bar Chart) */}
+        {/* This Week Leads Conversions Chart (Bar Chart) */}
         <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Last Contact by Weekday</h2>
-          {weekdayChartData.length > 0 ? (
+          <h2 className="text-xl font-semibold mb-4">This Week Leads Conversions</h2>
+          {weekConversionData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
-                data={weekdayChartData}
+                data={weekConversionData}
                 margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
@@ -102,13 +126,62 @@ const LeadsReport = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="value" fill="#82ca9d" name="Number of Leads" />
+                <Bar dataKey="value" fill="#8884d8" name="Conversions" />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-gray-500">No last contact data available for charting.</p>
+            <p className="text-gray-500">No conversion data available for this week.</p>
           )}
         </div>
+      </div>
+
+      {/* Daily Leads Chart */}
+      <div className="bg-white shadow-md rounded-lg p-6">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Daily Leads</h2>
+          <div className="flex gap-2">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+              className="border rounded px-3 py-1"
+            >
+              {months.map(month => (
+                <option key={month.value} value={month.value}>
+                  {month.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="border rounded px-3 py-1"
+            >
+              {years.map(year => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        
+        {dailyLeadsData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={400}>
+            <BarChart
+              data={dailyLeadsData}
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="name" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="value" fill="#82ca9d" name="Number of Leads" />
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <p className="text-gray-500">No daily leads data available for the selected period.</p>
+        )}
       </div>
     </div>
   );
