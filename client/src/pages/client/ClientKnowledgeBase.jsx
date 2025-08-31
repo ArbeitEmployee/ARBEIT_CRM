@@ -9,63 +9,111 @@ const ClientKnowledgeBasePage = () => {
   const [selectedGroup, setSelectedGroup] = useState("All");
   const [groups, setGroups] = useState(["All"]);
   const [userVotes, setUserVotes] = useState({});
-  const [userId, setUserId] = useState(""); // In a real app, this would come from authentication
+  const [userId, setUserId] = useState("");
 
-  // Generate a user ID for demo purposes (or use from auth in real app)
+  // Generate a persistent user ID using browser fingerprinting
   useEffect(() => {
-    const storedUserId = localStorage.getItem("kb_user_id");
-    if (storedUserId) {
-      setUserId(storedUserId);
-    } else {
-      const newUserId = `user_${Math.random().toString(36).substr(2, 9)}`;
-      localStorage.setItem("kb_user_id", newUserId);
-      setUserId(newUserId);
-    }
+    const generateUserId = async () => {
+      try {
+        // Try to get existing user ID from localStorage
+        let storedUserId = localStorage.getItem("kb_user_id");
+        
+        if (!storedUserId) {
+          // Generate a more persistent user ID using browser fingerprint
+          const fingerprint = await generateBrowserFingerprint();
+          storedUserId = `client_${fingerprint}`;
+          localStorage.setItem("kb_user_id", storedUserId);
+        }
+        
+        setUserId(storedUserId);
+      } catch {
+        // Fallback to random ID if fingerprint fails
+        const fallbackId = `client_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
+        localStorage.setItem("kb_user_id", fallbackId);
+        setUserId(fallbackId);
+      }
+    };
+
+    generateUserId();
   }, []);
+
+  // Simple browser fingerprint generator
+  const generateBrowserFingerprint = async () => {
+    try {
+      const components = [
+        navigator.userAgent,
+        navigator.language,
+        navigator.hardwareConcurrency || 'unknown',
+        screen.width,
+        screen.height,
+        screen.colorDepth,
+        new Date().getTimezoneOffset()
+      ].join('|');
+      
+      // Simple hash function
+      let hash = 0;
+      for (let i = 0; i < components.length; i++) {
+        const char = components.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+      }
+      
+      return Math.abs(hash).toString(36);
+    } catch {
+      throw new Error("Fingerprint generation failed");
+    }
+  };
 
   // Fetch articles
   const fetchArticles = async () => {
-    try {
-      const { data } = await axios.get("http://localhost:5000/api/client/knowledge-base", {
-        params: {
-          group: selectedGroup !== "All" ? selectedGroup : null,
-          search: searchTerm
-        }
-      });
-      setArticles(data.articles || []);
-      setFilteredArticles(data.articles || []);
-      setGroups(data.groups || ["All"]);
-      
-      // Fetch user votes for these articles
-      if (userId && data.articles.length > 0) {
-        fetchUserVotes(data.articles.map(article => article._id));
+  try {
+    const { data } = await axios.get("http://localhost:5000/api/client/knowledge-base", {
+      params: {
+        group: selectedGroup !== "All" ? selectedGroup : null,
+        search: searchTerm
       }
-    } catch (error) {
-      console.error("Error fetching articles:", error);
-      setArticles([]);
-      setFilteredArticles([]);
+    });
+    setArticles(data.articles || []);
+    setFilteredArticles(data.articles || []);
+    setGroups(data.groups || ["All"]);
+    
+    // Fetch user votes for these articles
+    if (userId && data.articles.length > 0) {
+      fetchUserVotes(data.articles.map(article => article._id));
     }
-  };
+  } catch (error) {
+    console.error("Error fetching articles:", error);
+    setArticles([]);
+    setFilteredArticles([]);
+  }
+};
 
   // Fetch user votes
   const fetchUserVotes = async (articleIds) => {
-    try {
-      const { data } = await axios.post("http://localhost:5000/api/client/knowledge-base/user-votes", {
-        userId,
-        articleIds
-      });
-      setUserVotes(data.userVotes || {});
-    } catch (error) {
-      console.error("Error fetching user votes:", error);
-    }
-  };
+  try {
+    const { data } = await axios.post("http://localhost:5000/api/client/knowledge-base/user-votes", {
+      userId,
+      articleIds
+    });
+    setUserVotes(data.userVotes || {});
+  } catch (error) {
+    console.error("Error fetching user votes:", error);
+  }
+};
 
   useEffect(() => {
-    fetchArticles();
-  }, [selectedGroup, searchTerm]);
+    if (userId) {
+      fetchArticles();
+    }
+  }, [selectedGroup, searchTerm, userId]);
 
   // Handle vote
   const handleVote = async (articleId, voteType) => {
+    if (!userId) {
+      alert("Please wait while we identify your browser...");
+      return;
+    }
+
     try {
       const { data } = await axios.post(
         `http://localhost:5000/api/client/knowledge-base/${articleId}/vote`,
@@ -176,29 +224,29 @@ const ClientKnowledgeBasePage = () => {
               <div className="border-t pt-4 mt-4">
                 <p className="text-sm text-gray-600 mb-2">Did you find this article useful?</p>
                 <div className="flex items-center space-x-4">
-                  <button
+                    <button
                     onClick={() => handleVote(article._id, 'helpful')}
                     className={`flex items-center space-x-1 px-3 py-1 rounded ${
-                      userVotes[article._id] === 'helpful'
+                        userVotes[article._id] === 'helpful'
                         ? "bg-green-100 text-green-800"
                         : "bg-gray-100 text-gray-700 hover:bg-green-50"
                     }`}
-                  >
+                    >
                     <FaThumbsUp className="text-sm" />
                     <span>Yes ({article.votes?.helpful || 0})</span>
-                  </button>
-                  
-                  <button
+                    </button>
+                    
+                    <button
                     onClick={() => handleVote(article._id, 'notHelpful')}
                     className={`flex items-center space-x-1 px-3 py-1 rounded ${
-                      userVotes[article._id] === 'notHelpful'
+                        userVotes[article._id] === 'notHelpful'
                         ? "bg-red-100 text-red-800"
                         : "bg-gray-100 text-gray-700 hover:bg-red-50"
                     }`}
-                  >
+                    >
                     <FaThumbsDown className="text-sm" />
                     <span>No ({article.votes?.notHelpful || 0})</span>
-                  </button>
+                    </button>
                 </div>
               </div>
             </div>
