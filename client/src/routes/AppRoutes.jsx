@@ -41,7 +41,8 @@ import CreditNoteForm from "../pages/admin/sales/creditNoteForm";
 import SalesReports from "../pages/admin/reports/sales";
 import ExpenseReports from "../pages/admin/reports/expenses";
 import ExpensesVsIncome from "../pages/admin/reports/expenses-vs-income";
-
+import LeadsReport from "../pages/admin/reports/LeadsReport";
+import KbArticlesReport from "../pages/admin/reports/kbArticles";
 
 
 
@@ -92,6 +93,8 @@ const AppRoutes = () => {
               <Route path="leads" element={<LeadsPage />} />
               <Route path="estimate-request" element={<EstimateRequestPage />} />
               <Route path="knowledge-base" element={<KnowledgeBase />} />
+              <Route path="reports/leads" element={<LeadsReport />} />
+              <Route path="reports/kb-articles" element={<KbArticlesReport />} />
 
               {/* Add more admin routes here */}
             </Routes>

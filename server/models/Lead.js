@@ -55,6 +55,7 @@ const leadSchema = new mongoose.Schema({
     validate: {
       validator: function(v) {
         if (!v) return true;
+        // Accepts DD-MM-YYYY or YYYY-MM-DD
         return /^\d{2}-\d{2}-\d{4}$/.test(v) || /^\d{4}-\d{2}-\d{2}$/.test(v);
       },
       message: "Date format should be DD-MM-YYYY or YYYY-MM-DD"
@@ -65,6 +66,7 @@ const leadSchema = new mongoose.Schema({
     validate: {
       validator: function(v) {
         if (!v) return true;
+        // Accepts DD-MM-YYYY or YYYY-MM-DD
         return /^\d{2}-\d{2}-\d{4}$/.test(v) || /^\d{4}-\d{2}-\d{2}$/.test(v);
       },
       message: "Date format should be DD-MM-YYYY or YYYY-MM-DD"

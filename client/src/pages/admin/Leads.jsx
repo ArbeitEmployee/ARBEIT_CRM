@@ -4,13 +4,16 @@ import {
   FaTimes, FaEdit, FaTrash, FaChevronDown,
   FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare,
   FaUser, FaBuilding, FaEnvelope, FaPhone, FaDollarSign, FaTag, FaUserCheck,
-  FaFileImport, FaFilter // <--- ADDED FaFilter HERE
+  FaFileImport, FaFilter
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+} from 'recharts'; // Import Recharts components
 
 const LeadsPage = () => {
   const [selectedLeads, setSelectedLeads] = useState([]);
@@ -31,6 +34,7 @@ const LeadsPage = () => {
     customer: 0,
     lost: 0
   });
+  const [chartData, setChartData] = useState([]); // State for chart data
   const [newLead, setNewLead] = useState({
     name: "",
     company: "",
@@ -84,6 +88,7 @@ const LeadsPage = () => {
         customer: 0,
         lost: 0
       });
+      setChartData(data.chartData || []); // Set chart data from API response
     } catch (error) {
       console.error("Error fetching leads:", error);
       setLeads([]);
@@ -96,6 +101,7 @@ const LeadsPage = () => {
         customer: 0,
         lost: 0
       });
+      setChartData([]); // Clear chart data on error
     }
   };
 
@@ -139,14 +145,14 @@ const LeadsPage = () => {
 
   const handleSaveLead = async () => {
     if (isSaving) return;
-    
+
     if (!newLead.name || !newLead.company || !newLead.email) {
       alert("Please fill in all required fields (Name, Company, Email)");
       return;
     }
 
     setIsSaving(true);
-    
+
     try {
       if (editingLead) {
         // Update existing lead
@@ -162,7 +168,7 @@ const LeadsPage = () => {
         fetchLeads();
         alert("Lead created successfully!");
       }
-      
+
       // Reset form
       setNewLead({
         name: "",
@@ -218,7 +224,7 @@ const LeadsPage = () => {
 
   const handleBulkDelete = async () => {
     if (selectedLeads.length === 0) return;
-    
+
     if (window.confirm(`Are you sure you want to delete ${selectedLeads.length} selected leads?`)) {
       try {
         await axios.post("http://localhost:5000/api/leads/bulk-delete", { ids: selectedLeads });
@@ -254,7 +260,7 @@ const LeadsPage = () => {
 
     try {
       setImportProgress({ status: 'uploading', message: 'Uploading file...' });
-      
+
       const { data } = await axios.post('http://localhost:5000/api/leads/import', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
@@ -268,7 +274,7 @@ const LeadsPage = () => {
         errorCount: data.errorMessages?.length || 0,
         errorMessages: data.errorMessages
       });
-      
+
       // Refresh lead list
       fetchLeads();
     } catch (error) {
@@ -335,7 +341,7 @@ const LeadsPage = () => {
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', 'Leads.csv');
     link.style.visibility = 'hidden';
@@ -362,7 +368,7 @@ const LeadsPage = () => {
       "Last Contact",
       "Created"
     ];
-    
+
     const tableRows = filteredLeads.map(lead => [
       lead._id,
       lead.name,
@@ -408,14 +414,14 @@ const LeadsPage = () => {
     printWindow.document.write('</head><body>');
     printWindow.document.write('<h1>Leads</h1>');
     printWindow.document.write('<table>');
-    
+
     // Table header
     printWindow.document.write('<thead><tr>');
     ['ID', 'Name', 'Company', 'Email', 'Phone', 'Value', 'Tags', 'Assigned', 'Status', 'Source', 'Last Contact', 'Created'].forEach(header => {
       printWindow.document.write(`<th>${header}</th>`);
     });
     printWindow.document.write('</tr></thead>');
-    
+
     // Table body
     printWindow.document.write('<tbody>');
     filteredLeads.forEach(lead => {
@@ -439,12 +445,12 @@ const LeadsPage = () => {
       printWindow.document.write('</tr>');
     });
     printWindow.document.write('</tbody>');
-    
+
     printWindow.document.write('</table>');
     printWindow.document.write('<p class="no-print">Printed on: ' + new Date().toLocaleString() + '</p>');
     printWindow.document.write('</body></html>');
     printWindow.document.close();
-    
+
     setTimeout(() => {
       printWindow.print();
       printWindow.close();
@@ -488,7 +494,7 @@ const LeadsPage = () => {
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Lead Details</h2>
-            <button 
+            <button
               onClick={() => {
                 setShowNewLeadForm(false);
                 setEditingLead(null);
@@ -750,16 +756,38 @@ const LeadsPage = () => {
             </div>
           </div>
 
+          {/* Leads by Source Chart */}
+          {chartData.length > 0 && (
+            <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+              <h2 className="text-xl font-semibold mb-4">Leads by Source</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={chartData}
+                  margin={{
+                    top: 5, right: 30, left: 20, bottom: 5,
+                  }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="value" fill="#8884d8" name="Number of Leads" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
           {/* Top action buttons */}
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
-              <button 
+              <button
                 className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
                 onClick={() => setShowNewLeadForm(true)}
               >
                 <FaPlus /> New Lead
               </button>
-              <button 
+              <button
                 className="border px-3 py-1 text-sm rounded flex items-center gap-2"
                 onClick={handleImportClick}
               >
@@ -808,7 +836,7 @@ const LeadsPage = () => {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-                
+
                 {/* Export button */}
                 <div className="relative">
                   <button
@@ -875,7 +903,7 @@ const LeadsPage = () => {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">      
+            <div className="overflow-x-auto">
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
@@ -1037,7 +1065,7 @@ const LeadsPage = () => {
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
-                  
+
                   return (
                     <button
                       key={pageNum}

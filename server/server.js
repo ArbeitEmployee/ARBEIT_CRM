@@ -1,5 +1,8 @@
-import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
+connectDB();
+
+import express from "express";
 import cors from "cors";
 import connectDB from "./config/db.js";
 import adminAuthRoutes from "./routes/admin/authRoutes.js";
@@ -19,11 +22,10 @@ import knowledgeBaseRoutes from "./routes/admin/knowledgeBaseRoutes.js";
 import leadRoutes from "./routes/admin/leadRoutes.js";
 import supportRoutes from "./routes/admin/supportRoutes.js";
 import estimateRequestRoutes from "./routes/admin/estimateRequestRoutes.js";
+import reportLeadRoutes from './routes/admin/reportLeadRoutes.js';
 
-dotenv.config();
 
-dotenv.config();
-connectDB();
+
 
 const app = express();
 app.use(cors());
@@ -46,6 +48,7 @@ app.use("/api/knowledge-base", knowledgeBaseRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/estimate-requests", estimateRequestRoutes);
+app.use('/api/reports', reportLeadRoutes);
 
 
 

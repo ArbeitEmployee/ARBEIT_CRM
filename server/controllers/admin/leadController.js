@@ -2,6 +2,55 @@ import Lead from "../../models/Lead.js";
 import Customer from "../../models/Customer.js";
 import XLSX from "xlsx";
 
+// Helper function to parse various date formats into YYYY-MM-DD
+const parseDate = (dateString) => {
+  if (!dateString) return "";
+
+  let date;
+
+  // Try parsing DD-MM-YYYY
+  let match = dateString.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (match) {
+    date = new Date(`${match[3]}-${match[2]}-${match[1]}`); // YYYY-MM-DD for Date constructor
+  } else {
+    // Try parsing YYYY-MM-DD
+    match = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (match) {
+      date = new Date(dateString);
+    } else {
+      // Try parsing M/D/YYYY or MM/DD/YYYY
+      match = dateString.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+      if (match) {
+        date = new Date(`${match[3]}-${match[1].padStart(2, '0')}-${match[2].padStart(2, '0')}`); // YYYY-MM-DD for Date constructor
+      } else {
+        // Fallback to general Date constructor for other formats (e.g., Excel's numeric date)
+        // If dateString is a number (Excel date), convert it
+        if (!isNaN(dateString) && !isNaN(parseFloat(dateString))) {
+          // Excel dates are days since 1900-01-01, with 1900-02-29 bug
+          // JavaScript Date objects are milliseconds since 1970-01-01
+          // Convert Excel date to JS date: (excel_date - 25569) * 86400000
+          // 25569 is the number of days between 1900-01-01 and 1970-01-01 (adjusted for Excel's bug)
+          date = new Date((dateString - 25569) * 86400 * 1000);
+        } else {
+          date = new Date(dateString);
+        }
+      }
+    }
+  }
+
+  // Check if it's a valid date
+  if (isNaN(date.getTime())) {
+    return ""; // Return empty string if date is invalid
+  }
+
+  // Format to YYYY-MM-DD to match schema validation
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+
 // @desc    Get all leads
 // @route   GET /api/leads
 // @access  Public
@@ -10,7 +59,7 @@ export const getLeads = async (req, res) => {
     const leads = await Lead.find({})
       .populate('customer', 'company contact email')
       .sort({ createdAt: -1 });
-    
+
     // Calculate stats
     const stats = {
       totalLeads: leads.length,
@@ -21,10 +70,23 @@ export const getLeads = async (req, res) => {
       customer: leads.filter(lead => lead.status === "Customer").length,
       lost: leads.filter(lead => lead.status === "Lost").length
     };
-    
+
+    // Calculate leads by source for charting
+    const leadsBySource = leads.reduce((acc, lead) => {
+      const source = lead.source && lead.source !== "" ? lead.source : "Unknown";
+      acc[source] = (acc[source] || 0) + 1;
+      return acc;
+    }, {});
+
+    const chartData = Object.keys(leadsBySource).map(source => ({
+      name: source,
+      value: leadsBySource[source]
+    }));
+
     res.json({
       leads,
-      stats
+      stats,
+      chartData // Added chartData to the response
     });
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -38,19 +100,19 @@ export const getLeads = async (req, res) => {
 export const createLead = async (req, res) => {
   try {
     const { name, company, email } = req.body;
-    
+
     if (!name || !company || !email) {
-      return res.status(400).json({ 
-        message: "Name, company, and email are required fields" 
+      return res.status(400).json({
+        message: "Name, company, and email are required fields"
       });
     }
 
     // Check if customer exists by company name and link if found
     let customerId = null;
-    const customer = await Customer.findOne({ 
-      company: { $regex: new RegExp(`^${company}$`, 'i') } 
+    const customer = await Customer.findOne({
+      company: { $regex: new RegExp(`^${company}$`, 'i') }
     });
-    
+
     if (customer) {
       customerId = customer._id;
     }
@@ -73,14 +135,14 @@ export const createLead = async (req, res) => {
     const createdLead = await lead.save();
     const populatedLead = await Lead.findById(createdLead._id)
       .populate('customer', 'company contact email');
-      
+
     res.status(201).json(populatedLead);
   } catch (error) {
     console.error("Error creating lead:", error);
-    res.status(400).json({ 
-      message: error.message.includes("validation failed") 
-        ? "Validation error: " + error.message 
-        : error.message 
+    res.status(400).json({
+      message: error.message.includes("validation failed")
+        ? "Validation error: " + error.message
+        : error.message
     });
   }
 };
@@ -91,25 +153,25 @@ export const createLead = async (req, res) => {
 export const updateLead = async (req, res) => {
   try {
     const { name, company, email } = req.body;
-    
+
     if (!name || !company || !email) {
-      return res.status(400).json({ 
-        message: "Name, company, and email are required fields" 
+      return res.status(400).json({
+        message: "Name, company, and email are required fields"
       });
     }
 
     const lead = await Lead.findById(req.params.id);
-    
+
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
     }
 
     // Check if customer exists by company name and link if found
     let customerId = null;
-    const customer = await Customer.findOne({ 
-      company: { $regex: new RegExp(`^${company}$`, 'i') } 
+    const customer = await Customer.findOne({
+      company: { $regex: new RegExp(`^${company}$`, 'i') }
     });
-    
+
     if (customer) {
       customerId = customer._id;
     }
@@ -130,14 +192,14 @@ export const updateLead = async (req, res) => {
     const updatedLead = await lead.save();
     const populatedLead = await Lead.findById(updatedLead._id)
       .populate('customer', 'company contact email');
-      
+
     res.json(populatedLead);
   } catch (error) {
     console.error("Error updating lead:", error);
-    res.status(400).json({ 
-      message: error.message.includes("validation failed") 
-        ? "Validation error: " + error.message 
-        : error.message 
+    res.status(400).json({
+      message: error.message.includes("validation failed")
+        ? "Validation error: " + error.message
+        : error.message
     });
   }
 };
@@ -148,7 +210,7 @@ export const updateLead = async (req, res) => {
 export const deleteLead = async (req, res) => {
   try {
     const lead = await Lead.findById(req.params.id);
-    
+
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
     }
@@ -167,18 +229,18 @@ export const deleteLead = async (req, res) => {
 export const bulkDeleteLeads = async (req, res) => {
   try {
     const { ids } = req.body;
-    
+
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({ message: "No lead IDs provided" });
     }
 
     const result = await Lead.deleteMany({ _id: { $in: ids } });
-    
+
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "No leads found to delete" });
     }
 
-    res.json({ 
+    res.json({
       message: `${result.deletedCount} lead(s) deleted successfully`,
       deletedCount: result.deletedCount
     });
@@ -209,10 +271,10 @@ export const importLeads = async (req, res) => {
     // Validate required fields
     const requiredFields = ['Name', 'Company', 'Email'];
     const missingFields = requiredFields.filter(field => !jsonData[0].hasOwnProperty(field));
-    
+
     if (missingFields.length) {
-      return res.status(400).json({ 
-        message: `Missing required fields: ${missingFields.join(', ')}` 
+      return res.status(400).json({
+        message: `Missing required fields: ${missingFields.join(', ')}`
       });
     }
 
@@ -222,7 +284,7 @@ export const importLeads = async (req, res) => {
 
     for (const [index, row] of jsonData.entries()) {
       const rowNumber = index + 2; // Excel rows start at 1, header is row 1
-      
+
       // Skip if required fields are missing
       if (!row.Name || !row.Company || !row.Email) {
         errorMessages.push(`Row ${rowNumber}: Missing required fields (Name, Company, Email)`);
@@ -232,10 +294,10 @@ export const importLeads = async (req, res) => {
       // Check if customer exists by company name
       let customerId = null;
       try {
-        const customer = await Customer.findOne({ 
-          company: { $regex: new RegExp(`^${row.Company}$`, 'i') } 
+        const customer = await Customer.findOne({
+          company: { $regex: new RegExp(`^${row.Company}$`, 'i') }
         });
-        
+
         if (customer) {
           customerId = customer._id;
         }
@@ -265,6 +327,10 @@ export const importLeads = async (req, res) => {
         continue;
       }
 
+      // Parse and format dates using the helper function
+      const formattedLastContact = parseDate(row['Last Contact']);
+      const formattedCreated = parseDate(row.Created);
+
       const leadData = {
         name: row.Name,
         company: row.Company,
@@ -275,8 +341,8 @@ export const importLeads = async (req, res) => {
         assigned: row.Assigned || "",
         status: row.Status || "New",
         source: row.Source || "",
-        lastContact: row['Last Contact'] || "",
-        created: row.Created || "",
+        lastContact: formattedLastContact, // Use formatted date
+        created: formattedCreated,         // Use formatted date
         customerId
       };
 
@@ -285,10 +351,10 @@ export const importLeads = async (req, res) => {
         const savedLead = await lead.save();
         const populatedLead = await Lead.findById(savedLead._id)
           .populate('customer', 'company contact email');
-          
+
         importedLeads.push(populatedLead);
       } catch (error) {
-        const errorMsg = error.message.includes("validation failed") 
+        const errorMsg = error.message.includes("validation failed")
           ? `Row ${rowNumber}: Validation error - ${error.message.split(': ')[2]}`
           : `Row ${rowNumber}: ${error.message}`;
         errorMessages.push(errorMsg);
@@ -305,10 +371,10 @@ export const importLeads = async (req, res) => {
 
   } catch (error) {
     console.error("Error importing leads:", error);
-    res.status(500).json({ 
-      message: error.message.includes("validation failed") 
-        ? "Validation error: " + error.message 
-        : "Server error while importing leads" 
+    res.status(500).json({
+      message: error.message.includes("validation failed")
+        ? "Validation error: " + error.message
+        : "Server error while importing leads"
     });
   }
 };

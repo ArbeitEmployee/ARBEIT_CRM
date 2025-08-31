@@ -757,7 +757,7 @@ const ContactsPage = () => {
                     data={chartData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={80}
+                    outerRadius={120}
                     fill="#8884d8"
                     dataKey="value"
                     label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
