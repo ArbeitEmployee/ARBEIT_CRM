@@ -1,86 +1,46 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const groups = [
+  "All",
   "General",
   "Technical",
   "Sales",
   "Support",
-  "Hr",
+  "HR",
   "Finance"
 ];
 
-// Sample data structure for articles with vote counts by group
-const articlesData = {
-  General: [
-    {
-      title: "How to get started?",
-      yes: 8,
-      no: 2
-    },
-    {
-      title: "General FAQ",
-      yes: 5,
-      no: 5
-    }
-  ],
-  Technical: [
-    {
-      title: "Troubleshooting Network Issues",
-      yes: 15,
-      no: 3
-    },
-    {
-      title: "System Requirements for Installation",
-      yes: 10,
-      no: 5
-    }
-  ],
-  Sales: [
-    {
-      title: "Nice",
-      yes: 1,
-      no: 0
-    },
-    {
-      title: "What made you so awfully clever? 'I have.",
-      yes: 2,
-      no: 7
-    },
-    {
-      title: "The next thing is.",
-      yes: 6,
-      no: 4
-    }
-  ],
-  Support: [
-    {
-      title: "How to contact Support",
-      yes: 12,
-      no: 0
-    }
-  ],
-  Hr: [
-    {
-      title: "Leave Policy 2024",
-      yes: 7,
-      no: 3
-    }
-  ],
-  Finance: [
-    {
-      title: "Expense Reimbursement",
-      yes: 9,
-      no: 1
-    }
-  ]
-};
-
 export default function KbArticles() {
-  const [selectedGroup, setSelectedGroup] = useState("Sales");
+  const [selectedGroup, setSelectedGroup] = useState("All");
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const onGroupChange = (e) => {
     setSelectedGroup(e.target.value);
   };
+
+  // Fetch articles from API
+  const fetchArticles = async () => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get("http://localhost:5000/api/knowledge-base", {
+        params: {
+          group: selectedGroup !== "All" ? selectedGroup : null
+        }
+      });
+      setArticles(data.articles || []);
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      setArticles([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchArticles();
+  }, [selectedGroup]);
 
   // Calculate total votes, percentages and ensure no division by zero
   const getPercent = (num, total) => (total === 0 ? 0 : (num / total) * 100);
@@ -135,61 +95,71 @@ export default function KbArticles() {
         ))}
       </select>
 
-      {/* List articles with vote bars */}
-      <div style={{ backgroundColor: "#f9f9f9", padding: "1rem 1.5rem", borderRadius: 12, boxShadow: "0 1px 5px rgb(0 0 0 / 0.1)" }}>
-        {articlesData[selectedGroup] && articlesData[selectedGroup].map(({ title, yes, no }, idx) => {
-          const total = yes + no;
-          const yesPercent = getPercent(yes, total);
-          const noPercent = getPercent(no, total);
+      {loading ? (
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <p>Loading articles...</p>
+        </div>
+      ) : (
+        /* List articles with vote bars */
+        <div style={{ backgroundColor: "#f9f9f9", padding: "1rem 1.5rem", borderRadius: 12, boxShadow: "0 1px 5px rgb(0 0 0 / 0.1)" }}>
+          {articles.length > 0 ? (
+            articles.map((article, idx) => {
+              const yes = article.votes?.helpful || 0;
+              const no = article.votes?.notHelpful || 0;
+              const total = yes + no;
+              const yesPercent = getPercent(yes, total);
+              const noPercent = getPercent(no, total);
 
-          return (
-            <div key={idx} style={{ marginBottom: 24, borderBottom: idx === articlesData[selectedGroup].length - 1 ? "none" : "1px solid #ddd", paddingBottom: 12 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "600", fontSize: "0.95rem", marginBottom: 4 }}>
-                <div>{title} <span style={{ fontWeight: "400" }}>(Total: {total})</span></div>
-                <div style={{ fontWeight: "400" }}>Yes: {yes}</div>
-              </div>
-              <div
-                style={{
-                  ...stripedBarStyle("#007acc"),
-                  width: `${yesPercent}%`,
-                  maxWidth: "100%",
-                  transition: "width 0.4s ease"
-                }}
-                aria-label={`${yesPercent.toFixed(2)}% Yes votes`}
-              >
-                {yesPercent.toFixed(2)}%
-              </div>
-              <div style={{ height: 6 }}></div>
-              <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "400", fontSize: "0.9rem", marginBottom: 4 }}>
-                <div style={{ visibility: "hidden" }}>No label placeholder</div> {/* space holder for alignment */}
-                <div>No: {no}</div>
-              </div>
-              <div
-                style={{
-                  ...stripedBarStyle("#cc0000"),
-                  width: `${noPercent}%`,
-                  maxWidth: "100%",
-                  backgroundImage:
-                    `repeating-linear-gradient(
-                        45deg,
-                        #cc0000,
-                        #cc0000 10px,
-                        #990000 10px,
-                        #990000 20px
-                      )`,
-                  color: "white",
-                  transition: "width 0.4s ease"
-                }}
-                aria-label={`${noPercent.toFixed(2)}% No votes`}
-              >
-                {noPercent.toFixed(2)}%
-              </div>
-            </div>
-          );
-        })}
-        {!articlesData[selectedGroup] && <p>No articles found for this group.</p>}
-      </div>
+              return (
+                <div key={article._id} style={{ marginBottom: 24, borderBottom: idx === articles.length - 1 ? "none" : "1px solid #ddd", paddingBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "600", fontSize: "0.95rem", marginBottom: 4 }}>
+                    <div>{article.title} <span style={{ fontWeight: "400" }}>(Total: {total})</span></div>
+                    <div style={{ fontWeight: "400" }}>Yes: {yes}</div>
+                  </div>
+                  <div
+                    style={{
+                      ...stripedBarStyle("#007acc"),
+                      width: `${yesPercent}%`,
+                      maxWidth: "100%",
+                      transition: "width 0.4s ease"
+                    }}
+                    aria-label={`${yesPercent.toFixed(2)}% Yes votes`}
+                  >
+                    {yesPercent.toFixed(2)}%
+                  </div>
+                  <div style={{ height: 6 }}></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "400", fontSize: "0.9rem", marginBottom: 4 }}>
+                    <div style={{ visibility: "hidden" }}>No label placeholder</div> {/* space holder for alignment */}
+                    <div>No: {no}</div>
+                  </div>
+                  <div
+                    style={{
+                      ...stripedBarStyle("#cc0000"),
+                      width: `${noPercent}%`,
+                      maxWidth: "100%",
+                      backgroundImage:
+                        `repeating-linear-gradient(
+                            45deg,
+                            #cc0000,
+                            #cc0000 10px,
+                            #990000 10px,
+                            #990000 20px
+                          )`,
+                      color: "white",
+                      transition: "width 0.4s ease"
+                    }}
+                    aria-label={`${noPercent.toFixed(2)}% No votes`}
+                  >
+                    {noPercent.toFixed(2)}%
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <p style={{ textAlign: "center", padding: "2rem" }}>No articles found for this group.</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
-
