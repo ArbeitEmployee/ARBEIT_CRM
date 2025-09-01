@@ -61,6 +61,8 @@ const customerSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true // This adds createdAt and updatedAt fields
 });
 
 // Add indexes for better performance

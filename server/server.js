@@ -26,6 +26,8 @@ import estimateRequestRoutes from "./routes/admin/estimateRequestRoutes.js";
 import reportLeadRoutes from './routes/admin/reportLeadRoutes.js';
 import clientKnowledgeBaseRoutes from './routes/client/clientKnowledgeBaseRoutes.js';
 import exportBulkPdfRoutes from "./routes/admin/exportBulkPdfRoutes.js";
+import csvExportRoutes from './routes/admin/csvExportRoutes.js';
+
 
 
 const app = express();
@@ -52,6 +54,7 @@ app.use("/api/support", supportRoutes);
 app.use("/api/estimate-requests", estimateRequestRoutes);
 app.use('/api/reports', reportLeadRoutes);
 app.use('/api/admin', exportBulkPdfRoutes);
+app.use('/api/csvexport', csvExportRoutes);
 
 //client routes
 app.use('/api/client/knowledge-base', clientKnowledgeBaseRoutes);
