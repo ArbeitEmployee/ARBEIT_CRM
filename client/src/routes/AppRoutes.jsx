@@ -47,6 +47,8 @@ import LeadsReport from "../pages/admin/reports/LeadsReport";
 import KbArticlesReport from "../pages/admin/reports/kbArticles";
 import StaffsPage from "../pages/admin/staffs";
 
+// Utilities
+import BulkPdfExport from "../pages/admin/utilities/BulkPdfExport";
 
 const AppRoutes = () => {
   return (
@@ -98,6 +100,9 @@ const AppRoutes = () => {
               <Route path="knowledge-base" element={<KnowledgeBase />} />
               <Route path="reports/leads" element={<LeadsReport />} />
               <Route path="reports/kb-articles" element={<KbArticlesReport />} />
+
+              {/*Utilities */}
+              <Route path="utilities/bulk-pdf" element={<BulkPdfExport />} />
 
               {/* Add more admin routes here */}
             </Routes>

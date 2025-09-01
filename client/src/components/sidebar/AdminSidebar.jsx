@@ -53,16 +53,16 @@ const AdminSideBar = ({ isOpen }) => {
       icon: <FaToolbox />,
       hasSub: true,
       subItems: [
-        { name: "Media", path: "/admin/utilities/media" },
+        //{ name: "Media", path: "/admin/utilities/media" },
         { name: "Bulk PDF Export", path: "/admin/utilities/bulk-pdf" },
         { name: "CSV Export", path: "/admin/utilities/csv" },
         { name: "Calender", path: "/admin/utilities/calender" },
         { name: "Announcements", path: "/admin/utilities/announcements" },
         { name: "Goals", path: "/admin/utilities/goals" },
-        { name: "Activity Log", path: "/admin/utilities/activity-log" },
-        { name: "Surveys", path: "/admin/utilities/surveys" },
-        { name: "Database Backup", path: "/admin/utilities/db-backup" },
-        { name: "Ticket Pipe Log", path: "/admin/utilities/ticket-pipe" },
+        //{ name: "Activity Log", path: "/admin/utilities/activity-log" },
+        //{ name: "Surveys", path: "/admin/utilities/surveys" },
+        //{ name: "Database Backup", path: "/admin/utilities/db-backup" },
+        //{ name: "Ticket Pipe Log", path: "/admin/utilities/ticket-pipe" },
       ],
     },
     {
@@ -74,11 +74,11 @@ const AdminSideBar = ({ isOpen }) => {
         { name: "Expenses", path: "/admin/reports/expenses" },
         { name: "Expenses vs Income", path: "/admin/reports/expenses-vs-income" },
         { name: "Leads", path: "/admin/reports/leads" },
-        { name: "Timesheets overview", path: "/admin/reports/timesheets" },
+        //{ name: "Timesheets overview", path: "/admin/reports/timesheets" },
         { name: "KB Articles", path: "/admin/reports/kb-articles" },
       ],
     },
-    { label: "Setup", icon: <FaCog />, path: "/admin/setup" },
+    //{ label: "Setup", icon: <FaCog />, path: "/admin/setup" },
   ];
 
   return (
