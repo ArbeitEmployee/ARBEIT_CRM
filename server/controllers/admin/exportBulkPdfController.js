@@ -1,5 +1,8 @@
 import Invoice from "../../models/Invoice.js";
 import Estimate from "../../models/Estimate.js";
+import Expense from "../../models/Expense.js";
+import Proposal from "../../models/Proposal.js";
+import CreditNote from "../../models/CreditNote.js";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -28,8 +31,34 @@ export const bulkPdfExport = async (req, res) => {
     }
 
     // Determine which model to use
-    const Model = type === "invoice" ? Invoice : Estimate;
-    const docType = type === "invoice" ? "Invoice" : "Estimate";
+    let Model, docType;
+    switch (type) {
+      case "invoice":
+        Model = Invoice;
+        docType = "Invoice";
+        break;
+      case "estimate":
+        Model = Estimate;
+        docType = "Estimate";
+        break;
+      case "expense":
+        Model = Expense;
+        docType = "Expense";
+        break;
+      case "proposal":
+        Model = Proposal;
+        docType = "Proposal";
+        break;
+      case "credit-note":
+        Model = CreditNote;
+        docType = "Credit Note";
+        break;
+      default:
+        return res.status(400).json({
+          success: false,
+          message: "Invalid document type"
+        });
+    }
 
     // Build query
     const query = {
@@ -45,9 +74,17 @@ export const bulkPdfExport = async (req, res) => {
     }
 
     // Fetch documents
-    const documents = await Model.find(query)
-      .sort({ createdAt: 1 })
-      .lean();
+    let documents;
+    if (type === "expense") {
+      documents = await Model.find(query)
+        .populate('customer', 'company contact email')
+        .sort({ createdAt: 1 })
+        .lean();
+    } else {
+      documents = await Model.find(query)
+        .sort({ createdAt: 1 })
+        .lean();
+    }
 
     if (!documents || documents.length === 0) {
       return res.status(404).json({
@@ -68,35 +105,67 @@ export const bulkPdfExport = async (req, res) => {
       doc.text(`Tag Filter: ${tag}`, 14, 29);
     }
 
-    // Prepare table data
-    const tableData = documents.map((doc) => {
-      if (type === "invoice") {
-        return [
-          doc.invoiceNumber || "N/A",
-          doc.customer || "N/A",
-          doc.reference || "N/A",
-          `$${doc.total?.toFixed(2) || "0.00"}`,
-          doc.status || "N/A",
-          doc.invoiceDate ? new Date(doc.invoiceDate).toLocaleDateString() : "N/A",
-          doc.tags || "N/A"
-        ];
-      } else {
-        return [
-          doc.estimateNumber || "N/A",
-          doc.customer || "N/A",
-          doc.reference || "N/A",
-          `$${doc.total?.toFixed(2) || "0.00"}`,
-          doc.status || "N/A",
-          doc.estimateDate ? new Date(doc.estimateDate).toLocaleDateString() : "N/A",
-          doc.tags || "N/A"
-        ];
-      }
-    });
+    // Prepare table data based on document type
+    let tableData = [];
+    let headers = [];
 
-    // Define table columns
-    const headers = type === "invoice" 
-      ? [["Invoice #", "Customer", "Reference", "Amount", "Status", "Date", "Tags"]]
-      : [["Estimate #", "Customer", "Reference", "Amount", "Status", "Date", "Tags"]];
+    if (type === "invoice") {
+      headers = [["Invoice #", "Customer", "Reference", "Amount", "Status", "Date", "Tags"]];
+      tableData = documents.map((doc) => [
+        doc.invoiceNumber || "N/A",
+        doc.customer || "N/A",
+        doc.reference || "N/A",
+        `$${doc.total?.toFixed(2) || "0.00"}`,
+        doc.status || "N/A",
+        doc.invoiceDate ? new Date(doc.invoiceDate).toLocaleDateString() : "N/A",
+        doc.tags || "N/A"
+      ]);
+    } else if (type === "estimate") {
+      headers = [["Estimate #", "Customer", "Reference", "Amount", "Status", "Date", "Tags"]];
+      tableData = documents.map((doc) => [
+        doc.estimateNumber || "N/A",
+        doc.customer || "N/A",
+        doc.reference || "N/A",
+        `$${doc.total?.toFixed(2) || "0.00"}`,
+        doc.status || "N/A",
+        doc.estimateDate ? new Date(doc.estimateDate).toLocaleDateString() : "N/A",
+        doc.tags || "N/A"
+      ]);
+    } else if (type === "expense") {
+      headers = [["Category", "Amount", "Name", "Customer", "Date", "Project", "Invoiced", "Payment Mode"]];
+      tableData = documents.map((doc) => [
+        doc.category || "N/A",
+        `$${doc.amount?.toFixed(2) || "0.00"}`,
+        doc.name || "N/A",
+        doc.customer ? doc.customer.company : "N/A",
+        doc.date || "N/A",
+        doc.project || "N/A",
+        doc.isInvoiced ? "Yes" : "No",
+        doc.paymentMode || "N/A"
+      ]);
+    }else if (type === "proposal") {
+      headers = [["Proposal #", "Client", "Title", "Amount", "Status", "Date", "Tags"]];
+      tableData = documents.map((doc) => [
+          doc.proposalNumber || "N/A",
+          doc.clientName || "N/A",
+          doc.title || "N/A",
+          `$${doc.total?.toFixed(2) || "0.00"}`,
+          doc.status || "N/A",
+          doc.proposalDate ? new Date(doc.proposalDate).toLocaleDateString() : "N/A",
+          doc.tags || "N/A"
+      ]);
+    } else if (type === "credit-note") {
+      headers = [["Credit Note #", "Customer", "Bill To", "Amount", "Status", "Date", "Admin Note"]];
+      tableData = documents.map((doc) => [
+          doc.creditNoteNumber || "N/A",
+          doc.customer || "N/A",
+          doc.billTo || "N/A",
+          `$${doc.total?.toFixed(2) || "0.00"}`,
+          doc.status || "N/A",
+          doc.creditNoteDate ? new Date(doc.creditNoteDate).toLocaleDateString() : "N/A",
+          doc.adminNote || "N/A"
+        ]);
+    }
 
     // Add table to PDF
     autoTable(doc, {
@@ -113,7 +182,12 @@ export const bulkPdfExport = async (req, res) => {
     doc.setFontSize(10);
     doc.text(`Total ${type}s: ${documents.length}`, 14, finalY);
     
-    const totalAmount = documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
+    let totalAmount = 0;
+    if (type === "expense") {
+      totalAmount = documents.reduce((sum, doc) => sum + (doc.amount || 0), 0);
+    } else {
+      totalAmount = documents.reduce((sum, doc) => sum + (doc.total || 0), 0);
+    }
     doc.text(`Total Amount: $${totalAmount.toFixed(2)}`, 14, finalY + 7);
 
     // Generate PDF buffer

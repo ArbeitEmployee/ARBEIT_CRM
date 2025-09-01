@@ -95,7 +95,6 @@ const BulkPdfExport = () => {
               <option value="">Select document type</option>
               <option value="estimate">Estimate</option>
               <option value="invoice">Invoice</option>
-              <option value="payment">Payment</option>
               <option value="credit-note">Credit Note</option>
               <option value="proposal">Proposal</option>
               <option value="expense">Expense</option>
