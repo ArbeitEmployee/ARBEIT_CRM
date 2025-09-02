@@ -50,6 +50,8 @@ import StaffsPage from "../pages/admin/staffs";
 // Utilities
 import BulkPdfExport from "../pages/admin/utilities/BulkPdfExport";
 import CsvExport from "../pages/admin/utilities/CsvExport";
+import Calendar from "../pages/admin/utilities/Calendar";
+
 
 const AppRoutes = () => {
   return (
@@ -105,6 +107,7 @@ const AppRoutes = () => {
               {/*Utilities */}
               <Route path="utilities/bulk-pdf" element={<BulkPdfExport />} />
               <Route path="utilities/csv" element={<CsvExport />} />
+              <Route path="utilities/calendar" element={<Calendar />} />
 
               {/* Add more admin routes here */}
             </Routes>

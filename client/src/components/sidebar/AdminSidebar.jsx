@@ -56,7 +56,7 @@ const AdminSideBar = ({ isOpen }) => {
         //{ name: "Media", path: "/admin/utilities/media" },
         { name: "Bulk PDF Export", path: "/admin/utilities/bulk-pdf" },
         { name: "CSV Export", path: "/admin/utilities/csv" },
-        { name: "Calender", path: "/admin/utilities/calender" },
+        { name: "Calendar", path: "/admin/utilities/calendar" },
         { name: "Announcements", path: "/admin/utilities/announcements" },
         { name: "Goals", path: "/admin/utilities/goals" },
         //{ name: "Activity Log", path: "/admin/utilities/activity-log" },
