@@ -123,6 +123,9 @@ export const exportToCSV = async (req, res) => {
         .populate('customer', 'company contact email')
         .sort({ createdAt: -1 });
 
+      // Convert data to plain objects to handle virtual fields
+      const plainData = data.map(lead => lead.toObject());
+
       fields = [
         { label: 'ID', value: '_id' },
         { label: 'Name', value: 'name' },
@@ -130,14 +133,30 @@ export const exportToCSV = async (req, res) => {
         { label: 'Email', value: 'email' },
         { label: 'Phone', value: 'phone' },
         { label: 'Value', value: 'value' },
-        { label: 'Tags', value: row => row.tags.join(', ') },
+        { label: 'Tags', value: row => row.tags || '' },
         { label: 'Assigned', value: 'assigned' },
         { label: 'Status', value: 'status' },
         { label: 'Source', value: 'source' },
         { label: 'Last Contact', value: 'lastContact' },
         { label: 'Created', value: 'created' },
+        { label: 'Customer Company', value: row => row.customer ? row.customer.company : 'N/A' },
+        { label: 'Customer Contact', value: row => row.customer ? row.customer.contact : 'N/A' },
+        { label: 'Customer Email', value: row => row.customer ? row.customer.email : 'N/A' },
         { label: 'Created At', value: row => new Date(row.createdAt).toLocaleString() }
       ];
+
+      opts = { fields };
+
+      // Convert JSON to CSV
+      const parser = new Parser(opts);
+      const csv = parser.parse(plainData);
+
+      // Set response headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename=${type}-export-${new Date().toISOString().split('T')[0]}.csv`);
+
+      // Send CSV file
+      return res.status(200).send(csv);
 
     } else if (type === 'contacts') {
       const query = { ...dateQuery };
