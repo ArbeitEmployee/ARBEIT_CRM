@@ -1,5 +1,7 @@
+// MultipleFiles/Calendar.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import styled from "styled-components"; // Import styled-components
 
 const colors = [
   "#1BC5BD", "#8950FC", "#F64E60", "#E4E6EF", "#A1A5B7",
@@ -27,6 +29,153 @@ function generateMonthDays(year, month) {
   return dates;
 }
 
+// Styled Components for EventModal
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  border-radius: 8px;
+  width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 20px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+`;
+
+const ModalHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+`;
+
+const CloseButton = styled.button`
+  font-size: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: #888;
+  transition: color 0.2s ease-in-out;
+
+  &:hover {
+    color: #333;
+  }
+`;
+
+const FormLabel = styled.label`
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+  color: #333;
+`;
+
+const FormInput = styled.input`
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #1a202c;
+    box-shadow: 0 0 0 2px rgba(26, 32, 44, 0.25);
+  }
+`;
+
+const FormTextarea = styled.textarea`
+  width: 100%;
+  margin-bottom: 15px;
+  padding: 10px;
+  min-height: 80px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+  box-sizing: border-box;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: #1a202c;
+    box-shadow: 0 0 0 2px rgba(26, 32, 44, 0.25);
+  }
+`;
+
+const ColorPickerContainer = styled.div`
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+`;
+
+const ColorSwatch = styled.div`
+  background-color: ${props => props.color};
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: ${props => props.isSelected ? "3px solid #333" : "2px solid #ccc"};
+  transition: border 0.2s ease-in-out, transform 0.2s ease-in-out;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+`;
+
+const ModalFooter = styled.div`
+  text-align: right;
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+`;
+
+const ModalButton = styled.button`
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+
+  &:not(:last-child) {
+    margin-right: 10px;
+  }
+
+  &.primary {
+    background: #4a5568;
+    color: white;
+
+    &:hover {
+      background: #1a202c;
+    }
+  }
+
+  &.secondary {
+    background: #4a5568;
+    color: white;
+
+    &:hover {
+      background: #1a202c;
+    }
+  }
+`;
+
 const EventModal = ({ show, onClose, onSave, selectedDate, eventToEdit, onUpdate }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -35,7 +184,6 @@ const EventModal = ({ show, onClose, onSave, selectedDate, eventToEdit, onUpdate
   const [color, setColor] = useState(colors[0]);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Reset form when selectedDate or show changes
   React.useEffect(() => {
     if (eventToEdit) {
       setTitle(eventToEdit.title);
@@ -79,87 +227,228 @@ const EventModal = ({ show, onClose, onSave, selectedDate, eventToEdit, onUpdate
   if (!show) return null;
 
   return (
-    <div style={{
-      position: "fixed", top: 0, left: 0,
-      width: "100%", height: "100%",
-      backgroundColor: "rgba(0,0,0,0.5)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      zIndex: 9999,
-    }}>
-      <div style={{
-        background: "white",
-        borderRadius: 8,
-        width: "600px",
-        maxHeight: "90vh",
-        overflowY: "auto",
-        padding: 20,
-        boxSizing: "border-box",
-      }}>
-        <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10}}>
+    <ModalOverlay>
+      <ModalContent>
+        <ModalHeader>
           <h3>{isEditing ? "Edit Event" : "Add New Event"}</h3>
-          <button onClick={onClose} style={{ fontSize: 20, border: "none", background: "transparent", cursor: "pointer" }}>×</button>
-        </div>
+          <CloseButton onClick={onClose}>×</CloseButton>
+        </ModalHeader>
         
-        <label><b>Event title*</b></label>
-        <input 
+        <FormLabel>Event title*</FormLabel>
+        <FormInput 
           type="text" 
           value={title} 
           onChange={e => setTitle(e.target.value)} 
-          style={{width: "100%", marginBottom: 10, padding: 6}} 
           placeholder="Enter event title"
         />
 
-        <label>Description</label>
-        <textarea 
+        <FormLabel>Description</FormLabel>
+        <FormTextarea 
           value={description} 
           onChange={e => setDescription(e.target.value)} 
-          style={{width: "100%", marginBottom: 10, padding: 6, minHeight: 60}} 
           placeholder="Enter description"
         />
 
-        <label><b>Start Date*</b></label>
-        <input
+        <FormLabel>Start Date*</FormLabel>
+        <FormInput
           type="datetime-local"
           value={startDate}
           onChange={e => setStartDate(e.target.value)}
-          style={{width: "100%", marginBottom: 10, padding: 6}}
         />
 
-        <label>End Date</label>
-        <input
+        <FormLabel>End Date</FormLabel>
+        <FormInput
           type="datetime-local"
           value={endDate}
           onChange={e => setEndDate(e.target.value)}
-          style={{width: "100%", marginBottom: 10, padding: 6}}
         />
 
-        <label><b>Event Color</b></label>
-        <div style={{display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 10}}>
+        <FormLabel>Event Color</FormLabel>
+        <ColorPickerContainer>
           {colors.map(c => (
-            <div 
+            <ColorSwatch 
               key={c} 
+              color={c}
+              isSelected={color === c}
               onClick={() => setColor(c)} 
-              style={{
-                backgroundColor: c,
-                width: 24, height: 24,
-                borderRadius: "50%",
-                cursor: "pointer",
-                border: color === c ? "3px solid black" : "1px solid #ccc",
-              }}
             />
           ))}
-        </div>
+        </ColorPickerContainer>
 
-        <div style={{textAlign: "right", marginTop: 20}}>
-          <button onClick={onClose} style={{marginRight: 10, padding: "6px 12px"}}>Close</button>
-          <button onClick={handleSubmit} style={{padding: "6px 12px", background: "#0d6efd", color: "white", border: "none", borderRadius: 3}}>
+        <ModalFooter>
+          <ModalButton className="secondary" onClick={onClose}>Close</ModalButton>
+          <ModalButton className="primary" onClick={handleSubmit}>
             {isEditing ? "Update" : "Save"}
-          </button>
-        </div>
-      </div>
-    </div>
+          </ModalButton>
+        </ModalFooter>
+      </ModalContent>
+    </ModalOverlay>
   );
 };
+
+// Styled Components for Calendar
+const CalendarContainer = styled.div`
+  width: 100%;
+  min-height: 100vh;
+  margin: 0;
+  padding: 30px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  box-sizing: border-box;
+  background-color: #f8f9fa;
+  color: #343a40;
+`;
+
+const CalendarHeader = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 25px;
+  background-color: #ffffff;
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+`;
+
+const NavButton = styled.button`
+  padding: 10px 15px;
+  font-size: 20px;
+  border: 1px solid #4a5568; /* Equivalent to gray-700 for border */
+  border-radius: 8px;
+  background: #2d3748; /* Equivalent to gray-800 */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white; /* Text white */
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    background: #1a202c; /* Equivalent to gray-900 */
+    border-color: #2d3748; /* Keep border consistent or slightly darker */
+    color: white;
+  }
+`;
+
+const MonthYearDisplay = styled.h2`
+  margin: 0 25px;
+  min-width: 220px;
+  text-align: center;
+  color: #343a40;
+  font-size: 28px;
+  font-weight: 600;
+`;
+
+const DaysOfWeekHeader = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 10px;
+  background-color: #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+`;
+
+const DayOfWeek = styled.div`
+  text-align: center;
+  font-weight: bold;
+  padding: 12px 0;
+  color: #495057;
+  font-size: 15px;
+  text-transform: uppercase;
+`;
+
+const DatesGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  height: calc(100vh - 250px); /* Adjusted height */
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+`;
+
+const DateCell = styled.div`
+  border: 1px solid #e0e0e0;
+  min-height: 100px; /* Increased min-height for better spacing */
+  padding: 8px;
+  cursor: ${props => props.isClickable ? "pointer" : "default"};
+  background-color: ${props => props.isToday ? "#e6f7ff" : (props.isCurrentMonth ? "white" : "#f8f9fa")};
+  color: ${props => props.isCurrentMonth ? "#333" : "#adb5bd"};
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 15px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    ${props => props.isClickable && `
+      background-color: ${props.isToday ? "#d0eeff" : "#f0f0f0"};
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    `}
+  }
+`;
+
+const DateNumber = styled.div`
+  font-weight: bold;
+  font-size: 1.2em;
+  margin-bottom: 5px;
+  color: ${props => props.isToday ? "#007bff" : "inherit"};
+`;
+
+const EventList = styled.div`
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 60px; /* Limit height for events */
+  overflow-y: auto; /* Scroll for many events */
+  padding-right: 2px; /* Space for scrollbar */
+`;
+
+const EventItem = styled.div`
+  background-color: ${props => props.color};
+  color: white;
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: transform 0.1s ease-in-out;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+`;
+
+const EventTitle = styled.span`
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const DeleteEventButton = styled.span`
+  cursor: pointer;
+  margin-left: 8px;
+  font-weight: bold;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  transition: color 0.2s ease-in-out;
+
+  &:hover {
+    color: white;
+  }
+`;
 
 const Calendar = () => {
   const today = new Date();
@@ -173,14 +462,12 @@ const Calendar = () => {
 
   const monthDays = generateMonthDays(currentYear, currentMonth);
 
-  // Fetch events from backend
   useEffect(() => {
     fetchEvents();
   }, [currentYear, currentMonth]);
 
   const fetchEvents = async () => {
     try {
-      // Calculate start and end of month for date range
       const startOfMonth = new Date(currentYear, currentMonth, 1);
       const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
       
@@ -216,7 +503,7 @@ const Calendar = () => {
   const saveEvent = async (eventData) => {
     try {
       await axios.post('http://localhost:5000/api/admin/events', eventData);
-      fetchEvents(); // Refresh events
+      fetchEvents();
       setShowModal(false);
     } catch (error) {
       console.error("Error saving event:", error);
@@ -227,7 +514,7 @@ const Calendar = () => {
   const updateEvent = async (id, eventData) => {
     try {
       await axios.put(`http://localhost:5000/api/admin/events/${id}`, eventData);
-      fetchEvents(); // Refresh events
+      fetchEvents();
       setShowModal(false);
       setEventToEdit(null);
     } catch (error) {
@@ -241,7 +528,7 @@ const Calendar = () => {
     if (window.confirm("Are you sure you want to delete this event?")) {
       try {
         await axios.delete(`http://localhost:5000/api/admin/events/${id}`);
-        fetchEvents(); // Refresh events
+        fetchEvents();
       } catch (error) {
         console.error("Error deleting event:", error);
         alert("Error deleting event");
@@ -267,14 +554,8 @@ const Calendar = () => {
     }
   };
 
-  const goToday = () => {
-    setCurrentYear(today.getFullYear());
-    setCurrentMonth(today.getMonth());
-  };
-
   const eventsForDate = (date) => {
     return events.filter(ev => {
-      // Filter by startDate (date only)
       const evDate = new Date(ev.startDate);
       return date && evDate.getFullYear() === date.getFullYear() &&
         evDate.getMonth() === date.getMonth() &&
@@ -283,85 +564,59 @@ const Calendar = () => {
   };
 
   return (
-    <div style={{width: "100%", height: "100vh", margin: "0", padding: "20px", fontFamily: "Arial, sans-serif", boxSizing: "border-box"}}>
-      {/* Header / Controls */}
-      <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16}}>
-        <div>
-          <button onClick={goPrevMonth} style={{marginRight: 10}}>{"<"}</button>
-          <button onClick={goNextMonth} style={{marginRight: 10}}>{">"}</button>
-          <button onClick={goToday}>Today</button>
-        </div>
-        <h2>{new Date(currentYear, currentMonth).toLocaleString('default', {month: 'long', year: 'numeric'})}</h2>
-        <div>
-          <button style={{marginRight: 5, backgroundColor: "#0a192f", color: "white", padding: "6px 12px", border: "none", borderRadius: 3}}>Month</button>
-          <button style={{marginRight: 5, padding: "6px 12px", borderRadius: 3}}>Week</button>
-          <button style={{marginRight: 5, padding: "6px 12px", borderRadius: 3}}>Day</button>
-        </div>
-      </div>
+    <CalendarContainer>
+      <CalendarHeader>
+        <NavButton onClick={goPrevMonth}>&lt;</NavButton>
+        <MonthYearDisplay>
+          {new Date(currentYear, currentMonth).toLocaleString('default', {month: 'long', year: 'numeric'})}
+        </MonthYearDisplay>
+        <NavButton onClick={goNextMonth}>&gt;</NavButton>
+      </CalendarHeader>
 
-      {/* Days of week header */}
-      <div style={{display: "grid", gridTemplateColumns: "repeat(7, 1fr)", marginBottom: 8}}>
+      <DaysOfWeekHeader>
         {daysInWeek.map(day => (
-          <div key={day} style={{textAlign: "center", fontWeight: "bold", padding: "8px 0"}}>{day}</div>
+          <DayOfWeek key={day}>{day}</DayOfWeek>
         ))}
-      </div>
+      </DaysOfWeekHeader>
 
-      {/* Dates grid */}
-      <div style={{display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 4, height: "calc(100vh - 180px)", overflowY: "auto", border: "1px solid #ddd", padding: 4, borderRadius: 5}}>
-        {monthDays.map((date, idx) => (
-          <div 
-            key={idx} 
-            onClick={() => date && openModal(date)} 
-            style={{
-              border: "1px solid #ccc",
-              minHeight: 85,
-              padding: 6,
-              cursor: date ? "pointer" : "default",
-              backgroundColor: date && (
-                date.getFullYear() === today.getFullYear() &&
-                date.getMonth() === today.getMonth() &&
-                date.getDate() === today.getDate()
-              ) ? "#d0e6ff" : "white",
-              color: date ? "black" : "#ccc",
-              borderRadius: 4,
-              overflow: "hidden",
-              fontSize: 14
-            }}
-          >
-            {date ? date.getDate() : ""}
-            <div style={{marginTop: 4, display: "flex", flexDirection: "column", gap: 4}}>
-              {eventsForDate(date).map((ev, i) => (
-                <div 
-                  key={i} 
-                  onClick={(e) => openEditModal(ev, e)}
-                  style={{
-                    backgroundColor: ev.color,
-                    color: "white",
-                    borderRadius: 4,
-                    padding: "2px 6px",
-                    fontSize: 12,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                  }}
-                  title={ev.title}
-                >
-                  <span>{ev.title}</span>
-                  <span 
-                    onClick={(e) => deleteEvent(ev._id, e)}
-                    style={{cursor: "pointer", marginLeft: "5px"}}
+      <DatesGrid>
+        {monthDays.map((date, idx) => {
+          const isToday = date && 
+            date.getFullYear() === today.getFullYear() &&
+            date.getMonth() === today.getMonth() &&
+            date.getDate() === today.getDate();
+          const isCurrentMonth = date && date.getMonth() === currentMonth;
+
+          return (
+            <DateCell 
+              key={idx} 
+              onClick={() => date && openModal(date)} 
+              isClickable={!!date}
+              isToday={isToday}
+              isCurrentMonth={isCurrentMonth}
+            >
+              {date && <DateNumber isToday={isToday}>{date.getDate()}</DateNumber>}
+              <EventList>
+                {eventsForDate(date).map((ev, i) => (
+                  <EventItem 
+                    key={i} 
+                    onClick={(e) => openEditModal(ev, e)}
+                    color={ev.color}
+                    title={ev.title}
                   >
-                    ×
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
+                    <EventTitle>{ev.title}</EventTitle>
+                    <DeleteEventButton 
+                      onClick={(e) => deleteEvent(ev._id, e)}
+                    >
+                      ×
+                    </DeleteEventButton>
+                  </EventItem>
+                ))}
+              </EventList>
+            </DateCell>
+          );
+        })}
+      </DatesGrid>
 
       <EventModal 
         show={showModal} 
@@ -371,7 +626,7 @@ const Calendar = () => {
         selectedDate={selectedDate} 
         eventToEdit={eventToEdit}
       />
-    </div>
+    </CalendarContainer>
   );
 };
 
