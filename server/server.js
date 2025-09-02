@@ -28,6 +28,7 @@ import clientKnowledgeBaseRoutes from './routes/client/clientKnowledgeBaseRoutes
 import exportBulkPdfRoutes from "./routes/admin/exportBulkPdfRoutes.js";
 import csvExportRoutes from './routes/admin/csvExportRoutes.js';
 import eventRoutes from './routes/admin/eventRoutes.js';
+import announcementRoutes from './routes/admin/announcementRoutes.js';
 
 
 
@@ -57,6 +58,7 @@ app.use('/api/reports', reportLeadRoutes);
 app.use('/api/admin', exportBulkPdfRoutes);
 app.use('/api/csvexport', csvExportRoutes);
 app.use('/api/admin/events', eventRoutes);
+app.use('/api/admin/announcements', announcementRoutes);
 
 //client routes
 app.use('/api/client/knowledge-base', clientKnowledgeBaseRoutes);
