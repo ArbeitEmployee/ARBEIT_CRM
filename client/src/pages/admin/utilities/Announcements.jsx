@@ -221,7 +221,7 @@ const AnnouncementsPage = () => {
       body { font-family: Arial, sans-serif; }
       table { border-collapse: collapse; width: 100%; }
       th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-      th { background-color: #f2f2f2; }
+      th { background-color: #111827; color: white; }
       tr:nth-child(even) { background-color: #f9f9f9; }
       @media print {
         body { margin: 0; padding: 20px; }
@@ -345,7 +345,7 @@ const AnnouncementsPage = () => {
             <button
               type="button"
               onClick={handleSaveAnnouncement}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
+              className="px-4 py-2 bg-gray-900 text-white rounded text-sm"
               disabled={!newAnnouncement.title || !newAnnouncement.content || !newAnnouncement.date || isSaving}
             >
               {isSaving ? "Saving..." : "Save"}
@@ -358,7 +358,7 @@ const AnnouncementsPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button 
-                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+                className="px-3 py-1 text-sm rounded flex items-center gap-2 bg-gray-900 text-white"
                 onClick={() => setShowNewAnnouncementForm(true)}
               >
                 <FaPlus /> New Announcement
@@ -420,7 +420,7 @@ const AnnouncementsPage = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="border px-2 py-1 rounded text-sm flex items-center gap-1 bg-gray-900 text-white"
                   >
                     <HiOutlineDownload /> Export
                   </button>
@@ -458,7 +458,7 @@ const AnnouncementsPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2 py-1 rounded text-sm flex items-center"
+                  className="border px-2 py-1 rounded text-sm flex items-center bg-gray-900 text-white"
                   onClick={fetchAnnouncements}
                 >
                   <FaSyncAlt />
@@ -486,7 +486,7 @@ const AnnouncementsPage = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                    <th className="p-3 rounded-l-lg bg-gray-900 text-white">
                       <input
                         type="checkbox"
                         checked={selectedAnnouncements.length === currentData.length && currentData.length > 0}
@@ -499,9 +499,9 @@ const AnnouncementsPage = () => {
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Announcement Name</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th className="p-3 bg-gray-900 text-white">Announcement Name</th>
+                    <th className="p-3 bg-gray-900 text-white">Date</th>
+                    <th className="p-3 rounded-r-lg bg-gray-900 text-white">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
