@@ -135,7 +135,7 @@ const BulkPdfExport = () => {
           <button
             onClick={handleExport}
             disabled={loading}
-            className="w-full bg-gray-900 text-white py-4 px-6 rounded-lg text-lg font-semibold flex items-center justify-center hover:bg-gray-800 disabled:opacity-50 transition-colors duration-200 shadow-md"
+            className="w-full bg-gray-800 text-white py-4 px-6 rounded-lg text-lg font-semibold flex items-center justify-center hover:bg-gray-900 disabled:opacity-50 transition-colors duration-200 shadow-md"
           >
             {loading ? (
               <span className="flex items-center">
