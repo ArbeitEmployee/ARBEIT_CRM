@@ -8,6 +8,7 @@ export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState({ email: false, password: false });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -18,6 +19,7 @@ export default function AdminLogin() {
       return;
     }
 
+    setLoading(true);
     try {
       const res = await fetch("http://localhost:5000/api/admin/login", {
         method: "POST",
@@ -25,48 +27,40 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
 
-      // Read text then try parse JSON (safe for any response)
-      const text = await res.text();
-      let data = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch (parseErr) {
-        data = { message: text || "" };
-      }
-
+      const data = await res.json().catch(() => ({}));
       console.log("LOGIN response:", res.status, data);
 
-      // If backend returns non-OK, show its message
       if (!res.ok) {
         toast.error(data.message || `Login failed (status ${res.status})`);
         return;
       }
 
-      // Expect token in successful response
-      const token = data.token;
-      if (!token) {
-        // backend didn't return token — show message and don't navigate
-        toast.error(data.message || "Login succeeded but token missing.");
+      if (!data.token || !data.admin) {
+        toast.error(data.message || "Login succeeded but missing data.");
         return;
       }
 
-      // Success
-      toast.success(data.message || "Login successful!");
-      localStorage.setItem("crm_token", token);
+      // ✅ Store token
+      localStorage.setItem("admin_token", data.token);
 
-      // small delay so toast is visible
-      setTimeout(() => {
-        navigate("/admin/dashboard");
-      }, 900);
+      // ✅ Store admin info for sidebar
+      localStorage.setItem("crm_admin", JSON.stringify(data.admin));
+
+      toast.success(data.message || "Login successful!");
+      setTimeout(() => navigate("/admin/dashboard"), 700);
     } catch (err) {
       console.error("Network/login error:", err);
       toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
   const getInputClasses = (field, value) =>
     `w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-      touched[field] && !value ? "border border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
+      touched[field] && !value
+        ? "border border-red-500 focus:ring-red-400"
+        : "focus:ring-blue-400"
     }`;
 
   return (
@@ -104,7 +98,9 @@ export default function AdminLogin() {
               />
             </div>
             {touched.email && !email && (
-              <p className="text-red-400 text-xs mt-1">Please fill up the email field.</p>
+              <p className="text-red-400 text-xs mt-1">
+                Please fill up the email field.
+              </p>
             )}
           </div>
 
@@ -112,7 +108,10 @@ export default function AdminLogin() {
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="text-sm">Password</label>
-              <Link to="/admin/forgot-password" className="text-xs text-gray-100 hover:underline">
+              <Link
+                to="/admin/forgot-password"
+                className="text-xs text-gray-100 hover:underline"
+              >
                 Forgot Password?
               </Link>
             </div>
@@ -124,6 +123,7 @@ export default function AdminLogin() {
               <input
                 type="password"
                 placeholder="Enter your password"
+                autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onBlur={() => setTouched({ ...touched, password: true })}
@@ -131,15 +131,22 @@ export default function AdminLogin() {
               />
             </div>
             {touched.password && !password && (
-              <p className="text-red-400 text-xs mt-1">Please fill up the password field.</p>
+              <p className="text-red-400 text-xs mt-1">
+                Please fill up the password field.
+              </p>
             )}
           </div>
 
           <button
             type="submit"
-            className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition"
+            disabled={loading}
+            className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+              loading
+                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                : "bg-white text-[#0c123d] hover:bg-gray-200"
+            }`}
           >
-            LOG IN
+            {loading ? "Logging in..." : "LOG IN"}
           </button>
         </form>
 

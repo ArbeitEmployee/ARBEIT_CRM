@@ -28,31 +28,46 @@ export default function AdminSignup() {
     e.preventDefault();
 
     // validate
-    const nameErr = name.trim() === "";
-    const emailErr = !emailRegex.test(email);
-    const passErr = password.length < 6;
-    const confirmErr = confirmPassword !== password || confirmPassword === "";
+    // validate
+const nameErr = name.trim() === "";
+const emailErr = !emailRegex.test(email);
+const passErr = password.length < 6;
+const confirmErr = confirmPassword !== password || confirmPassword === "";
 
-    if (nameErr || emailErr || passErr || confirmErr) {
-      setTouched({
-        name: true,
-        email: true,
-        password: true,
-        confirmPassword: true,
-      });
+if (nameErr || emailErr || passErr || confirmErr) {
+  setTouched({
+    name: true,
+    email: true,
+    password: true,
+    confirmPassword: true,
+  });
 
-      if (nameErr) return toast.error("Please fill up the name field.");
-      if (emailErr) return toast.error("Please enter a valid email.");
-      if (passErr) return toast.error("Password must be at least 6 characters.");
-      if (confirmErr) return toast.error("Passwords do not match.");
-    }
+  if (nameErr) {
+    toast.error("Please fill up the name field.");
+    return;  // 🔥 exit early
+  }
+  if (emailErr) {
+    toast.error("Please enter a valid email.");
+    return;
+  }
+  if (passErr) {
+    toast.error("Password must be at least 6 characters.");
+    return;
+  }
+  if (confirmErr) {
+    toast.error("Passwords do not match.");
+    return;
+  }
+}
+
 
     try {
-      const res = await fetch("http://localhost:5000/api/admin/register", {
+        const res = await fetch("http://localhost:5000/api/admin/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, confirmPassword }),
+        body: JSON.stringify({ name, email, password, confirmPassword }), // ✅ add confirmPassword
       });
+
 
       const text = await res.text();
       let data = {};
@@ -69,9 +84,16 @@ export default function AdminSignup() {
         return;
       }
 
-      // success
-      toast.success(data.message || "Registration successful! Await approval.");
-      setTimeout(() => navigate("/admin/login"), 900);
+      // success toast depending on role/status
+      if (data.role === "superAdmin") {
+        toast.success("Super Admin registered successfully 🎉");
+      } else if (data.status === "pending") {
+        toast.success("Registration successful! Awaiting super admin approval.");
+      } else {
+        toast.success("Registration successful!");
+      }
+
+      setTimeout(() => navigate("/admin/login"), 1000);
     } catch (err) {
       console.error("Signup error:", err);
       toast.error("Something went wrong. Please try again.");

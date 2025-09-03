@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   FaTachometerAlt,
@@ -21,11 +21,20 @@ import { IoIosArrowForward } from "react-icons/io";
 
 const AdminSideBar = ({ isOpen }) => {
   const [activeMenu, setActiveMenu] = useState("");
+  const [admin, setAdmin] = useState(null);
+
+  // Load logged-in admin details from localStorage (after login/signup)
+  useEffect(() => {
+    const storedAdmin = JSON.parse(localStorage.getItem("crm_admin")); // 👈 save this in login/signup
+    if (storedAdmin) setAdmin(storedAdmin);
+  }, []);
+
+  const defaultImage = "https://via.placeholder.com/40"; // fallback avatar
 
   const menuItems = [
     { label: "Dashboard", icon: <FaTachometerAlt />, path: "/admin/dashboard" },
     { label: "Customers", icon: <FaUsers />, path: "/admin/customers" },
-      { label: "Staffs", icon: <FaUsers />, path: "/admin/staffs" },
+    { label: "Staffs", icon: <FaUsers />, path: "/admin/staffs" },
     {
       label: "Sales",
       icon: <FaChartLine />,
@@ -53,16 +62,11 @@ const AdminSideBar = ({ isOpen }) => {
       icon: <FaToolbox />,
       hasSub: true,
       subItems: [
-        //{ name: "Media", path: "/admin/utilities/media" },
         { name: "Bulk PDF Export", path: "/admin/utilities/bulk-pdf" },
         { name: "CSV Export", path: "/admin/utilities/csv" },
         { name: "Calendar", path: "/admin/utilities/calendar" },
         { name: "Announcements", path: "/admin/utilities/announcements" },
         { name: "Goals", path: "/admin/utilities/goals" },
-        //{ name: "Activity Log", path: "/admin/utilities/activity-log" },
-        //{ name: "Surveys", path: "/admin/utilities/surveys" },
-        //{ name: "Database Backup", path: "/admin/utilities/db-backup" },
-        //{ name: "Ticket Pipe Log", path: "/admin/utilities/ticket-pipe" },
       ],
     },
     {
@@ -74,12 +78,23 @@ const AdminSideBar = ({ isOpen }) => {
         { name: "Expenses", path: "/admin/reports/expenses" },
         { name: "Expenses vs Income", path: "/admin/reports/expenses-vs-income" },
         { name: "Leads", path: "/admin/reports/leads" },
-        //{ name: "Timesheets overview", path: "/admin/reports/timesheets" },
         { name: "KB Articles", path: "/admin/reports/kb-articles" },
       ],
     },
-    //{ label: "Setup", icon: <FaCog />, path: "/admin/setup" },
   ];
+
+  // If superAdmin → add "Admins" menu
+  if (admin?.role === "superAdmin") {
+    menuItems.push({
+      label: "Admins",
+      icon: <FaUsers />,
+      hasSub: true,
+      subItems: [
+        { name: "All Admins", path: "/admin/admins/all" },
+        { name: "Pending Admins", path: "/admin/admins/pending" },
+      ],
+    });
+  }
 
   return (
     <aside
@@ -89,13 +104,13 @@ const AdminSideBar = ({ isOpen }) => {
       {/* User profile */}
       <div className="flex items-center gap-3 p-4 border-b border-gray-700">
         <img
-          src="https://via.placeholder.com/40"
+          src={admin?.image || defaultImage}
           alt="Profile"
-          className="w-10 h-10 rounded-full"
+          className="w-10 h-10 rounded-full object-cover"
         />
         <div>
-          <h2 className="text-sm font-semibold">Nathasa Khan</h2>
-          <p className="text-xs text-gray-400">admin@crm.com</p>
+          <h2 className="text-sm font-semibold">{admin?.name || "Unknown User"}</h2>
+          <p className="text-xs text-gray-400">{admin?.email || "no-email@crm.com"}</p>
         </div>
       </div>
 

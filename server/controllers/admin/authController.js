@@ -6,7 +6,7 @@ import sendEmail from "../../utils/sendEmail.js";
 // REGISTER ADMIN
 export const registerAdmin = async (req, res) => {
   try {
-    const { name, email, password, confirmPassword, role } = req.body;
+    const { name, email, password, confirmPassword } = req.body;
 
     if (!name || !email || !password || !confirmPassword)
       return res.status(400).json({ message: "All fields are required" });
@@ -19,20 +19,38 @@ export const registerAdmin = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Check if any admin exists
+    const adminCount = await Admin.countDocuments();
+
+    let role = "admin";
+    let status = "pending";
+
+    if (adminCount === 0) {
+      // First registration → superAdmin
+      role = "superAdmin";
+      status = "approved";
+    }
+
     const admin = await Admin.create({
       name,
       email,
       password: hashedPassword,
-      role: role || "admin",
-      status: "pending" // default to pending
+      role,
+      status
     });
 
-    res.status(201).json({ message: "Registration successful. Await superAdmin approval.", admin });
+    res.status(201).json({
+      message: role === "superAdmin"
+        ? "SuperAdmin registered successfully."
+        : "Registration successful. Await superAdmin approval.",
+      admin
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+// LOGIN ADMIN
 // LOGIN ADMIN
 export const loginAdmin = async (req, res) => {
   try {
@@ -41,7 +59,6 @@ export const loginAdmin = async (req, res) => {
     const admin = await Admin.findOne({ email });
     if (!admin) return res.status(400).json({ message: "Invalid email or password" });
 
-    // Check approval
     if (admin.status === "pending")
       return res.status(403).json({ message: "Your account is pending approval from the superAdmin." });
     if (admin.status === "rejected")
@@ -56,12 +73,26 @@ export const loginAdmin = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.json({ message: "Login successful", token });
+    // send admin data along with token
+    res.json({ 
+      message: "Login successful", 
+      token,
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+        image: admin.image || null, // default null if no image uploaded
+        status: admin.status,
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-//update status
+
+
+// UPDATE STATUS (superAdmin only)
 export const updateAdminStatus = async (req, res) => {
   try {
     const { adminId, status } = req.body;
@@ -76,12 +107,52 @@ export const updateAdminStatus = async (req, res) => {
     admin.status = status;
     await admin.save();
 
-    res.json({ message: `Admin status updated to ${status}` });
+    res.json({ message: `Admin status updated to ${status}`, admin });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-// FORGOT PASSWORD - SEND OTP
+
+// GET ALL ADMINS (superAdmin only)
+export const getAllAdmins = async (req, res) => {
+  try {
+    const admins = await Admin.find().select("-password");
+    res.json(admins);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// UPDATE ADMIN (superAdmin only)
+export const updateAdmin = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+    const updates = req.body;
+
+    const admin = await Admin.findByIdAndUpdate(adminId, updates, { new: true }).select("-password");
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    res.json({ message: "Admin updated successfully", admin });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// DELETE ADMIN (superAdmin only)
+export const deleteAdmin = async (req, res) => {
+  try {
+    const { adminId } = req.params;
+
+    const admin = await Admin.findByIdAndDelete(adminId);
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    res.json({ message: "Admin deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// FORGOT PASSWORD
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -90,7 +161,7 @@ export const forgotPassword = async (req, res) => {
 
     const resetCode = Math.floor(1000 + Math.random() * 9000).toString();
     admin.resetCode = resetCode;
-    admin.resetCodeExpire = Date.now() + 15 * 60 * 1000; // 15 minutes
+    admin.resetCodeExpire = Date.now() + 15 * 60 * 1000; // 15 min
     await admin.save();
 
     await sendEmail(email, "Password Reset Code", `Your password reset code is ${resetCode}`);
@@ -100,7 +171,8 @@ export const forgotPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-// VERIFY RESET CODE ONLY
+
+// VERIFY RESET CODE
 export const verifyResetCode = async (req, res) => {
   try {
     const { email, code } = req.body;
@@ -114,15 +186,13 @@ export const verifyResetCode = async (req, res) => {
     if (admin.resetCode !== code || admin.resetCodeExpire < Date.now())
       return res.status(400).json({ message: "Invalid or expired code" });
 
-    // If valid, just confirm success without changing password
     res.json({ message: "Code verified successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-
-  // RESET PASSWORD (AFTER CODE VERIFIED)
+// RESET PASSWORD
 export const resetPassword = async (req, res) => {
   try {
     const { email, newPassword } = req.body;
@@ -146,7 +216,3 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-
-
-
