@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
   FaTimes, FaEdit, FaTrash, FaChevronDown,
@@ -40,6 +40,23 @@ const KnowledgeBasePage = () => {
   const [viewingArticle, setViewingArticle] = useState(null); // New state for viewing article
   const [filterGroup, setFilterGroup] = useState("All");
 
+  // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Format date from YYYY-MM-DD to DD-MM-YYYY
   const formatDateForBackend = (dateString) => {
     if (!dateString) return "";
@@ -60,10 +77,13 @@ const KnowledgeBasePage = () => {
     return dateString;
   };
 
+    const [loading, setLoading] = useState(true);
+
   // Fetch articles from API
   // Moved inside useEffect or wrapped in useCallback for better dependency management
   // For simplicity, we'll make useEffect depend on filterGroup and searchTerm
   const fetchArticles = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get("http://localhost:5000/api/knowledge-base", {
         params: {
@@ -76,6 +96,7 @@ const KnowledgeBasePage = () => {
       console.error("Error fetching articles:", error);
       setArticles([]);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -312,6 +333,8 @@ const KnowledgeBasePage = () => {
     return dateString;
   };
 
+  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading KnowledgeBase...</div>;
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
@@ -503,7 +526,7 @@ const KnowledgeBasePage = () => {
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}

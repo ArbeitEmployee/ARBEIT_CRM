@@ -65,9 +65,28 @@ const ContactsPage = () => {
     "Standard Contract",
     "Custom Contract"
   ];
+  // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const [loading, setLoading] = useState(true);
 
   // Fetch contacts from API
   const fetchContacts = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get("http://localhost:5000/api/contacts");
       setContacts(data.contacts || []);
@@ -89,6 +108,7 @@ const ContactsPage = () => {
         trash: 0
       });
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -500,6 +520,8 @@ const ContactsPage = () => {
     },
   ];
 
+  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading Contacts...</div>;
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
@@ -870,7 +892,7 @@ const ContactsPage = () => {
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}

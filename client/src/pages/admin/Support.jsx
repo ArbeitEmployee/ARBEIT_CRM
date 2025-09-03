@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
   FaTimes, FaEdit, FaTrash, FaEye, // Added FaEye
@@ -52,8 +52,28 @@ const SupportPage = () => {
   const serviceOptions = ["FIELD", "STRATEGY", "TECHNICAL", "BILLING", "GENERAL"];
   const departmentOptions = ["Marketing", "Sales", "Support", "Development", "Operations"];
 
+  // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const [loading, setLoading] = useState(true);
+
   // Fetch tickets from API
   const fetchTickets = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get("http://localhost:5000/api/support");
       setTickets(data.tickets || []);
@@ -77,6 +97,7 @@ const SupportPage = () => {
         inProgress: 0
       });
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -419,6 +440,8 @@ const SupportPage = () => {
     }
   };
 
+  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading supports...</div>;
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
@@ -757,7 +780,7 @@ const SupportPage = () => {
                     <HiOutlineDownload /> Export
                   </button>
                   {showExportMenu && (
-                    <div className="absolute right-0 mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div ref={exportMenuRef} className="absolute right-0 mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         onClick={exportToExcel}
                         className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"

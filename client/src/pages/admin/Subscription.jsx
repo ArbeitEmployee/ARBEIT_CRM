@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight, 
   FaTimes, FaEdit, FaTrash, FaUser, FaUserCheck, 
@@ -54,33 +54,53 @@ const SubscriptionPage = () => {
     "Canceled",
     "Incomplete Expired"
   ];
+   // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const billingCycleOptions = ["Monthly", "Quarterly", "Annual", "Custom"];
 
+  //const [isRefreshing, setIsRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   // Fetch subscriptions from API
   const fetchSubscriptions = async () => {
-    try {
-      const { data } = await axios.get("http://localhost:5000/api/subscriptions");
-      setSubscriptions(data.subscriptions || []);
-      setStats(data.stats || {
-        totalSubscriptions: 0,
-        activeSubscriptions: 0,
-        pastDueSubscriptions: 0,
-        canceledSubscriptions: 0,
-        futureSubscriptions: 0
-      });
-    } catch (error) {
-      console.error("Error fetching subscriptions:", error);
-      setSubscriptions([]);
-      setStats({
-        totalSubscriptions: 0,
-        activeSubscriptions: 0,
-        pastDueSubscriptions: 0,
-        canceledSubscriptions: 0,
-        futureSubscriptions: 0
-      });
-    }
-  };
+  setLoading(true); // ADD THIS LINE
+  try {
+    const { data } = await axios.get("http://localhost:5000/api/subscriptions");
+    setSubscriptions(data.subscriptions || []);
+    setStats(data.stats || {
+      totalSubscriptions: 0,
+      activeSubscriptions: 0,
+      pastDueSubscriptions: 0,
+      canceledSubscriptions: 0,
+      futureSubscriptions: 0
+    });
+  } catch (error) {
+    console.error("Error fetching subscriptions:", error);
+    setSubscriptions([]);
+    setStats({
+      totalSubscriptions: 0,
+      activeSubscriptions: 0,
+      pastDueSubscriptions: 0,
+      canceledSubscriptions: 0,
+      futureSubscriptions: 0
+    });
+  }
+  setLoading(false); // ADD THIS LINE
+};
 
   useEffect(() => {
     fetchSubscriptions();
@@ -395,6 +415,8 @@ const SubscriptionPage = () => {
     }
   };
 
+  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading subscriptions...</div>;
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
@@ -406,6 +428,7 @@ const SubscriptionPage = () => {
           <span>Subscriptions</span>
         </div>
       </div>
+      
 
       {showNewSubscriptionForm ? (
         <div className="bg-white shadow-md rounded p-6 mb-6">
@@ -751,7 +774,7 @@ const SubscriptionPage = () => {
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}

@@ -51,6 +51,22 @@ const CustomersPage = () => {
   const filteredGroupOptions = groupOptions.filter(option =>
     option.toLowerCase().includes(groupSearchTerm.toLowerCase())
   );
+  // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fetch customers from API
   const fetchCustomers = async () => {
@@ -841,7 +857,7 @@ const CustomersPage = () => {
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}

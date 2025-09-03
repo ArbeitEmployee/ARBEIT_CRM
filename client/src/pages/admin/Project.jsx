@@ -93,8 +93,11 @@ const ProjectPage = () => {
     setShowStaffDropdown(false);
   });
 
+  const [loading, setLoading] = useState(true);
+
   // Fetch projects from API
   const fetchProjects = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get("http://localhost:5000/api/projects");
       setProjects(data.projects || []);
@@ -124,6 +127,7 @@ const ProjectPage = () => {
         finishedProjects: 0
       });
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -474,6 +478,8 @@ const ProjectPage = () => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
   };
+
+  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading projects...</div>;
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">

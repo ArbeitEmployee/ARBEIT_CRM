@@ -109,8 +109,11 @@ const TaskPage = () => {
     return dateString;
   };
 
+  const [loading, setLoading] = useState(true);
+
   // Fetch tasks from API
   const fetchTasks = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get("http://localhost:5000/api/tasks");
       setTasks(data.tasks || []);
@@ -134,6 +137,7 @@ const TaskPage = () => {
         complete: 0
       });
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -462,6 +466,8 @@ const TaskPage = () => {
     }
     return dateString;
   };
+
+  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading tasks...</div>;
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">

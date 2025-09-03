@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
   FaTimes, FaEdit, FaTrash, FaChevronDown,
@@ -28,6 +28,24 @@ const AnnouncementsPage = () => {
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const [viewingAnnouncement, setViewingAnnouncement] = useState(null);
 
+
+  // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -42,8 +60,11 @@ const AnnouncementsPage = () => {
     return date.toISOString().split('T')[0];
   };
 
+  const [loading, setLoading] = useState(true);
+
   // Fetch announcements from API
   const fetchAnnouncements = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get("http://localhost:5000/api/admin/announcements", {
         params: {
@@ -55,6 +76,7 @@ const AnnouncementsPage = () => {
       console.error("Error fetching announcements:", error);
       setAnnouncements([]);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -267,6 +289,8 @@ const AnnouncementsPage = () => {
     setShowExportMenu(false);
   };
 
+  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading Announcements...</div>;
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
@@ -427,7 +451,7 @@ const AnnouncementsPage = () => {
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}

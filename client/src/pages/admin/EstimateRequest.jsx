@@ -1,5 +1,5 @@
 // FileName: EstimateRequest.jsx
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
   FaTimes, FaEdit, FaTrash, FaEye, FaBan, FaCheckCircle, FaClock, FaFileInvoiceDollar
@@ -55,6 +55,22 @@ const EstimateRequestPage = () => {
     "Rejected",
     "Expired"
   ];
+  // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Format date from YYYY-MM-DD to DD-MM-YYYY for backend
   const formatDateForBackend = (dateString) => {
@@ -73,9 +89,11 @@ const EstimateRequestPage = () => {
     return date.toISOString().split('T')[0];
   };
 
+  const [loading, setLoading] = useState(true);
 
   // Fetch estimates from API
   const fetchEstimates = useCallback(async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get("http://localhost:5000/api/estimate-requests", {
         params: {
@@ -104,6 +122,7 @@ const EstimateRequestPage = () => {
         expired: 0
       });
     }
+    setLoading(false);
   }, [searchTerm]); // Re-fetch when searchTerm changes
 
   useEffect(() => {
@@ -451,6 +470,8 @@ const EstimateRequestPage = () => {
       currency: 'USD'
     }).format(amount);
   };
+
+  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading estimateRequests...</div>;
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
@@ -839,7 +860,7 @@ const EstimateRequestPage = () => {
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}

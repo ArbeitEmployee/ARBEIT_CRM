@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaPlus, FaChevronRight, FaTimes, FaUser, FaUserCheck, FaUserTimes, FaUserClock, FaEdit, FaTrash, FaSyncAlt, FaSearch, FaEye } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +34,23 @@ const CreditNotes = () => {
     cancelled: 0,
     pending: 0
   });
+
+  // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fetch credit notes
   const fetchCreditNotes = async () => {
@@ -352,7 +369,7 @@ const CreditNotes = () => {
 
               {/* Dropdown menu */}
               {showExportMenu && (
-                <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                   <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                     onClick={() => handleExport("Excel")}

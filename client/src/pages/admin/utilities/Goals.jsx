@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
   FaTimes, FaEdit, FaTrash, FaChevronDown,
@@ -35,6 +35,23 @@ const GoalsPage = () => {
   const [editingGoal, setEditingGoal] = useState(null);
   const [viewingGoal, setViewingGoal] = useState(null);
 
+  // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -55,8 +72,11 @@ const GoalsPage = () => {
     return Math.min(100, Math.round((current / target) * 100));
   };
 
+  const [loading, setLoading] = useState(true);
+
   // Fetch goals from API
   const fetchGoals = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get("http://localhost:5000/api/admin/goals", {
         params: {
@@ -70,6 +90,7 @@ const GoalsPage = () => {
       console.error("Error fetching goals:", error);
       setGoals([]);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -333,6 +354,8 @@ const GoalsPage = () => {
     setShowExportMenu(false);
   };
 
+  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading Goals...</div>
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
@@ -589,7 +612,7 @@ const GoalsPage = () => {
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}
@@ -771,13 +794,6 @@ const GoalsPage = () => {
                 <button
                   className="px-2 py-1 border rounded disabled:opacity-50"
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage(1)}
-                >
-                  First
-                </button>
-                <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
-                  disabled={currentPage === 1}
                   onClick={() => setCurrentPage(currentPage - 1)}
                 >
                   Previous
@@ -791,13 +807,6 @@ const GoalsPage = () => {
                   onClick={() => setCurrentPage(currentPage + 1)}
                 >
                   Next
-                </button>
-                <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage(totalPages)}
-                >
-                  Last
                 </button>
               </div>
             </div>

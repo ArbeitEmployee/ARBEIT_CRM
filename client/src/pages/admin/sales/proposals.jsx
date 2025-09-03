@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaPlus, FaFilter, FaSyncAlt, FaEye, FaEdit, FaTrash, FaChevronRight, FaTimes, FaSearch } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +16,6 @@ const Proposals = () => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredId, setHoveredId] = useState(null);
   const [selectedProposals, setSelectedProposals] = useState([]);
 
   const [viewProposal, setViewProposal] = useState(null);
@@ -36,6 +35,22 @@ const Proposals = () => {
       default: return "bg-gray-100 text-gray-800";
     }
   };
+  // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fetch proposals
   const fetchProposals = async () => {
@@ -334,7 +349,7 @@ const Proposals = () => {
 
               {/* Dropdown menu */}
               {showExportMenu && (
-                <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                   <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                     onClick={() => handleExport("Excel")}

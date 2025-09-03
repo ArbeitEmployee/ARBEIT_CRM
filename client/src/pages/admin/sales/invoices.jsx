@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { FaPlus, FaFilter, FaSyncAlt, FaEye, FaEdit, FaTrash, FaChevronRight, FaTimes, FaSearch, FaFileInvoiceDollar, FaMoneyCheckAlt, FaClock, FaExclamationTriangle, FaFileAlt, FaMoneyBillWave } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
@@ -45,6 +45,23 @@ const Invoices = () => {
     partiallypaidInvoices: 0,
     unpaidInvoices: 0
   });
+
+  // Add a ref for the export menu
+  const exportMenuRef = useRef(null);
+
+  // Close export menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Fetch invoices
   const fetchInvoices = async () => {
@@ -473,7 +490,7 @@ const processBatchPayments = async () => {
                 <HiOutlineDownload /> Export
               </button>
               {showExportMenu && (
-                <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                   {["Excel", "CSV", "PDF", "Print"].map((item) => (
                     <button
                       key={item}
