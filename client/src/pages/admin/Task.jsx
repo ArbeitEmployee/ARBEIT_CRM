@@ -1,4 +1,4 @@
-import { useState, useEffect} from "react";
+import { useState, useEffect, useRef } from "react";
 import { 
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight, 
   FaTimes, FaEdit, FaTrash, FaEye,
@@ -9,6 +9,27 @@ import axios from "axios";
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+// Custom hook for detecting outside clicks
+const useOutsideClick = (callback) => {
+  const ref = useRef();
+
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [ref, callback]);
+
+  return ref;
+};
 
 const TaskPage = () => {
   const [selectedTasks, setSelectedTasks] = useState([]);
@@ -31,7 +52,6 @@ const TaskPage = () => {
   const [newTask, setNewTask] = useState({
     projectName: "",
     priority: "Medium",
-    tags: "",
     startDate: "",
     deadline: "",
     members: "",
@@ -41,6 +61,9 @@ const TaskPage = () => {
   const [editingTask, setEditingTask] = useState(null);
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
   const [currentDescription, setCurrentDescription] = useState("");
+  const [staffSearchTerm, setStaffSearchTerm] = useState("");
+  const [staffSearchResults, setStaffSearchResults] = useState([]);
+  const [showStaffDropdown, setShowStaffDropdown] = useState(false);
 
   const statusOptions = [
     "Not Started",
@@ -56,6 +79,15 @@ const TaskPage = () => {
     "Medium",
     "Low"
   ];
+
+  // Use the custom hook for detecting outside clicks
+  const exportRef = useOutsideClick(() => {
+    setShowExportMenu(false);
+  });
+  
+  const staffRef = useOutsideClick(() => {
+    setShowStaffDropdown(false);
+  });
 
   // Format date from YYYY-MM-DD to DD-MM-YYYY
   const formatDateForBackend = (dateString) => {
@@ -108,11 +140,36 @@ const TaskPage = () => {
     fetchTasks();
   }, []);
 
+  // Search staff by name
+  const searchStaff = async (searchTerm) => {
+    if (searchTerm.length < 1) {
+      setStaffSearchResults([]);
+      return;
+    }
+    
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`);
+      setStaffSearchResults(data.staffs || []);
+    } catch (error) {
+      console.error("Error searching staff:", error);
+      setStaffSearchResults([]);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (staffSearchTerm) {
+        searchStaff(staffSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [staffSearchTerm]);
+
   // Search filter
   const filteredTasks = tasks.filter(task => 
     task._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (task.tags && task.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
     task.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
     task.priority.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -136,6 +193,20 @@ const TaskPage = () => {
   const handleNewTaskChange = (e) => {
     const { name, value } = e.target;
     setNewTask(prev => ({ ...prev, [name]: value }));
+    
+    if (name === "members") {
+      setStaffSearchTerm(value);
+      setShowStaffDropdown(true);
+    }
+  };
+
+  const handleSelectStaff = (staff) => {
+    setNewTask(prev => ({
+      ...prev,
+      members: prev.members ? `${prev.members}, ${staff.name}` : staff.name
+    }));
+    setShowStaffDropdown(false);
+    setStaffSearchTerm("");
   };
 
   const handleSaveTask = async () => {
@@ -175,7 +246,6 @@ const TaskPage = () => {
       setNewTask({
         projectName: "",
         priority: "Medium",
-        tags: "",
         startDate: "",
         deadline: "",
         members: "",
@@ -195,7 +265,6 @@ const TaskPage = () => {
     setNewTask({
       projectName: task.projectName,
       priority: task.priority,
-      tags: task.tags || "",
       startDate: formatDateForInput(task.startDate),
       deadline: formatDateForInput(task.deadline),
       members: task.members || "",
@@ -229,7 +298,6 @@ const TaskPage = () => {
       ID: task._id,
       "Subject": task.projectName,
       Priority: task.priority,
-      Tags: task.tags,
       "Start Date": task.startDate,
       Deadline: task.deadline,
       Members: task.members,
@@ -249,7 +317,6 @@ const TaskPage = () => {
       ID: task._id,
       "Subject": task.projectName,
       Priority: task.priority,
-      Tags: task.tags,
       "Start Date": task.startDate,
       Deadline: task.deadline,
       Members: task.members,
@@ -278,7 +345,6 @@ const TaskPage = () => {
       "ID",
       "Subject",
       "Priority",
-      "Tags",
       "Start Date",
       "Deadline",
       "Members",
@@ -290,7 +356,6 @@ const TaskPage = () => {
       task._id,
       task.projectName,
       task.priority,
-      task.tags,
       task.startDate,
       task.deadline,
       task.members,
@@ -331,7 +396,7 @@ const TaskPage = () => {
     
     // Table header
     printWindow.document.write('<thead><tr>');
-    ['ID', 'Subject', 'Priority', 'Tags', 'Start Date', 'Deadline', 'Members', 'Status', 'Description'].forEach(header => {
+    ['ID', 'Subject', 'Priority', 'Start Date', 'Deadline', 'Members', 'Status', 'Description'].forEach(header => {
       printWindow.document.write(`<th>${header}</th>`);
     });
     printWindow.document.write('</tr></thead>');
@@ -344,7 +409,6 @@ const TaskPage = () => {
         task._id,
         task.projectName,
         task.priority,
-        task.tags,
         task.startDate,
         task.deadline,
         task.members,
@@ -454,18 +518,6 @@ const TaskPage = () => {
                   ))}
                 </select>
               </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
-                <input
-                  type="text"
-                  name="tags"
-                  value={newTask.tags}
-                  onChange={handleNewTaskChange}
-                  className="w-full border rounded px-3 py-2"
-                  placeholder="e.g., warm, urgent, design"
-                />
-              </div>
             </div>
 
             {/* Right Column */}
@@ -508,14 +560,35 @@ const TaskPage = () => {
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Members</label>
-                <input
-                  type="text"
-                  name="members"
-                  value={newTask.members}
-                  onChange={handleNewTaskChange}
-                  className="w-full border rounded px-3 py-2"
-                  placeholder="e.g., 🌬️🌬️🌬️"
-                />
+                <div className="relative" ref={staffRef}>
+                  <input
+                    type="text"
+                    name="members"
+                    value={newTask.members}
+                    onChange={handleNewTaskChange}
+                    className="w-full border rounded px-3 py-2"
+                    placeholder="Search staff by name..."
+                  />
+                  {showStaffDropdown && staffSearchResults.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                      {staffSearchResults.map((staff, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelectStaff(staff)}
+                        >
+                          <div className="font-medium">{staff.name}</div>
+                          <div className="text-sm text-gray-600">{staff.position} - {staff.department}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showStaffDropdown && staffSearchResults.length === 0 && staffSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">No staff found</div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -698,7 +771,7 @@ const TaskPage = () => {
                 </select>
                 
                 {/* Export button */}
-                <div className="relative">
+                <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
                     className="border px-2 py-1 rounded text-sm flex items-center gap-1"
@@ -790,7 +863,6 @@ const TaskPage = () => {
                       </>
                     ) : (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Members</th>
@@ -862,7 +934,6 @@ const TaskPage = () => {
                           </>
                         ) : (
                           <>
-                            <td className="p-3 border-0">{task.tags || "-"}</td>
                             <td className="p-3 border-0">{formatDate(task.startDate)}</td>
                             <td className="p-3 border-0">{formatDate(task.deadline)}</td>
                             <td className="p-3 border-0">{task.members || "-"}</td>
@@ -946,7 +1017,7 @@ const TaskPage = () => {
                 </button>
               </div>
             </div>
-          </div>
+            </div>
         </>
       )}
 
@@ -963,11 +1034,13 @@ const TaskPage = () => {
                 <FaTimes />
               </button>
             </div>
-            <p className="text-gray-700 whitespace-pre-wrap">{currentDescription || "No description provided."}</p>
-            <div className="mt-6 text-right">
+            <p className="text-gray-700 whitespace-pre-wrap">
+              {currentDescription || "No description provided."}
+            </p>
+            <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setShowDescriptionModal(false)}
-                className="px-4 py-2 bg-black text-white rounded text-sm"
+                className="px-4 py-2 bg-black text-white rounded"
               >
                 Close
               </button>
@@ -980,4 +1053,3 @@ const TaskPage = () => {
 };
 
 export default TaskPage;
-
