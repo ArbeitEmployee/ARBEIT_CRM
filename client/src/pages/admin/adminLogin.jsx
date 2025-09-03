@@ -11,7 +11,7 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+    const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!email || !password) {
@@ -19,7 +19,6 @@ export default function AdminLogin() {
       return;
     }
 
-    setLoading(true);
     try {
       const res = await fetch("http://localhost:5000/api/admin/login", {
         method: "POST",
@@ -27,35 +26,44 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      // Read text then try parse JSON (safe for any response)
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        data = { message: text || "" };
+      }
+
       console.log("LOGIN response:", res.status, data);
 
+      // If backend returns non-OK, show its message
       if (!res.ok) {
         toast.error(data.message || `Login failed (status ${res.status})`);
         return;
       }
 
-      if (!data.token || !data.admin) {
-        toast.error(data.message || "Login succeeded but missing data.");
+      // Expect token in successful response
+      const token = data.token;
+      if (!token) {
+        // backend didn't return token — show message and don't navigate
+        toast.error(data.message || "Login succeeded but token missing.");
         return;
       }
 
-      // ✅ Store token
-      localStorage.setItem("admin_token", data.token);
-
-      // ✅ Store admin info for sidebar
-      localStorage.setItem("crm_admin", JSON.stringify(data.admin));
-
+      // Success
       toast.success(data.message || "Login successful!");
-      setTimeout(() => navigate("/admin/dashboard"), 700);
+      localStorage.setItem("crm_token", token);
+
+      // small delay so toast is visible
+      setTimeout(() => {
+        navigate("/admin/dashboard");
+      }, 900);
     } catch (err) {
       console.error("Network/login error:", err);
       toast.error("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
     }
   };
-
   const getInputClasses = (field, value) =>
     `w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
       touched[field] && !value
