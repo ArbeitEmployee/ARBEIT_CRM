@@ -312,40 +312,69 @@ export const importStaffs = async (req, res) => {
       const row = results[i];
       const rowNumber = i + 1;
       
+      // Normalize field names (handle case differences and spaces)
+      const normalizedRow = {};
+      Object.keys(row).forEach(key => {
+        const normalizedKey = key.toLowerCase().replace(/\s+/g, '');
+        normalizedRow[normalizedKey] = row[key];
+      });
+      
+      // Get values with fallbacks for different field name variations
+      const name = normalizedRow.name || row.Name || row['Staff Name'] || '';
+      const email = normalizedRow.email || row.Email || row['Email Address'] || '';
+      const position = normalizedRow.position || row.Position || row.Role || row.Title || '';
+      const department = normalizedRow.department || row.Department || row.Dept || '';
+      const phone = normalizedRow.phone || row.Phone || row['Phone Number'] || row.Telephone || '';
+      
       // Validate required fields
-      if (!row.name || !row.email) {
+      if (!name || !email) {
         errorMessages.push(`Row ${rowNumber}: Name and Email are required`);
         continue;
       }
       
       // Validate email format
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(row.email)) {
-        errorMessages.push(`Row ${rowNumber}: Invalid email format (${row.email})`);
+      if (!emailRegex.test(email)) {
+        errorMessages.push(`Row ${rowNumber}: Invalid email format (${email})`);
         continue;
       }
       
       // Check for duplicate email in import batch
-      const duplicateInBatch = staffsToImport.some(staff => staff.email === row.email.toLowerCase());
+      const duplicateInBatch = staffsToImport.some(staff => staff.email === email.toLowerCase());
       if (duplicateInBatch) {
-        errorMessages.push(`Row ${rowNumber}: Duplicate email in import file (${row.email})`);
+        errorMessages.push(`Row ${rowNumber}: Duplicate email in import file (${email})`);
         continue;
       }
       
       // Check if staff already exists in database
-      const existingStaff = await Staff.findOne({ email: row.email.toLowerCase() });
+      const existingStaff = await Staff.findOne({ email: email.toLowerCase() });
       if (existingStaff) {
-        errorMessages.push(`Row ${rowNumber}: Staff with email ${row.email} already exists`);
+        errorMessages.push(`Row ${rowNumber}: Staff with email ${email} already exists`);
         continue;
       }
       
+      // Handle active status with various formats
+      let active = true;
+      const activeValue = normalizedRow.active || row.Active || row['Active Staff'] || row.Status || '';
+      
+      if (activeValue) {
+        if (typeof activeValue === 'boolean') {
+          active = activeValue;
+        } else if (typeof activeValue === 'string') {
+          const lowerValue = activeValue.toLowerCase();
+          active = lowerValue === 'true' || lowerValue === 'yes' || lowerValue === 'active' || lowerValue === '1';
+        } else if (typeof activeValue === 'number') {
+          active = activeValue === 1;
+        }
+      }
+      
       staffsToImport.push({
-        name: row.name,
-        position: row.position || '',
-        department: row.department || '',
-        phone: row.phone || '',
-        email: row.email.toLowerCase(),
-        active: row.active !== undefined ? String(row.active).toLowerCase() === 'true' : true
+        name: name,
+        position: position,
+        department: department,
+        phone: phone,
+        email: email.toLowerCase(),
+        active: active
       });
     }
     
