@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // Added useRef import
 import { 
   FaPlus, FaFilter, FaSearch, FaSyncAlt, FaChevronRight, 
   FaTimes, FaEdit, FaTrash, FaChevronDown, FaFileImport,
@@ -9,6 +9,27 @@ import axios from "axios";
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+
+// Custom hook for detecting outside clicks - ADDED THIS HOOK
+const useOutsideClick = (callback) => {
+  const ref = useRef();
+
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [ref, callback]);
+
+  return ref;
+};
 
 const ProjectPage = () => {
   const [selectedProjects, setSelectedProjects] = useState([]);
@@ -41,6 +62,11 @@ const ProjectPage = () => {
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [customerSearchResults, setCustomerSearchResults] = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [staffSearchTerm, setStaffSearchTerm] = useState("");
+  const [staffSearchResults, setStaffSearchResults] = useState([]);
+  const [showStaffDropdown, setShowStaffDropdown] = useState(false);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("All");
 
   const statusOptions = [
     "Progress",
@@ -49,6 +75,23 @@ const ProjectPage = () => {
     "Cancelled",
     "Finished"
   ];
+
+  // Use the custom hook for detecting outside clicks - ADDED THESE REFS
+  const exportRef = useOutsideClick(() => {
+    setShowExportMenu(false);
+  });
+  
+  const filterRef = useOutsideClick(() => {
+    setShowFilterMenu(false);
+  });
+  
+  const customerRef = useOutsideClick(() => {
+    setShowCustomerDropdown(false);
+  });
+  
+  const staffRef = useOutsideClick(() => {
+    setShowStaffDropdown(false);
+  });
 
   // Fetch projects from API
   const fetchProjects = async () => {
@@ -103,6 +146,22 @@ const ProjectPage = () => {
     }
   };
 
+  // Search staff by name
+  const searchStaff = async (searchTerm) => {
+    if (searchTerm.length < 1) {
+      setStaffSearchResults([]);
+      return;
+    }
+    
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`);
+      setStaffSearchResults(data.staffs || []);
+    } catch (error) {
+      console.error("Error searching staff:", error);
+      setStaffSearchResults([]);
+    }
+  };
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (customerSearchTerm) {
@@ -113,14 +172,29 @@ const ProjectPage = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [customerSearchTerm]);
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (staffSearchTerm) {
+        searchStaff(staffSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [staffSearchTerm]);
+
   // Search filter
-  const filteredProjects = projects.filter(project => 
-    project._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (project.customer && project.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (project.tags && project.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    project.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredProjects = projects.filter(project => {
+    const matchesSearch = 
+      project._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (project.customer && project.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (project.tags && project.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      project.status.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === "All" || project.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
 
   // Pagination
   const totalPages = Math.ceil(filteredProjects.length / entriesPerPage);
@@ -145,6 +219,9 @@ const ProjectPage = () => {
     if (name === "customerName") {
       setCustomerSearchTerm(value);
       setShowCustomerDropdown(true);
+    } else if (name === "members") {
+      setStaffSearchTerm(value);
+      setShowStaffDropdown(true);
     }
   };
 
@@ -156,6 +233,15 @@ const ProjectPage = () => {
     }));
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
+  };
+
+  const handleSelectStaff = (staff) => {
+    setNewProject(prev => ({
+      ...prev,
+      members: prev.members ? `${prev.members}, ${staff.name}` : staff.name
+    }));
+    setShowStaffDropdown(false);
+    setStaffSearchTerm("");
   };
 
   const handleSaveProject = async () => {
@@ -264,7 +350,7 @@ const ProjectPage = () => {
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([csv], { type: 'text/clsx;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     
@@ -433,7 +519,7 @@ const ProjectPage = () => {
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                <div className="relative">
+                <div className="relative" ref={customerRef}> {/* ADDED REF HERE */}
                   <input
                     type="text"
                     name="customerName"
@@ -517,14 +603,35 @@ const ProjectPage = () => {
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Members</label>
-                <input
-                  type="text"
-                  name="members"
-                  value={newProject.members}
-                  onChange={handleNewProjectChange}
-                  className="w-full border rounded px-3 py-2"
-                  placeholder="🌬️ 🌬️ 🌬️"
-                />
+                <div className="relative" ref={staffRef}> {/* ADDED REF HERE */}
+                  <input
+                    type="text"
+                    name="members"
+                    value={newProject.members}
+                    onChange={handleNewProjectChange}
+                    className="w-full border rounded px-3 py-2"
+                    placeholder="Search staff by name..."
+                  />
+                  {showStaffDropdown && staffSearchResults.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                      {staffSearchResults.map((staff, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelectStaff(staff)}
+                        >
+                          <div className="font-medium">{staff.name}</div>
+                          <div className="text-sm text-gray-600">{staff.position} - {staff.department}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showStaffDropdown && staffSearchResults.length === 0 && staffSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">No staff found</div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -685,12 +792,45 @@ const ProjectPage = () => {
                 </select>
                 
                 {/* Filter button */}
-                <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
-                  <FaFilter /> Filter
-                </button>
+                <div className="relative" ref={filterRef}> {/* ADDED REF HERE */}
+                  <button 
+                    className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                    onClick={() => setShowFilterMenu(!showFilterMenu)}
+                  >
+                    <FaFilter /> Filter
+                  </button>
+
+                  {/* Filter dropdown menu */}
+                  {showFilterMenu && (
+                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                      <div className="px-3 py-2 text-sm font-medium border-b">Status</div>
+                      <button
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${statusFilter === "All" ? "bg-gray-100" : ""}`}
+                        onClick={() => {
+                          setStatusFilter("All");
+                          setShowFilterMenu(false);
+                        }}
+                      >
+                        All
+                      </button>
+                      {statusOptions.map(option => (
+                        <button
+                          key={option}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${statusFilter === option ? "bg-gray-100" : ""}`}
+                          onClick={() => {
+                            setStatusFilter(option);
+                            setShowFilterMenu(false);
+                          }}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 
                 {/* Export button */}
-                <div className="relative">
+                <div className="relative" ref={exportRef}> {/* ADDED REF HERE */}
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
                     className="border px-2 py-1 rounded text-sm flex items-center gap-1"
@@ -887,8 +1027,8 @@ const ProjectPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={compactView ? 6 : 9} className="p-4 text-center text-gray-500">
-                        {projects.length === 0 ? "No projects found. Create your first project!" : "No projects match your search criteria."}
+                      <td colSpan={compactView ? 6 : 9} className="p-4 text-center">
+                        No projects found.
                       </td>
                     </tr>
                   )}
@@ -897,35 +1037,25 @@ const ProjectPage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <span>
-                Showing {startIndex + 1} to{" "}
-                {Math.min(startIndex + entriesPerPage, filteredProjects.length)} of{" "}
-                {filteredProjects.length} entries
-              </span>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+              <div className="text-sm text-gray-700">
+                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredProjects.length)} of {filteredProjects.length} entries
+              </div>
+              <div className="flex items-center gap-1">                
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => prev - 1)}
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => (
-                  <button
-                    key={i}
-                    className={`px-3 py-1 border rounded ${
-                      currentPage === i + 1 ? "bg-gray-200" : ""
-                    }`}
-                    onClick={() => setCurrentPage(i + 1)}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                <span className="px-2 text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
                 >
                   Next
                 </button>
