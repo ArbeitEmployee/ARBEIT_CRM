@@ -29,7 +29,7 @@ import exportBulkPdfRoutes from "./routes/admin/exportBulkPdfRoutes.js";
 import csvExportRoutes from './routes/admin/csvExportRoutes.js';
 import eventRoutes from './routes/admin/eventRoutes.js';
 import announcementRoutes from './routes/admin/announcementRoutes.js';
-
+import goalsRoutes from './routes/admin/goalRoutes.js';
 
 
 const app = express();
@@ -59,6 +59,7 @@ app.use('/api/admin', exportBulkPdfRoutes);
 app.use('/api/csvexport', csvExportRoutes);
 app.use('/api/admin/events', eventRoutes);
 app.use('/api/admin/announcements', announcementRoutes);
+app.use('/api/admin/goals', goalsRoutes);
 
 //client routes
 app.use('/api/client/knowledge-base', clientKnowledgeBaseRoutes);
