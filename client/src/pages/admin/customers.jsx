@@ -21,8 +21,7 @@ const CustomersPage = () => {
     activeCustomers: 0,
     inactiveCustomers: 0,
     activeContacts: 0,
-    inactiveContacts: 0,
-    loggedInContacts: 0
+    inactiveContacts: 0
   });
   const [newCustomer, setNewCustomer] = useState({
     company: "",
@@ -68,8 +67,10 @@ const CustomersPage = () => {
     };
   }, []);
 
+  const [loading, setLoading] = useState(true);
   // Fetch customers from API
   const fetchCustomers = async () => {
+    setLoading(true);
     try {
       const { data } = await axios.get("http://localhost:5000/api/customers");
       setCustomers(data.customers || []);
@@ -89,10 +90,10 @@ const CustomersPage = () => {
         activeCustomers: 0,
         inactiveCustomers: 0,
         activeContacts: 0,
-        inactiveContacts: 0,
-        loggedInContacts: 0,
+        inactiveContacts: 0
       });
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -448,7 +449,7 @@ const CustomersPage = () => {
     }, 200);
     setShowExportMenu(false);
   };
-
+  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading customers...</div>;
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
@@ -690,7 +691,7 @@ const CustomersPage = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             {/* Total Customers */}
             <div className="bg-white p-4 rounded-lg shadow border">
               <div className="flex items-center justify-between">
@@ -755,19 +756,6 @@ const CustomersPage = () => {
                 </div>
               </div>
             </div>
-
-            {/* Contacts Logged In */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Contacts Logged In</p>
-                  <p className="text-2xl font-bold">{stats.loggedInContacts}</p>
-                </div>
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <FaUserClock className="text-purple-600" />
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Top action buttons */}
@@ -792,9 +780,6 @@ const CustomersPage = () => {
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
-              </button>
-              <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
-                <FaFilter /> Filters
               </button>
             </div>
           </div>
@@ -1052,26 +1037,21 @@ const CustomersPage = () => {
                           </td>
                           <td className="p-3 border-0">
                             <span
-                              className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                              onClick={() => toggleContactsActive(customer._id)}
-                              title="Toggle contacts active status"
-                            >
-                              {customer.contactsActive ? 'Active' : 'Inactive'}
-                            </span>
+                            className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
+                            onClick={() => toggleContactsActive(customer._id)}
+                            title="Toggle contacts active status"
+                          >
+                            {customer.contactsActive ? 'Active' : 'Inactive'}
+                          </span>
                           </td>
                           <td className="p-3 border-0">
                             {customer.groups.map((group, index) => (
-                              <span
-                                key={index}
-                                className="bg-gray-100 px-2 py-1 rounded text-xs mr-1"
-                              >
+                              <span key={index} className="bg-gray-100 px-2 py-1 rounded text-xs mr-1">
                                 {group}
                               </span>
                             ))}
                           </td>
-                          <td className="p-3 border-0">
-                            {new Date(customer.dateCreated).toLocaleString()}
-                          </td>
+                          <td className="p-3 border-0">{new Date(customer.dateCreated).toLocaleString()}</td>
                           <td className="p-3 rounded-r-lg border-0">
                             <div className="flex space-x-2">
                               <button
@@ -1099,11 +1079,11 @@ const CustomersPage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
               <div className="text-sm text-gray-700">
                 Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredCustomers.length)} of {filteredCustomers.length} entries
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex space-x-1">
                 <button
                   className="px-3 py-1 border rounded text-sm"
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
@@ -1111,13 +1091,31 @@ const CustomersPage = () => {
                 >
                   Previous
                 </button>
-                <span className="text-sm">
-                  Page {currentPage} of {totalPages}
-                </span>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? 'bg-gray-200' : ''}`}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
                 <button
                   className="px-3 py-1 border rounded text-sm"
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages || totalPages === 0}
+                  disabled={currentPage === totalPages}
                 >
                   Next
                 </button>
@@ -1130,75 +1128,80 @@ const CustomersPage = () => {
       {/* Import Modal */}
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">Import Customers</h2>
             
             {importProgress ? (
               <div className="mb-4">
-                <p className="text-sm">{importProgress.message}</p>
+                <p className="text-gray-700">{importProgress.message}</p>
+                {importProgress.status === 'processing' && (
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${importProgress.progress}%` }}></div>
+                  </div>
+                )}
               </div>
             ) : importResult ? (
-              <div className={`mb-4 p-3 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              <div className={`mb-4 p-4 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                 {importResult.success ? (
                   <>
-                    <p className="font-semibold">Import completed!</p>
-                    <p className="text-sm">Imported: {importResult.imported}</p>
-                    <p className="text-sm">Errors: {importResult.errorCount}</p>
+                    <p className="font-semibold">Import completed successfully!</p>
+                    <p>Imported: {importResult.imported} customers</p>
+                    {importResult.errorCount > 0 && (
+                      <p>Errors: {importResult.errorCount}</p>
+                    )}
                     {importResult.errorMessages && importResult.errorMessages.length > 0 && (
                       <div className="mt-2">
-                        <p className="text-sm font-semibold">Error details:</p>
-                        <ul className="text-xs max-h-32 overflow-auto">
+                        <p className="font-semibold">Error details:</p>
+                        <ul className="list-disc pl-5 mt-1">
                           {importResult.errorMessages.map((error, index) => (
-                            <li key={index} className="mt-1">{error}</li>
+                            <li key={index} className="text-sm">{error}</li>
                           ))}
                         </ul>
                       </div>
                     )}
                   </>
                 ) : (
-                  <p className="text-sm">Error: {importResult.message}</p>
+                  <p>Error: {importResult.message}</p>
                 )}
               </div>
             ) : (
-              <div className="mb-4">
-                <p className="text-sm mb-2">Select a CSV or Excel file to import customers:</p>
+              <>
+                <p className="text-gray-700 mb-4">Select a CSV or Excel file to import customers.</p>
                 <input
-                  type="file"
                   ref={fileInputRef}
-                  onChange={handleFileChange}
+                  type="file"
                   accept=".csv,.xlsx,.xls"
-                  className="w-full border rounded p-2 text-sm"
+                  onChange={handleFileChange}
+                  className="w-full border rounded p-2 mb-4"
                 />
-              </div>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 border rounded text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleImportSubmit}
+                    className="px-4 py-2 bg-black text-white rounded text-sm"
+                    disabled={!importFile}
+                  >
+                    Import
+                  </button>
+                </div>
+              </>
             )}
-            
-            <div className="flex justify-end space-x-2">
-              {!importResult && (
-                <button
-                  onClick={closeImportModal}
-                  className="px-4 py-2 border rounded text-sm"
-                >
-                  Cancel
-                </button>
-              )}
-              {!importProgress && !importResult && (
-                <button
-                  onClick={handleImportSubmit}
-                  className="px-4 py-2 bg-black text-white rounded text-sm"
-                  disabled={!importFile}
-                >
-                  Import
-                </button>
-              )}
-              {importResult && (
+
+            {importResult && (
+              <div className="flex justify-end mt-4">
                 <button
                   onClick={closeImportModal}
                   className="px-4 py-2 bg-black text-white rounded text-sm"
                 >
                   Close
                 </button>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
