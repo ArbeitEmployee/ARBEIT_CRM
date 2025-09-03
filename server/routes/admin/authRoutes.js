@@ -4,6 +4,7 @@ import {
   loginAdmin,
   forgotPassword,
   verifyResetCode,
+    changePassword,  
   resetPassword,
   getAllAdmins,
   updateAdminStatus,
@@ -21,6 +22,12 @@ router.post("/login", loginAdmin);
 router.post("/forgot-password", forgotPassword);
 router.post("/verify-reset-code", verifyResetCode);
 router.post("/reset-password", resetPassword);
+
+
+
+
+// PUT /api/admin/change-password
+router.put("/change-password", protect, changePassword);
 
 // SuperAdmin protected routes
 router.get("/", protect, (req, res, next) => {

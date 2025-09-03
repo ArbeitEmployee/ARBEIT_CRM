@@ -92,63 +92,116 @@ export const loginAdmin = async (req, res) => {
 };
 
 
-// UPDATE STATUS (superAdmin only)
+// Get all admins (superAdmin only)
+export const getAllAdmins = async (req, res) => {
+  try {
+    // Exclude the password field from the response
+    const admins = await Admin.find().select('-password');
+    
+    res.status(200).json(admins);
+  } catch (error) {
+    console.error('Error fetching admins:', error);
+    res.status(500).json({ message: 'Server error while fetching admins' });
+  }
+};
+
+// Update admin status
 export const updateAdminStatus = async (req, res) => {
   try {
     const { adminId, status } = req.body;
-
-    if (!["approved", "rejected"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
+    
+    // Validate status
+    if (!['pending', 'approved', 'rejected'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value' });
     }
-
+    
     const admin = await Admin.findById(adminId);
-    if (!admin) return res.status(404).json({ message: "Admin not found" });
-
-    admin.status = status;
-    await admin.save();
-
-    res.json({ message: `Admin status updated to ${status}`, admin });
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+    
+    // Prevent status change for superAdmin
+    if (admin.role === "superAdmin") {
+      return res.status(400).json({ message: 'Cannot change status of superAdmin' });
+    }
+    
+    const updatedAdmin = await Admin.findByIdAndUpdate(
+      adminId,
+      { status },
+      { new: true, runValidators: true }
+    ).select('-password');
+    
+    res.status(200).json({ message: 'Status updated successfully', admin: updatedAdmin });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error updating admin status:', error);
+    res.status(500).json({ message: 'Server error while updating status' });
   }
 };
 
-// GET ALL ADMINS (superAdmin only)
-export const getAllAdmins = async (req, res) => {
-  try {
-    const admins = await Admin.find().select("-password");
-    res.json(admins);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// UPDATE ADMIN (superAdmin only)
+// Update admin
 export const updateAdmin = async (req, res) => {
   try {
     const { adminId } = req.params;
-    const updates = req.body;
-
-    const admin = await Admin.findByIdAndUpdate(adminId, updates, { new: true }).select("-password");
-    if (!admin) return res.status(404).json({ message: "Admin not found" });
-
-    res.json({ message: "Admin updated successfully", admin });
+    const { name, email, role, status } = req.body;
+    
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+    
+    // Prevent role change for superAdmin
+    if (admin.role === "superAdmin" && role && role !== "superAdmin") {
+      return res.status(400).json({ message: 'Cannot change role of superAdmin' });
+    }
+    
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email;
+    if (role && admin.role !== "superAdmin") updateData.role = role; // Only update role if not superAdmin
+    if (status) updateData.status = status;
+    
+    const updatedAdmin = await Admin.findByIdAndUpdate(
+      adminId,
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password');
+    
+    res.status(200).json({ message: 'Admin updated successfully', admin: updatedAdmin });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error updating admin:', error);
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+    res.status(500).json({ message: 'Server error while updating admin' });
   }
 };
 
-// DELETE ADMIN (superAdmin only)
+// Delete admin
 export const deleteAdmin = async (req, res) => {
   try {
     const { adminId } = req.params;
-
-    const admin = await Admin.findByIdAndDelete(adminId);
-    if (!admin) return res.status(404).json({ message: "Admin not found" });
-
-    res.json({ message: "Admin deleted successfully" });
+    
+    const admin = await Admin.findById(adminId);
+    if (!admin) {
+      return res.status(404).json({ message: 'Admin not found' });
+    }
+    
+    // Prevent deleting superAdmin
+    if (admin.role === "superAdmin") {
+      return res.status(400).json({ message: 'Cannot delete superAdmin account' });
+    }
+    
+    // Prevent superAdmin from deleting themselves
+    if (req.admin.id.toString() === adminId) {
+      return res.status(400).json({ message: 'Cannot delete your own account' });
+    }
+    
+    await Admin.findByIdAndDelete(adminId);
+    
+    res.status(200).json({ message: 'Admin deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error deleting admin:', error);
+    res.status(500).json({ message: 'Server error while deleting admin' });
   }
 };
 
@@ -212,6 +265,38 @@ export const resetPassword = async (req, res) => {
     await admin.save();
 
     res.json({ message: "Password reset successful" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+
+// CHANGE PASSWORD 
+export const changePassword = async (req, res) => {
+  try {
+    const adminId = req.admin.id; // from protect middleware
+    const { newPassword, confirmNewPassword } = req.body;
+
+    if (!newPassword || !confirmNewPassword) {
+      return res.status(400).json({ message: "Both fields are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    const admin = await Admin.findById(adminId);
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    // Update password
+    admin.password = await bcrypt.hash(newPassword, 10);
+    await admin.save();
+
+    res.json({ message: "Password changed successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

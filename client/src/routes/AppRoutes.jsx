@@ -53,6 +53,8 @@ import CsvExport from "../pages/admin/utilities/CsvExport";
 import Calendar from "../pages/admin/utilities/Calendar";
 import AnnouncementsPage from "../pages/admin/utilities/Announcements";
 import GoalsPage from "../pages/admin/utilities/Goals";
+import AllAdmins from "../pages/admin/admins/all";
+import PendingAdmins from "../pages/admin/admins/pending";
 
 
 const AppRoutes = () => {
@@ -105,6 +107,8 @@ const AppRoutes = () => {
               <Route path="knowledge-base" element={<KnowledgeBase />} />
               <Route path="reports/leads" element={<LeadsReport />} />
               <Route path="reports/kb-articles" element={<KbArticlesReport />} />
+              <Route path="admins/all" element={<AllAdmins />} />
+              <Route path="admins/pending" element={< PendingAdmins/>} />
 
               {/*Utilities */}
               <Route path="utilities/bulk-pdf" element={<BulkPdfExport />} />

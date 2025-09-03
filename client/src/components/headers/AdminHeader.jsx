@@ -1,8 +1,19 @@
-import { FaBars, FaBell, FaUserCircle, FaCog } from "react-icons/fa";
+import { useState, useEffect } from "react";
+import { FaBars, FaBell, FaUserCircle, FaSignOutAlt, FaKey } from "react-icons/fa";
 
-const AdminHeader = ({ onToggleSidebar }) => {
+const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
+  const [admin, setAdmin] = useState(propAdmin || null);
+
+  // Read from localStorage if not passed as prop
+  useEffect(() => {
+    if (!propAdmin) {
+      const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
+      if (storedAdmin) setAdmin(storedAdmin);
+    }
+  }, [propAdmin]);
+
   return (
-    <header className="bg-gray-600 text-white flex items-center justify-between px-4 py-3 shadow-md fixed top-0 left-0 right-0 z-50 h-14"> {/* Added h-14 */}
+    <header className="bg-gray-600 text-white flex items-center justify-between px-4 py-3 shadow-md fixed top-0 left-0 right-0 z-50 h-14">
       {/* Left - Sidebar Toggle + Brand */}
       <div className="flex items-center gap-4">
         <button onClick={onToggleSidebar} className="text-white text-xl">
@@ -23,12 +34,12 @@ const AdminHeader = ({ onToggleSidebar }) => {
 
       {/* Right Section */}
       <div className="flex items-center gap-6">
-        {/* Customer Area + Settings */}
+        {/* Customer Area + Change Password */}
         <div className="flex items-center gap-4">
           <h1 className="text-sm text-gray-300">Customer Area</h1>
           <div className="flex items-center gap-1 cursor-pointer hover:text-gray-300">
-            <FaCog className="text-xl" />
-            <span className="hidden md:inline text-sm">Settings</span>
+            <FaKey className="text-xl" />
+            <span className="hidden md:inline text-sm">Change Password</span>
           </div>
         </div>
 
@@ -40,11 +51,17 @@ const AdminHeader = ({ onToggleSidebar }) => {
           </span>
         </button>
 
-        {/* User */}
+        {/* User Name */}
         <div className="flex items-center gap-2 cursor-pointer">
           <FaUserCircle className="text-2xl" />
-          <span className="hidden md:inline">Admin</span>
+          <h2 className="hidden md:inline text-sm font-semibold">{admin?.name || "Unknown User"}</h2>
         </div>
+
+        {/* Logout */}
+        <button onClick={onLogout} className="flex items-center gap-1 hover:text-gray-300">
+          <FaSignOutAlt className="text-xl" />
+          <span className="hidden md:inline text-sm">Logout</span>
+        </button>
       </div>
     </header>
   );
