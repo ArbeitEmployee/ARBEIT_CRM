@@ -987,38 +987,40 @@ const CustomersPage = () => {
                       {compactView ? (
                         <>
                           <td className="p-3 border-0">
-                            <span
-                              className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                              onClick={() => toggleCustomerActive(customer._id)}
-                              title="Toggle customer active status"
-                            >
-                              {customer.active ? 'Active' : 'Inactive'}
-                            </span>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer" 
+                                checked={customer.active}
+                                onChange={() => toggleCustomerActive(customer._id)}
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
                           </td>
                           <td className="p-3 border-0">
-                            <span
-                            className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                            onClick={() => toggleContactsActive(customer._id)}
-                            title="Toggle contacts active status"
-                          >
-                            {customer.contactsActive ? 'Active' : 'Inactive'}
-                          </span>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer" 
+                                checked={customer.contactsActive}
+                                onChange={() => toggleContactsActive(customer._id)}
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
                           </td>
                           <td className="p-3 rounded-r-lg border-0">
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEditCustomer(customer)}
-                                className="text-blue-500 hover:text-blue-700"
-                                title="Edit"
+                                className="text-blue-600 hover:text-blue-800"
                               >
-                                <FaEdit size={16} />
+                                <FaEdit />
                               </button>
                               <button
                                 onClick={() => handleDeleteCustomer(customer._id)}
-                                className="text-red-500 hover:text-red-700"
-                                title="Delete"
+                                className="text-red-600 hover:text-red-800"
                               >
-                                <FaTrash size={16} />
+                                <FaTrash />
                               </button>
                             </div>
                           </td>
@@ -1027,46 +1029,50 @@ const CustomersPage = () => {
                         <>
                           <td className="p-3 border-0">{customer.phone}</td>
                           <td className="p-3 border-0">
-                            <span
-                              className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                              onClick={() => toggleCustomerActive(customer._id)}
-                              title="Toggle customer active status"
-                            >
-                              {customer.active ? 'Active' : 'Inactive'}
-                            </span>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer" 
+                                checked={customer.active}
+                                onChange={() => toggleCustomerActive(customer._id)}
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
                           </td>
                           <td className="p-3 border-0">
-                            <span
-                            className={`px-2 py-1 rounded text-xs cursor-pointer ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}
-                            onClick={() => toggleContactsActive(customer._id)}
-                            title="Toggle contacts active status"
-                          >
-                            {customer.contactsActive ? 'Active' : 'Inactive'}
-                          </span>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer" 
+                                checked={customer.contactsActive}
+                                onChange={() => toggleContactsActive(customer._id)}
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
                           </td>
                           <td className="p-3 border-0">
-                            {customer.groups.map((group, index) => (
-                              <span key={index} className="bg-gray-100 px-2 py-1 rounded text-xs mr-1">
-                                {group}
-                              </span>
-                            ))}
+                            <div className="flex flex-wrap gap-1">
+                              {customer.groups.map((group, index) => (
+                                <span key={index} className="bg-gray-100 px-2 py-1 rounded text-xs">
+                                  {group}
+                                </span>
+                              ))}
+                            </div>
                           </td>
                           <td className="p-3 border-0">{new Date(customer.dateCreated).toLocaleString()}</td>
                           <td className="p-3 rounded-r-lg border-0">
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEditCustomer(customer)}
-                                className="text-blue-500 hover:text-blue-700"
-                                title="Edit"
+                                className="text-blue-600 hover:text-blue-800"
                               >
-                                <FaEdit size={16} />
+                                <FaEdit />
                               </button>
                               <button
                                 onClick={() => handleDeleteCustomer(customer._id)}
-                                className="text-red-500 hover:text-red-700"
-                                title="Delete"
+                                className="text-red-600 hover:text-red-800"
                               >
-                                <FaTrash size={16} />
+                                <FaTrash />
                               </button>
                             </div>
                           </td>
@@ -1085,9 +1091,9 @@ const CustomersPage = () => {
               </div>
               <div className="flex space-x-1">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -1105,17 +1111,17 @@ const CustomersPage = () => {
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? 'bg-gray-200' : ''}`}
                       onClick={() => setCurrentPage(pageNum)}
+                      className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? "bg-gray-200" : ""}`}
                     >
                       {pageNum}
                     </button>
                   );
                 })}
                 <button
-                  className="px-3 py-1 border rounded text-sm"
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -1128,15 +1134,15 @@ const CustomersPage = () => {
       {/* Import Modal */}
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">Import Customers</h2>
             
             {importProgress ? (
               <div className="mb-4">
-                <p className="text-gray-700">{importProgress.message}</p>
-                {importProgress.status === 'processing' && (
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${importProgress.progress}%` }}></div>
+                <p className="text-sm text-gray-600 mb-2">{importProgress.message}</p>
+                {importProgress.status === 'uploading' && (
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="bg-blue-600 h-2 rounded-full animate-pulse"></div>
                   </div>
                 )}
               </div>
@@ -1144,20 +1150,20 @@ const CustomersPage = () => {
               <div className={`mb-4 p-4 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                 {importResult.success ? (
                   <>
-                    <p className="font-semibold">Import completed successfully!</p>
-                    <p>Imported: {importResult.imported} customers</p>
+                    <p className="font-medium">Import completed successfully!</p>
+                    <p className="text-sm mt-1">Imported: {importResult.imported} customers</p>
                     {importResult.errorCount > 0 && (
-                      <p>Errors: {importResult.errorCount}</p>
+                      <p className="text-sm mt-1">Failed: {importResult.errorCount} rows</p>
                     )}
                     {importResult.errorMessages && importResult.errorMessages.length > 0 && (
-                      <div className="mt-2">
-                        <p className="font-semibold">Error details:</p>
-                        <ul className="list-disc pl-5 mt-1">
+                      <details className="mt-2 text-xs">
+                        <summary className="cursor-pointer">View error details</summary>
+                        <ul className="mt-1 space-y-1">
                           {importResult.errorMessages.map((error, index) => (
-                            <li key={index} className="text-sm">{error}</li>
+                            <li key={index} className="text-red-600">• {error}</li>
                           ))}
                         </ul>
-                      </div>
+                      </details>
                     )}
                   </>
                 ) : (
@@ -1166,15 +1172,24 @@ const CustomersPage = () => {
               </div>
             ) : (
               <>
-                <p className="text-gray-700 mb-4">Select a CSV or Excel file to import customers.</p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv,.xlsx,.xls"
-                  onChange={handleFileChange}
-                  className="w-full border rounded p-2 mb-4"
-                />
-                <div className="flex justify-end space-x-3">
+                <p className="text-sm text-gray-600 mb-4">
+                  Upload a CSV or Excel file with customer data. The file should include columns for company, contact, email, etc.
+                </p>
+                <div className="mb-4">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv,.xlsx,.xls"
+                    onChange={handleFileChange}
+                    className="w-full border rounded p-2"
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="flex justify-end space-x-3">
+              {!importProgress && !importResult && (
+                <>
                   <button
                     onClick={closeImportModal}
                     className="px-4 py-2 border rounded text-sm"
@@ -1183,25 +1198,22 @@ const CustomersPage = () => {
                   </button>
                   <button
                     onClick={handleImportSubmit}
-                    className="px-4 py-2 bg-black text-white rounded text-sm"
                     disabled={!importFile}
+                    className="px-4 py-2 bg-black text-white rounded text-sm disabled:opacity-50"
                   >
                     Import
                   </button>
-                </div>
-              </>
-            )}
-
-            {importResult && (
-              <div className="flex justify-end mt-4">
+                </>
+              )}
+              {(importProgress || importResult) && (
                 <button
                   onClick={closeImportModal}
                   className="px-4 py-2 bg-black text-white rounded text-sm"
                 >
                   Close
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
