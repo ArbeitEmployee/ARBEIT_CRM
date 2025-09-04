@@ -57,18 +57,15 @@ const CreditNotes = () => {
     setLoading(true);
     try {
       const { data } = await axios.get("http://localhost:5000/api/admin/credit-notes");
-      setCreditNotes(data.data || data);
+      const fetchedCreditNotes = data.data || []; // Ensure it's an array
+      setCreditNotes(fetchedCreditNotes);
       
-      // Calculate stats
-      const total = data.data?.length || data.length || 0;
-      const draft = data.data?.filter(note => note.status === "Draft").length || 
-                   data.filter(note => note.status === "Draft").length || 0;
-      const issued = data.data?.filter(note => note.status === "Issued").length || 
-                    data.filter(note => note.status === "Issued").length || 0;
-      const cancelled = data.data?.filter(note => note.status === "Cancelled").length || 
-                       data.filter(note => note.status === "Cancelled").length || 0;
-      const pending = data.data?.filter(note => note.status === "Pending").length || 
-                     data.filter(note => note.status === "Pending").length || 0;
+      // Calculate stats based on the fetchedCreditNotes
+      const total = fetchedCreditNotes.length;
+      const draft = fetchedCreditNotes.filter(note => note.status === "Draft").length;
+      const issued = fetchedCreditNotes.filter(note => note.status === "Issued").length;
+      const cancelled = fetchedCreditNotes.filter(note => note.status === "Cancelled").length;
+      const pending = fetchedCreditNotes.filter(note => note.status === "Pending").length;
       
       setStats({
         total,
@@ -79,6 +76,8 @@ const CreditNotes = () => {
       });
     } catch (err) {
       console.error("Error fetching credit notes", err);
+      setCreditNotes([]); // Set to empty array on error
+      setStats({ total: 0, draft: 0, issued: 0, cancelled: 0, pending: 0 }); // Reset stats on error
     }
     setLoading(false);
   };
@@ -179,6 +178,8 @@ const CreditNotes = () => {
     try {
       await axios.delete(`http://localhost:5000/api/admin/credit-notes/${id}`);
       setCreditNotes(creditNotes.filter((cn) => cn._id !== id));
+      // Re-fetch stats after deletion
+      fetchCreditNotes();
     } catch (err) {
       console.error("Error deleting credit note", err);
     }
@@ -193,6 +194,8 @@ const CreditNotes = () => {
       ));
       setCreditNotes(creditNotes.filter((cn) => !selectedCreditNotes.includes(cn._id)));
       setSelectedCreditNotes([]);
+      // Re-fetch stats after bulk deletion
+      fetchCreditNotes();
     } catch (err) {
       console.error("Error deleting credit notes", err);
     }
@@ -531,7 +534,7 @@ const CreditNotes = () => {
                                 className="text-blue-500 hover:text-blue-700"
                                 title="View"
                               >
-                                <FaEdit size={16} />
+                                <FaEye />
                               </button>
                               <button
                                 onClick={() => {
