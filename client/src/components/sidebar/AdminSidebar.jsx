@@ -23,6 +23,23 @@ const AdminSideBar = ({ isOpen }) => {
   const [activeMenu, setActiveMenu] = useState("");
   const [admin, setAdmin] = useState(null);
 
+  // Load logged-in admin details from localStorage
+  useEffect(() => {
+    const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
+    console.log("Loaded admin from storage:", storedAdmin); // 👈 Add logging
+    if (storedAdmin) setAdmin(storedAdmin);
+  }, []);
+
+  // Add this useEffect to listen for storage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
+      setAdmin(storedAdmin);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
   // Load logged-in admin details from localStorage (after login/signup)
   useEffect(() => {
     const storedAdmin = JSON.parse(localStorage.getItem("crm_admin")); // 👈 save this in login/signup

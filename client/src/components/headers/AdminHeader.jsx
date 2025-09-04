@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { FaBars, FaBell, FaUserCircle, FaSignOutAlt, FaKey } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
 const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
   const [admin, setAdmin] = useState(propAdmin || null);
+  const navigate = useNavigate();
 
   // Read from localStorage if not passed as prop
   useEffect(() => {
@@ -11,6 +13,21 @@ const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
       if (storedAdmin) setAdmin(storedAdmin);
     }
   }, [propAdmin]);
+
+  // Handle logout functionality
+  const handleLogout = () => {
+    // Clear JWT token from localStorage
+    localStorage.removeItem("crm_token");
+    localStorage.removeItem("crm_admin");
+    
+    // If a custom logout function is provided as prop, call it
+    if (onLogout && typeof onLogout === "function") {
+      onLogout();
+    }
+    
+    // Redirect to login page
+    navigate("/admin/login");
+  };
 
   return (
     <header className="bg-gray-600 text-white flex items-center justify-between px-4 py-3 shadow-md fixed top-0 left-0 right-0 z-50 h-14">
@@ -58,7 +75,7 @@ const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
         </div>
 
         {/* Logout */}
-        <button onClick={onLogout} className="flex items-center gap-1 hover:text-gray-300">
+        <button onClick={handleLogout} className="flex items-center gap-1 hover:text-gray-300">
           <FaSignOutAlt className="text-xl" />
           <span className="hidden md:inline text-sm">Logout</span>
         </button>

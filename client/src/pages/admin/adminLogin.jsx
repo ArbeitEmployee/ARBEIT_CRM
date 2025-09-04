@@ -12,58 +12,55 @@ export default function AdminLogin() {
   const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!email || !password) {
-      toast.error("Please fill in all fields.");
+  if (!email || !password) {
+    toast.error("Please fill in all fields.");
+    return;
+  }
+
+  try {
+    const res = await fetch("http://localhost:5000/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const text = await res.text();
+    let data = {};
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch (parseErr) {
+      data = { message: text || "" };
+    }
+
+    console.log("LOGIN response:", res.status, data);
+
+    if (!res.ok) {
+      toast.error(data.message || `Login failed (status ${res.status})`);
       return;
     }
 
-    try {
-      const res = await fetch("http://localhost:5000/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      // Read text then try parse JSON (safe for any response)
-      const text = await res.text();
-      let data = {};
-      try {
-        data = text ? JSON.parse(text) : {};
-      } catch (parseErr) {
-        data = { message: text || "" };
-      }
-
-      console.log("LOGIN response:", res.status, data);
-
-      // If backend returns non-OK, show its message
-      if (!res.ok) {
-        toast.error(data.message || `Login failed (status ${res.status})`);
-        return;
-      }
-
-      // Expect token in successful response
-      const token = data.token;
-      if (!token) {
-        // backend didn't return token — show message and don't navigate
-        toast.error(data.message || "Login succeeded but token missing.");
-        return;
-      }
-
-      // Success
-      toast.success(data.message || "Login successful!");
-      localStorage.setItem("crm_token", token);
-
-      // small delay so toast is visible
-      setTimeout(() => {
-        navigate("/admin/dashboard");
-      }, 900);
-    } catch (err) {
-      console.error("Network/login error:", err);
-      toast.error("Something went wrong. Please try again.");
+    const token = data.token;
+    if (!token) {
+      toast.error(data.message || "Login succeeded but token missing.");
+      return;
     }
-  };
+
+    // Store both token AND admin data in localStorage
+    localStorage.setItem("crm_token", token);
+    localStorage.setItem("crm_admin", JSON.stringify(data.admin)); // 👈 ADD THIS LINE
+
+    toast.success(data.message || "Login successful!");
+    
+    setTimeout(() => {
+      navigate("/admin/dashboard");
+    }, 900);
+  } catch (err) {
+    console.error("Network/login error:", err);
+    toast.error("Something went wrong. Please try again.");
+  }
+};
   const getInputClasses = (field, value) =>
     `w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
       touched[field] && !value
