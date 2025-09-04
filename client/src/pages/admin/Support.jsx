@@ -808,6 +808,14 @@ const SupportPage = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Refresh button */}
+                <button
+                  onClick={fetchTickets}
+                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                >
+                  <FaSyncAlt />
+                </button>
               </div>
               
               <div className="flex items-center gap-2">
@@ -823,13 +831,7 @@ const SupportPage = () => {
                   <FaSearch className="absolute left-2 top-2.5 transform text-gray-400 text-sm" />
                 </div>
                 
-                {/* Refresh button */}
-                <button
-                  onClick={fetchTickets}
-                  className="border px-2 py-1 rounded text-sm flex items-center"
-                >
-                  <FaSyncAlt />
-                </button>
+                
               </div>
             </div>
 

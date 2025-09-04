@@ -805,7 +805,7 @@ const SubscriptionPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2 py-1 rounded text-sm flex items-center"
+                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
                   onClick={fetchSubscriptions}
                 >
                   <FaSyncAlt />

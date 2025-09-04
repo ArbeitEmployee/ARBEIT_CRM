@@ -29,13 +29,11 @@ const ExpensesPage = () => {
     category: "",
     amount: "",
     name: "",
-    hasReceipt: false,
     date: "",
     project: "",
     customerId: "",
     customerName: "",
     isInvoiced: false,
-    referenceId: "",
     paymentMode: ""
   });
   const [editingExpense, setEditingExpense] = useState(null);
@@ -148,7 +146,6 @@ const ExpensesPage = () => {
     expense.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     expense.project.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (expense.customer && expense.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    expense.referenceId.toLowerCase().includes(searchTerm.toLowerCase()) ||
     expense.paymentMode.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -237,13 +234,11 @@ const handleSaveExpense = async () => {
         category: "",
         amount: "",
         name: "",
-        hasReceipt: false,
         date: "",
         project: "",
         customerId: "",
         customerName: "",
         isInvoiced: false,
-        referenceId: "",
         paymentMode: ""
       });
     } catch (error) {
@@ -260,13 +255,11 @@ const handleSaveExpense = async () => {
       category: expense.category,
       amount: expense.amount,
       name: expense.name,
-      hasReceipt: expense.hasReceipt,
       date: expense.date,
       project: expense.project,
       customerId: expense.customerId,
       customerName: expense.customer ? expense.customer.company : "",
       isInvoiced: expense.isInvoiced,
-      referenceId: expense.referenceId,
       paymentMode: expense.paymentMode
     });
     setShowNewExpenseForm(true);
@@ -367,12 +360,10 @@ const handleSaveExpense = async () => {
       Category: expense.category,
       Amount: expense.amount,
       Name: expense.name,
-      Receipt: expense.hasReceipt ? "YES" : "NO",
       Date: expense.date,
       Project: expense.project,
       Customer: expense.customer ? expense.customer.company : "N/A",
       Invoiced: expense.isInvoiced ? "YES" : "NO",
-      'Reference ID': expense.referenceId,
       'Payment Mode': expense.paymentMode
     }));
 
@@ -389,12 +380,10 @@ const handleSaveExpense = async () => {
       Category: expense.category,
       Amount: expense.amount,
       Name: expense.name,
-      Receipt: expense.hasReceipt ? "YES" : "NO",
       Date: expense.date,
       Project: expense.project,
       Customer: expense.customer ? expense.customer.company : "N/A",
       Invoiced: expense.isInvoiced ? "YES" : "NO",
-      'Reference ID': expense.referenceId,
       'Payment Mode': expense.paymentMode
     }));
 
@@ -420,12 +409,10 @@ const handleSaveExpense = async () => {
       "Category",
       "Amount",
       "Name",
-      "Receipt",
       "Date",
       "Project",
       "Customer",
       "Invoiced",
-      "Reference ID",
       "Payment Mode"
     ];
     
@@ -434,12 +421,10 @@ const handleSaveExpense = async () => {
       expense.category,
       `$${expense.amount.toFixed(2)}`,
       expense.name,
-      expense.hasReceipt ? "YES" : "NO",
       expense.date,
       expense.project,
       expense.customer ? expense.customer.company : "N/A",
       expense.isInvoiced ? "YES" : "NO",
-      expense.referenceId,
       expense.paymentMode
     ]);
 
@@ -476,7 +461,7 @@ const handleSaveExpense = async () => {
     
     // Table header
     printWindow.document.write('<thead><tr>');
-    ['ID', 'Category', 'Amount', 'Name', 'Receipt', 'Date', 'Project', 'Customer', 'Invoiced', 'Reference ID', 'Payment Mode'].forEach(header => {
+    ['ID', 'Category', 'Amount', 'Name', 'Date', 'Project', 'Customer', 'Invoiced', 'Payment Mode'].forEach(header => {
       printWindow.document.write(`<th>${header}</th>`);
     });
     printWindow.document.write('</tr></thead>');
@@ -490,12 +475,10 @@ const handleSaveExpense = async () => {
         expense.category,
         `$${expense.amount.toFixed(2)}`,
         expense.name,
-        expense.hasReceipt ? "YES" : "NO",
         expense.date,
         expense.project,
         expense.customer ? expense.customer.company : "N/A",
         expense.isInvoiced ? "YES" : "NO",
-        expense.referenceId,
         expense.paymentMode
       ].forEach(value => {
         printWindow.document.write(`<td>${value}</td>`);
@@ -657,17 +640,6 @@ const handleSaveExpense = async () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reference ID</label>
-                <input
-                  type="text"
-                  name="referenceId"
-                  value={newExpense.referenceId}
-                  onChange={handleNewExpenseChange}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-
-              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Payment Mode</label>
                 <select
                   name="paymentMode"
@@ -685,18 +657,6 @@ const handleSaveExpense = async () => {
           </div>
 
           <div className="flex flex-wrap gap-4 mb-6">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                name="hasReceipt"
-                checked={newExpense.hasReceipt}
-                onChange={handleNewExpenseChange}
-                className="mr-2"
-                id="hasReceipt"
-              />
-              <label htmlFor="hasReceipt" className="text-sm text-gray-700">Has Receipt</label>
-            </div>
-
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -871,7 +831,7 @@ const handleSaveExpense = async () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2 py-1 rounded text-sm flex items-center"
+                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
                   onClick={fetchExpenses}
                 >
                   <FaSyncAlt />
@@ -924,12 +884,10 @@ const handleSaveExpense = async () => {
                       </>
                     ) : (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Receipt</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Invoiced</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Reference ID</th>
                         <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Payment Mode</th>
                         <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                       </>
@@ -983,13 +941,6 @@ const handleSaveExpense = async () => {
                         </>
                       ) : (
                         <>
-                          <td className="p-3 border-0">
-                            {expense.hasReceipt ? (
-                              <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">Yes</span>
-                            ) : (
-                              <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">No</span>
-                            )}
-                          </td>
                           <td className="p-3 border-0">{expense.date}</td>
                           <td className="p-3 border-0">{expense.project || "-"}</td>
                           <td className="p-3 border-0">
@@ -1007,7 +958,6 @@ const handleSaveExpense = async () => {
                               <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">No</span>
                             )}
                           </td>
-                          <td className="p-3 border-0">{expense.referenceId || "-"}</td>
                           <td className="p-3 border-0">{expense.paymentMode || "-"}</td>
                           <td className="p-3 rounded-r-lg border-0">
                             <div className="flex space-x-2">
