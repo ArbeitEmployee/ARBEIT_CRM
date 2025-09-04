@@ -1,4 +1,5 @@
-import { useState } from "react";
+// ClientSidebar.jsx - Updated version
+import { useState, useEffect } from "react";
 import {
   FaQuestionCircle,
   FaProjectDiagram,
@@ -14,6 +15,15 @@ import { Link } from "react-router-dom";
 
 const ClientSidebar = ({ isOpen }) => {
   const [activeMenu, setActiveMenu] = useState("");
+  const [client, setClient] = useState(null);
+
+  useEffect(() => {
+    // Get client data from localStorage
+    const storedClient = JSON.parse(localStorage.getItem("crm_client"));
+    if (storedClient) {
+      setClient(storedClient);
+    }
+  }, []);
 
   const menuItems = [
     { label: "Home", icon: <FaHome />, path: "/client/home" },
@@ -49,8 +59,8 @@ const ClientSidebar = ({ isOpen }) => {
           className="w-10 h-10 rounded-full"
         />
         <div>
-          <h2 className="text-sm font-semibold">Client Name</h2>
-          <p className="text-xs text-gray-400">client@example.com</p>
+          <h2 className="text-sm font-semibold">{client?.name || "Client Name"}</h2>
+          <p className="text-xs text-gray-400">{client?.email || "client@example.com"}</p>
         </div>
       </div>
 

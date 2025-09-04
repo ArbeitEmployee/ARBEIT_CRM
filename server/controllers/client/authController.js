@@ -59,8 +59,7 @@ export const registerClient = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-// LOGIN CLIENT
+// LOGIN CLIENT - Updated to return client data
 export const loginClient = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -81,12 +80,23 @@ export const loginClient = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    res.json({ message: "Login successful", token });
+    // Return client data along with token
+    res.json({ 
+      message: "Login successful", 
+      token,
+      client: {
+        id: client._id,
+        name: client.name,
+        email: client.email,
+        phone: client.phone,
+        companyName: client.companyName,
+        // Add other fields you want to store
+      }
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 // FORGOT PASSWORD - SEND OTP
 export const forgotPassword = async (req, res) => {
   try {

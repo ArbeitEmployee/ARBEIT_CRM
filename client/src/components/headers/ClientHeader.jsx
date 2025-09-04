@@ -1,7 +1,29 @@
-import { FaUserCircle, FaBars, FaBell, FaCog } from "react-icons/fa";
-import { NavLink } from "react-router-dom";
+// ClientHeader.jsx - Updated version
+import { FaUserCircle, FaBars, FaBell, FaCog, FaSignOutAlt, FaKey } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 
-const ClientHeader = ({ onToggleSidebar }) => {
+const ClientHeader = ({ onToggleSidebar, client: propClient, onLogout }) => {
+  const navigate = useNavigate();
+
+  // Read from localStorage if not passed as prop
+  const storedClient = JSON.parse(localStorage.getItem("crm_client"));
+  const client = propClient || storedClient;
+
+  // Handle logout functionality
+  const handleLogout = () => {
+    // Clear client data from localStorage
+    localStorage.removeItem("crm_client_token");
+    localStorage.removeItem("crm_client");
+    
+    // If a custom logout function is provided as prop, call it
+    if (onLogout && typeof onLogout === "function") {
+      onLogout();
+    }
+    
+    // Redirect to login page
+    navigate("/client/login");
+  };
+
   return (
     <header className="bg-gray-600 text-white flex items-center justify-between px-4 py-3 shadow-md fixed top-0 left-0 right-0 z-50 h-14">
       {/* Left - Sidebar Toggle + Brand */}
@@ -15,10 +37,10 @@ const ClientHeader = ({ onToggleSidebar }) => {
 
       {/* Right Section */}
       <div className="flex items-center gap-6">
-        {/* Settings */}
+        {/* Change Password */}
         <div className="flex items-center gap-1 cursor-pointer hover:text-gray-300">
-          <FaCog className="text-xl" />
-          <span className="hidden md:inline text-sm">Settings</span>
+          <FaKey className="text-xl" />
+          <span className="hidden md:inline text-sm">Change Password</span>
         </div>
 
         {/* Notifications */}
@@ -32,8 +54,14 @@ const ClientHeader = ({ onToggleSidebar }) => {
         {/* User */}
         <div className="flex items-center gap-2 cursor-pointer">
           <FaUserCircle className="text-2xl" />
-          <span className="hidden md:inline">Client</span>
+          <span className="hidden md:inline">{client?.name || "Client"}</span>
         </div>
+
+        {/* Logout */}
+        <button onClick={handleLogout} className="flex items-center gap-1 hover:text-gray-300">
+          <FaSignOutAlt className="text-xl" />
+          <span className="hidden md:inline text-sm">Logout</span>
+        </button>
       </div>
     </header>
   );

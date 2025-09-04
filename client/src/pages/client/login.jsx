@@ -1,3 +1,4 @@
+// ClientLogin.jsx - Updated version
 import { useState } from "react";
 import { FiMail, FiLock } from "react-icons/fi";
 import { toast } from "react-hot-toast";
@@ -12,6 +13,7 @@ const ClientLogin = () => {
     email: "",
     password: ""
   });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -31,6 +33,8 @@ const ClientLogin = () => {
       return;
     }
     
+    setLoading(true);
+    
     try {
       const res = await fetch("http://localhost:5000/api/client/login", {
         method: "POST",
@@ -38,7 +42,13 @@ const ClientLogin = () => {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        data = { message: text || "" };
+      }
 
       if (!res.ok) {
         toast.error(data.message || "Login failed");
@@ -47,8 +57,9 @@ const ClientLogin = () => {
 
       toast.success("Login successful!");
       
-      // Save token in localStorage
+      // Save token and client data in localStorage
       localStorage.setItem("crm_client_token", data.token);
+      localStorage.setItem("crm_client", JSON.stringify(data.client));
       
       // Remember me functionality
       if (rememberMe) {
@@ -64,6 +75,8 @@ const ClientLogin = () => {
 
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -152,9 +165,14 @@ const ClientLogin = () => {
           {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition"
+            disabled={loading}
+            className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+              loading
+                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                : "bg-white text-[#0c123d] hover:bg-gray-200"
+            }`}
           >
-            LOG IN
+            {loading ? "Logging in..." : "LOG IN"}
           </button>
         </form>
 
