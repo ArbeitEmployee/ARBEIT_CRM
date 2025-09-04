@@ -1,6 +1,5 @@
-
 import { useState, useEffect, useRef } from "react";
-import { FaPlus, FaFilter, FaSearch, FaSyncAlt, FaUser, FaUserCheck, FaUserTimes, FaUserClock, FaChevronRight, FaTimes, FaEdit, FaTrash } from "react-icons/fa";
+import { FaPlus, FaSearch, FaSyncAlt, FaUser, FaUserCheck, FaUserTimes, FaUserClock, FaChevronRight, FaTimes, FaEdit, FaTrash } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
 import * as XLSX from 'xlsx';
@@ -586,9 +585,6 @@ const StaffsPage = () => {
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
-              </button>
-              <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
-                <FaFilter /> Filters
               </button>
             </div>
           </div>

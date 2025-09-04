@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { 
-  FaPlus, FaFilter, FaSearch, FaSyncAlt, FaChevronRight, 
+  FaPlus, FaSearch, FaSyncAlt, FaChevronRight, 
   FaTimes, FaEdit, FaTrash, FaChevronDown, FaFileImport,
   FaReceipt
 } from "react-icons/fa";
@@ -23,7 +23,6 @@ const ExpensesPage = () => {
   const [stats, setStats] = useState({
     total: 0,
     billable: 0,
-    nonBillable: 0,
     notInvoiced: 0
   });
   const [newExpense, setNewExpense] = useState({
@@ -61,7 +60,6 @@ const ExpensesPage = () => {
     "Other"
   ];
 
-
   const paymentModeOptions = [
     "CASH",
     "BANK",
@@ -70,6 +68,7 @@ const ExpensesPage = () => {
     "DIGITAL WALLET",
     "OTHER"
   ];
+  
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
 
@@ -98,7 +97,6 @@ const ExpensesPage = () => {
       setStats(data.stats || {
         total: 0,
         billable: 0,
-        nonBillable: 0,
         notInvoiced: 0
       });
     } catch (error) {
@@ -107,7 +105,6 @@ const ExpensesPage = () => {
       setStats({
         total: 0,
         billable: 0,
-        nonBillable: 0,
         notInvoiced: 0
       });
     }
@@ -735,7 +732,7 @@ const handleSaveExpense = async () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {/* Total Expenses */}
             <div className="bg-white p-4 rounded-lg shadow border">
               <div className="flex items-center justify-between">
@@ -758,19 +755,6 @@ const handleSaveExpense = async () => {
                 </div>
                 <div className="bg-green-100 p-3 rounded-full">
                   <FaReceipt className="text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Non-Billable Expenses */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Non-Billable</p>
-                  <p className="text-2xl font-bold">{formatCurrency(stats.nonBillable)}</p>
-                </div>
-                <div className="bg-red-100 p-3 rounded-full">
-                  <FaReceipt className="text-red-600" />
                 </div>
               </div>
             </div>
@@ -811,9 +795,6 @@ const handleSaveExpense = async () => {
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
-              </button>
-              <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
-                <FaFilter /> Filters
               </button>
             </div>
           </div>
@@ -1056,43 +1037,24 @@ const handleSaveExpense = async () => {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <div>
+              <div className="text-sm text-gray-700">
                 Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredExpenses.length)} of {filteredExpenses.length} entries
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center space-x-2">
                 <button
-                  className="px-3 py-1 border rounded"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  className="px-3 py-1 border rounded disabled:opacity-50"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
                 </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  
-                  return (
-                    <button
-                      key={pageNum}
-                      className={`px-3 py-1 border rounded ${currentPage === pageNum ? 'bg-black text-white' : ''}`}
-                      onClick={() => setCurrentPage(pageNum)}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
                 <button
-                  className="px-3 py-1 border rounded"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded disabled:opacity-50"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages || totalPages === 0}
                 >
                   Next
                 </button>
@@ -1106,104 +1068,79 @@ const handleSaveExpense = async () => {
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Import Expenses</h3>
-              <button onClick={closeImportModal} className="text-gray-500 hover:text-gray-700">
-                <FaTimes />
-              </button>
-            </div>
-
-            {!importResult && (
+            <h2 className="text-xl font-semibold mb-4">Import Expenses</h2>
+            
+            {importProgress ? (
+              <div className="mb-4">
+                <p className="mb-2">{importProgress.message}</p>
+                {importProgress.status === 'processing' && (
+                  <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${importProgress.progress}%` }}></div>
+                  </div>
+                )}
+              </div>
+            ) : importResult ? (
+              <div className={`mb-4 p-4 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {importResult.success ? (
+                  <>
+                    <p className="font-semibold">Import completed!</p>
+                    <p>{importResult.imported} expenses imported successfully.</p>
+                    {importResult.errorCount > 0 && (
+                      <p className="mt-2">{importResult.errorCount} rows had errors and were skipped.</p>
+                    )}
+                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
+                      <div className="mt-2 text-sm">
+                        <p className="font-medium">Error details:</p>
+                        <ul className="list-disc pl-5 mt-1">
+                          {importResult.errorMessages.slice(0, 5).map((error, index) => (
+                            <li key={index}>{error}</li>
+                          ))}
+                          {importResult.errorMessages.length > 5 && (
+                            <li>...and {importResult.errorMessages.length - 5} more errors</li>
+                          )}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p>Import failed: {importResult.message}</p>
+                )}
+              </div>
+            ) : (
               <>
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">
-                    Upload a CSV or Excel file with expense data. The file should include columns for:
-                    Category, Amount, Name, Date, Customer (company name- must exist in customer field), and other optional fields.
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Download a <a href="#" className="text-blue-500">template file</a> for reference.
-                  </p>
-                </div>
-
+                <p className="mb-4">Upload an Excel or CSV file to import expenses.</p>
                 <div className="mb-4">
                   <input
                     type="file"
-                    ref={fileInputRef}
+                    accept=".xlsx,.xls,.csv"
                     onChange={handleFileChange}
-                    accept=".csv,.xlsx,.xls"
-                    className="w-full border rounded p-2"
+                    ref={fileInputRef}
+                    className="w-full"
                   />
                 </div>
-
-                {importProgress && (
-                  <div className="mb-4 p-2 bg-blue-50 text-blue-700 rounded text-sm">
-                    {importProgress.message}
-                  </div>
-                )}
-
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={closeImportModal}
-                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleImportSubmit}
-                    disabled={!importFile || importProgress}
-                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
-                  >
-                    Import
-                  </button>
-                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Your file should include these columns: Category, Amount, Name, Date, Customer (company name), Project, Reference ID, Payment Mode. Include headers in the first row.
+                </p>
               </>
             )}
 
-            {importResult && (
-              <>
-                {importResult.success ? (
-                  <div className="mb-4">
-                    <div className="p-3 bg-green-50 text-green-700 rounded mb-3">
-                      <p className="font-medium">Import completed successfully!</p>
-                      <p className="text-sm mt-1">
-                        Imported {importResult.imported} expenses.
-                        {importResult.errorCount > 0 && (
-                          <span> {importResult.errorCount} rows had errors.</span>
-                        )}
-                      </p>
-                    </div>
-
-                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
-                      <div className="mb-4">
-                        <p className="font-medium text-sm mb-1">Error details:</p>
-                        <div className="max-h-40 overflow-y-auto text-xs">
-                          {importResult.errorMessages.map((error, index) => (
-                            <div key={index} className="p-2 border-b">
-                              <p className="text-red-600">{error}</p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  // Changed this div to have red background and text
-                  <div className="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-200">
-                    <p className="font-medium">Import failed!</p>
-                    <p className="text-sm mt-1">{importResult.message}</p>
-                  </div>
-                )}
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={closeImportModal}
-                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
-                  >
-                    Close
-                  </button>
-                </div>
-              </>
-            )}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeImportModal}
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+              >
+                {importResult ? 'Close' : 'Cancel'}
+              </button>
+              {!importResult && !importProgress && (
+                <button
+                  onClick={handleImportSubmit}
+                  disabled={!importFile}
+                  className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                >
+                  Import
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

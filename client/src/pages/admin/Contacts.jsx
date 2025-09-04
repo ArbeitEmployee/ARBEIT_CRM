@@ -36,8 +36,7 @@ const ContactsPage = () => {
     active: 0,
     expired: 0,
     aboutToExpire: 0,
-    recentlyAdded: 0,
-    trash: 0
+    recentlyAdded: 0
   });
   const [newContact, setNewContact] = useState({
     subject: "",
@@ -94,8 +93,7 @@ const ContactsPage = () => {
         active: 0,
         expired: 0,
         aboutToExpire: 0,
-        recentlyAdded: 0,
-        trash: 0
+        recentlyAdded: 0
       });
     } catch (error) {
       console.error("Error fetching contacts:", error);
@@ -104,8 +102,7 @@ const ContactsPage = () => {
         active: 0,
         expired: 0,
         aboutToExpire: 0,
-        recentlyAdded: 0,
-        trash: 0
+        recentlyAdded: 0
       });
     }
     setLoading(false);
@@ -702,7 +699,7 @@ const ContactsPage = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Active Contracts */}
             <div className="bg-white p-4 rounded-lg shadow border">
               <div className="flex items-center justify-between">
@@ -751,19 +748,6 @@ const ContactsPage = () => {
                 </div>
                 <div className="bg-green-100 p-3 rounded-full">
                   <FaPlus className="text-green-600" />
-                </div>
-              </div>
-            </div>
-
-            {/* Trash */}
-            <div className="bg-white p-4 rounded-lg shadow border">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-500 text-sm">Trash</p>
-                  <p className="text-2xl font-bold">{stats.trash}</p>
-                </div>
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <FaTrash className="text-gray-600" />
                 </div>
               </div>
             </div>
@@ -1016,26 +1000,26 @@ const ContactsPage = () => {
                         <>
                           <td className="p-3 border-0">
                             <span className={`px-2 py-1 rounded-full text-xs ${
-                              contact.contractType === "Express Contract" ? "bg-blue-100 text-blue-800" :
-                              contact.contractType === "Standard Contract" ? "bg-green-100 text-green-800" :
-                              "bg-yellow-100 text-yellow-800"
+                              contact.contractType === 'Express Contract' ? 'bg-blue-100 text-blue-800' :
+                              contact.contractType === 'Standard Contract' ? 'bg-green-100 text-green-800' :
+                              'bg-yellow-100 text-yellow-800'
                             }`}>
                               {contact.contractType}
                             </span>
                           </td>
                           <td className="p-3 border-0">{formatCurrency(contact.contractValue)}</td>
                           <td className="p-3 border-0">{formatDate(contact.endDate)}</td>
-                          <td className="p-3 border-0 rounded-r-lg">
-                            <div className="flex space-x-2">
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex items-center space-x-2">
                               <button
-                                onClick={() => handleEditContact(contact)}
                                 className="text-blue-600 hover:text-blue-800"
+                                onClick={() => handleEditContact(contact)}
                               >
                                 <FaEdit />
                               </button>
                               <button
-                                onClick={() => handleDeleteContact(contact._id)}
                                 className="text-red-600 hover:text-red-800"
+                                onClick={() => handleDeleteContact(contact._id)}
                               >
                                 <FaTrash />
                               </button>
@@ -1046,9 +1030,9 @@ const ContactsPage = () => {
                         <>
                           <td className="p-3 border-0">
                             <span className={`px-2 py-1 rounded-full text-xs ${
-                              contact.contractType === "Express Contract" ? "bg-blue-100 text-blue-800" :
-                              contact.contractType === "Standard Contract" ? "bg-green-100 text-green-800" :
-                              "bg-yellow-100 text-yellow-800"
+                              contact.contractType === 'Express Contract' ? 'bg-blue-100 text-blue-800' :
+                              contact.contractType === 'Standard Contract' ? 'bg-green-100 text-green-800' :
+                              'bg-yellow-100 text-yellow-800'
                             }`}>
                               {contact.contractType}
                             </span>
@@ -1059,22 +1043,22 @@ const ContactsPage = () => {
                           <td className="p-3 border-0">{contact.project}</td>
                           <td className="p-3 border-0">
                             <span className={`px-2 py-1 rounded-full text-xs ${
-                              contact.signature === "Signed" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                              contact.signature === 'Signed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                             }`}>
                               {contact.signature}
                             </span>
                           </td>
-                          <td className="p-3 border-0 rounded-r-lg">
-                            <div className="flex space-x-2">
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex items-center space-x-2">
                               <button
-                                onClick={() => handleEditContact(contact)}
                                 className="text-blue-600 hover:text-blue-800"
+                                onClick={() => handleEditContact(contact)}
                               >
                                 <FaEdit />
                               </button>
                               <button
-                                onClick={() => handleDeleteContact(contact._id)}
                                 className="text-red-600 hover:text-red-800"
+                                onClick={() => handleDeleteContact(contact._id)}
                               >
                                 <FaTrash />
                               </button>
@@ -1090,23 +1074,45 @@ const ContactsPage = () => {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-gray-700">
                 Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredContacts.length)} of {filteredContacts.length} entries
               </div>
               <div className="flex items-center space-x-2">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  className="border rounded px-3 py-1 text-sm disabled:opacity-50"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
                 </button>
-                <span className="text-sm">
-                  Page {currentPage} of {totalPages}
-                </span>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={i}
+                      className={`border rounded px-3 py-1 text-sm ${currentPage === pageNum ? 'bg-black text-white' : ''}`}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+                {totalPages > 5 && (
+                  <span className="px-2">...</span>
+                )}
                 <button
-                  className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  className="border rounded px-3 py-1 text-sm disabled:opacity-50"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
                 >
                   Next
@@ -1121,81 +1127,87 @@ const ContactsPage = () => {
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Import Contracts</h2>
+            <h2 className="text-xl font-semibold mb-4">Import Contacts</h2>
             
-            {importProgress ? (
+            {!importProgress && !importResult && (
+              <>
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Upload an Excel file (.xlsx) with contact data. The file should have columns for:
+                    Subject, Customer ID, Contract Type, Contract Value, Start Date, End Date, Project, and Signature.
+                  </p>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    onChange={handleFileChange}
+                    className="w-full border rounded p-2"
+                  />
+                </div>
+                
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleImportSubmit}
+                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+                  >
+                    Import
+                  </button>
+                </div>
+              </>
+            )}
+
+            {importProgress && (
               <div className="mb-4">
-                <p className="text-gray-600">{importProgress.message}</p>
-                {importProgress.status === 'processing' && (
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${importProgress.progress}%` }}></div>
-                  </div>
-                )}
+                <p className="text-sm text-gray-600">{importProgress.message}</p>
+                <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: '50%' }}></div>
+                </div>
               </div>
-            ) : importResult ? (
-              <div className={`mb-4 p-4 rounded border ${
-                importResult.success ? "bg-green-100 border-green-400 text-green-800" : "bg-red-100 border-red-400 text-red-800"
-              }`}>
+            )}
+
+            {importResult && (
+              <div className="mb-4">
                 {importResult.success ? (
                   <>
-                    <p className="font-semibold">Import completed successfully!</p>
-                    <p className="mt-2">Imported: {importResult.imported} contracts</p>
-                    {importResult.errorCount > 0 && (
-                      <p className="mt-2">Failed: {importResult.errorCount} contracts</p>
-                    )}
-                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
-                      <div className="mt-2">
-                        <p className="font-semibold">Errors:</p>
-                        <ul className="list-disc pl-5 mt-1">
-                          {importResult.errorMessages.map((error, index) => (
-                            <li key={index} className="text-sm">{error}</li>
-                          ))}
-                        </ul>
+                    <p className="text-green-600 font-medium">Import completed successfully!</p>
+                    <p className="text-sm text-gray-600 mt-2">
+                      Imported: {importResult.imported} contacts
+                      {importResult.errorCount > 0 && (
+                        <span>, Errors: {importResult.errorCount}</span>
+                      )}
+                    </p>
+                    {importResult.errorCount > 0 && importResult.errorMessages && (
+                      <div className="mt-3 p-2 bg-red-50 rounded border border-red-200 max-h-32 overflow-y-auto">
+                        <p className="text-sm font-medium text-red-800">Error details:</p>
+                        {importResult.errorMessages.map((error, index) => (
+                          <p key={index} className="text-xs text-red-600 mt-1">{error}</p>
+                        ))}
                       </div>
                     )}
                   </>
                 ) : (
                   <>
-                    <p className="font-semibold">Import failed!</p>
-                    <p className="mt-2">{importResult.message}</p>
+                    <p className="text-red-600 font-medium">Import failed!</p>
+                    <p className="text-sm text-gray-600 mt-2">{importResult.message}</p>
                   </>
                 )}
-              </div>
-            ) : (
-              <>
-                <p className="text-gray-600 mb-4">Upload an Excel file to import contracts.</p>
-                <div className="mb-4">
-                  <input
-                    type="file"
-                    accept=".xlsx,.xls"
-                    onChange={handleFileChange}
-                    ref={fileInputRef}
-                    className="w-full border rounded p-2"
-                  />
+                
+                <div className="flex justify-end mt-4">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
+                  >
+                    Close
+                  </button>
                 </div>
-                <p className="text-sm text-gray-500 mb-4">
-                  The Excel file should have columns: Subject, Customer, Contract Type, Contract Value, Start Date, End Date, Project, Signature
-                </p>
-              </>
+              </div>
             )}
-
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={closeImportModal}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
-              >
-                {importResult ? "Close" : "Cancel"}
-              </button>
-              {!importResult && !importProgress && (
-                <button
-                  onClick={handleImportSubmit}
-                  disabled={!importFile}
-                  className="px-4 py-2 bg-black text-white rounded text-sm hover:bg-gray-800 disabled:opacity-50"
-                >
-                  Import
-                </button>
-              )}
-            </div>
           </div>
         </div>
       )}
