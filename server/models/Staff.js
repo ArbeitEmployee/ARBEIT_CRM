@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const staffSchema = new mongoose.Schema({
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+    index: true
+  },
   name: {
     type: String,
     required: [true, "Name is required"],
@@ -25,7 +31,6 @@ const staffSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, "Email is required"],
-    unique: true,
     trim: true,
     lowercase: true,
     match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, "Please provide a valid email address"]
@@ -43,16 +48,16 @@ const staffSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
-staffSchema.index({ name: 1 });
-staffSchema.index({ email: 1 });
-staffSchema.index({ active: 1 });
-staffSchema.index({ department: 1 });
-staffSchema.index({ position: 1 });
+staffSchema.index({ admin: 1, email: 1 }, { unique: true }); // each admin must have unique staff email
+staffSchema.index({ admin: 1, name: 1 });
+staffSchema.index({ admin: 1, department: 1 });
+staffSchema.index({ admin: 1, position: 1 });
+staffSchema.index({ admin: 1, active: 1 });
 
 // Text index for search functionality
 staffSchema.index({
   name: 'text',
-  email: 'text', 
+  email: 'text',
   position: 'text',
   department: 'text'
 });

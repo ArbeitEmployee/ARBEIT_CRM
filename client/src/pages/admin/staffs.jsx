@@ -20,7 +20,6 @@ const StaffsPage = () => {
     totalStaffs: 0,
     activeStaffs: 0,
     inactiveStaffs: 0,
-    
   });
   const [newStaff, setNewStaff] = useState({
     name: "",
@@ -39,6 +38,22 @@ const StaffsPage = () => {
 
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
+
+  // Get auth token from localStorage (using the correct key "crm_token")
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
   // Close export menu when clicking outside
   useEffect(() => {
@@ -60,22 +75,26 @@ const StaffsPage = () => {
   const fetchStaffs = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/staffs");
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/staffs", config);
       setStaffs(data.staffs || []);
       setStats({
         totalStaffs: data.stats?.totalStaffs ?? 0,
         activeStaffs: data.stats?.activeStaffs ?? 0,
         inactiveStaffs: data.stats?.inactiveStaffs ?? 0,
-        
       });
     } catch (error) {
       console.error("Error fetching staffs:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        // Redirect to login page
+        window.location.href = "/admin/login";
+      }
       setStaffs([]);
       setStats({
         totalStaffs: 0,
         activeStaffs: 0,
         inactiveStaffs: 0,
-       
       });
     }
     setLoading(false);
@@ -88,7 +107,8 @@ const StaffsPage = () => {
   // Toggle staff active status
   const toggleStaffActive = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/staffs/${id}/active`);
+      const config = createAxiosConfig();
+      await axios.patch(`http://localhost:5000/api/staffs/${id}/toggle-active`, {}, config);
       fetchStaffs();
     } catch (error) {
       console.error("Error updating staff status:", error);
@@ -100,7 +120,7 @@ const StaffsPage = () => {
   const filteredStaffs = (staffs || []).filter((s) =>
     Object.values(s).some((val) =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
-  ));
+    ));
 
   // Pagination
   const totalPages = Math.ceil(filteredStaffs.length / entriesPerPage);
@@ -134,9 +154,11 @@ const StaffsPage = () => {
     setIsSaving(true);
     
     try {
+      const config = createAxiosConfig();
+      
       if (editingStaff) {
         // Update existing staff
-        const response = await axios.put(`http://localhost:5000/api/staffs/${editingStaff._id}`, newStaff);
+        const response = await axios.put(`http://localhost:5000/api/staffs/${editingStaff._id}`, newStaff, config);
         if (response.status === 200) {
           setShowNewStaffForm(false);
           setEditingStaff(null);
@@ -145,7 +167,7 @@ const StaffsPage = () => {
         }
       } else {
         // Create new staff
-        const response = await axios.post("http://localhost:5000/api/staffs", newStaff);
+        const response = await axios.post("http://localhost:5000/api/staffs", newStaff, config);
         if (response.status === 201) {
           setShowNewStaffForm(false);
           fetchStaffs();
@@ -186,7 +208,8 @@ const StaffsPage = () => {
   const handleDeleteStaff = async (id) => {
     if (window.confirm("Are you sure you want to delete this staff?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/staffs/${id}`);
+        const config = createAxiosConfig();
+        await axios.delete(`http://localhost:5000/api/staffs/${id}`, config);
         fetchStaffs();
         alert("Staff deleted successfully!");
       } catch (error) {
@@ -219,11 +242,15 @@ const StaffsPage = () => {
     try {
       setImportProgress({ status: 'uploading', message: 'Uploading file...' });
       
-      const { data } = await axios.post('http://localhost:5000/api/staffs/import', formData, {
+      const token = getAuthToken();
+      const config = {
         headers: {
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
-      });
+      };
+      
+      const { data } = await axios.post('http://localhost:5000/api/staffs/import', formData, config);
 
       setImportProgress(null);
       setImportResult({
@@ -255,6 +282,24 @@ const StaffsPage = () => {
     }
   };
 
+  // Delete selected staffs
+  const handleDeleteSelected = async () => {
+    if (window.confirm(`Delete ${selectedStaffs.length} selected staffs?`)) {
+      try {
+        const config = createAxiosConfig();
+        await Promise.all(selectedStaffs.map(id =>
+          axios.delete(`http://localhost:5000/api/staffs/${id}`, config)
+        ));
+        setSelectedStaffs([]);
+        fetchStaffs();
+        alert("Selected staffs deleted!");
+      } catch (error) {
+        console.error("Error deleting selected staffs:", error);
+        alert("Error deleting selected staffs.");
+      }
+    }
+  };
+
   // Export functions
   const exportToExcel = () => {
     const dataToExport = filteredStaffs.map(staff => ({
@@ -264,7 +309,7 @@ const StaffsPage = () => {
       Email: staff.email,
       Phone: staff.phone,
       'Active Staff': staff.active ? 'Yes' : 'No',
-      'Date Created': new Date(staff.dateCreated).toLocaleString()
+      'Date Created': new Date(staff.dateCreated || staff.createdAt).toLocaleString()
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -282,7 +327,7 @@ const StaffsPage = () => {
       Email: staff.email,
       Phone: staff.phone,
       'Active Staff': staff.active ? 'Yes' : 'No',
-      'Date Created': new Date(staff.dateCreated).toLocaleString()
+      'Date Created': new Date(staff.dateCreated || staff.createdAt).toLocaleString()
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
@@ -319,10 +364,10 @@ const StaffsPage = () => {
       staff.email,
       staff.phone,
       staff.active ? 'Yes' : 'No',
-      new Date(staff.dateCreated).toLocaleString()
+      new Date(staff.dateCreated || staff.createdAt).toLocaleString()
     ]);
 
-    autoTable(doc,{
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       margin: { top: 20 },
@@ -371,7 +416,7 @@ const StaffsPage = () => {
         staff.email,
         staff.phone,
         staff.active ? 'Yes' : 'No',
-        new Date(staff.dateCreated).toLocaleString()
+        new Date(staff.dateCreated || staff.createdAt).toLocaleString()
       ].forEach(value => {
         printWindow.document.write(`<td>${value}</td>`);
       });
@@ -412,6 +457,14 @@ const StaffsPage = () => {
               onClick={() => {
                 setShowNewStaffForm(false);
                 setEditingStaff(null);
+                setNewStaff({
+                  name: "",
+                  position: "",
+                  department: "",
+                  phone: "",
+                  email: "",
+                  active: true
+                });
               }}
               className="text-gray-500 hover:text-gray-700"
             >
@@ -504,6 +557,14 @@ const StaffsPage = () => {
               onClick={() => {
                 setShowNewStaffForm(false);
                 setEditingStaff(null);
+                setNewStaff({
+                  name: "",
+                  position: "",
+                  department: "",
+                  phone: "",
+                  email: "",
+                  active: true
+                });
               }}
               className="px-4 py-2 border rounded text-sm"
             >
@@ -521,53 +582,54 @@ const StaffsPage = () => {
         </div>
       ) : (
         <>
-         {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        {/* Total Staffs */}
-        <div className="bg-white p-4 rounded-lg shadow border">
-            <div className="flex items-center justify-between">
-            <div>
-                <p className="text-gray-500 text-sm">Total Staffs</p>
-                <p className="text-2xl font-bold">{stats.totalStaffs}</p>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+            {/* Total Staffs */}
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Total Staffs</p>
+                  <p className="text-2xl font-bold">{stats.totalStaffs}</p>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <FaUser className="text-blue-600" />
+                </div>
+              </div>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-                <FaUser className="text-blue-600" />
-            </div>
-            </div>
-        </div>
 
-        {/* Active Staffs */}
-        <div className="bg-white p-4 rounded-lg shadow border">
-            <div className="flex items-center justify-between">
-            <div>
-                <p className="text-gray-500 text-sm">Active Staffs</p>
-                <p className="text-2xl font-bold">{stats.activeStaffs}</p>
+            {/* Active Staffs */}
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Active Staffs</p>
+                  <p className="text-2xl font-bold">{stats.activeStaffs}</p>
+                </div>
+                <div className="bg-green-100 p-3 rounded-full">
+                  <FaUserCheck className="text-green-600" />
+                </div>
+              </div>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-                <FaUserCheck className="text-green-600" />
-            </div>
-            </div>
-        </div>
 
-        {/* Inactive Staffs */}
-        <div className="bg-white p-4 rounded-lg shadow border">
-            <div className="flex items-center justify-between">
-            <div>
-                <p className="text-gray-500 text-sm">Inactive Staffs</p>
-                <p className="text-2xl font-bold">{stats.inactiveStaffs}</p>
+            {/* Inactive Staffs */}
+            <div className="bg-white p-4 rounded-lg shadow border">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-500 text-sm">Inactive Staffs</p>
+                  <p className="text-2xl font-bold">{stats.inactiveStaffs}</p>
+                </div>
+                <div className="bg-red-100 p-3 rounded-full">
+                  <FaUserTimes className="text-red-600" />
+                </div>
+              </div>
             </div>
-            <div className="bg-red-100 p-3 rounded-full">
-                <FaUserTimes className="text-red-600" />
-            </div>
-            </div>
-        </div>
-        </div>
+          </div>
 
           {/* Top action buttons */}
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button 
-                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+                className="px-3 py-1 text-sm rounded flex items-center gap-2" 
+                style={{ backgroundColor: '#333333', color: 'white' }}
                 onClick={() => setShowNewStaffForm(true)}
               >
                 <FaPlus /> New Staff
@@ -594,32 +656,17 @@ const StaffsPage = () => {
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
+                {/* Delete Selected button */}
+                {selectedStaffs.length > 0 && (
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    onClick={handleDeleteSelected}
+                  >
+                    Delete Selected ({selectedStaffs.length})
+                  </button>
+                )}
 
-
-                {/* Delete Selected button before the select */}
-      {selectedStaffs.length > 0 && (
-        <button
-          className="bg-red-600 text-white px-3 py-1 rounded"
-          onClick={async () => {
-            if (window.confirm(`Delete ${selectedStaffs.length} selected staffs?`)) {
-              try {
-                await Promise.all(selectedStaffs.map(id =>
-                  axios.delete(`http://localhost:5000/api/staffs/${id}`)
-                ));
-                setSelectedStaffs([]);
-                fetchStaffs();
-                alert("Selected staffs deleted!");
-              } catch {
-                alert("Error deleting selected staffs.");
-              }
-            }
-          }}
-        >
-          Delete Selected ({selectedStaffs.length})
-        </button>
-      )}
-
-                      {/* Entries per page */}
+                {/* Entries per page */}
                 <select
                   className="border rounded px-2 py-1 text-sm"
                   value={entriesPerPage}
@@ -738,11 +785,11 @@ const StaffsPage = () => {
                 </thead>
                 <tbody>
                   {currentData.map((staff) => (
-                      <tr
-                        key={staff._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50"
-                        style={{ color: 'black' }}
-                      >
+                    <tr
+                      key={staff._id}
+                      className="bg-white shadow rounded-lg hover:bg-gray-50"
+                      style={{ color: 'black' }}
+                    >
                       <td className="p-3 rounded-l-lg border-0">
                         <div className="flex items-center">
                           <input
@@ -800,7 +847,7 @@ const StaffsPage = () => {
                             </span>
                           </td>
                           <td className="p-3 border-0">
-                            {new Date(staff.dateCreated).toLocaleString()}
+                            {new Date(staff.dateCreated || staff.createdAt).toLocaleString()}
                           </td>
                           <td className="p-3 rounded-r-lg border-0">
                             <div className="flex space-x-2">

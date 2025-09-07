@@ -1,42 +1,30 @@
-import express from 'express';
-import multer from 'multer';
+// server/routes/admin/staffRoutes.js
+import express from "express";
+import { protect } from "../../middlewares/authMiddleware.js";
 import {
-  getAllStaffs,
+  getStaffs,
   getStaffById,
   createStaff,
   updateStaff,
-  toggleStaffActive,
   deleteStaff,
+  toggleStaffActive,
   importStaffs
-} from '../../controllers/admin/staffController.js';
-
-
-
-const upload = multer();
+} from "../../controllers/admin/staffController.js";
+import multer from "multer";
 
 const router = express.Router();
 
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
-
-// GET /api/staffs - Get all staffs
-router.get('/', getAllStaffs);
-
-// GET /api/staffs/:id - Get single staff
-router.get('/:id', getStaffById);
-
-// POST /api/staffs - Create new staff
-router.post('/', createStaff);
-
-// PUT /api/staffs/:id - Update staff
-router.put('/:id', updateStaff);
-
-// PUT /api/staffs/:id/active - Toggle staff active status
-router.put('/:id/active', toggleStaffActive);
-
-// DELETE /api/staffs/:id - Delete staff
-router.delete('/:id', deleteStaff);
-
-// POST /api/staffs/import - Import staffs from CSV/Excel
-router.post('/import', upload.single('file'), importStaffs);
+// ✅ All staff routes (protected with JWT middleware)
+router.get("/", protect, getStaffs);           // GET all staffs
+router.get("/:id", protect, getStaffById);     // GET staff by ID
+router.post("/", protect, createStaff);        // CREATE staff
+router.put("/:id", protect, updateStaff);      // UPDATE staff
+router.patch("/:id/toggle-active", protect, toggleStaffActive); // TOGGLE active status
+router.delete("/:id", protect, deleteStaff);   // DELETE staff
+router.post("/import", protect, upload.single('file'), importStaffs); // IMPORT staffs
 
 export default router;
