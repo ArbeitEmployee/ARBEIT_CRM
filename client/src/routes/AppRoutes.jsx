@@ -55,6 +55,7 @@ import AnnouncementsPage from "../pages/admin/utilities/Announcements";
 import GoalsPage from "../pages/admin/utilities/Goals";
 import AllAdmins from "../pages/admin/admins/all";
 import PendingAdmins from "../pages/admin/admins/pending";
+import ChangePassword from "../pages/admin/changePassword";
 
 
 const AppRoutes = () => {
@@ -93,6 +94,7 @@ const AppRoutes = () => {
               <Route path="reports/sales" element={<SalesReports />} />
               <Route path="reports/expenses" element={<ExpenseReports />} />
               <Route path="reports/expenses-vs-income" element={<ExpensesVsIncome />} />
+              <Route path="change-password" element={<ChangePassword/>} />
               
               <Route path="/credit-notes/new" element={<CreditNoteForm/>} />
               <Route path="sales/items" element={<Items/>} />

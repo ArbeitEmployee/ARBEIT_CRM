@@ -29,6 +29,11 @@ const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
     navigate("/admin/login");
   };
 
+  // Navigate to change password page
+  const handleChangePassword = () => {
+    navigate("/admin/change-password");
+  };
+
   return (
     <header className="bg-gray-600 text-white flex items-center justify-between px-4 py-3 shadow-md fixed top-0 left-0 right-0 z-50 h-14">
       {/* Left - Sidebar Toggle + Brand */}
@@ -53,8 +58,10 @@ const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
       <div className="flex items-center gap-6">
         {/* Customer Area + Change Password */}
         <div className="flex items-center gap-4">
-          <h1 className="text-sm text-gray-300">Customer Area</h1>
-          <div className="flex items-center gap-1 cursor-pointer hover:text-gray-300">
+          <div 
+            className="flex items-center gap-1 cursor-pointer hover:text-gray-300"
+            onClick={handleChangePassword}
+          >
             <FaKey className="text-xl" />
             <span className="hidden md:inline text-sm">Change Password</span>
           </div>
