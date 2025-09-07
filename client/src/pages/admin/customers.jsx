@@ -104,7 +104,22 @@ const CustomersPage = () => {
   const toggleCustomerActive = async (id) => {
     try {
       await axios.put(`http://localhost:5000/api/customers/${id}/active`);
-      fetchCustomers();
+      // Update the customer's active status in the local state
+      setCustomers(prevCustomers =>
+        prevCustomers.map(customer =>
+          customer._id === id ? { ...customer, active: !customer.active } : customer
+        )
+      );
+      // Update stats based on the change
+      setStats(prevStats => {
+        const customer = customers.find(c => c._id === id);
+        if (!customer) return prevStats; // Should not happen
+        return {
+          ...prevStats,
+          activeCustomers: customer.active ? prevStats.activeCustomers - 1 : prevStats.activeCustomers + 1,
+          inactiveCustomers: customer.active ? prevStats.inactiveCustomers + 1 : prevStats.inactiveCustomers - 1,
+        };
+      });
     } catch (error) {
       console.error("Error updating customer status:", error);
       alert(`Error updating customer status: ${error.response?.data?.message || error.message}`);
@@ -115,7 +130,24 @@ const CustomersPage = () => {
   const toggleContactsActive = async (id) => {
     try {
       await axios.put(`http://localhost:5000/api/customers/${id}/contacts-active`);
-      fetchCustomers();
+      // Update the contact's active status in the local state
+      setCustomers(prevCustomers =>
+        prevCustomers.map(customer =>
+          customer._id === id ? { ...customer, contactsActive: !customer.contactsActive } : customer
+        )
+      );
+      // Update stats based on the change (assuming contactsActive affects active/inactive contacts stats)
+      setStats(prevStats => {
+        const customer = customers.find(c => c._id === id);
+        if (!customer) return prevStats; // Should not happen
+        // This part might need more precise logic if a single customer can have multiple contacts
+        // For simplicity, assuming contactsActive status of the customer directly reflects the contact stats
+        return {
+          ...prevStats,
+          activeContacts: customer.contactsActive ? prevStats.activeContacts - 1 : prevStats.activeContacts + 1,
+          inactiveContacts: customer.contactsActive ? prevStats.inactiveContacts + 1 : prevStats.inactiveContacts - 1,
+        };
+      });
     } catch (error) {
       console.error("Error updating contacts status:", error);
       alert(`Error updating contacts status: ${error.response?.data?.message || error.message}`);
@@ -184,7 +216,7 @@ const CustomersPage = () => {
         if (response.status === 200) {
           setShowNewCustomerForm(false);
           setEditingCustomer(null);
-          fetchCustomers();
+          fetchCustomers(); // Re-fetch to ensure all data is consistent after edit
           alert("Customer updated successfully!");
         }
       } else {
@@ -192,7 +224,7 @@ const CustomersPage = () => {
         const response = await axios.post("http://localhost:5000/api/customers", newCustomer);
         if (response.status === 201) {
           setShowNewCustomerForm(false);
-          fetchCustomers();
+          fetchCustomers(); // Re-fetch to ensure all data is consistent after new creation
           alert("Customer created successfully!");
         }
       }
@@ -241,7 +273,7 @@ const CustomersPage = () => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
       try {
         await axios.delete(`http://localhost:5000/api/customers/${id}`);
-        fetchCustomers();
+        fetchCustomers(); // Re-fetch to ensure all data is consistent after deletion
         alert("Customer deleted successfully!");
       } catch (error) {
         console.error("Error deleting customer:", error);
@@ -449,7 +481,9 @@ const CustomersPage = () => {
     }, 200);
     setShowExportMenu(false);
   };
+
   if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading customers...</div>;
+
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
@@ -898,34 +932,6 @@ const CustomersPage = () => {
 
             {/* Table */}
             <div className="overflow-x-auto">
-              {/* Bulk delete button */}
-                {/*
-                {selectedCustomers.length > 0 && (
-                  <tr>
-                    <td colSpan={compactView ? 7 : 10} className="p-2 border bg-red-50">
-                      <button
-                        className="bg-red-600 text-white px-3 py-1 rounded"
-                        onClick={async () => {
-                          if (window.confirm(`Delete ${selectedCustomers.length} selected customers?`)) {
-                            try {
-                              await Promise.all(selectedCustomers.map(id =>
-                                axios.delete(`http://localhost:5000/api/customers/${id}`)
-                              ));
-                              setSelectedCustomers([]);
-                              fetchCustomers();
-                              alert("Selected customers deleted!");
-                            } catch {
-                              alert("Error deleting selected customers.");
-                            }
-                          }
-                        }}
-                      >
-                        Delete Selected ({selectedCustomers.length})
-                      </button>
-                    </td>
-                  </tr>
-                )}
-                */}
                 
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
