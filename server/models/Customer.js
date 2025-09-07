@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const customerSchema = new mongoose.Schema({
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+    index: true
+  },
   company: {
     type: String,
     required: [true, "Company name is required"],
@@ -42,7 +48,7 @@ const customerSchema = new mongoose.Schema({
   currency: {
     type: String,
     default: "System Default",
-    enum: ["System Default", "USD", "EUR", "GBP"]
+    enum: ["System Default", "USD", "EUR", "GBP", "IDR"]
   },
   language: {
     type: String,
@@ -66,10 +72,18 @@ const customerSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
-customerSchema.index({ company: 1 });
-customerSchema.index({ email: 1 });
-customerSchema.index({ active: 1 });
-customerSchema.index({ contactsActive: 1 });
+customerSchema.index({ admin: 1, company: 1 });
+customerSchema.index({ admin: 1, email: 1 }, { unique: true }); // each admin must have unique customer email
+customerSchema.index({ admin: 1, active: 1 });
+customerSchema.index({ admin: 1, contactsActive: 1 });
+
+// Text index for search functionality
+customerSchema.index({
+  company: 'text',
+  contact: 'text',
+  email: 'text',
+  phone: 'text'
+});
 
 const Customer = mongoose.model("Customer", customerSchema);
 

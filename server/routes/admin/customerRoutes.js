@@ -1,4 +1,5 @@
 import express from "express";
+import { protect } from "../../middlewares/authMiddleware.js";
 import {
   getCustomers,
   createCustomer,
@@ -10,26 +11,28 @@ import {
 } from "../../controllers/admin/customerController.js";
 import multer from "multer";
 
-const upload = multer();
+// Configure multer for file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 const router = express.Router();
 
-// Customer routes
+// All customer routes are now protected and scoped to the logged-in admin
 router.route("/")
-  .get(getCustomers)
-  .post(createCustomer);
+  .get(protect, getCustomers)
+  .post(protect, createCustomer);
 
 router.route("/import")
-  .post(upload.single('file'), importCustomers);
+  .post(protect, upload.single('file'), importCustomers);
 
 router.route("/:id")
-  .put(updateCustomer)
-  .delete(deleteCustomer);
+  .put(protect, updateCustomer)
+  .delete(protect, deleteCustomer);
 
 router.route("/:id/active")
-  .put(updateCustomerStatus);
+  .put(protect, updateCustomerStatus);
 
 router.route("/:id/contacts-active")
-  .put(updateContactsStatus);
+  .put(protect, updateContactsStatus);
 
 export default router;
