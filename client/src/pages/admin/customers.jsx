@@ -50,25 +50,8 @@ const CustomersPage = () => {
   const filteredGroupOptions = groupOptions.filter(option =>
     option.toLowerCase().includes(groupSearchTerm.toLowerCase())
   );
-  
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
-
-  // Get auth token from localStorage
-  const getAuthToken = () => {
-    return localStorage.getItem('crm_token');
-  };
-
-  // Create axios instance with auth headers
-  const createAxiosConfig = () => {
-    const token = getAuthToken();
-    return {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    };
-  };
 
   // Close export menu when clicking outside
   useEffect(() => {
@@ -85,13 +68,20 @@ const CustomersPage = () => {
   }, []);
 
   const [loading, setLoading] = useState(true);
-  
-  // Fetch customers from API
+
+  // Helper function to get auth headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("crm_token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
+
+  // Fetch customers from API with authentication
   const fetchCustomers = async () => {
     setLoading(true);
     try {
-      const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/customers", config);
+      const { data } = await axios.get("http://localhost:5000/api/customers", {
+        headers: getAuthHeaders()
+      });
       setCustomers(data.customers || []);
       setStats({
         totalCustomers: data.stats?.totalCustomers ?? 0,
@@ -103,11 +93,16 @@ const CustomersPage = () => {
       });
     } catch (error) {
       console.error("Error fetching customers:", error);
+      
+      // Handle authentication errors
       if (error.response?.status === 401) {
-        alert("Session expired. Please login again.");
-        // Redirect to login page
+        // Token is invalid or expired
+        localStorage.removeItem("crm_token");
+        localStorage.removeItem("crm_admin");
         window.location.href = "/admin/login";
+        return;
       }
+
       setCustomers([]);
       setStats({
         totalCustomers: 0,
@@ -127,8 +122,9 @@ const CustomersPage = () => {
   // Toggle customer active status
   const toggleCustomerActive = async (id) => {
     try {
-      const config = createAxiosConfig();
-      await axios.put(`http://localhost:5000/api/customers/${id}/active`, {}, config);
+      await axios.put(`http://localhost:5000/api/customers/${id}/active`, {}, {
+        headers: getAuthHeaders()
+      });
       // Update the customer's active status in the local state
       setCustomers(prevCustomers =>
         prevCustomers.map(customer =>
@@ -147,6 +143,12 @@ const CustomersPage = () => {
       });
     } catch (error) {
       console.error("Error updating customer status:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        localStorage.removeItem("crm_admin");
+        window.location.href = "/admin/login";
+        return;
+      }
       alert(`Error updating customer status: ${error.response?.data?.message || error.message}`);
     }
   };
@@ -154,20 +156,19 @@ const CustomersPage = () => {
   // Toggle contacts active status
   const toggleContactsActive = async (id) => {
     try {
-      const config = createAxiosConfig();
-      await axios.put(`http://localhost:5000/api/customers/${id}/contacts-active`, {}, config);
+      await axios.put(`http://localhost:5000/api/customers/${id}/contacts-active`, {}, {
+        headers: getAuthHeaders()
+      });
       // Update the contact's active status in the local state
       setCustomers(prevCustomers =>
         prevCustomers.map(customer =>
           customer._id === id ? { ...customer, contactsActive: !customer.contactsActive } : customer
         )
       );
-      // Update stats based on the change (assuming contactsActive affects active/inactive contacts stats)
+      // Update stats based on the change
       setStats(prevStats => {
         const customer = customers.find(c => c._id === id);
         if (!customer) return prevStats; // Should not happen
-        // This part might need more precise logic if a single customer can have multiple contacts
-        // For simplicity, assuming contactsActive status of the customer directly reflects the contact stats
         return {
           ...prevStats,
           activeContacts: customer.contactsActive ? prevStats.activeContacts - 1 : prevStats.activeContacts + 1,
@@ -176,6 +177,12 @@ const CustomersPage = () => {
       });
     } catch (error) {
       console.error("Error updating contacts status:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        localStorage.removeItem("crm_admin");
+        window.location.href = "/admin/login";
+        return;
+      }
       alert(`Error updating contacts status: ${error.response?.data?.message || error.message}`);
     }
   };
@@ -236,11 +243,13 @@ const CustomersPage = () => {
     setIsSaving(true);
     
     try {
-      const config = createAxiosConfig();
-      
       if (editingCustomer) {
         // Update existing customer
-        const response = await axios.put(`http://localhost:5000/api/customers/${editingCustomer._id}`, newCustomer, config);
+        const response = await axios.put(
+          `http://localhost:5000/api/customers/${editingCustomer._id}`, 
+          newCustomer,
+          { headers: getAuthHeaders() }
+        );
         if (response.status === 200) {
           setShowNewCustomerForm(false);
           setEditingCustomer(null);
@@ -249,7 +258,11 @@ const CustomersPage = () => {
         }
       } else {
         // Create new customer
-        const response = await axios.post("http://localhost:5000/api/customers", newCustomer, config);
+        const response = await axios.post(
+          "http://localhost:5000/api/customers", 
+          newCustomer,
+          { headers: getAuthHeaders() }
+        );
         if (response.status === 201) {
           setShowNewCustomerForm(false);
           fetchCustomers(); // Re-fetch to ensure all data is consistent after new creation
@@ -273,6 +286,12 @@ const CustomersPage = () => {
       });
     } catch (error) {
       console.error("Error saving customer:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        localStorage.removeItem("crm_admin");
+        window.location.href = "/admin/login";
+        return;
+      }
       alert(`Error saving customer: ${error.response?.data?.message || error.message}`);
     } finally {
       setIsSaving(false);
@@ -300,12 +319,19 @@ const CustomersPage = () => {
   const handleDeleteCustomer = async (id) => {
     if (window.confirm("Are you sure you want to delete this customer?")) {
       try {
-        const config = createAxiosConfig();
-        await axios.delete(`http://localhost:5000/api/customers/${id}`, config);
+        await axios.delete(`http://localhost:5000/api/customers/${id}`, {
+          headers: getAuthHeaders()
+        });
         fetchCustomers(); // Re-fetch to ensure all data is consistent after deletion
         alert("Customer deleted successfully!");
       } catch (error) {
         console.error("Error deleting customer:", error);
+        if (error.response?.status === 401) {
+          localStorage.removeItem("crm_token");
+          localStorage.removeItem("crm_admin");
+          window.location.href = "/admin/login";
+          return;
+        }
         alert(`Error deleting customer: ${error.response?.data?.message || error.message}`);
       }
     }
@@ -334,15 +360,16 @@ const CustomersPage = () => {
     try {
       setImportProgress({ status: 'uploading', message: 'Uploading file...' });
       
-      const token = getAuthToken();
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
+      const { data } = await axios.post(
+        'http://localhost:5000/api/customers/import',
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            ...getAuthHeaders()
+          }
         }
-      };
-      
-      const { data } = await axios.post('http://localhost:5000/api/customers/import', formData, config);
+      );
 
       setImportProgress(null);
       setImportResult({
@@ -357,6 +384,14 @@ const CustomersPage = () => {
     } catch (error) {
       console.error("Error importing customers:", error);
       setImportProgress(null);
+      
+      if (error.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        localStorage.removeItem("crm_admin");
+        window.location.href = "/admin/login";
+        return;
+      }
+      
       setImportResult({
         success: false,
         message: error.response?.data?.message || error.message || 'Import failed'
@@ -374,25 +409,7 @@ const CustomersPage = () => {
     }
   };
 
-  // Delete selected customers
-  const handleDeleteSelected = async () => {
-    if (window.confirm(`Delete ${selectedCustomers.length} selected customers?`)) {
-      try {
-        const config = createAxiosConfig();
-        await Promise.all(selectedCustomers.map(id =>
-          axios.delete(`http://localhost:5000/api/customers/${id}`, config)
-        ));
-        setSelectedCustomers([]);
-        fetchCustomers();
-        alert("Selected customers deleted!");
-      } catch (error) {
-        console.error("Error deleting selected customers:", error);
-        alert("Error deleting selected customers.");
-      }
-    }
-  };
-
-  // Export functions
+  // Export functions (remain the same as before)
   const exportToExcel = () => {
     const dataToExport = filteredCustomers.map(customer => ({
       Company: customer.company,
@@ -874,11 +891,33 @@ const CustomersPage = () => {
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
-                {/* Delete Selected button */}
+
+                {/* Delete Selected button before the select */}
                 {selectedCustomers.length > 0 && (
                   <button
                     className="bg-red-600 text-white px-3 py-1 rounded"
-                    onClick={handleDeleteSelected}
+                    onClick={async () => {
+                      if (window.confirm(`Delete ${selectedCustomers.length} selected customers?`)) {
+                        try {
+                          await Promise.all(selectedCustomers.map(id =>
+                            axios.delete(`http://localhost:5000/api/customers/${id}`, {
+                              headers: getAuthHeaders()
+                            })
+                          ));
+                          setSelectedCustomers([]);
+                          fetchCustomers();
+                          alert("Selected customers deleted!");
+                        } catch (error) {
+                          if (error.response?.status === 401) {
+                            localStorage.removeItem("crm_token");
+                            localStorage.removeItem("crm_admin");
+                            window.location.href = "/admin/login";
+                            return;
+                          }
+                          alert("Error deleting selected customers.");
+                        }
+                      }
+                    }}
                   >
                     Delete Selected ({selectedCustomers.length})
                   </button>
@@ -966,7 +1005,6 @@ const CustomersPage = () => {
 
             {/* Table */}
             <div className="overflow-x-auto">
-                
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
@@ -1011,151 +1049,157 @@ const CustomersPage = () => {
                         className="bg-white shadow rounded-lg hover:bg-gray-50"
                         style={{ color: 'black' }}
                       >
-                        <td className="p-3 rounded-l-lg">
+                      <td className="p-3 rounded-l-lg border-0">
+                        <div className="flex items-center">
                           <input
                             type="checkbox"
                             checked={selectedCustomers.includes(customer._id)}
                             onChange={() => toggleCustomerSelection(customer._id)}
+                            className="h-4 w-4"
                           />
-                        </td>
-                        <td className="p-3">{customer.company}</td>
-                        <td className="p-3">{customer.contact}</td>
-                        <td className="p-3">{customer.email}</td>
-                        {compactView ? (
-                          <>
-                            <td className="p-3">
+                        </div>
+                      </td>
+                      <td className="p-3 border-0">{customer.company}</td>
+                      <td className="p-3 border-0">{customer.contact}</td>
+                      <td className="p-3 border-0">{customer.email}</td>
+                      {compactView ? (
+                        <>
+                          <td className="p-3 border-0">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer" 
+                                checked={customer.active}
+                                onChange={() => toggleCustomerActive(customer._id)}
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                          </td>
+                          <td className="p-3 border-0">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer" 
+                                checked={customer.contactsActive}
+                                onChange={() => toggleContactsActive(customer._id)}
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                          </td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex space-x-2">
                               <button
-                                onClick={() => toggleCustomerActive(customer._id)}
-                                className={`px-2 py-1 rounded-full text-xs ${customer.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                                onClick={() => handleEditCustomer(customer)}
+                                className="text-blue-600 hover:text-blue-800"
                               >
-                                {customer.active ? 'Active' : 'Inactive'}
+                                <FaEdit />
                               </button>
-                            </td>
-                            <td className="p-3">
                               <button
-                                onClick={() => toggleContactsActive(customer._id)}
-                                className={`px-2 py-1 rounded-full text-xs ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                                onClick={() => handleDeleteCustomer(customer._id)}
+                                className="text-red-600 hover:text-red-800"
                               >
-                                {customer.contactsActive ? 'Active' : 'Inactive'}
+                                <FaTrash />
                               </button>
-                            </td>
-                            <td className="p-3 rounded-r-lg">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleEditCustomer(customer)}
-                                  className="text-blue-600 hover:text-blue-800"
-                                >
-                                  <FaEdit />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteCustomer(customer._id)}
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  <FaTrash />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="p-3">{customer.phone}</td>
-                            <td className="p-3">
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="p-3 border-0">{customer.phone}</td>
+                          <td className="p-3 border-0">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer" 
+                                checked={customer.active}
+                                onChange={() => toggleCustomerActive(customer._id)}
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                          </td>
+                          <td className="p-3 border-0">
+                            <label className="relative inline-flex items-center cursor-pointer">
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer" 
+                                checked={customer.contactsActive}
+                                onChange={() => toggleContactsActive(customer._id)}
+                              />
+                              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+                            </label>
+                          </td>
+                          <td className="p-3 border-0">
+                            <div className="flex flex-wrap gap-1">
+                              {customer.groups?.map((group, index) => (
+                                <span key={index} className="bg-gray-100 px-2 py-1 rounded text-xs">
+                                  {group}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="p-3 border-0">
+                            {customer.dateCreated ? new Date(customer.dateCreated).toLocaleDateString() : 'N/A'}
+                          </td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex space-x-2">
                               <button
-                                onClick={() => toggleCustomerActive(customer._id)}
-                                className={`px-2 py-1 rounded-full text-xs ${customer.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                                onClick={() => handleEditCustomer(customer)}
+                                className="text-blue-600 hover:text-blue-800"
                               >
-                                {customer.active ? 'Active' : 'Inactive'}
+                                <FaEdit />
                               </button>
-                            </td>
-                            <td className="p-3">
                               <button
-                                onClick={() => toggleContactsActive(customer._id)}
-                                className={`px-2 py-1 rounded-full text-xs ${customer.contactsActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                                onClick={() => handleDeleteCustomer(customer._id)}
+                                className="text-red-600 hover:text-red-800"
                               >
-                                {customer.contactsActive ? 'Active' : 'Inactive'}
+                                <FaTrash />
                               </button>
-                            </td>
-                            <td className="p-3">
-                              {customer.groups && customer.groups.length > 0 ? (
-                                <div className="flex flex-wrap gap-1">
-                                  {customer.groups.map((group, index) => (
-                                    <span
-                                      key={index}
-                                      className="bg-gray-100 px-2 py-1 rounded text-xs"
-                                    >
-                                      {group}
-                                    </span>
-                                  ))}
-                                </div>
-                              ) : (
-                                <span className="text-gray-400">No groups</span>
-                              )}
-                            </td>
-                            <td className="p-3">{new Date(customer.dateCreated).toLocaleString()}</td>
-                            <td className="p-3 rounded-r-lg">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleEditCustomer(customer)}
-                                  className="text-blue-600 hover:text-blue-800"
-                                >
-                                  <FaEdit />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteCustomer(customer._id)}
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  <FaTrash />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        )}
-                      </tr>
-                    ))}
+                            </div>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-gray-600">
                 Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredCustomers.length)} of {filteredCustomers.length} entries
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() => setCurrentPage(1)}
                   disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+                >
+                  First
+                </button>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
                 >
                   Previous
                 </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = currentPage - 2 + i;
-                  }
-                  return (
-                    <button
-                      key={pageNum}
-                      className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? "bg-gray-200" : ""}`}
-                      onClick={() => setCurrentPage(pageNum)}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+                <span className="px-3 py-1 text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
                 <button
-                  className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
                 >
                   Next
+                </button>
+                <button
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+                >
+                  Last
                 </button>
               </div>
             </div>
@@ -1166,74 +1210,30 @@ const CustomersPage = () => {
       {/* Import Modal */}
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Import Customers</h2>
-            
-            {importProgress ? (
-              <div className="mb-4">
-                <p>{importProgress.message}</p>
-                {importProgress.status === 'processing' && (
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
-                    <div 
-                      className="bg-blue-600 h-2.5 rounded-full" 
-                      style={{ width: `${importProgress.progress || 0}%` }}
-                    ></div>
-                  </div>
-                )}
-              </div>
-            ) : importResult ? (
-              <div className={`mb-4 p-4 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {importResult.success ? (
-                  <>
-                    <p>Import completed successfully!</p>
-                    <p>Imported: {importResult.imported}</p>
-                    {importResult.errorCount > 0 && (
-                      <p>Errors: {importResult.errorCount}</p>
-                    )}
-                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
-                      <div className="mt-2">
-                        <p className="font-semibold">Error details:</p>
-                        <ul className="list-disc pl-5">
-                          {importResult.errorMessages.map((error, index) => (
-                            <li key={index}>{error}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <p>Import failed: {importResult.message}</p>
-                )}
-              </div>
-            ) : (
-              <>
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">
-                    Upload an Excel or CSV file with customer data. The file should include columns for Company, Contact, Email, Phone, etc.
-                  </p>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept=".xlsx,.xls,.csv"
-                    className="w-full border rounded p-2"
-                  />
-                </div>
-                <div className="mb-4">
-                  <a 
-                    href="/sample-customers-import.xlsx" 
-                    download
-                    className="text-blue-600 hover:underline text-sm"
-                  >
-                    Download sample import file
-                  </a>
-                </div>
-              </>
-            )}
-            
-            <div className="flex justify-end space-x-3">
-              {!importProgress && !importResult && (
-                <>
+          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Import Customers</h3>
+              <button
+                onClick={closeImportModal}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {!importResult && !importProgress && (
+              <div>
+                <p className="text-sm text-gray-600 mb-4">
+                  Select a CSV or Excel file to import customers. The file should contain columns for company, contact, email, etc.
+                </p>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  onChange={handleFileChange}
+                  className="w-full mb-4"
+                />
+                <div className="flex justify-end space-x-3">
                   <button
                     onClick={closeImportModal}
                     className="px-4 py-2 border rounded text-sm"
@@ -1247,17 +1247,52 @@ const CustomersPage = () => {
                   >
                     Import
                   </button>
-                </>
-              )}
-              {(importResult || importProgress?.status === 'error') && (
-                <button
-                  onClick={closeImportModal}
-                  className="px-4 py-2 bg-black text-white rounded text-sm"
-                >
-                  Close
-                </button>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
+
+            {importProgress && (
+              <div className="text-center">
+                <div className="mb-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
+                </div>
+                <p className="text-sm">{importProgress.message}</p>
+              </div>
+            )}
+
+            {importResult && (
+              <div>
+                {importResult.success ? (
+                  <div className="text-green-600">
+                    <p className="font-semibold mb-2">Import Successful!</p>
+                    <p className="text-sm">Imported {importResult.imported} customers successfully.</p>
+                    {importResult.errorCount > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-orange-600">{importResult.errorCount} errors occurred:</p>
+                        <div className="max-h-32 overflow-y-auto text-xs text-gray-600 mt-1">
+                          {importResult.errorMessages?.map((error, index) => (
+                            <p key={index}>{error}</p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-red-600">
+                    <p className="font-semibold mb-2">Import Failed</p>
+                    <p className="text-sm">{importResult.message}</p>
+                  </div>
+                )}
+                <div className="flex justify-end mt-4">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 bg-black text-white rounded text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
