@@ -2,17 +2,43 @@ import Project from "../../models/Project.js";
 import Customer from "../../models/Customer.js";
 import XLSX from "xlsx";
 
-// @desc    Get all projects with customer details
+// @desc    Get all projects with customer details for logged-in admin
 // @route   GET /api/projects
-// @access  Public
+// @access  Private
 export const getProjects = async (req, res) => {
   try {
-    const projects = await Project.find({})
+    const projects = await Project.find({ admin: req.admin._id })
       .populate('customer', 'company contact email phone')
       .sort({ createdAt: -1 });
     
+    // Calculate stats
+    const totalProjects = await Project.countDocuments({ admin: req.admin._id });
+    const progressProjects = await Project.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Progress" 
+    });
+    const onHoldProjects = await Project.countDocuments({ 
+      admin: req.admin._id, 
+      status: "On Hold" 
+    });
+    const cancelledProjects = await Project.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Cancelled" 
+    });
+    const finishedProjects = await Project.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Finished" 
+    });
+    
     res.json({
-      projects
+      projects,
+      stats: {
+        totalProjects,
+        progressProjects,
+        onHoldProjects,
+        cancelledProjects,
+        finishedProjects
+      }
     });
   } catch (error) {
     console.error("Error fetching projects:", error);
@@ -20,9 +46,9 @@ export const getProjects = async (req, res) => {
   }
 };
 
-// @desc    Create a project
+// @desc    Create a project for logged-in admin
 // @route   POST /api/projects
-// @access  Public
+// @access  Private
 export const createProject = async (req, res) => {
   try {
     const { name, customerId, tags, startDate, deadline, members, status } = req.body;
@@ -33,13 +59,14 @@ export const createProject = async (req, res) => {
       });
     }
 
-    // Check if customer exists
-    const customer = await Customer.findById(customerId);
+    // Check if customer exists and belongs to the same admin
+    const customer = await Customer.findOne({ _id: customerId, admin: req.admin._id });
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
 
     const project = new Project({
+      admin: req.admin._id,
       name,
       customerId,
       tags: tags || "",
@@ -65,9 +92,9 @@ export const createProject = async (req, res) => {
   }
 };
 
-// @desc    Import projects from CSV
+// @desc    Import projects from CSV for logged-in admin
 // @route   POST /api/projects/import
-// @access  Public
+// @access  Private
 export const importProjects = async (req, res) => {
   try {
     if (!req.file) {
@@ -106,10 +133,11 @@ export const importProjects = async (req, res) => {
         continue;
       }
 
-      // Find customer by company name
+      // Find customer by company name for this admin
       let customer;
       try {
         customer = await Customer.findOne({ 
+          admin: req.admin._id,
           company: { $regex: new RegExp(row.Customer, 'i') } 
         });
         
@@ -158,6 +186,7 @@ export const importProjects = async (req, res) => {
       }
 
       const projectData = {
+        admin: req.admin._id,
         name: row.Name,
         customerId: customer._id,
         tags: row.Tags || "",
@@ -201,9 +230,9 @@ export const importProjects = async (req, res) => {
   }
 };
 
-// @desc    Update a project
+// @desc    Update a project for logged-in admin
 // @route   PUT /api/projects/:id
-// @access  Public
+// @access  Private
 export const updateProject = async (req, res) => {
   try {
     const { name, customerId, tags, startDate, deadline, members, status } = req.body;
@@ -214,16 +243,16 @@ export const updateProject = async (req, res) => {
       });
     }
 
-    // Check if customer exists
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
-
-    const project = await Project.findById(req.params.id);
-    
+    // Check if project exists and belongs to the admin
+    const project = await Project.findOne({ _id: req.params.id, admin: req.admin._id });
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
+    }
+
+    // Check if customer exists and belongs to the same admin
+    const customer = await Customer.findOne({ _id: customerId, admin: req.admin._id });
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
     }
 
     project.name = name;
@@ -260,18 +289,18 @@ export const updateProject = async (req, res) => {
   }
 };
 
-// @desc    Delete a project
+// @desc    Delete a project for logged-in admin
 // @route   DELETE /api/projects/:id
-// @access  Public
+// @access  Private
 export const deleteProject = async (req, res) => {
   try {
-    const project = await Project.findById(req.params.id);
+    const project = await Project.findOne({ _id: req.params.id, admin: req.admin._id });
     
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    await Project.deleteOne({ _id: req.params.id });
+    await Project.deleteOne({ _id: req.params.id, admin: req.admin._id });
     res.json({ message: "Project removed successfully" });
   } catch (error) {
     console.error("Error deleting project:", error);
@@ -279,9 +308,9 @@ export const deleteProject = async (req, res) => {
   }
 };
 
-// @desc    Search customers by company name
+// @desc    Search customers by company name for logged-in admin
 // @route   GET /api/projects/customers/search
-// @access  Public
+// @access  Private
 export const searchCustomers = async (req, res) => {
   try {
     const { q } = req.query;
@@ -291,6 +320,7 @@ export const searchCustomers = async (req, res) => {
     }
 
     const customers = await Customer.find({
+      admin: req.admin._id,
       company: { $regex: q, $options: 'i' }
     }).select('company contact email phone').limit(10);
     

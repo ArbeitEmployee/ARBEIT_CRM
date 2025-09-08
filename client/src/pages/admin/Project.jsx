@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"; // Added useRef import
+import { useState, useEffect, useRef } from "react";
 import { 
   FaPlus, FaFilter, FaSearch, FaSyncAlt, FaChevronRight, 
   FaTimes, FaEdit, FaTrash, FaChevronDown, FaFileImport,
@@ -95,11 +95,28 @@ const ProjectPage = () => {
 
   const [loading, setLoading] = useState(true);
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   // Fetch projects from API
   const fetchProjects = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/projects");
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/projects", config);
       setProjects(data.projects || []);
       
       // Calculate stats
@@ -118,6 +135,10 @@ const ProjectPage = () => {
       });
     } catch (error) {
       console.error("Error fetching projects:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/admin/login";
+      }
       setProjects([]);
       setStats({
         totalProjects: 0,
@@ -142,7 +163,8 @@ const ProjectPage = () => {
     }
     
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/projects/customers/search?q=${searchTerm}`);
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/projects/customers/search?q=${searchTerm}`, config);
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -158,7 +180,8 @@ const ProjectPage = () => {
     }
     
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`);
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`, config);
       setStaffSearchResults(data.staffs || []);
     } catch (error) {
       console.error("Error searching staff:", error);
@@ -259,16 +282,18 @@ const ProjectPage = () => {
     setIsSaving(true);
     
     try {
+      const config = createAxiosConfig();
+      
       if (editingProject) {
         // Update existing project
-        await axios.put(`http://localhost:5000/api/projects/${editingProject._id}`, newProject);
+        await axios.put(`http://localhost:5000/api/projects/${editingProject._id}`, newProject, config);
         setShowNewProjectForm(false);
         setEditingProject(null);
         fetchProjects();
         alert("Project updated successfully!");
       } else {
         // Create new project
-        await axios.post("http://localhost:5000/api/projects", newProject);
+        await axios.post("http://localhost:5000/api/projects", newProject, config);
         setShowNewProjectForm(false);
         fetchProjects();
         alert("Project created successfully!");
@@ -311,12 +336,31 @@ const ProjectPage = () => {
   const handleDeleteProject = async (id) => {
     if (window.confirm("Are you sure you want to delete this project?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/projects/${id}`);
+        const config = createAxiosConfig();
+        await axios.delete(`http://localhost:5000/api/projects/${id}`, config);
         fetchProjects();
         alert("Project deleted successfully!");
       } catch (error) {
         console.error("Error deleting project:", error);
         alert(`Error deleting project: ${error.response?.data?.message || error.message}`);
+      }
+    }
+  };
+
+  // Delete selected projects
+  const handleDeleteSelected = async () => {
+    if (window.confirm(`Delete ${selectedProjects.length} selected projects?`)) {
+      try {
+        const config = createAxiosConfig();
+        await Promise.all(selectedProjects.map(id =>
+          axios.delete(`http://localhost:5000/api/projects/${id}`, config)
+        ));
+        setSelectedProjects([]);
+        fetchProjects();
+        alert("Selected projects deleted!");
+      } catch (error) {
+        console.error("Error deleting selected projects:", error);
+        alert("Error deleting selected projects.");
       }
     }
   };
@@ -354,7 +398,7 @@ const ProjectPage = () => {
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
-    const blob = new Blob([csv], { type: 'text/clsx;charset=utf-8;' });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     
@@ -764,20 +808,7 @@ const ProjectPage = () => {
               {selectedProjects.length > 0 && (
                 <button
                   className="bg-red-600 text-white px-3 py-1 rounded"
-                  onClick={async () => {
-                    if (window.confirm(`Delete ${selectedProjects.length} selected projects?`)) {
-                      try {
-                        await Promise.all(selectedProjects.map(id =>
-                          axios.delete(`http://localhost:5000/api/projects/${id}`)
-                        ));
-                        setSelectedProjects([]);
-                        fetchProjects();
-                        alert("Selected projects deleted!");
-                      } catch {
-                        alert("Error deleting selected projects.");
-                      }
-                    }
-                  }}
+                  onClick={handleDeleteSelected}
                 >
                   Delete Selected ({selectedProjects.length})
                 </button>
@@ -972,58 +1003,52 @@ const ProjectPage = () => {
                         {compactView ? (
                           <>
                             <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs ${getStatusColor(project.status)}`}>
+                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(project.status)}`}>
                                 {project.status}
                               </span>
                             </td>
-                            <td className="p-3 border-0">
-                              {formatDate(project.deadline)}
-                            </td>
-                            <td className="p-3 rounded-r-lg border-0">
-                              <div className="flex space-x-2">
+                            <td className="p-3 border-0">{formatDate(project.deadline)}</td>
+                            <td className="p-3 border-0 rounded-r-lg">
+                              <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => handleEditProject(project)}
-                                  className="text-blue-500 hover:text-blue-700"
-                                  title="Edit"
+                                  className="text-blue-600 hover:text-blue-800"
                                 >
-                                  <FaEdit size={16} />
+                                  <FaEdit />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteProject(project._id)}
-                                  className="text-red-500 hover:text-red-700"
-                                  title="Delete"
+                                  className="text-red-600 hover:text-red-800"
                                 >
-                                  <FaTrash size={16} />
+                                  <FaTrash />
                                 </button>
                               </div>
                             </td>
                           </>
                         ) : (
                           <>
-                            <td className="p-3 border-0">{project.tags || "-"}</td>
+                            <td className="p-3 border-0">{project.tags || "N/A"}</td>
                             <td className="p-3 border-0">{formatDate(project.startDate)}</td>
                             <td className="p-3 border-0">{formatDate(project.deadline)}</td>
-                            <td className="p-3 border-0">{project.members || "-"}</td>
+                            <td className="p-3 border-0">{project.members || "N/A"}</td>
                             <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs ${getStatusColor(project.status)}`}>
+                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(project.status)}`}>
                                 {project.status}
                               </span>
                             </td>
-                            <td className="p-3 rounded-r-lg border-0">
-                              <div className="flex space-x-2">
+                            <td className="p-3 border-0 rounded-r-lg">
+                              <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => handleEditProject(project)}
-                                  className="text-blue-500 hover:text-blue-700"
-                                  title="Edit"
+                                  className="text-blue-600 hover:text-blue-800"
                                 >
-                                  <FaEdit size={16} />
+                                  <FaEdit />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteProject(project._id)}
-                                  className="text-red-500 hover:text-red-700"
-                                  title="Delete"
+                                  className="text-red-600 hover:text-red-800"
                                 >
-                                  <FaTrash size={16} />
+                                  <FaTrash />
                                 </button>
                               </div>
                             </td>
@@ -1034,7 +1059,7 @@ const ProjectPage = () => {
                   ) : (
                     <tr>
                       <td colSpan={compactView ? 6 : 9} className="p-4 text-center">
-                        No projects found.
+                        No projects found
                       </td>
                     </tr>
                   )}
@@ -1044,24 +1069,43 @@ const ProjectPage = () => {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-gray-600">
                 Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredProjects.length)} of {filteredProjects.length} entries
               </div>
-              <div className="flex items-center gap-1">                
+              <div className="flex items-center space-x-1">
                 <button
                   className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
                 </button>
-                <span className="px-2 text-sm">
-                  Page {currentPage} of {totalPages}
-                </span>
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <button
+                      key={pageNum}
+                      className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? "bg-gray-200" : ""}`}
+                      onClick={() => setCurrentPage(pageNum)}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
                 <button
                   className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages || totalPages === 0}
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
                 >
                   Next
                 </button>

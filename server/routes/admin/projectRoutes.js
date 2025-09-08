@@ -7,25 +7,26 @@ import {
   importProjects,
   searchCustomers
 } from "../../controllers/admin/projectController.js";
+import { protect } from "../../middlewares/authMiddleware.js";
 import multer from "multer";
 
 const upload = multer();
 
 const router = express.Router();
 
-// Project routes
+// All project routes (protected with JWT middleware)
 router.route("/")
-  .get(getProjects)
-  .post(createProject);
+  .get(protect, getProjects)
+  .post(protect, createProject);
 
 router.route("/import")
-  .post(upload.single('file'), importProjects);
+  .post(protect, upload.single('file'), importProjects);
 
 router.route("/customers/search")
-  .get(searchCustomers);
+  .get(protect, searchCustomers);
 
 router.route("/:id")
-  .put(updateProject)
-  .delete(deleteProject);
+  .put(protect, updateProject)
+  .delete(protect, deleteProject);
 
 export default router;

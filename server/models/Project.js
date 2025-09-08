@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const projectSchema = new mongoose.Schema({
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+    index: true
+  },
   name: {
     type: String,
     required: [true, "Project name is required"],
@@ -49,6 +55,7 @@ const projectSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
+projectSchema.index({ admin: 1 });
 projectSchema.index({ customerId: 1 });
 projectSchema.index({ status: 1 });
 projectSchema.index({ deadline: 1 });
