@@ -2,21 +2,33 @@ import Subscription from "../../models/Subscription.js";
 import Customer from "../../models/Customer.js";
 import XLSX from "xlsx";
 
-// @desc    Get all subscriptions with customer details
+// @desc    Get all subscriptions with customer details for logged-in admin
 // @route   GET /api/subscriptions
-// @access  Public
+// @access  Private
 export const getSubscriptions = async (req, res) => {
   try {
-    const subscriptions = await Subscription.find({})
+    const subscriptions = await Subscription.find({ admin: req.admin._id })
       .populate('customer', 'company contact email phone')
       .sort({ createdAt: -1 });
     
     // Calculate stats
-    const totalSubscriptions = await Subscription.countDocuments();
-    const activeSubscriptions = await Subscription.countDocuments({ status: "Active" });
-    const pastDueSubscriptions = await Subscription.countDocuments({ status: "Past Due" });
-    const canceledSubscriptions = await Subscription.countDocuments({ status: "Canceled" });
-    const futureSubscriptions = await Subscription.countDocuments({ status: "Future" });
+    const totalSubscriptions = await Subscription.countDocuments({ admin: req.admin._id });
+    const activeSubscriptions = await Subscription.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Active" 
+    });
+    const pastDueSubscriptions = await Subscription.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Past Due" 
+    });
+    const canceledSubscriptions = await Subscription.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Canceled" 
+    });
+    const futureSubscriptions = await Subscription.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Future" 
+    });
     
     res.json({
       subscriptions,
@@ -34,9 +46,9 @@ export const getSubscriptions = async (req, res) => {
   }
 };
 
-// @desc    Create a subscription
+// @desc    Create a subscription for logged-in admin
 // @route   POST /api/subscriptions
-// @access  Public
+// @access  Private
 export const createSubscription = async (req, res) => {
   try {
     const { name, customerId, project, status, nextBilling, amount } = req.body;
@@ -47,13 +59,14 @@ export const createSubscription = async (req, res) => {
       });
     }
 
-    // Check if customer exists
-    const customer = await Customer.findById(customerId);
+    // Check if customer exists and belongs to the same admin
+    const customer = await Customer.findOne({ _id: customerId, admin: req.admin._id });
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
 
     const subscription = new Subscription({
+      admin: req.admin._id,
       name,
       customerId,
       project,
@@ -81,9 +94,9 @@ export const createSubscription = async (req, res) => {
   }
 };
 
-// @desc    Import subscriptions from CSV
+// @desc    Import subscriptions from CSV for logged-in admin
 // @route   POST /api/subscriptions/import
-// @access  Public
+// @access  Private
 export const importSubscriptions = async (req, res) => {
   try {
     if (!req.file) {
@@ -122,10 +135,11 @@ export const importSubscriptions = async (req, res) => {
         continue;
       }
 
-      // Find customer by company name
+      // Find customer by company name for this admin
       let customer;
       try {
         customer = await Customer.findOne({ 
+          admin: req.admin._id,
           company: { $regex: new RegExp(row.Customer, 'i') } 
         });
         
@@ -189,6 +203,7 @@ export const importSubscriptions = async (req, res) => {
       }
 
       const subscriptionData = {
+        admin: req.admin._id,
         name: row.Name,
         customerId: customer._id,
         project: row.Project,
@@ -234,9 +249,9 @@ export const importSubscriptions = async (req, res) => {
   }
 };
 
-// @desc    Update a subscription
+// @desc    Update a subscription for logged-in admin
 // @route   PUT /api/subscriptions/:id
-// @access  Public
+// @access  Private
 export const updateSubscription = async (req, res) => {
   try {
     const { name, customerId, project, status, nextBilling, amount } = req.body;
@@ -247,16 +262,16 @@ export const updateSubscription = async (req, res) => {
       });
     }
 
-    // Check if customer exists
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
-
-    const subscription = await Subscription.findById(req.params.id);
-    
+    // Check if subscription exists and belongs to the admin
+    const subscription = await Subscription.findOne({ _id: req.params.id, admin: req.admin._id });
     if (!subscription) {
       return res.status(404).json({ message: "Subscription not found" });
+    }
+
+    // Check if customer exists and belongs to the same admin
+    const customer = await Customer.findOne({ _id: customerId, admin: req.admin._id });
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
     }
 
     subscription.name = name;
@@ -291,18 +306,18 @@ export const updateSubscription = async (req, res) => {
   }
 };
 
-// @desc    Delete a subscription
+// @desc    Delete a subscription for logged-in admin
 // @route   DELETE /api/subscriptions/:id
-// @access  Public
+// @access  Private
 export const deleteSubscription = async (req, res) => {
   try {
-    const subscription = await Subscription.findById(req.params.id);
+    const subscription = await Subscription.findOne({ _id: req.params.id, admin: req.admin._id });
     
     if (!subscription) {
       return res.status(404).json({ message: "Subscription not found" });
     }
 
-    await Subscription.deleteOne({ _id: req.params.id });
+    await Subscription.deleteOne({ _id: req.params.id, admin: req.admin._id });
     res.json({ message: "Subscription removed successfully" });
   } catch (error) {
     console.error("Error deleting subscription:", error);
@@ -310,9 +325,9 @@ export const deleteSubscription = async (req, res) => {
   }
 };
 
-// @desc    Search customers by company name
+// @desc    Search customers by company name for logged-in admin
 // @route   GET /api/subscriptions/customers/search
-// @access  Public
+// @access  Private
 export const searchCustomers = async (req, res) => {
   try {
     const { q } = req.query;
@@ -322,6 +337,7 @@ export const searchCustomers = async (req, res) => {
     }
 
     const customers = await Customer.find({
+      admin: req.admin._id,
       company: { $regex: q, $options: 'i' }
     }).select('company contact email phone').limit(10);
     

@@ -70,6 +70,22 @@ const ExpensesPage = () => {
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
 
+  // Get auth token from localStorage (using the correct key "crm_token")
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   // Close export menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -90,7 +106,8 @@ const ExpensesPage = () => {
   const fetchExpenses = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/expenses");
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/expenses", config);
       setExpenses(data.expenses || []);
       setStats(data.stats || {
         total: 0,
@@ -99,6 +116,11 @@ const ExpensesPage = () => {
       });
     } catch (error) {
       console.error("Error fetching expenses:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        // Redirect to login page
+        window.location.href = "/admin/login";
+      }
       setExpenses([]);
       setStats({
         total: 0,
@@ -121,7 +143,8 @@ const ExpensesPage = () => {
     }
     
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/expenses/customers/search?q=${searchTerm}`);
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/expenses/customers/search?q=${searchTerm}`, config);
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -189,41 +212,42 @@ const ExpensesPage = () => {
   };
 
   // Add this function to format date for backend
-const formatDateForBackend = (dateString) => {
-  if (!dateString) return '';
-  
-  // Convert YYYY-MM-DD to DD-MM-YYYY
-  const [year, month, day] = dateString.split('-');
-  return `${day}-${month}-${year}`;
-};
+  const formatDateForBackend = (dateString) => {
+    if (!dateString) return '';
+    
+    // Convert YYYY-MM-DD to DD-MM-YYYY
+    const [year, month, day] = dateString.split('-');
+    return `${day}-${month}-${year}`;
+  };
 
-// Update handleSaveExpense function
-const handleSaveExpense = async () => {
-  if (isSaving) return;
-  
-  if (!newExpense.category || !newExpense.amount || !newExpense.name || !newExpense.customerId || !newExpense.date) {
-    alert("Please fill in all required fields (Category, Amount, Name, Customer, Date)");
-    return;
-  }
+  // Update handleSaveExpense function
+  const handleSaveExpense = async () => {
+    if (isSaving) return;
+    
+    if (!newExpense.category || !newExpense.amount || !newExpense.name || !newExpense.customerId || !newExpense.date) {
+      alert("Please fill in all required fields (Category, Amount, Name, Customer, Date)");
+      return;
+    }
 
     setIsSaving(true);
     
     try {
+      const config = createAxiosConfig();
       const expenseData = {
-      ...newExpense,
-      date: formatDateForBackend(newExpense.date) // Format the date
-    };
+        ...newExpense,
+        date: formatDateForBackend(newExpense.date) // Format the date
+      };
 
       if (editingExpense) {
         // Update existing expense
-        await axios.put(`http://localhost:5000/api/expenses/${editingExpense._id}`, expenseData);
+        await axios.put(`http://localhost:5000/api/expenses/${editingExpense._id}`, expenseData, config);
         setShowNewExpenseForm(false);
         setEditingExpense(null);
         fetchExpenses();
         alert("Expense updated successfully!");
       } else {
         // Create new expense
-        await axios.post("http://localhost:5000/api/expenses", expenseData);
+        await axios.post("http://localhost:5000/api/expenses", expenseData, config);
         setShowNewExpenseForm(false);
         fetchExpenses();
         alert("Expense created successfully!");
@@ -268,7 +292,8 @@ const handleSaveExpense = async () => {
   const handleDeleteExpense = async (id) => {
     if (window.confirm("Are you sure you want to delete this expense?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/expenses/${id}`);
+        const config = createAxiosConfig();
+        await axios.delete(`http://localhost:5000/api/expenses/${id}`, config);
         fetchExpenses();
         alert("Expense deleted successfully!");
       } catch (error) {
@@ -283,7 +308,8 @@ const handleSaveExpense = async () => {
     
     if (window.confirm(`Are you sure you want to delete ${selectedExpenses.length} selected expenses?`)) {
       try {
-        await axios.post("http://localhost:5000/api/expenses/bulk-delete", { ids: selectedExpenses });
+        const config = createAxiosConfig();
+        await axios.post("http://localhost:5000/api/expenses/bulk-delete", { ids: selectedExpenses }, config);
         setSelectedExpenses([]);
         fetchExpenses();
         alert("Selected expenses deleted successfully!");
@@ -317,11 +343,15 @@ const handleSaveExpense = async () => {
     try {
       setImportProgress({ status: 'uploading', message: 'Uploading file...' });
       
-      const { data } = await axios.post('http://localhost:5000/api/expenses/import', formData, {
+      const token = getAuthToken();
+      const config = {
         headers: {
+          Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
-      });
+      };
+      
+      const { data } = await axios.post('http://localhost:5000/api/expenses/import', formData, config);
 
       setImportProgress(null);
       setImportResult({
@@ -506,7 +536,9 @@ const handleSaveExpense = async () => {
       minimumFractionDigits: 2
     }).format(amount);
   };
+  
   if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading expenses...</div>;
+  
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
@@ -831,11 +863,11 @@ const handleSaveExpense = async () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
-                  onClick={fetchExpenses}
-                >
-                  <FaSyncAlt />
-                </button>
+                    className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                    onClick={fetchExpenses}
+                  >
+                    <FaSyncAlt />
+                  </button>
               </div>
 
               {/* Search */}
@@ -990,21 +1022,53 @@ const handleSaveExpense = async () => {
               <div className="text-sm text-gray-700">
                 Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredExpenses.length)} of {filteredExpenses.length} entries
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex space-x-2">
                 <button
-                  className="px-3 py-1 border rounded disabled:opacity-50"
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
                   onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
                 </button>
-                <span className="text-sm">
-                  Page {currentPage} of {totalPages}
-                </span>
+                <div className="flex space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i;
+                    } else {
+                      pageNum = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? 'bg-gray-800 text-white' : ''}`}
+                        onClick={() => setCurrentPage(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                  {totalPages > 5 && currentPage < totalPages - 2 && (
+                    <>
+                      <span className="px-2 py-1">...</span>
+                      <button
+                        className="px-3 py-1 border rounded text-sm"
+                        onClick={() => setCurrentPage(totalPages)}
+                      >
+                        {totalPages}
+                      </button>
+                    </>
+                  )}
+                </div>
                 <button
-                  className="px-3 py-1 border rounded disabled:opacity-50"
+                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
                   onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages || totalPages === 0}
+                  disabled={currentPage === totalPages}
                 >
                   Next
                 </button>
@@ -1018,79 +1082,84 @@ const handleSaveExpense = async () => {
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Import Expenses</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Import Expenses</h3>
+              <button onClick={closeImportModal} className="text-gray-500 hover:text-gray-700">
+                <FaTimes />
+              </button>
+            </div>
             
             {importProgress ? (
-              <div className="mb-4">
-                <p className="mb-2">{importProgress.message}</p>
-                {importProgress.status === 'processing' && (
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${importProgress.progress}%` }}></div>
-                  </div>
-                )}
+              <div className="text-center py-4">
+                <div className="text-blue-500 mb-2">{importProgress.message}</div>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: '50%' }}></div>
+                </div>
               </div>
             ) : importResult ? (
-              <div className={`mb-4 p-4 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              <div className={`p-4 rounded mb-4 ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                 {importResult.success ? (
                   <>
-                    <p className="font-semibold">Import completed!</p>
-                    <p>{importResult.imported} expenses imported successfully.</p>
+                    <p className="font-semibold">Import completed successfully!</p>
+                    <p className="mt-2">Imported: {importResult.imported} expenses</p>
                     {importResult.errorCount > 0 && (
-                      <p className="mt-2">{importResult.errorCount} rows had errors and were skipped.</p>
+                      <p className="mt-1">Errors: {importResult.errorCount}</p>
                     )}
                     {importResult.errorMessages && importResult.errorMessages.length > 0 && (
                       <div className="mt-2 text-sm">
                         <p className="font-medium">Error details:</p>
                         <ul className="list-disc pl-5 mt-1">
-                          {importResult.errorMessages.slice(0, 5).map((error, index) => (
+                          {importResult.errorMessages.map((error, index) => (
                             <li key={index}>{error}</li>
                           ))}
-                          {importResult.errorMessages.length > 5 && (
-                            <li>...and {importResult.errorMessages.length - 5} more errors</li>
-                          )}
                         </ul>
                       </div>
                     )}
                   </>
                 ) : (
-                  <p>Import failed: {importResult.message}</p>
+                  <p>Error: {importResult.message}</p>
                 )}
               </div>
             ) : (
               <>
-                <p className="mb-4">Upload an Excel or CSV file to import expenses.</p>
                 <div className="mb-4">
+                  <p className="text-sm text-gray-600 mb-3">
+                    Upload an Excel or CSV file with expense data. The file should include columns for:
+                    Category, Amount, Name, Date, Project, Customer, IsInvoiced, and PaymentMode.
+                  </p>
+                  <a 
+                    href="/expenses-template.xlsx" 
+                    download 
+                    className="text-blue-500 text-sm flex items-center gap-1 mb-3"
+                  >
+                    <HiOutlineDownload /> Download template
+                  </a>
                   <input
+                    ref={fileInputRef}
                     type="file"
                     accept=".xlsx,.xls,.csv"
                     onChange={handleFileChange}
-                    ref={fileInputRef}
-                    className="w-full"
+                    className="w-full border rounded p-2"
                   />
                 </div>
-                <p className="text-sm text-gray-600 mb-4">
-                  Your file should include these columns: Category, Amount, Name, Date, Customer (company name), Project, Reference ID, Payment Mode. Include headers in the first row.
-                </p>
+                
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={closeImportModal}
+                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleImportSubmit}
+                    disabled={!importFile}
+                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                  >
+                    Import
+                  </button>
+                </div>
               </>
             )}
-
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={closeImportModal}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
-              >
-                {importResult ? 'Close' : 'Cancel'}
-              </button>
-              {!importResult && !importProgress && (
-                <button
-                  onClick={handleImportSubmit}
-                  disabled={!importFile}
-                  className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
-                >
-                  Import
-                </button>
-              )}
-            </div>
           </div>
         </div>
       )}

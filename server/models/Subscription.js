@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const subscriptionSchema = new mongoose.Schema({
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+    index: true
+  },
   name: {
     type: String,
     required: [true, "Subscription name is required"],
@@ -62,6 +68,7 @@ const subscriptionSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
+subscriptionSchema.index({ admin: 1 });
 subscriptionSchema.index({ customerId: 1 });
 subscriptionSchema.index({ status: 1 });
 subscriptionSchema.index({ nextBilling: 1 });

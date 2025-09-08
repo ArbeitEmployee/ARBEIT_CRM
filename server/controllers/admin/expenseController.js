@@ -2,12 +2,12 @@ import Expense from "../../models/Expense.js";
 import Customer from "../../models/Customer.js";
 import XLSX from "xlsx";
 
-// @desc    Get all expenses
+// @desc    Get all expenses for logged-in admin
 // @route   GET /api/expenses
-// @access  Public
+// @access  Private
 export const getExpenses = async (req, res) => {
   try {
-    const expenses = await Expense.find({})
+    const expenses = await Expense.find({ admin: req.admin._id })
       .populate('customer', 'company contact email')
       .sort({ createdAt: -1 });
     
@@ -36,9 +36,9 @@ export const getExpenses = async (req, res) => {
   }
 };
 
-// @desc    Create an expense
+// @desc    Create an expense for logged-in admin
 // @route   POST /api/expenses
-// @access  Public
+// @access  Private
 export const createExpense = async (req, res) => {
   try {
     const { category, amount, name, customerId, date } = req.body;
@@ -56,6 +56,7 @@ export const createExpense = async (req, res) => {
     }
 
     const expense = new Expense({
+      admin: req.admin._id,
       category,
       amount,
       name,
@@ -83,9 +84,9 @@ export const createExpense = async (req, res) => {
   }
 };
 
-// @desc    Import expenses from CSV
+// @desc    Import expenses from CSV for logged-in admin
 // @route   POST /api/expenses/import
-// @access  Public
+// @access  Private
 export const importExpenses = async (req, res) => {
   try {
     if (!req.file) {
@@ -128,6 +129,7 @@ export const importExpenses = async (req, res) => {
       let customer;
       try {
         customer = await Customer.findOne({ 
+          admin: req.admin._id,
           company: { $regex: new RegExp(row.Customer, 'i') } 
         });
         
@@ -165,22 +167,22 @@ export const importExpenses = async (req, res) => {
         continue;
       }
 
-      // In importExpenses function, replace the date validation and processing:
-// Remove the strict DD-MM-YYYY validation
-const dateRegex = /^\d{4}-\d{2}-\d{2}$|^\d{2}-\d{2}-\d{4}$/;
-if (!dateRegex.test(row.Date)) {
-  errorMessages.push(`Row ${rowNumber}: Invalid date format. Use YYYY-MM-DD or DD-MM-YYYY`);
-  continue;
-}
+      // Date validation and processing
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$|^\d{2}-\d{2}-\d{4}$/;
+      if (!dateRegex.test(row.Date)) {
+        errorMessages.push(`Row ${rowNumber}: Invalid date format. Use YYYY-MM-DD or DD-MM-YYYY`);
+        continue;
+      }
 
-// Convert date to DD-MM-YYYY format if it's in YYYY-MM-DD format
-let formattedDate = row.Date;
-if (/^\d{4}-\d{2}-\d{2}$/.test(row.Date)) {
-  const [year, month, day] = row.Date.split('-');
-  formattedDate = `${day}-${month}-${year}`;
-}
+      // Convert date to DD-MM-YYYY format if it's in YYYY-MM-DD format
+      let formattedDate = row.Date;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(row.Date)) {
+        const [year, month, day] = row.Date.split('-');
+        formattedDate = `${day}-${month}-${year}`;
+      }
 
       const expenseData = {
+        admin: req.admin._id,
         category: row.Category,
         amount: amount,
         name: row.Name,
@@ -226,9 +228,9 @@ if (/^\d{4}-\d{2}-\d{2}$/.test(row.Date)) {
   }
 };
 
-// @desc    Update an expense
+// @desc    Update an expense for logged-in admin
 // @route   PUT /api/expenses/:id
-// @access  Public
+// @access  Private
 export const updateExpense = async (req, res) => {
   try {
     const { category, amount, name, customerId, date } = req.body;
@@ -245,7 +247,7 @@ export const updateExpense = async (req, res) => {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findOne({ _id: req.params.id, admin: req.admin._id });
     
     if (!expense) {
       return res.status(404).json({ message: "Expense not found" });
@@ -277,18 +279,18 @@ export const updateExpense = async (req, res) => {
   }
 };
 
-// @desc    Delete an expense
+// @desc    Delete an expense for logged-in admin
 // @route   DELETE /api/expenses/:id
-// @access  Public
+// @access  Private
 export const deleteExpense = async (req, res) => {
   try {
-    const expense = await Expense.findById(req.params.id);
+    const expense = await Expense.findOne({ _id: req.params.id, admin: req.admin._id });
     
     if (!expense) {
       return res.status(404).json({ message: "Expense not found" });
     }
 
-    await Expense.deleteOne({ _id: req.params.id });
+    await Expense.deleteOne({ _id: req.params.id, admin: req.admin._id });
     res.json({ message: "Expense removed successfully" });
   } catch (error) {
     console.error("Error deleting expense:", error);
@@ -296,9 +298,9 @@ export const deleteExpense = async (req, res) => {
   }
 };
 
-// @desc    Search customers by company name for expenses
+// @desc    Search customers by company name for expenses (for logged-in admin)
 // @route   GET /api/expenses/customers/search
-// @access  Public
+// @access  Private
 export const searchCustomers = async (req, res) => {
   try {
     const { q } = req.query;
@@ -308,6 +310,7 @@ export const searchCustomers = async (req, res) => {
     }
 
     const customers = await Customer.find({
+      admin: req.admin._id,
       $or: [
         { company: { $regex: q, $options: 'i' } },
         { contact: { $regex: q, $options: 'i' } }
@@ -321,9 +324,9 @@ export const searchCustomers = async (req, res) => {
   }
 };
 
-// @desc    Bulk delete expenses
+// @desc    Bulk delete expenses for logged-in admin
 // @route   POST /api/expenses/bulk-delete
-// @access  Public
+// @access  Private
 export const bulkDeleteExpenses = async (req, res) => {
   try {
     const { ids } = req.body;
@@ -332,7 +335,7 @@ export const bulkDeleteExpenses = async (req, res) => {
       return res.status(400).json({ message: "No expense IDs provided" });
     }
 
-    const result = await Expense.deleteMany({ _id: { $in: ids } });
+    const result = await Expense.deleteMany({ _id: { $in: ids }, admin: req.admin._id });
     
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "No expenses found to delete" });

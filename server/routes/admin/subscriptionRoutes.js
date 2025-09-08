@@ -7,25 +7,26 @@ import {
   importSubscriptions,
   searchCustomers
 } from "../../controllers/admin/subscriptionController.js";
+import { protect } from "../../middlewares/authMiddleware.js";
 import multer from "multer";
 
 const upload = multer();
 
 const router = express.Router();
 
-// Subscription routes
+// All subscription routes (protected with JWT middleware)
 router.route("/")
-  .get(getSubscriptions)
-  .post(createSubscription);
+  .get(protect, getSubscriptions)
+  .post(protect, createSubscription);
 
 router.route("/import")
-  .post(upload.single('file'), importSubscriptions);
+  .post(protect, upload.single('file'), importSubscriptions);
 
 router.route("/customers/search")
-  .get(searchCustomers);
+  .get(protect, searchCustomers);
 
 router.route("/:id")
-  .put(updateSubscription)
-  .delete(deleteSubscription);
+  .put(protect, updateSubscription)
+  .delete(protect, deleteSubscription);
 
 export default router;

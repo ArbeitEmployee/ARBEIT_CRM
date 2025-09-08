@@ -8,28 +8,29 @@ import {
   searchCustomers,
   bulkDeleteExpenses
 } from "../../controllers/admin/expenseController.js";
+import { protect } from "../../middlewares/authMiddleware.js";
 import multer from "multer";
 
 const upload = multer();
 
 const router = express.Router();
 
-// Expense routes
+// All expense routes are protected with JWT middleware
 router.route("/")
-  .get(getExpenses)
-  .post(createExpense);
+  .get(protect, getExpenses)
+  .post(protect, createExpense);
 
 router.route("/import")
-  .post(upload.single('file'), importExpenses);
+  .post(protect, upload.single('file'), importExpenses);
 
 router.route("/customers/search")
-  .get(searchCustomers);
+  .get(protect, searchCustomers);
 
 router.route("/bulk-delete")
-  .post(bulkDeleteExpenses);
+  .post(protect, bulkDeleteExpenses);
 
 router.route("/:id")
-  .put(updateExpense)
-  .delete(deleteExpense);
+  .put(protect, updateExpense)
+  .delete(protect, deleteExpense);
 
 export default router;

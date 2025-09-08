@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const expenseSchema = new mongoose.Schema({
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+    index: true
+  },
   category: {
     type: String,
     required: [true, "Category is required"],
@@ -33,16 +39,16 @@ const expenseSchema = new mongoose.Schema({
     default: false
   },
   date: {
-  type: String,
-  required: [true, "Date is required"],
-  validate: {
-    validator: function(v) {
-      // Accept both DD-MM-YYYY and YYYY-MM-DD formats
-      return /^\d{2}-\d{2}-\d{4}$/.test(v) || /^\d{4}-\d{2}-\d{2}$/.test(v);
-    },
-    message: "Date format should be DD-MM-YYYY or YYYY-MM-DD"
-  }
-},
+    type: String,
+    required: [true, "Date is required"],
+    validate: {
+      validator: function(v) {
+        // Accept both DD-MM-YYYY and YYYY-MM-DD formats
+        return /^\d{2}-\d{2}-\d{4}$/.test(v) || /^\d{4}-\d{2}-\d{2}$/.test(v);
+      },
+      message: "Date format should be DD-MM-YYYY or YYYY-MM-DD"
+    }
+  },
   project: {
     type: String,
     trim: true,
@@ -80,6 +86,7 @@ const expenseSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
+expenseSchema.index({ admin: 1 });
 expenseSchema.index({ customerId: 1 });
 expenseSchema.index({ category: 1 });
 expenseSchema.index({ date: 1 });

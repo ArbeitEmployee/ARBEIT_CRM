@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { 
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight, 
   FaTimes, FaEdit, FaTrash, FaUser, FaUserCheck, 
-  FaUserTimes, FaUserClock 
+  FaUserTimes, FaUserClock, FaFileImport 
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
@@ -44,6 +44,11 @@ const SubscriptionPage = () => {
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [customerSearchResults, setCustomerSearchResults] = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importFile, setImportFile] = useState(null);
+  const [importProgress, setImportProgress] = useState(null);
+  const [importResult, setImportResult] = useState(null);
+  const fileInputRef = useRef(null);
 
   const statusOptions = [
     "Active",
@@ -54,8 +59,25 @@ const SubscriptionPage = () => {
     "Canceled",
     "Incomplete Expired"
   ];
-   // Add a ref for the export menu
+  
+  // Add a ref for the export menu
   const exportMenuRef = useRef(null);
+
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
   // Close export menu when clicking outside
   useEffect(() => {
@@ -73,34 +95,39 @@ const SubscriptionPage = () => {
 
   const billingCycleOptions = ["Monthly", "Quarterly", "Annual", "Custom"];
 
-  //const [isRefreshing, setIsRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  
   // Fetch subscriptions from API
   const fetchSubscriptions = async () => {
-  setLoading(true); // ADD THIS LINE
-  try {
-    const { data } = await axios.get("http://localhost:5000/api/subscriptions");
-    setSubscriptions(data.subscriptions || []);
-    setStats(data.stats || {
-      totalSubscriptions: 0,
-      activeSubscriptions: 0,
-      pastDueSubscriptions: 0,
-      canceledSubscriptions: 0,
-      futureSubscriptions: 0
-    });
-  } catch (error) {
-    console.error("Error fetching subscriptions:", error);
-    setSubscriptions([]);
-    setStats({
-      totalSubscriptions: 0,
-      activeSubscriptions: 0,
-      pastDueSubscriptions: 0,
-      canceledSubscriptions: 0,
-      futureSubscriptions: 0
-    });
-  }
-  setLoading(false); // ADD THIS LINE
-};
+    setLoading(true);
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/subscriptions", config);
+      setSubscriptions(data.subscriptions || []);
+      setStats(data.stats || {
+        totalSubscriptions: 0,
+        activeSubscriptions: 0,
+        pastDueSubscriptions: 0,
+        canceledSubscriptions: 0,
+        futureSubscriptions: 0
+      });
+    } catch (error) {
+      console.error("Error fetching subscriptions:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/admin/login";
+      }
+      setSubscriptions([]);
+      setStats({
+        totalSubscriptions: 0,
+        activeSubscriptions: 0,
+        pastDueSubscriptions: 0,
+        canceledSubscriptions: 0,
+        futureSubscriptions: 0
+      });
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
     fetchSubscriptions();
@@ -114,7 +141,8 @@ const SubscriptionPage = () => {
     }
     
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`);
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`, config);
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -189,16 +217,18 @@ const SubscriptionPage = () => {
     setIsSaving(true);
     
     try {
+      const config = createAxiosConfig();
+      
       if (editingSubscription) {
         // Update existing subscription
-        await axios.put(`http://localhost:5000/api/subscriptions/${editingSubscription._id}`, newSubscription);
+        await axios.put(`http://localhost:5000/api/subscriptions/${editingSubscription._id}`, newSubscription, config);
         setShowNewSubscriptionForm(false);
         setEditingSubscription(null);
         fetchSubscriptions();
         alert("Subscription updated successfully!");
       } else {
         // Create new subscription
-        await axios.post("http://localhost:5000/api/subscriptions", newSubscription);
+        await axios.post("http://localhost:5000/api/subscriptions", newSubscription, config);
         setShowNewSubscriptionForm(false);
         fetchSubscriptions();
         alert("Subscription created successfully!");
@@ -247,12 +277,94 @@ const SubscriptionPage = () => {
   const handleDeleteSubscription = async (id) => {
     if (window.confirm("Are you sure you want to delete this subscription?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/subscriptions/${id}`);
+        const config = createAxiosConfig();
+        await axios.delete(`http://localhost:5000/api/subscriptions/${id}`, config);
         fetchSubscriptions();
         alert("Subscription deleted successfully!");
       } catch (error) {
         console.error("Error deleting subscription:", error);
         alert(`Error deleting subscription: ${error.response?.data?.message || error.message}`);
+      }
+    }
+  };
+
+  const handleImportClick = () => {
+    setImportModalOpen(true);
+    setImportFile(null);
+    setImportProgress(null);
+    setImportResult(null);
+  };
+
+  const handleFileChange = (e) => {
+    setImportFile(e.target.files[0]);
+  };
+
+  const handleImportSubmit = async () => {
+    if (!importFile) {
+      alert("Please select a file to import");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', importFile);
+
+    try {
+      setImportProgress({ status: 'uploading', message: 'Uploading file...' });
+      
+      const token = getAuthToken();
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      };
+      
+      const { data } = await axios.post('http://localhost:5000/api/subscriptions/import', formData, config);
+
+      setImportProgress(null);
+      setImportResult({
+        success: true,
+        imported: data.importedCount,
+        errorCount: data.errorMessages?.length || 0,
+        errorMessages: data.errorMessages
+      });
+      
+      // Refresh subscription list
+      fetchSubscriptions();
+    } catch (error) {
+      console.error("Error importing subscriptions:", error);
+      setImportProgress(null);
+      setImportResult({
+        success: false,
+        message: error.response?.data?.message || error.message || 'Import failed'
+      });
+    }
+  };
+
+  const closeImportModal = () => {
+    setImportModalOpen(false);
+    setImportFile(null);
+    setImportProgress(null);
+    setImportResult(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Delete selected subscriptions
+  const handleDeleteSelected = async () => {
+    if (window.confirm(`Delete ${selectedSubscriptions.length} selected subscriptions?`)) {
+      try {
+        const config = createAxiosConfig();
+        await Promise.all(selectedSubscriptions.map(id =>
+          axios.delete(`http://localhost:5000/api/subscriptions/${id}`, config)
+        ));
+        setSelectedSubscriptions([]);
+        fetchSubscriptions();
+        alert("Selected subscriptions deleted!");
+      } catch (error) {
+        console.error("Error deleting selected subscriptions:", error);
+        alert("Error deleting selected subscriptions.");
       }
     }
   };
@@ -428,7 +540,6 @@ const SubscriptionPage = () => {
           <span>Subscriptions</span>
         </div>
       </div>
-      
 
       {showNewSubscriptionForm ? (
         <div className="bg-white shadow-md rounded p-6 mb-6">
@@ -553,7 +664,7 @@ const SubscriptionPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Next Billing Cycle *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Next Billing Date *</label>
                 <input
                   type="date"
                   name="nextBilling"
@@ -585,18 +696,18 @@ const SubscriptionPage = () => {
                   className="w-full border rounded px-3 py-2"
                 />
               </div>
-            </div>
-          </div>
 
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea
-              name="notes"
-              value={newSubscription.notes}
-              onChange={handleNewSubscriptionChange}
-              className="w-full border rounded px-3 py-2"
-              rows="3"
-            />
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                <textarea
+                  name="notes"
+                  value={newSubscription.notes}
+                  onChange={handleNewSubscriptionChange}
+                  className="w-full border rounded px-3 py-2"
+                  rows="3"
+                />
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end space-x-3">
@@ -697,12 +808,12 @@ const SubscriptionPage = () => {
               >
                 <FaPlus /> New Subscription
               </button>
-
-              
-
-
-
-
+              <button 
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={handleImportClick}
+              >
+                <FaFileImport /> Import Subscriptions
+              </button>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -719,34 +830,15 @@ const SubscriptionPage = () => {
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
-
-                
-                {/* --- ADD THIS BLOCK: Delete Selected button before the select --- */}
-      {selectedSubscriptions.length > 0 && (
-        <button
-          className="bg-red-600 text-white px-3 py-1 rounded"
-          onClick={async () => {
-            if (window.confirm(`Delete ${selectedSubscriptions.length} selected subscriptions?`)) {
-              try {
-                await Promise.all(selectedSubscriptions.map(id =>
-                  axios.delete(`http://localhost:5000/api/subscriptions/${id}`)
-                ));
-                setSelectedSubscriptions([]);
-                fetchSubscriptions();
-                alert("Selected subscriptions deleted!");
-              } catch {
-                alert("Error deleting selected subscriptions.");
-              }
-            }
-          }}
-        >
-          Delete Selected ({selectedSubscriptions.length})
-        </button>
-      )}
-      {/* --- END BLOCK --- */}
-
-
-
+                {/* Delete Selected button */}
+                {selectedSubscriptions.length > 0 && (
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    onClick={handleDeleteSelected}
+                  >
+                    Delete Selected ({selectedSubscriptions.length})
+                  </button>
+                )}
 
                 {/* Entries per page */}
                 <select
@@ -830,37 +922,6 @@ const SubscriptionPage = () => {
 
             {/* Table */}
             <div className="overflow-x-auto">
-              
-              {/* Bulk delete button */}
-              {/*
-              {selectedSubscriptions.length > 0 && (
-                <tr>
-                  <td colSpan={compactView ? 8 : 10} className="p-2 border bg-red-50">
-                    <button
-                      className="bg-red-600 text-white px-3 py-1 rounded"
-                      onClick={async () => {
-                        if (window.confirm(`Delete ${selectedSubscriptions.length} selected subscriptions?`)) {
-                          try {
-                            await Promise.all(selectedSubscriptions.map(id =>
-                              axios.delete(`http://localhost:5000/api/subscriptions/${id}`)
-                            ));
-                            setSelectedSubscriptions([]);
-                            fetchSubscriptions();
-                            alert("Selected subscriptions deleted!");
-                          } catch {
-                            alert("Error deleting selected subscriptions.");
-                          }
-                        }
-                      }}
-                    >
-                      Delete Selected ({selectedSubscriptions.length})
-                    </button>
-                  </td>
-                </tr>
-              )}
-              */}
-         
-              
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
@@ -1040,6 +1101,82 @@ const SubscriptionPage = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* Import Modal */}
+      {importModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Import Subscriptions</h2>
+            
+            {importProgress ? (
+              <div className="mb-4">
+                <p className="text-sm">{importProgress.message}</p>
+              </div>
+            ) : importResult ? (
+              <div className={`mb-4 p-3 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {importResult.success ? (
+                  <>
+                    <p className="font-semibold">Import completed!</p>
+                    <p className="text-sm">Imported: {importResult.imported}</p>
+                    <p className="text-sm">Errors: {importResult.errorCount}</p>
+                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm font-semibold">Error details:</p>
+                        <ul className="text-xs max-h-32 overflow-auto">
+                          {importResult.errorMessages.map((error, index) => (
+                            <li key={index} className="mt-1">{error}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm">Error: {importResult.message}</p>
+                )}
+              </div>
+            ) : (
+              <div className="mb-4">
+                <p className="text-sm mb-2">Select a CSV or Excel file to import subscriptions:</p>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept=".csv,.xlsx,.xls"
+                  className="w-full border rounded p-2 text-sm"
+                />
+              </div>
+            )}
+            
+            <div className="flex justify-end space-x-2">
+              {!importResult && (
+                <button
+                  onClick={closeImportModal}
+                  className="px-4 py-2 border rounded text-sm"
+                >
+                  Cancel
+                </button>
+              )}
+              {!importProgress && !importResult && (
+                <button
+                  onClick={handleImportSubmit}
+                  className="px-4 py-2 bg-black text-white rounded text-sm"
+                  disabled={!importFile}
+                >
+                  Import
+                </button>
+              )}
+              {importResult && (
+                <button
+                  onClick={closeImportModal}
+                  className="px-4 py-2 bg-black text-white rounded text-sm"
+                >
+                  Close
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
