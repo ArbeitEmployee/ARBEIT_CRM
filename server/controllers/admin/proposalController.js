@@ -5,21 +5,21 @@ const errorResponse = (res, status, message, error = null) => {
   return res.status(status).json({
     success: false,
     message,
-    error: process.env.NODE_ENV === 'development' ? error?.message : undefined
+    error: process.env.NODE_ENV === "development" ? error?.message : undefined
   });
 };
 
-// Get all proposals
+// ✅ Get all proposals (only for logged-in admin)
 export const getProposals = async (req, res) => {
   try {
     const { status, client } = req.query;
-    const filter = {};
-    
+    const filter = { admin: req.admin._id };
+
     if (status) filter.status = status;
-    if (client) filter.clientName = new RegExp(client, 'i');
-    
+    if (client) filter.clientName = new RegExp(client, "i");
+
     const proposals = await Proposal.find(filter).sort({ createdAt: -1 });
-    
+
     res.status(200).json({
       success: true,
       count: proposals.length,
@@ -31,7 +31,7 @@ export const getProposals = async (req, res) => {
   }
 };
 
-// Create new proposal
+// ✅ Create new proposal
 export const createProposal = async (req, res) => {
   try {
     // Validate required fields
@@ -39,16 +39,15 @@ export const createProposal = async (req, res) => {
       return errorResponse(res, 400, "Client name is required");
     }
 
-    // Validate items
     if (!req.body.items || !Array.isArray(req.body.items) || req.body.items.length === 0) {
       return errorResponse(res, 400, "Proposal must contain at least one item");
     }
 
-    // Validate each item
+    // Validate items structure
     const invalidItems = req.body.items.filter(item => (
-      !item.description || 
-      typeof item.quantity !== 'number' || 
-      typeof item.rate !== 'number'
+      !item.description ||
+      typeof item.quantity !== "number" ||
+      typeof item.rate !== "number"
     ));
 
     if (invalidItems.length > 0) {
@@ -63,12 +62,17 @@ export const createProposal = async (req, res) => {
       });
     }
 
-    // Remove proposalNumber if provided (will be auto-generated)
-    if (req.body.proposalNumber) {
-      delete req.body.proposalNumber;
-    }
+    // Handle date conversion
+    const proposalData = {
+      ...req.body,
+      admin: req.admin._id
+    };
 
-    const proposal = new Proposal(req.body);
+    // Convert date strings to Date objects
+    if (req.body.date) proposalData.date = new Date(req.body.date);
+    if (req.body.openTill) proposalData.openTill = new Date(req.body.openTill);
+
+    const proposal = new Proposal(proposalData);
     const savedProposal = await proposal.save();
 
     res.status(201).json({
@@ -76,15 +80,14 @@ export const createProposal = async (req, res) => {
       message: "Proposal created successfully",
       data: savedProposal
     });
-
   } catch (error) {
     console.error("Error saving proposal:", error);
-    
+
     if (error.code === 11000) {
       return errorResponse(res, 400, "Proposal number conflict occurred", error);
     }
 
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       const errors = Object.values(error.errors).map(err => ({
         field: err.path,
         message: err.message
@@ -100,13 +103,18 @@ export const createProposal = async (req, res) => {
   }
 };
 
-// Get single proposal by ID
+// ✅ Get single proposal by ID
 export const getProposalById = async (req, res) => {
   try {
-    const proposal = await Proposal.findById(req.params.id);
+    const proposal = await Proposal.findOne({
+      _id: req.params.id,
+      admin: req.admin._id
+    });
+
     if (!proposal) {
       return errorResponse(res, 404, "Proposal not found");
     }
+
     res.status(200).json({
       success: true,
       data: proposal
@@ -117,16 +125,19 @@ export const getProposalById = async (req, res) => {
   }
 };
 
-// Update proposal
+// ✅ Update proposal
 export const updateProposal = async (req, res) => {
   try {
-    // Prevent proposalNumber from being updated
     if (req.body.proposalNumber) {
-      delete req.body.proposalNumber;
+      delete req.body.proposalNumber; // prevent manual updates
     }
 
-    const proposal = await Proposal.findByIdAndUpdate(
-      req.params.id,
+    // Handle date conversion
+    if (req.body.date) req.body.date = new Date(req.body.date);
+    if (req.body.openTill) req.body.openTill = new Date(req.body.openTill);
+
+    const proposal = await Proposal.findOneAndUpdate(
+      { _id: req.params.id, admin: req.admin._id },
       req.body,
       { new: true, runValidators: true }
     );
@@ -140,11 +151,10 @@ export const updateProposal = async (req, res) => {
       message: "Proposal updated successfully",
       data: proposal
     });
-
   } catch (error) {
     console.error("Error updating proposal:", error);
-    
-    if (error.name === 'ValidationError') {
+
+    if (error.name === "ValidationError") {
       const errors = Object.values(error.errors).map(err => ({
         field: err.path,
         message: err.message
@@ -160,11 +170,14 @@ export const updateProposal = async (req, res) => {
   }
 };
 
-// Delete proposal
+// ✅ Delete proposal
 export const deleteProposal = async (req, res) => {
   try {
-    const proposal = await Proposal.findByIdAndDelete(req.params.id);
-    
+    const proposal = await Proposal.findOneAndDelete({
+      _id: req.params.id,
+      admin: req.admin._id
+    });
+
     if (!proposal) {
       return errorResponse(res, 404, "Proposal not found");
     }
@@ -177,17 +190,17 @@ export const deleteProposal = async (req, res) => {
         proposalNumber: proposal.proposalNumber
       }
     });
-
   } catch (error) {
     console.error("Error deleting proposal:", error);
     errorResponse(res, 500, "Server error while deleting proposal", error);
   }
 };
 
-// Get proposal count by status
+// ✅ Get proposal count by status (per admin)
 export const getProposalStats = async (req, res) => {
   try {
     const stats = await Proposal.aggregate([
+      { $match: { admin: req.admin._id } },
       {
         $group: {
           _id: "$status",
@@ -196,7 +209,7 @@ export const getProposalStats = async (req, res) => {
         }
       }
     ]);
-    
+
     res.status(200).json({
       success: true,
       data: stats

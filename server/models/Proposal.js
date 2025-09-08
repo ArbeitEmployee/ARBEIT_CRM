@@ -9,6 +9,12 @@ const Counter = mongoose.model('Counter', counterSchema);
 
 const proposalSchema = new mongoose.Schema(
   {
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
+      required: true,
+      index: true
+    },
     title: { type: String },
     proposalNumber: { 
       type: String,
@@ -91,6 +97,10 @@ proposalSchema.pre('save', function(next) {
   }
   next();
 });
+
+// Index for SaaS isolation
+proposalSchema.index({ admin: 1, clientName: 1 });
+proposalSchema.index({ admin: 1, status: 1 });
 
 const Proposal = mongoose.model("Proposal", proposalSchema);
 export default Proposal;

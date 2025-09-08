@@ -17,7 +17,6 @@ const Proposals = () => {
   const [proposals, setProposals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProposals, setSelectedProposals] = useState([]);
-
   const [viewProposal, setViewProposal] = useState(null);
   const [editProposal, setEditProposal] = useState(null);
   const [formData, setFormData] = useState({ clientName: "", title: "", total: 0, status: "Draft" });
@@ -35,8 +34,25 @@ const Proposals = () => {
       default: return "bg-gray-100 text-gray-800";
     }
   };
+
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
+
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
   // Close export menu when clicking outside
   useEffect(() => {
@@ -52,14 +68,30 @@ const Proposals = () => {
     };
   }, []);
 
-  // Fetch proposals
+  // Fetch proposals for the logged-in admin only
   const fetchProposals = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/admin/proposals");
-      setProposals(data.data || data);
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/admin/proposals", config);
+      
+      // Ensure we're getting the data in the correct format
+      if (data.data) {
+        setProposals(data.data); // If response has data property
+      } else if (Array.isArray(data)) {
+        setProposals(data); // If response is directly an array
+      } else {
+        console.error("Unexpected API response format:", data);
+        setProposals([]);
+      }
     } catch (err) {
       console.error("Error fetching proposals", err);
+      if (err.response?.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+      setProposals([]);
     }
     setLoading(false);
   };
@@ -159,21 +191,53 @@ const Proposals = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this proposal?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/admin/proposals/${id}`);
+      const config = createAxiosConfig();
+      await axios.delete(`http://localhost:5000/api/admin/proposals/${id}`, config);
       setProposals(proposals.filter((p) => p._id !== id));
     } catch (err) {
       console.error("Error deleting proposal", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
   };
 
   // Update proposal
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/proposals/${editProposal._id}`, formData);
+      const config = createAxiosConfig();
+      await axios.put(`http://localhost:5000/api/admin/proposals/${editProposal._id}`, formData, config);
       setEditProposal(null);
       fetchProposals();
     } catch (err) {
       console.error("Error updating proposal", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+    }
+  };
+
+  // Delete selected proposals
+  const handleDeleteSelected = async () => {
+    if (!window.confirm(`Delete ${selectedProposals.length} selected proposals?`)) return;
+    
+    try {
+      const config = createAxiosConfig();
+      await Promise.all(selectedProposals.map(id =>
+        axios.delete(`http://localhost:5000/api/admin/proposals/${id}`, config)
+      ));
+      setSelectedProposals([]);
+      fetchProposals();
+      alert("Selected proposals deleted!");
+    } catch (err) {
+      console.error("Error deleting selected proposals:", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+      alert("Error deleting selected proposals.");
     }
   };
 
@@ -288,20 +352,7 @@ const Proposals = () => {
           {selectedProposals.length > 0 && (
             <button
               className="bg-red-600 text-white px-3 py-1 rounded"
-              onClick={async () => {
-                if (window.confirm(`Delete ${selectedProposals.length} selected proposals?`)) {
-                  try {
-                    await Promise.all(selectedProposals.map(id =>
-                      axios.delete(`http://localhost:5000/api/admin/proposals/${id}`)
-                    ));
-                    setSelectedProposals([]);
-                    fetchProposals();
-                    alert("Selected proposals deleted!");
-                  } catch {
-                    alert("Error deleting selected proposals.");
-                  }
-                }
-              }}
+              onClick={handleDeleteSelected}
             >
               Delete Selected ({selectedProposals.length})
             </button>
@@ -443,178 +494,188 @@ const Proposals = () => {
               </tr>
             </thead>
             <tbody>
-              {currentProposals.map((proposal) => {
-                const formatProposalNumber = (num) => {
-                  if (!num) return "TEMP-" + proposal._id.slice(-6).toUpperCase();
-                  if (num.startsWith("PRO-")) return num;
-                  const matches = num.match(/\d+/);
-                  const numberPart = matches ? matches[0] : "000001";
-                  return `PRO-${String(numberPart).padStart(6, "0")}`;
-                };
+              {currentProposals.length > 0 ? (
+                currentProposals.map((proposal) => {
+                  const formatProposalNumber = (num) => {
+                    if (!num) return "TEMP-" + proposal._id.slice(-6).toUpperCase();
+                    if (num.startsWith("PRO-")) return num;
+                    const matches = num.match(/\d+/);
+                    const numberPart = matches ? matches[0] : "000001";
+                    return `PRO-${String(numberPart).padStart(6, "0")}`;
+                  };
 
-                const displayProposalNumber = formatProposalNumber(proposal.proposalNumber);
+                  const displayProposalNumber = formatProposalNumber(proposal.proposalNumber);
 
-                const displayAmount = new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: proposal.currency || "USD",
-                  minimumFractionDigits: 2,
-                }).format(proposal.total || 0);
+                  const displayAmount = new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: proposal.currency || "USD",
+                    minimumFractionDigits: 2,
+                  }).format(proposal.total || 0);
 
-                const formatDate = (dateString) => {
-                  if (!dateString) return "-";
-                  const date = new Date(dateString);
-                  return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
-                };
+                  const formatDate = (dateString) => {
+                    if (!dateString) return "-";
+                    const date = new Date(dateString);
+                    return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+                  };
 
-                return (
-                  <tr
-                    key={proposal._id}
-                    className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                    style={{ color: 'black' }}
-                  >
-                    <td className="p-3 rounded-l-lg border-0">
-                      <div className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedProposals.includes(proposal._id)}
-                          onChange={() => toggleProposalSelection(proposal._id)}
-                          className="h-4 w-4"
-                        />
-                      </div>
-                    </td>
-                    <td className="p-3 border-0 font-mono">{displayProposalNumber}</td>
-                    <td className="p-3 border-0">{proposal.clientName || "-"}</td>
-                    <td className="p-3 border-0">{proposal.title || "-"}</td>
-                    {compactView ? (
-                      <>
-                        <td className="p-3 border-0 text-right">{displayAmount}</td>
-                        <td className="p-3 border-0">
-                          <span className={`px-2 py-1 rounded text-xs ${getStatusColor(proposal.status)}`}>
-                            {proposal.status || "Draft"}
-                          </span>
-                        </td>
-                        <td className="p-3 rounded-r-lg border-0">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => setViewProposal(proposal)}
-                              className="text-blue-500 hover:text-blue-700"
-                              title="View"
-                            >
-                              <FaEye size={16} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditProposal(proposal);
-                                setFormData({
-                                  clientName: proposal.clientName || "",
-                                  title: proposal.title || "",
-                                  total: proposal.total || 0,
-                                  status: proposal.status || "Draft",
-                                });
-                              }}
-                              className="text-blue-500 hover:text-blue-700"
-                              title="Edit"
-                            >
-                              <FaEdit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(proposal._id)}
-                              className="text-red-500 hover:text-red-700"
-                              title="Delete"
-                            >
-                              <FaTrash size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="p-3 border-0 text-right">{displayAmount}</td>
-                        <td className="p-3 border-0">{formatDate(proposal.date)}</td>
-                        <td className="p-3 border-0">{formatDate(proposal.openTill)}</td>
-                        <td className="p-3 border-0">{proposal.tags || "-"}</td>
-                        <td className="p-3 border-0">
-                          <span className={`px-2 py-1 rounded text-xs ${getStatusColor(proposal.status)}`}>
-                            {proposal.status || "Draft"}
-                          </span>
-                        </td>
-                        <td className="p-3 rounded-r-lg border-0">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => setViewProposal(proposal)}
-                              className="text-blue-500 hover:text-blue-700"
-                              title="View"
-                            >
-                              <FaEye size={16} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setEditProposal(proposal);
-                                setFormData({
-                                  clientName: proposal.clientName || "",
-                                  title: proposal.title || "",
-                                  total: proposal.total || 0,
-                                  status: proposal.status || "Draft",
-                                });
-                              }}
-                              className="text-blue-500 hover:text-blue-700"
-                              title="Edit"
-                            >
-                              <FaEdit size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(proposal._id)}
-                              className="text-red-500 hover:text-red-700"
-                              title="Delete"
-                            >
-                              <FaTrash size={16} />
-                            </button>
-                          </div>
-                        </td>
-                      </>
-                    )}
-                  </tr>
-                );
-              })}
+                  return (
+                    <tr
+                      key={proposal._id}
+                      className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                      style={{ color: 'black' }}
+                    >
+                      <td className="p-3 rounded-l-lg border-0">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedProposals.includes(proposal._id)}
+                            onChange={() => toggleProposalSelection(proposal._id)}
+                            className="h-4 w-4"
+                          />
+                        </div>
+                      </td>
+                      <td className="p-3 border-0">{displayProposalNumber}</td>
+                      <td className="p-3 border-0">{proposal.clientName || "-"}</td>
+                      <td className="p-3 border-0">{proposal.title || "-"}</td>
+                      {compactView ? (
+                        <>
+                          <td className="p-3 border-0 text-right">{displayAmount}</td>
+                          <td className="p-3 border-0">
+                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(proposal.status)}`}>
+                              {proposal.status || "Draft"}
+                            </span>
+                          </td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => setViewProposal(proposal)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="View"
+                              >
+                                <FaEye size={16} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditProposal(proposal);
+                                  setFormData({
+                                    clientName: proposal.clientName || "",
+                                    title: proposal.title || "",
+                                    total: proposal.total || 0,
+                                    status: proposal.status || "Draft",
+                                  });
+                                }}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="Edit"
+                              >
+                                <FaEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(proposal._id)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Delete"
+                              >
+                                <FaTrash size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="p-3 border-0">{displayAmount}</td>
+                          <td className="p-3 border-0">{formatDate(proposal.date)}</td>
+                          <td className="p-3 border-0">{formatDate(proposal.openTill)}</td>
+                          <td className="p-3 border-0">{proposal.tags || "-"}</td>
+                          <td className="p-3 border-0">
+                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(proposal.status)}`}>
+                              {proposal.status || "Draft"}
+                            </span>
+                          </td>
+                          <td className="p-3 rounded-r-lg border-0">
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={() => setViewProposal(proposal)}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="View"
+                              >
+                                <FaEye size={16} />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditProposal(proposal);
+                                  setFormData({
+                                    clientName: proposal.clientName || "",
+                                    title: proposal.title || "",
+                                    total: proposal.total || 0,
+                                    status: proposal.status || "Draft",
+                                  });
+                                }}
+                                className="text-blue-500 hover:text-blue-700"
+                                title="Edit"
+                              >
+                                <FaEdit size={16} />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(proposal._id)}
+                                className="text-red-500 hover:text-red-700"
+                                title="Delete"
+                              >
+                                <FaTrash size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </>
+                      )}
+                    </tr>
+                  );
+                })
+              ) : (
+                <tr>
+                  <td colSpan={compactView ? 7 : 10} className="p-4 text-center text-gray-500">
+                    {proposals.length === 0 ? "No proposals found. Create your first proposal!" : "No proposals match your search."}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-4 text-sm">
-          <span>
-            Showing {indexOfFirstProposal + 1} to{" "}
-            {Math.min(indexOfLastProposal, filteredProposals.length)} of{" "}
-            {filteredProposals.length} entries
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="px-2 py-1 border rounded disabled:opacity-50"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
+        {filteredProposals.length > 0 && (
+          <div className="flex justify-between items-center mt-4 text-sm">
+            <span>
+              Showing {indexOfFirstProposal + 1} to{" "}
+              {Math.min(indexOfLastProposal, filteredProposals.length)} of{" "}
+              {filteredProposals.length} entries
+            </span>
+            <div className="flex items-center gap-2">
               <button
-                key={i}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === i + 1 ? "bg-gray-200" : ""
-                }`}
-                onClick={() => setCurrentPage(i + 1)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
               >
-                {i + 1}
+                Previous
               </button>
-            ))}
-            <button
-              className="px-2 py-1 border rounded disabled:opacity-50"
-              disabled={currentPage === totalPages || totalPages === 0}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Next
-            </button>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === i + 1 ? "bg-gray-200" : ""
+                  }`}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                className="px-2 py-1 border rounded disabled:opacity-50"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
+                Next
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* View & Edit Modals */}

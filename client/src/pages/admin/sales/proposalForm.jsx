@@ -51,14 +51,44 @@ const ProposalForm = () => {
   const statusOptions = ["Draft", "Sent", "Accepted", "Rejected"];
   const taxOptions = ["", "0%", "5%", "10%", "15%", "20%"];
 
+  // Get auth token from localStorage (using the same key as staff page: "crm_token")
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
+  // Configure axios defaults
+  useEffect(() => {
+    const token = getAuthToken();
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+  }, []);
+
   // Fetch items from database
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const { data } = await axios.get("http://localhost:5000/api/admin/items");
+        const config = createAxiosConfig();
+        const { data } = await axios.get("http://localhost:5000/api/admin/items", config);
         setDatabaseItems(data);
       } catch (err) {
         console.error("Error fetching items", err);
+        if (err.response?.status === 401) {
+          // Token expired or invalid
+          localStorage.removeItem("crm_token");
+          navigate("/login");
+        }
       }
     };
     fetchItems();
@@ -85,9 +115,10 @@ const ProposalForm = () => {
   const addItemFromDatabase = (item) => {
     const newProposalItem = {
       description: item.description,
-      qty: 1,
+      quantity: 1,
       rate: parseFloat(item.rate.replace('$', '')),
-      amount: parseFloat(item.rate.replace('$', ''))
+      tax1: parseFloat(item.tax1) || 0,
+      tax2: parseFloat(item.tax2) || 0
     };
     setProposalItems([...proposalItems, newProposalItem]);
   };
@@ -96,9 +127,9 @@ const ProposalForm = () => {
     const newItems = [...proposalItems];
     newItems[index][field] = value;
     
-    // Recalculate amount if qty or rate changes
-    if (field === 'qty' || field === 'rate') {
-      newItems[index].amount = newItems[index].qty * newItems[index].rate;
+    // Recalculate amount if quantity or rate changes
+    if (field === 'quantity' || field === 'rate') {
+      newItems[index].amount = newItems[index].quantity * newItems[index].rate;
     }
     
     setProposalItems(newItems);
@@ -114,10 +145,11 @@ const ProposalForm = () => {
   const saveNewItemToDatabase = async (e) => {
     e.preventDefault();
     try {
+      const config = createAxiosConfig();
       const response = await axios.post("http://localhost:5000/api/admin/items", {
         ...newItem,
         rate: newItem.rate.startsWith('$') ? newItem.rate : `$${newItem.rate}`
-      });
+      }, config);
       
       // Add to database items
       setDatabaseItems([response.data, ...databaseItems]);
@@ -138,11 +170,15 @@ const ProposalForm = () => {
       setShowItemForm(false);
     } catch (err) {
       console.error("Error saving item", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
   };
 
   // Calculations
-  const subtotal = proposalItems.reduce((sum, item) => sum + item.amount, 0);
+  const subtotal = proposalItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
   const discount = formData.discountType === "percent" 
     ? subtotal * (formData.discountValue / 100) 
     : formData.discountValue;
@@ -152,66 +188,90 @@ const ProposalForm = () => {
   const validate = () => {
     let newErrors = {};
     if (!formData.title) newErrors.title = "Title is required";
+    if (!formData.clientName) newErrors.clientName = "Client name is required";
     if (!formData.clientEmail) newErrors.clientEmail = "Email is required";
+    if (proposalItems.length === 0) newErrors.items = "At least one item is required";
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-const handleSubmit = async (send = false) => {
-  try {
-    // Prepare items without any total calculations
-    const items = proposalItems.map(item => ({
-      description: item.description,
-      quantity: Number(item.qty || item.quantity),
-      rate: Number(item.rate),
-      tax1: Number(item.tax1 || 0),
-      tax2: Number(item.tax2 || 0)
-    }));
-
-    const proposalData = {
-      title: formData.title,
-      clientName: formData.clientName,
-      clientEmail: formData.clientEmail,
-      status: formData.status,
-      items: items,
-      date: formData.date ? new Date(formData.date) : new Date(),
-      openTill: formData.openTill ? new Date(formData.openTill) : null,
-      currency: formData.currency,
-      discountType: formData.discountType,
-      discountValue: Number(formData.discountValue || 0),
-      tags: formData.tags,
-      address: formData.address,
-      city: formData.city,
-      state: formData.state,
-      country: formData.country,
-      zip: formData.zip,
-      phone: formData.phone,
-      assigned: formData.assigned
-    };
-
-    console.log("Submitting:", proposalData);
-
-    const response = await axios.post('http://localhost:5000/api/admin/proposals', proposalData);
-    
-    if (response.data.success) {
-      alert("Proposal saved successfully!");
-      navigate("../sales/proposals");
-    } else {
-      throw new Error(response.data.message || "Failed to save proposal");
+  const handleSubmit = async (send = false) => {
+    if (!validate()) {
+      alert("Please fill all required fields");
+      return;
     }
-  } catch (error) {
-    console.error("Submission error:", error.response?.data || error.message);
-    
-    let errorMessage = "Failed to save proposal";
-    if (error.response?.data?.errors) {
-      errorMessage = error.response.data.errors.join("\n");
-    } else if (error.response?.data?.message) {
-      errorMessage = error.response.data.message;
+
+    try {
+      const token = getAuthToken();
+      if (!token) {
+        alert("Authentication token missing. Please login again.");
+        navigate("/login");
+        return;
+      }
+
+      // Prepare items in the correct format for backend
+      const items = proposalItems.map(item => ({
+        description: item.description,
+        quantity: Number(item.quantity),
+        rate: Number(item.rate),
+        tax1: Number(item.tax1 || 0),
+        tax2: Number(item.tax2 || 0)
+      }));
+
+      const proposalData = {
+        title: formData.title,
+        clientName: formData.clientName,
+        clientEmail: formData.clientEmail,
+        status:formData.status,
+        items: items,
+        date: formData.date || new Date().toISOString().split('T')[0],
+        openTill: formData.openTill || null,
+        currency: formData.currency,
+        discountType: formData.discountType,
+        discountValue: Number(formData.discountValue || 0),
+        tags: formData.tags,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        country: formData.country,
+        zip: formData.zip,
+        phone: formData.phone,
+        assigned: formData.assigned
+      };
+
+      const config = createAxiosConfig();
+      const response = await axios.post(
+        'http://localhost:5000/api/admin/proposals', 
+        proposalData,
+        config
+      );
+      
+      if (response.data.success) {
+        alert(`Proposal saved successfully!`);
+        navigate("../sales/proposals");
+      } else {
+        throw new Error(response.data.message || "Failed to save proposal");
+      }
+    } catch (error) {
+      console.error("Submission error:", error.response?.data || error.message);
+      
+      let errorMessage = "Failed to save proposal";
+      if (error.response?.status === 401) {
+        errorMessage = "Authentication failed. Please login again.";
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      } else if (error.response?.data?.errors) {
+        errorMessage = error.response.data.errors.map(e => e.message).join("\n");
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      }
+      
+      alert(errorMessage);
     }
-    
-    alert(errorMessage);
-  }
-};
+  };
+
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">New Proposal</h2>
@@ -245,8 +305,11 @@ const handleSubmit = async (send = false) => {
                 name="clientName"
                 value={formData.clientName}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className={`w-full border px-3 py-2 rounded text-sm ${
+                  errors.clientName ? "border-red-500" : "border-gray-300"
+                }`}
               />
+              {errors.clientName && <p className="text-red-500 text-xs mt-1">{errors.clientName}</p>}
             </div>
 
             {/* Date fields */}
@@ -499,9 +562,10 @@ const handleSubmit = async (send = false) => {
                 ...proposalItems,
                 {
                   description: "",
-                  qty: 1,
+                  quantity: 1,
                   rate: 0,
-                  amount: 0
+                  tax1: 0,
+                  tax2: 0
                 }
               ]);
             }}
@@ -510,6 +574,8 @@ const handleSubmit = async (send = false) => {
             <FaPlus /> <span className="ml-1">Add Custom Item</span>
           </button>
         </div>
+
+        {errors.items && <p className="text-red-500 text-sm mb-3">{errors.items}</p>}
 
         {/* Proposal Items Table */}
         <div className="overflow-x-auto">
@@ -520,6 +586,8 @@ const handleSubmit = async (send = false) => {
                 <th className="p-3 font-medium">Item Description</th>
                 <th className="p-3 font-medium">Qty</th>
                 <th className="p-3 font-medium">Rate</th>
+                <th className="p-3 font-medium">Tax 1</th>
+                <th className="p-3 font-medium">Tax 2</th>
                 <th className="p-3 font-medium">Amount</th>
                 <th className="p-3 font-medium">Action</th>
               </tr>
@@ -537,34 +605,52 @@ const handleSubmit = async (send = false) => {
                       placeholder="Item description"
                     />
                   </td>
-            <td className="p-3">
-              <input
-                type="number"
-                value={item.qty}
-                onChange={(e) => {
-                  const qty = Math.max(1, parseInt(e.target.value) || 1);
-                  handleItemChange(i, "qty", qty);
-                  handleItemChange(i, "amount", item.rate * qty);
-                }}
-                className="w-full border px-2 py-1 rounded"
-                min="1"
-              />
-            </td>
-                             <td className="p-3">
+                  <td className="p-3">
+                    <input
+                      type="number"
+                      value={item.quantity}
+                      onChange={(e) => {
+                        const quantity = Math.max(1, parseInt(e.target.value) || 1);
+                        handleItemChange(i, "quantity", quantity);
+                      }}
+                      className="w-full border px-2 py-1 rounded"
+                      min="1"
+                    />
+                  </td>
+                  <td className="p-3">
                     <input
                       type="number"
                       value={item.rate}
                       onChange={(e) => {
                         const rate = parseFloat(e.target.value) || 0;
                         handleItemChange(i, "rate", rate);
-                        handleItemChange(i, "amount", item.qty * rate);
                       }}
                       className="w-full border px-2 py-1 rounded"
                       min="0"
                       step="0.01"
                     />
                   </td>
-                  <td className="p-3 text-right">${item.amount.toFixed(2)}</td>
+                  <td className="p-3">
+                    <input
+                      type="number"
+                      value={item.tax1}
+                      onChange={(e) => handleItemChange(i, "tax1", parseFloat(e.target.value) || 0)}
+                      className="w-full border px-2 py-1 rounded"
+                      min="0"
+                      step="0.01"
+                    />
+                  </td>
+                  <td className="p-3">
+                    <input
+                      type="number"
+                      value={item.tax2}
+                      onChange={(e) => handleItemChange(i, "tax2", parseFloat(e.target.value) || 0)}
+                      className="w-full border px-2 py-1 rounded"
+                      min="0"
+                      step="0.01"
+                    />
+                  </td>
+                  <td className="p-3 text-right">${(item.quantity * item.rate).toFixed(2)}</td>
                   <td className="p-3 text-center">
                     <button
                       onClick={() => deleteItem(i)}
@@ -757,10 +843,10 @@ const handleSubmit = async (send = false) => {
       {/* Form Buttons */}
       <div className="mt-6 flex justify-end gap-3">
         <button
-          onClick={() => handleSubmit(true)}
+          onClick={() => handleSubmit(false)}
           className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
         >
-          Save
+          Save Draft
         </button>
         <button
           onClick={() => handleSubmit(true)}
