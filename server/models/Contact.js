@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const contactSchema = new mongoose.Schema({
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+    index: true
+  },
   subject: {
     type: String,
     required: [true, "Subject is required"],
@@ -47,6 +53,7 @@ const contactSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
+contactSchema.index({ admin: 1 });
 contactSchema.index({ customerId: 1 });
 contactSchema.index({ contractType: 1 });
 contactSchema.index({ endDate: 1 });

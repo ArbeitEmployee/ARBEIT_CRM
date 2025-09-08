@@ -7,25 +7,26 @@ import {
   importContacts,
   searchCustomers
 } from "../../controllers/admin/contactController.js";
+import { protect } from "../../middlewares/authMiddleware.js";
 import multer from "multer";
 
 const upload = multer();
 
 const router = express.Router();
 
-// Contact routes
+// Contact routes (protected with JWT middleware)
 router.route("/")
-  .get(getContacts)
-  .post(createContact);
+  .get(protect, getContacts)
+  .post(protect, createContact);
 
 router.route("/import")
-  .post(upload.single('file'), importContacts);
+  .post(protect, upload.single('file'), importContacts);
 
 router.route("/customers/search")
-  .get(searchCustomers);
+  .get(protect, searchCustomers);
 
 router.route("/:id")
-  .put(updateContact)
-  .delete(deleteContact);
+  .put(protect, updateContact)
+  .delete(protect, deleteContact);
 
 export default router;

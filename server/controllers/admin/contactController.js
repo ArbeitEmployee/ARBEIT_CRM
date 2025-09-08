@@ -2,25 +2,28 @@ import Contact from "../../models/Contact.js";
 import Customer from "../../models/Customer.js";
 import XLSX from "xlsx";
 
-// @desc    Get all contacts with customer details
+// @desc    Get all contacts with customer details for logged-in admin
 // @route   GET /api/contacts
-// @access  Public
+// @access  Private
 export const getContacts = async (req, res) => {
   try {
-    const contacts = await Contact.find({})
+    const contacts = await Contact.find({ admin: req.admin._id })
       .populate('customer', 'company contact email phone')
       .sort({ createdAt: -1 });
     
     // Calculate stats
     const active = await Contact.countDocuments({ 
+      admin: req.admin._id,
       endDate: { $gte: new Date() } 
     });
     
     const expired = await Contact.countDocuments({ 
+      admin: req.admin._id,
       endDate: { $lt: new Date() } 
     });
     
     const aboutToExpire = await Contact.countDocuments({ 
+      admin: req.admin._id,
       endDate: { 
         $gte: new Date(),
         $lte: new Date(new Date().setDate(new Date().getDate() + 30))
@@ -28,6 +31,7 @@ export const getContacts = async (req, res) => {
     });
     
     const recentlyAdded = await Contact.countDocuments({ 
+      admin: req.admin._id,
       createdAt: { 
         $gte: new Date(new Date().setDate(new Date().getDate() - 7))
       } 
@@ -49,9 +53,9 @@ export const getContacts = async (req, res) => {
   }
 };
 
-// @desc    Create a contact
+// @desc    Create a contact for logged-in admin
 // @route   POST /api/contacts
-// @access  Public
+// @access  Private
 export const createContact = async (req, res) => {
   try {
     const { subject, customerId, contractType, contractValue, startDate, endDate, project, signature } = req.body;
@@ -62,13 +66,14 @@ export const createContact = async (req, res) => {
       });
     }
 
-    // Check if customer exists
-    const customer = await Customer.findById(customerId);
+    // Check if customer exists and belongs to the same admin
+    const customer = await Customer.findOne({ _id: customerId, admin: req.admin._id });
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
 
     const contact = new Contact({
+      admin: req.admin._id,
       subject,
       customerId,
       contractType,
@@ -94,9 +99,9 @@ export const createContact = async (req, res) => {
   }
 };
 
-// @desc    Import contacts from CSV
+// @desc    Import contacts from CSV for logged-in admin
 // @route   POST /api/contacts/import
-// @access  Public
+// @access  Private
 export const importContacts = async (req, res) => {
   try {
     if (!req.file) {
@@ -159,10 +164,11 @@ export const importContacts = async (req, res) => {
         continue;
       }
 
-      // Find customer by company name
+      // Find customer by company name for this admin
       let customer;
       try {
         customer = await Customer.findOne({ 
+          admin: req.admin._id,
           company: { $regex: new RegExp(row.Customer, 'i') } 
         });
         
@@ -224,6 +230,7 @@ export const importContacts = async (req, res) => {
       }
 
       const contactData = {
+        admin: req.admin._id,
         subject: row.Subject,
         customerId: customer._id,
         contractType: row['Contract Type'],
@@ -267,9 +274,9 @@ export const importContacts = async (req, res) => {
   }
 };
 
-// @desc    Update a contact
+// @desc    Update a contact for logged-in admin
 // @route   PUT /api/contacts/:id
-// @access  Public
+// @access  Private
 export const updateContact = async (req, res) => {
   try {
     const { subject, customerId, contractType, contractValue, startDate, endDate, project, signature } = req.body;
@@ -280,16 +287,16 @@ export const updateContact = async (req, res) => {
       });
     }
 
-    // Check if customer exists
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
-
-    const contact = await Contact.findById(req.params.id);
-    
+    // Check if contact exists and belongs to the admin
+    const contact = await Contact.findOne({ _id: req.params.id, admin: req.admin._id });
     if (!contact) {
       return res.status(404).json({ message: "Contact not found" });
+    }
+
+    // Check if customer exists and belongs to the same admin
+    const customer = await Customer.findOne({ _id: customerId, admin: req.admin._id });
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
     }
 
     contact.subject = subject;
@@ -316,18 +323,18 @@ export const updateContact = async (req, res) => {
   }
 };
 
-// @desc    Delete a contact
+// @desc    Delete a contact for logged-in admin
 // @route   DELETE /api/contacts/:id
-// @access  Public
+// @access  Private
 export const deleteContact = async (req, res) => {
   try {
-    const contact = await Contact.findById(req.params.id);
+    const contact = await Contact.findOne({ _id: req.params.id, admin: req.admin._id });
     
     if (!contact) {
       return res.status(404).json({ message: "Contact not found" });
     }
 
-    await Contact.deleteOne({ _id: req.params.id });
+    await Contact.deleteOne({ _id: req.params.id, admin: req.admin._id });
     res.json({ message: "Contact removed successfully" });
   } catch (error) {
     console.error("Error deleting contact:", error);
@@ -335,9 +342,9 @@ export const deleteContact = async (req, res) => {
   }
 };
 
-// @desc    Search customers by company name
+// @desc    Search customers by company name for logged-in admin
 // @route   GET /api/contacts/customers/search
-// @access  Public
+// @access  Private
 export const searchCustomers = async (req, res) => {
   try {
     const { q } = req.query;
@@ -347,6 +354,7 @@ export const searchCustomers = async (req, res) => {
     }
 
     const customers = await Customer.find({
+      admin: req.admin._id,
       company: { $regex: q, $options: 'i' }
     }).select('company contact email phone').limit(10);
     
