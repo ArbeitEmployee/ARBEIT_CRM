@@ -49,14 +49,43 @@ const EstimateForm = () => {
   const statusOptions = ["Draft", "Pending", "Approved", "Rejected"];
   const taxOptions = [0, 5, 10, 15, 20];
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
+  // Configure axios defaults
+  useEffect(() => {
+    const token = getAuthToken();
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+  }, []);
+
   // Fetch items from database
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const { data } = await axios.get("http://localhost:5000/api/admin/items");
+        const config = createAxiosConfig();
+        const { data } = await axios.get("http://localhost:5000/api/admin/items", config);
         setDatabaseItems(data.data || data);
       } catch (err) {
         console.error("Error fetching items", err);
+        if (err.response?.status === 401) {
+          localStorage.removeItem("crm_token");
+          navigate("/login");
+        }
       }
     };
     fetchItems();
@@ -70,7 +99,11 @@ const EstimateForm = () => {
     }
     
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`);
+      const config = createAxiosConfig();
+      const { data } = await axios.get(
+        `http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`,
+        config
+      );
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -165,10 +198,11 @@ const EstimateForm = () => {
   const saveNewItemToDatabase = async (e) => {
     e.preventDefault();
     try {
+      const config = createAxiosConfig();
       const response = await axios.post("http://localhost:5000/api/admin/items", {
         ...newItem,
         rate: newItem.rate.startsWith('$') ? newItem.rate : `$${newItem.rate}`
-      });
+      }, config);
       
       // Add to database items
       setDatabaseItems([response.data, ...databaseItems]);
@@ -187,6 +221,10 @@ const EstimateForm = () => {
       setShowItemForm(false);
     } catch (err) {
       console.error("Error saving item", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
   };
 
@@ -202,14 +240,26 @@ const EstimateForm = () => {
     let newErrors = {};
     if (!formData.customer || !formData.customerId) newErrors.customer = "Customer is required";
     if (!formData.reference) newErrors.reference = "Reference is required";
+    if (estimateItems.length === 0) newErrors.items = "At least one item is required";
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (send = false) => {
-    if (!validate()) return;
+    if (!validate()) {
+      alert("Please fill all required fields");
+      return;
+    }
     
     try {
+      const token = getAuthToken();
+      if (!token) {
+        alert("Authentication token missing. Please login again.");
+        navigate("/login");
+        return;
+      }
+
       // Prepare items with proper structure
       const items = estimateItems.map(item => ({
         description: item.description,
@@ -228,24 +278,24 @@ const EstimateForm = () => {
         expiryDate: formData.expiryDate,
         tags: formData.tags,
         currency: formData.currency,
-        status: formData.status,
+        status: send ? "Pending" : formData.status,
         reference: formData.reference,
         salesAgent: formData.salesAgent,
         discountType: formData.discountType,
         discountValue: parseFloat(formData.discountValue),
         adminNote: formData.adminNote,
-        items: items,
-        subtotal: subtotal,
-        discount: discount,
-        total: total
+        items: items
       };
 
-      console.log("Submitting:", estimateData);
-
-      const response = await axios.post('http://localhost:5000/api/admin/estimates', estimateData);
+      const config = createAxiosConfig();
+      const response = await axios.post(
+        'http://localhost:5000/api/admin/estimates', 
+        estimateData,
+        config
+      );
       
       if (response.data.success) {
-        alert("Estimate saved successfully!");
+        alert(`Estimate ${send ? "sent" : "saved"} successfully!`);
         navigate("../sales/estimates");
       } else {
         throw new Error(response.data.message || "Failed to save estimate");
@@ -254,10 +304,16 @@ const EstimateForm = () => {
       console.error("Submission error:", error.response?.data || error.message);
       
       let errorMessage = "Failed to save estimate";
-      if (error.response?.data?.errors) {
-        errorMessage = error.response.data.errors.join("\n");
+      if (error.response?.status === 401) {
+        errorMessage = "Authentication failed. Please login again.";
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      } else if (error.response?.data?.errors) {
+        errorMessage = error.response.data.errors.map(e => e.message).join("\n");
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
+      } else if (error.code === 11000) {
+        errorMessage = "Estimate number conflict occurred. Please try again.";
       }
       
       alert(errorMessage);
@@ -469,7 +525,7 @@ const EstimateForm = () => {
                 value={formData.tags}
                 onChange={handleChange}
                 className="w-full border px-3 py-2 rounded text-sm border-gray-300"
-              >
+                >
                 <option value="">Select Tag</option>
                 {tagOptions.map((tag, i) => (
                   <option key={i} value={tag}>{tag}</option>
@@ -561,6 +617,8 @@ const EstimateForm = () => {
             <FaPlus /> <span className="ml-1">Add Custom Item</span>
           </button>
         </div>
+
+        {errors.items && <p className="text-red-500 text-sm mb-3">{errors.items}</p>}
 
         {/* Estimate Items Table */}
         <div className="overflow-x-auto">

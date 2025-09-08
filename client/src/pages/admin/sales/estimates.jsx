@@ -27,6 +27,22 @@ const Estimates = () => {
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   // Close export menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -41,14 +57,30 @@ const Estimates = () => {
     };
   }, []);
 
-  // Fetch estimates
+  // Fetch estimates for the logged-in admin only
   const fetchEstimates = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/admin/estimates");
-      setEstimates(data.data || data);
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/admin/estimates", config);
+      
+      // Ensure we're getting the data in the correct format
+      if (data.data) {
+        setEstimates(data.data); // If response has data property
+      } else if (Array.isArray(data)) {
+        setEstimates(data); // If response is directly an array
+      } else {
+        console.error("Unexpected API response format:", data);
+        setEstimates([]);
+      }
     } catch (err) {
       console.error("Error fetching estimates", err);
+      if (err.response?.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+      setEstimates([]);
     }
     setLoading(false);
   };
@@ -150,12 +182,17 @@ const Estimates = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this estimate?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/admin/estimates/${id}`);
+      const config = createAxiosConfig();
+      await axios.delete(`http://localhost:5000/api/admin/estimates/${id}`, config);
       setEstimates(estimates.filter((e) => e._id !== id));
       // Remove from selected if it was selected
       setSelectedEstimates(selectedEstimates.filter(estimateId => estimateId !== id));
     } catch (err) {
       console.error("Error deleting estimate", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
   };
 
@@ -163,9 +200,10 @@ const Estimates = () => {
   const handleBulkDelete = async () => {
     if (!window.confirm(`Are you sure you want to delete ${selectedEstimates.length} estimates?`)) return;
     try {
+      const config = createAxiosConfig();
       await Promise.all(
         selectedEstimates.map(id => 
-          axios.delete(`http://localhost:5000/api/admin/estimates/${id}`)
+          axios.delete(`http://localhost:5000/api/admin/estimates/${id}`, config)
         )
       );
       setEstimates(estimates.filter(e => !selectedEstimates.includes(e._id)));
@@ -173,6 +211,10 @@ const Estimates = () => {
       alert("Selected estimates deleted successfully!");
     } catch (err) {
       console.error("Error deleting estimates", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
       alert("Error deleting selected estimates.");
     }
   };
@@ -180,11 +222,16 @@ const Estimates = () => {
   // Update estimate
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/estimates/${editEstimate._id}`, formData);
+      const config = createAxiosConfig();
+      await axios.put(`http://localhost:5000/api/admin/estimates/${editEstimate._id}`, formData, config);
       setEditEstimate(null);
       fetchEstimates();
     } catch (err) {
       console.error("Error updating estimate", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
   };
 
@@ -206,7 +253,7 @@ const Estimates = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Draft": return "bg-gray-100 text-gray-800";
-      case "Sent": return "bg-blue-100 text-blue-800";
+      case "Pending": return "bg-blue-100 text-blue-800";
       case "Approved": return "bg-green-100 text-green-800";
       case "Rejected": return "bg-red-100 text-red-800";
       case "Expired": return "bg-yellow-100 text-yellow-800";
@@ -225,6 +272,74 @@ const Estimates = () => {
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Estimates</span>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        {/* Total Estimates */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Total Estimates</p>
+              <p className="text-2xl font-bold">{estimates.length}</p>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-full">
+              <FaEye className="text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Draft Estimates */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Draft</p>
+              <p className="text-2xl font-bold">{estimates.filter(e => e.status === "Draft").length}</p>
+            </div>
+            <div className="bg-gray-100 p-3 rounded-full">
+              <FaEdit className="text-gray-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Estimates */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Pending</p>
+              <p className="text-2xl font-bold">{estimates.filter(e => e.status === "Pending").length}</p>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-full">
+              <FaEye className="text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Approved Estimates */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Approved</p>
+              <p className="text-2xl font-bold">{estimates.filter(e => e.status === "Approved").length}</p>
+            </div>
+            <div className="bg-green-100 p-3 rounded-full">
+              <FaEye className="text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Rejected Estimates */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Rejected</p>
+              <p className="text-2xl font-bold">{estimates.filter(e => e.status === "Rejected").length}</p>
+            </div>
+            <div className="bg-red-100 p-3 rounded-full">
+              <FaTimes className="text-red-600" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -422,11 +537,11 @@ const Estimates = () => {
                           />
                         </div>
                       </td>
-                      <td className="p-3 border-0 font-mono">{displayEstimateNumber}</td>
+                      <td className="p-3 border-0 ">{displayEstimateNumber}</td>
                       <td className="p-3 border-0">{estimate.customer || "-"}</td>
                       {compactView ? (
                         <>
-                          <td className="p-3 border-0 text-right">{displayAmount}</td>
+                          <td className="p-3 border-0 ">{displayAmount}</td>
                           <td className="p-3 border-0">{formatDate(estimate.estimateDate)}</td>
                           <td className="p-3 border-0">
                             <span className={`px-2 py-1 rounded text-xs ${getStatusColor(estimate.status)}`}>
@@ -467,8 +582,8 @@ const Estimates = () => {
                         </>
                       ) : (
                         <>
-                          <td className="p-3 border-0 text-right">{displayAmount}</td>
-                          <td className="p-3 border-0 text-right">
+                          <td className="p-3 border-0 ">{displayAmount}</td>
+                          <td className="p-3 border-0 ">
                             {new Intl.NumberFormat("en-US", {
                               style: "currency",
                               currency: estimate.currency || "USD",
@@ -526,7 +641,7 @@ const Estimates = () => {
                     colSpan={compactView ? 7 : 11} 
                     className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
                   >
-                    No estimates found
+                    {estimates.length === 0 ? "No estimates found. Create your first estimate!" : "No estimates match your search."}
                   </td>
                 </tr>
               )}
@@ -535,39 +650,41 @@ const Estimates = () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-4 text-sm">
-          <span>
-            Showing {indexOfFirstEstimate + 1} to {Math.min(indexOfLastEstimate, filteredEstimates.length)} of{" "}
-            {filteredEstimates.length} entries
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="px-2 py-1 border rounded disabled:opacity-50"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
+        {filteredEstimates.length > 0 && (
+          <div className="flex justify-between items-center mt-4 text-sm">
+            <span>
+              Showing {indexOfFirstEstimate + 1} to {Math.min(indexOfLastEstimate, filteredEstimates.length)} of{" "}
+              {filteredEstimates.length} entries
+            </span>
+            <div className="flex items-center gap-2">
               <button
-                key={i}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === i + 1 ? "bg-gray-200" : ""
-                }`}
-                onClick={() => setCurrentPage(i + 1)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
               >
-                {i + 1}
+                Previous
               </button>
-            ))}
-            <button
-              className="px-2 py-1 border rounded disabled:opacity-50"
-              disabled={currentPage === totalPages || totalPages === 0}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Next
-            </button>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === i + 1 ? "bg-gray-200" : ""
+                  }`}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                className="px-2 py-1 border rounded disabled:opacity-50"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
+                Next
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* View & Edit Modals */}
@@ -641,10 +758,9 @@ const Estimates = () => {
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="Draft">Draft</option>
-                  <option value="Sent">Sent</option>
+                  <option value="Pending">Pending</option>
                   <option value="Approved">Approved</option>
                   <option value="Rejected">Rejected</option>
-                  <option value="Expired">Expired</option>
                 </select>
               </div>
             </div>
@@ -662,7 +778,7 @@ const Estimates = () => {
                 Update Estimate
               </button>
             </div>
-          </div>
+            </div>
         </div>
       )}
     </div>

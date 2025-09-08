@@ -1,51 +1,114 @@
 import mongoose from "mongoose";
 
-// Counter schema for sequential numbering
 const counterSchema = new mongoose.Schema({
   _id: { type: String, required: true },
   seq: { type: Number, default: 1 }
 });
-const Counter = mongoose.model("EstimateCounter", counterSchema);
+const Counter = mongoose.model('EstimateCounter', counterSchema);
+
 
 const estimateSchema = new mongoose.Schema(
   {
-    customer: { type: String, required: true },
-    billTo: { type: String },
-    shipTo: { type: String },
-    estimateNumber: {
-      type: String,
-      unique: true,
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
+      required: true,
       index: true
     },
-    estimateDate: { type: Date, default: Date.now },
-    expiryDate: { type: Date },
-    tags: { type: String },
-    currency: { type: String, default: "USD" },
+    customer: { 
+      type: String, 
+      required: true 
+    },
+    billTo: { 
+      type: String 
+    },
+    shipTo: { 
+      type: String 
+    },
+    estimateNumber: {
+      type: String,
+      index: true
+    },
+    estimateDate: { 
+      type: Date, 
+      default: Date.now 
+    },
+    expiryDate: { 
+      type: Date 
+    },
+    tags: { 
+      type: String 
+    },
+    currency: { 
+      type: String, 
+      default: "USD" 
+    },
     status: {
       type: String,
       enum: ["Draft", "Pending", "Approved", "Rejected"],
       default: "Draft"
     },
-    reference: { type: String, required: true },
-    salesAgent: { type: String },
-    discountType: { type: String, default: "percent" },
-    discountValue: { type: Number, default: 0 },
-    adminNote: { type: String },
+    reference: { 
+      type: String, 
+      required: true 
+    },
+    salesAgent: { 
+      type: String 
+    },
+    discountType: { 
+      type: String, 
+      default: "percent" 
+    },
+    discountValue: { 
+      type: Number, 
+      default: 0 
+    },
+    adminNote: { 
+      type: String 
+    },
 
     items: [
       {
-        description: { type: String, required: true },
-        quantity: { type: Number, required: true, default: 1 },
-        rate: { type: Number, required: true },
-        tax1: { type: Number, default: 0 },
-        tax2: { type: Number, default: 0 },
-        amount: { type: Number,default: 0}
+        description: { 
+          type: String, 
+          required: true 
+        },
+        quantity: { 
+          type: Number, 
+          required: true, 
+          default: 1 
+        },
+        rate: { 
+          type: Number, 
+          required: true 
+        },
+        tax1: { 
+          type: Number, 
+          default: 0 
+        },
+        tax2: { 
+          type: Number, 
+          default: 0 
+        },
+        amount: { 
+          type: Number,
+          default: 0
+        }
       }
     ],
 
-    subtotal: { type: Number, default: 0 },
-    discount: { type: Number, default: 0 },
-    total: { type: Number, default: 0 }
+    subtotal: { 
+      type: Number, 
+      default: 0 
+    },
+    discount: { 
+      type: Number, 
+      default: 0 
+    },
+    total: { 
+      type: Number, 
+      default: 0 
+    }
   },
   {
     timestamps: true,
@@ -54,18 +117,21 @@ const estimateSchema = new mongoose.Schema(
   }
 );
 
-// Auto-generate sequential Estimate Number
-estimateSchema.pre("save", async function (next) {
-  if (!this.isNew) return next();
+// Compound index for admin-specific estimate numbers
+estimateSchema.index({ admin: 1, estimateNumber: 1 }, { unique: true });
 
+// Pre-save hook
+estimateSchema.pre('save', async function(next) {
+  if (!this.isNew) return next();
+  
   try {
     const counter = await Counter.findByIdAndUpdate(
-      { _id: "estimateNumber" },
+      { _id: 'estimateNumber' },
       { $inc: { seq: 1 } },
       { new: true, upsert: true }
     );
-
-    this.estimateNumber = `EST-${String(counter.seq).padStart(6, "0")}`;
+    
+    this.estimateNumber = `EST-${String(counter.seq).padStart(6, '0')}`;
     next();
   } catch (err) {
     next(err);
