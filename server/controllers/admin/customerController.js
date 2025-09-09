@@ -44,7 +44,7 @@ export const createCustomer = async (req, res) => {
       });
     }
 
-    // Check if customer with email already exists for this admin
+    // CHANGED: Check if customer with email already exists for THIS ADMIN only
     const existingCustomer = await Customer.findOne({ 
       admin: req.admin._id, 
       email: email.toLowerCase() 
@@ -168,7 +168,7 @@ export const importCustomers = async (req, res) => {
         continue;
       }
 
-      // Check if email already exists for this admin
+      // CHANGED: Check if email already exists for THIS ADMIN only
       const existingCustomer = await Customer.findOne({ 
         admin: req.admin._id, 
         email: normalizedEmail 
@@ -252,7 +252,7 @@ export const updateCustomer = async (req, res) => {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    // Check email uniqueness for this admin
+    // CHANGED: Check email uniqueness for THIS ADMIN only
     const normalizedEmail = email.toLowerCase().trim();
     if (normalizedEmail !== customer.email) {
       const existingCustomer = await Customer.findOne({ 

@@ -73,7 +73,8 @@ const customerSchema = new mongoose.Schema({
 
 // Add indexes for better performance
 customerSchema.index({ admin: 1, company: 1 });
-customerSchema.index({ admin: 1, email: 1 }, { unique: true }); // each admin must have unique customer email
+// CHANGED: Added compound unique index for admin and email
+customerSchema.index({ admin: 1, email: 1 }, { unique: true }); 
 customerSchema.index({ admin: 1, active: 1 });
 customerSchema.index({ admin: 1, contactsActive: 1 });
 
