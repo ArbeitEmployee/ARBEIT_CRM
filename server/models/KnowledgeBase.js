@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const knowledgeBaseSchema = new mongoose.Schema({
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+    //index: true
+  },
   title: {
     type: String,
     required: [true, "Title is required"],
@@ -41,6 +47,7 @@ const knowledgeBaseSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
+knowledgeBaseSchema.index({ admin: 1 });
 knowledgeBaseSchema.index({ group: 1 });
 knowledgeBaseSchema.index({ dateCreated: 1 });
 

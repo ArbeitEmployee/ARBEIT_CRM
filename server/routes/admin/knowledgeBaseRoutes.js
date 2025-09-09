@@ -6,19 +6,20 @@ import {
   deleteArticle,
   bulkDeleteArticles
 } from "../../controllers/admin/knowledgeBaseController.js";
+import { protect } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// Knowledge base routes
+// All knowledge base routes (protected with JWT middleware)
 router.route("/")
-  .get(getArticles)
-  .post(createArticle);
+  .get(protect, getArticles)
+  .post(protect, createArticle);
 
 router.route("/bulk-delete")
-  .post(bulkDeleteArticles);
+  .post(protect, bulkDeleteArticles);
 
 router.route("/:id")
-  .put(updateArticle)
-  .delete(deleteArticle);
+  .put(protect, updateArticle)
+  .delete(protect, deleteArticle);
 
 export default router;

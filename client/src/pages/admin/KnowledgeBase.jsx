@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
   FaTimes, FaEdit, FaTrash, FaChevronDown,
-  FaFileAlt, FaFilter, FaEye // Import FaEye icon
+  FaFileAlt, FaFilter, FaEye
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
@@ -19,7 +19,6 @@ const KnowledgeBasePage = () => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showNewArticleForm, setShowNewArticleForm] = useState(false);
   const [articles, setArticles] = useState([]);
-  // Removed useState for groups as it's static and setGroups was unused
   const groups = [
     "All",
     "General",
@@ -37,7 +36,7 @@ const KnowledgeBasePage = () => {
     dateCreated: ""
   });
   const [editingArticle, setEditingArticle] = useState(null);
-  const [viewingArticle, setViewingArticle] = useState(null); // New state for viewing article
+  const [viewingArticle, setViewingArticle] = useState(null);
   const [filterGroup, setFilterGroup] = useState("All");
 
   // Add a ref for the export menu
@@ -77,23 +76,43 @@ const KnowledgeBasePage = () => {
     return dateString;
   };
 
-    const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
   // Fetch articles from API
-  // Moved inside useEffect or wrapped in useCallback for better dependency management
-  // For simplicity, we'll make useEffect depend on filterGroup and searchTerm
   const fetchArticles = async () => {
     setLoading(true);
     try {
+      const config = createAxiosConfig();
       const { data } = await axios.get("http://localhost:5000/api/knowledge-base", {
         params: {
           group: filterGroup !== "All" ? filterGroup : null,
           search: searchTerm
-        }
+        },
+        ...config
       });
       setArticles(data.articles || []);
     } catch (error) {
       console.error("Error fetching articles:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/admin/login";
+      }
       setArticles([]);
     }
     setLoading(false);
@@ -101,7 +120,7 @@ const KnowledgeBasePage = () => {
 
   useEffect(() => {
     fetchArticles();
-  }, [filterGroup, searchTerm]); // Added searchTerm to dependency array
+  }, [filterGroup, searchTerm]);
 
   // Search filter
   const filteredArticles = articles.filter(article => 
@@ -145,20 +164,22 @@ const KnowledgeBasePage = () => {
     // Format dates for backend
     const articleData = {
       ...newArticle,
-      dateCreated: newArticle.dateCreated ? formatDateForBackend(newArticle.dateCreated) : "" // Ensure date is formatted or empty
+      dateCreated: newArticle.dateCreated ? formatDateForBackend(newArticle.dateCreated) : ""
     };
     
     try {
+      const config = createAxiosConfig();
+      
       if (editingArticle) {
         // Update existing article
-        await axios.put(`http://localhost:5000/api/knowledge-base/${editingArticle._id}`, articleData);
+        await axios.put(`http://localhost:5000/api/knowledge-base/${editingArticle._id}`, articleData, config);
         setShowNewArticleForm(false);
         setEditingArticle(null);
         fetchArticles();
         alert("Article updated successfully!");
       } else {
         // Create new article
-        await axios.post("http://localhost:5000/api/knowledge-base", articleData);
+        await axios.post("http://localhost:5000/api/knowledge-base", articleData, config);
         setShowNewArticleForm(false);
         fetchArticles();
         alert("Article created successfully!");
@@ -173,6 +194,10 @@ const KnowledgeBasePage = () => {
       });
     } catch (error) {
       console.error("Error saving article:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/admin/login";
+      }
       alert(`Error saving article: ${error.response?.data?.message || error.message}`);
     } finally {
       setIsSaving(false);
@@ -185,7 +210,7 @@ const KnowledgeBasePage = () => {
       title: article.title,
       content: article.content,
       group: article.group,
-      dateCreated: formatDateForInput(article.dateCreated) // Format for input field
+      dateCreated: formatDateForInput(article.dateCreated)
     });
     setShowNewArticleForm(true);
   };
@@ -193,17 +218,22 @@ const KnowledgeBasePage = () => {
   const handleDeleteArticle = async (id) => {
     if (window.confirm("Are you sure you want to delete this article?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/knowledge-base/${id}`);
+        const config = createAxiosConfig();
+        await axios.delete(`http://localhost:5000/api/knowledge-base/${id}`, config);
         fetchArticles();
         alert("Article deleted successfully!");
       } catch (error) {
         console.error("Error deleting article:", error);
+        if (error.response?.status === 401) {
+          alert("Session expired. Please login again.");
+          window.location.href = "/admin/login";
+        }
         alert(`Error deleting article: ${error.response?.data?.message || error.message}`);
       }
     }
   };
 
-  // Export functions
+  // Export functions (same as before)
   const exportToExcel = () => {
     const dataToExport = filteredArticles.map(article => ({
       ID: article._id,
@@ -471,13 +501,19 @@ const KnowledgeBasePage = () => {
                     onClick={async () => {
                       if (window.confirm(`Delete ${selectedArticles.length} selected articles?`)) {
                         try {
+                          const config = createAxiosConfig();
                           await axios.post("http://localhost:5000/api/knowledge-base/bulk-delete", {
                             articleIds: selectedArticles
-                          });
+                          }, config);
                           setSelectedArticles([]);
                           fetchArticles();
                           alert("Selected articles deleted!");
-                        } catch {
+                        } catch (error) {
+                          console.error("Error deleting selected articles:", error);
+                          if (error.response?.status === 401) {
+                            alert("Session expired. Please login again.");
+                            window.location.href = "/admin/login";
+                          }
                           alert("Error deleting selected articles.");
                         }
                       }
@@ -770,7 +806,7 @@ const KnowledgeBasePage = () => {
             <div className="mt-6 flex justify-end">
               <button 
                 onClick={() => setViewingArticle(null)} 
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                className="px-4 py-2 bg-black text-white rounded text-sm"
               >
                 Close
               </button>

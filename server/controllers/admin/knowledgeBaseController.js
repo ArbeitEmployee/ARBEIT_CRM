@@ -1,13 +1,13 @@
 import KnowledgeBase from "../../models/KnowledgeBase.js";
 
-// @desc    Get all knowledge base articles
+// @desc    Get all knowledge base articles for logged-in admin
 // @route   GET /api/knowledge-base
-// @access  Public
+// @access  Private
 export const getArticles = async (req, res) => {
   try {
     const { group, search } = req.query;
     
-    let filter = {};
+    let filter = { admin: req.admin._id };
     
     if (group && group !== "All") {
       filter.group = group;
@@ -24,7 +24,7 @@ export const getArticles = async (req, res) => {
     const articles = await KnowledgeBase.find(filter).sort({ createdAt: -1 });
     
     // Get unique groups for filter
-    const groups = await KnowledgeBase.distinct("group");
+    const groups = await KnowledgeBase.distinct("group", { admin: req.admin._id });
     
     res.json({
       articles,
@@ -36,9 +36,9 @@ export const getArticles = async (req, res) => {
   }
 };
 
-// @desc    Create an article
+// @desc    Create an article for logged-in admin
 // @route   POST /api/knowledge-base
-// @access  Public
+// @access  Private
 export const createArticle = async (req, res) => {
   try {
     const { title, content, group, dateCreated } = req.body;
@@ -50,6 +50,7 @@ export const createArticle = async (req, res) => {
     }
 
     const article = new KnowledgeBase({
+      admin: req.admin._id,
       title,
       content,
       group,
@@ -68,9 +69,9 @@ export const createArticle = async (req, res) => {
   }
 };
 
-// @desc    Update an article
+// @desc    Update an article for logged-in admin
 // @route   PUT /api/knowledge-base/:id
-// @access  Public
+// @access  Private
 export const updateArticle = async (req, res) => {
   try {
     const { title, content, group, dateCreated } = req.body;
@@ -81,7 +82,7 @@ export const updateArticle = async (req, res) => {
       });
     }
 
-    const article = await KnowledgeBase.findById(req.params.id);
+    const article = await KnowledgeBase.findOne({ _id: req.params.id, admin: req.admin._id });
     
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
@@ -104,18 +105,18 @@ export const updateArticle = async (req, res) => {
   }
 };
 
-// @desc    Delete an article
+// @desc    Delete an article for logged-in admin
 // @route   DELETE /api/knowledge-base/:id
-// @access  Public
+// @access  Private
 export const deleteArticle = async (req, res) => {
   try {
-    const article = await KnowledgeBase.findById(req.params.id);
+    const article = await KnowledgeBase.findOne({ _id: req.params.id, admin: req.admin._id });
     
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
     }
 
-    await KnowledgeBase.deleteOne({ _id: req.params.id });
+    await KnowledgeBase.deleteOne({ _id: req.params.id, admin: req.admin._id });
     res.json({ message: "Article removed successfully" });
   } catch (error) {
     console.error("Error deleting article:", error);
@@ -123,9 +124,9 @@ export const deleteArticle = async (req, res) => {
   }
 };
 
-// @desc    Bulk delete articles
+// @desc    Bulk delete articles for logged-in admin
 // @route   POST /api/knowledge-base/bulk-delete
-// @access  Public
+// @access  Private
 export const bulkDeleteArticles = async (req, res) => {
   try {
     const { articleIds } = req.body;
@@ -134,7 +135,10 @@ export const bulkDeleteArticles = async (req, res) => {
       return res.status(400).json({ message: "Article IDs are required" });
     }
 
-    const result = await KnowledgeBase.deleteMany({ _id: { $in: articleIds } });
+    const result = await KnowledgeBase.deleteMany({ 
+      _id: { $in: articleIds },
+      admin: req.admin._id
+    });
     
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "No articles found to delete" });
