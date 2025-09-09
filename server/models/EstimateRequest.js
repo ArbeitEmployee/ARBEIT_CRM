@@ -1,8 +1,11 @@
-// FileName: EstimateRequest.js
 import mongoose from "mongoose";
 
 const estimateRequestSchema = new mongoose.Schema({
-  // estimateNumber field removed
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+  },
   customerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Customer",
@@ -19,12 +22,10 @@ const estimateRequestSchema = new mongoose.Schema({
     required: [true, "Amount is required"],
     min: [0, "Amount cannot be negative"]
   },
-  // tags field removed
   createdDate: {
     type: Date,
     required: [true, "Created date is required"]
   },
-  // validUntil field removed
   status: {
     type: String,
     required: true,
@@ -37,7 +38,7 @@ const estimateRequestSchema = new mongoose.Schema({
     ],
     default: "Draft"
   },
-  notes: { // Added for content/notes
+  notes: {
     type: String,
     trim: true,
     maxlength: [1000, "Notes cannot exceed 1000 characters"]
@@ -47,10 +48,10 @@ const estimateRequestSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
+estimateRequestSchema.index({ admin: 1 });
 estimateRequestSchema.index({ customerId: 1 });
 estimateRequestSchema.index({ status: 1 });
 estimateRequestSchema.index({ createdDate: 1 });
-// estimateRequestSchema.index({ estimateNumber: 1 }); // Index for estimateNumber removed
 
 estimateRequestSchema.virtual('customer', {
   ref: 'Customer',

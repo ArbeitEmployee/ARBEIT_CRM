@@ -1,4 +1,3 @@
-// FileName: estimateRequestRoutes.js
 import express from "express";
 import {
   getEstimateRequests,
@@ -8,22 +7,23 @@ import {
   bulkDeleteEstimateRequests,
   searchCustomers
 } from "../../controllers/admin/estimateRequestController.js";
+import { protect } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// Estimate request routes
+// All estimate request routes (protected with JWT middleware)
 router.route("/")
-  .get(getEstimateRequests)
-  .post(createEstimateRequest);
+  .get(protect, getEstimateRequests)
+  .post(protect, createEstimateRequest);
 
 router.route("/bulk-delete")
-  .post(bulkDeleteEstimateRequests);
+  .post(protect, bulkDeleteEstimateRequests);
 
 router.route("/customers/search")
-  .get(searchCustomers);
+  .get(protect, searchCustomers);
 
 router.route("/:id")
-  .put(updateEstimateRequest)
-  .delete(deleteEstimateRequest);
+  .put(protect, updateEstimateRequest)
+  .delete(protect, deleteEstimateRequest);
 
 export default router;
