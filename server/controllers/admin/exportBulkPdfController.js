@@ -60,8 +60,9 @@ export const bulkPdfExport = async (req, res) => {
         });
     }
 
-    // Build query
+    // Build query - Only fetch documents for the logged-in admin
     const query = {
+      admin: req.admin._id,
       createdAt: {
         $gte: start,
         $lte: new Date(end.getTime() + 24 * 60 * 60 * 1000) // Include the entire end date
@@ -143,7 +144,7 @@ export const bulkPdfExport = async (req, res) => {
         doc.isInvoiced ? "Yes" : "No",
         doc.paymentMode || "N/A"
       ]);
-    }else if (type === "proposal") {
+    } else if (type === "proposal") {
       headers = [["Proposal #", "Client", "Title", "Amount", "Status", "Date", "Tags"]];
       tableData = documents.map((doc) => [
           doc.proposalNumber || "N/A",

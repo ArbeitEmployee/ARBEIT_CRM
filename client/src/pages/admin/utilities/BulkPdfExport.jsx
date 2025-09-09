@@ -11,6 +11,22 @@ const BulkPdfExport = () => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setExportData({
@@ -34,10 +50,12 @@ const BulkPdfExport = () => {
     setMessage("");
 
     try {
+      const config = createAxiosConfig();
       const response = await axios.post(
         "http://localhost:5000/api/admin/export/bulk-pdf",
         exportData,
         {
+          ...config,
           responseType: "blob"
         }
       );
@@ -65,7 +83,11 @@ const BulkPdfExport = () => {
       setMessage("PDF exported successfully!");
     } catch (error) {
       console.error("Export error:", error);
-      setMessage("Failed to export PDF. Please try again.");
+      if (error.response?.status === 401) {
+        setMessage("Session expired. Please login again.");
+      } else {
+        setMessage("Failed to export PDF. Please try again.");
+      }
     } finally {
       setLoading(false);
     }
