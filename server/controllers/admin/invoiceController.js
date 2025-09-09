@@ -1,57 +1,53 @@
 import Invoice from "../../models/Invoice.js";
 
-// Create new invoice
+// Helper function for error responses
+const errorResponse = (res, status, message, error = null) => {
+  return res.status(status).json({
+    success: false,
+    message,
+    error: process.env.NODE_ENV === "development" ? error?.message : undefined
+  });
+};
+
+// ✅ Create Invoice (admin-specific)
 export const createInvoice = async (req, res) => {
   try {
     // Validate required fields
     const { customer, items } = req.body;
     
     if (!customer) {
-      return res.status(400).json({ message: "Customer is required" });
+      return errorResponse(res, 400, "Customer is required");
     }
     
     if (!items || !Array.isArray(items) || items.length === 0) {
-      return res.status(400).json({ message: "At least one item is required" });
+      return errorResponse(res, 400, "At least one item is required");
     }
 
     // Validate each item
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       if (!item.description) {
-        return res.status(400).json({ message: `Item ${i + 1} description is required` });
+        return errorResponse(res, 400, `Item ${i + 1} description is required`);
       }
       if (!item.quantity || item.quantity <= 0) {
-        return res.status(400).json({ message: `Item ${i + 1} quantity must be greater than 0` });
+        return errorResponse(res, 400, `Item ${i + 1} quantity must be greater than 0`);
       }
       if (!item.rate || item.rate <= 0) {
-        return res.status(400).json({ message: `Item ${i + 1} rate must be greater than 0` });
+        return errorResponse(res, 400, `Item ${i + 1} rate must be greater than 0`);
       }
     }
 
-    // Create the invoice with proper data structure
+    // Create the invoice with admin reference
     const invoiceData = {
-      customer,
-      billTo: req.body.billTo || "",
-      shipTo: req.body.shipTo || "",
-      invoiceDate: req.body.invoiceDate || new Date(),
-      dueDate: req.body.dueDate || null,
-      tags: req.body.tags || "",
-      paymentMode: req.body.paymentMode || "Bank",
-      currency: req.body.currency || "USD",
-      salesAgent: req.body.salesAgent || "",
-      recurringInvoice: req.body.recurringInvoice || "No",
-      discountType: req.body.discountType || "percent",
-      discountValue: req.body.discountValue || 0,
-      adminNote: req.body.adminNote || "",
-      status: req.body.status || "Draft",
-      paidAmount: req.body.paidAmount || 0, // Add paidAmount field
+      ...req.body,
+      admin: req.admin._id, // Add admin reference from auth middleware
       items: items.map(item => ({
         description: item.description,
         quantity: Number(item.quantity),
         rate: Number(item.rate),
         tax1: Number(item.tax1 || 0),
         tax2: Number(item.tax2 || 0),
-        amount: Number(item.quantity) * Number(item.rate) // Calculate amount upfront
+        amount: Number(item.quantity) * Number(item.rate)
       }))
     };
 
@@ -76,59 +72,86 @@ export const createInvoice = async (req, res) => {
     });
   } catch (error) {
     console.error("Invoice creation error:", error);
-    res.status(400).json({ 
-      success: false,
-      message: error.message,
-      error: error.errors ? Object.values(error.errors).map(e => e.message) : []
-    });
+    
+    if (error.code === 11000) {
+      return errorResponse(res, 400, "Invoice number conflict occurred");
+    }
+    
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors
+      });
+    }
+    
+    errorResponse(res, 500, "Server error while creating invoice", error);
   }
 };
 
-// Get all invoices
+// ✅ Get All Invoices (for logged-in admin only)
 export const getInvoices = async (req, res) => {
   try {
-    const invoices = await Invoice.find().sort({ createdAt: -1 });
-    res.json({
+    const { status, customer } = req.query;
+    const filter = { admin: req.admin._id }; // Only get invoices for this admin
+
+    if (status) filter.status = status;
+    if (customer) filter.customer = new RegExp(customer, "i");
+
+    const invoices = await Invoice.find(filter).sort({ createdAt: -1 });
+    
+    res.status(200).json({
       success: true,
+      count: invoices.length,
       data: invoices
     });
   } catch (error) {
     console.error("Get invoices error:", error);
-    res.status(500).json({ 
-      success: false,
-      message: error.message 
-    });
+    errorResponse(res, 500, "Server error while fetching invoices", error);
   }
 };
 
-// Get invoice by ID
+// ✅ Get Single Invoice by ID (admin-specific)
 export const getInvoiceById = async (req, res) => {
   try {
-    const invoice = await Invoice.findById(req.params.id);
-    if (!invoice) return res.status(404).json({ 
-      success: false,
-      message: "Invoice not found" 
+    const invoice = await Invoice.findOne({
+      _id: req.params.id,
+      admin: req.admin._id // Ensure the invoice belongs to this admin
     });
+
+    if (!invoice) {
+      return errorResponse(res, 404, "Invoice not found");
+    }
     
-    res.json({
+    res.status(200).json({
       success: true,
       data: invoice
     });
   } catch (error) {
     console.error("Get invoice error:", error);
-    res.status(500).json({ 
-      success: false,
-      message: error.message 
-    });
+    errorResponse(res, 500, "Server error while fetching invoice", error);
   }
 };
 
-// Update invoice
+// ✅ Update Invoice (admin-specific)
 export const updateInvoice = async (req, res) => {
   try {
+    // Prevent manual update of invoice number
+    if (req.body.invoiceNumber) {
+      delete req.body.invoiceNumber;
+    }
+
     // If updating paidAmount, automatically update status based on payment
     if (req.body.paidAmount !== undefined) {
-      const existingInvoice = await Invoice.findById(req.params.id);
+      const existingInvoice = await Invoice.findOne({
+        _id: req.params.id,
+        admin: req.admin._id
+      });
+      
       if (existingInvoice) {
         const paidAmount = Number(req.body.paidAmount);
         const total = existingInvoice.total;
@@ -137,7 +160,7 @@ export const updateInvoice = async (req, res) => {
         if (paidAmount >= total) {
           req.body.status = "Paid";
         } else if (paidAmount > 0) {
-          req.body.status = "Partiallypaid"; // Match frontend spelling
+          req.body.status = "Partiallypaid";
         } else {
           req.body.status = "Unpaid";
         }
@@ -168,54 +191,89 @@ export const updateInvoice = async (req, res) => {
       }));
     }
 
-    const updatedInvoice = await Invoice.findByIdAndUpdate(
-      req.params.id,
+    const updatedInvoice = await Invoice.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        admin: req.admin._id // Ensure the invoice belongs to this admin
+      },
       req.body,
       { new: true, runValidators: true }
     );
     
     if (!updatedInvoice) {
-      return res.status(404).json({ 
-        success: false,
-        message: "Invoice not found" 
-      });
+      return errorResponse(res, 404, "Invoice not found");
     }
     
-    res.json({
+    res.status(200).json({
       success: true,
       message: "Invoice updated successfully",
       data: updatedInvoice
     });
   } catch (error) {
     console.error("Update invoice error:", error);
-    res.status(400).json({ 
-      success: false,
-      message: error.message,
-      error: error.errors ? Object.values(error.errors).map(e => e.message) : []
-    });
-  }
-};
-
-// Delete invoice
-export const deleteInvoice = async (req, res) => {
-  try {
-    const deletedInvoice = await Invoice.findByIdAndDelete(req.params.id);
-    if (!deletedInvoice) {
-      return res.status(404).json({ 
+    
+    if (error.name === "ValidationError") {
+      const errors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message
+      }));
+      return res.status(400).json({
         success: false,
-        message: "Invoice not found" 
+        message: "Validation failed",
+        errors
       });
     }
     
-    res.json({ 
+    errorResponse(res, 500, "Server error while updating invoice", error);
+  }
+};
+
+// ✅ Delete Invoice (admin-specific)
+export const deleteInvoice = async (req, res) => {
+  try {
+    const deletedInvoice = await Invoice.findOneAndDelete({
+      _id: req.params.id,
+      admin: req.admin._id // Ensure the invoice belongs to this admin
+    });
+    
+    if (!deletedInvoice) {
+      return errorResponse(res, 404, "Invoice not found");
+    }
+    
+    res.status(200).json({
       success: true,
-      message: "Invoice deleted successfully" 
+      message: "Invoice deleted successfully",
+      data: {
+        id: deletedInvoice._id,
+        invoiceNumber: deletedInvoice.invoiceNumber
+      }
     });
   } catch (error) {
     console.error("Delete invoice error:", error);
-    res.status(500).json({ 
-      success: false,
-      message: error.message 
+    errorResponse(res, 500, "Server error while deleting invoice", error);
+  }
+};
+
+// ✅ Get invoice stats (admin-specific)
+export const getInvoiceStats = async (req, res) => {
+  try {
+    const stats = await Invoice.aggregate([
+      { $match: { admin: req.admin._id } },
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+          totalAmount: { $sum: "$total" }
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: stats
     });
+  } catch (error) {
+    console.error("Error fetching invoice stats:", error);
+    errorResponse(res, 500, "Server error while fetching stats", error);
   }
 };

@@ -16,7 +16,7 @@ const Invoices = () => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredId, setHoveredId] = useState(null);
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
   const [viewInvoice, setViewInvoice] = useState(null);
   const [editInvoice, setEditInvoice] = useState(null);
   const [searchInput, setSearchInput] = useState("");
@@ -49,6 +49,22 @@ const Invoices = () => {
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   // Close export menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -63,12 +79,22 @@ const Invoices = () => {
     };
   }, []);
 
-  // Fetch invoices
+  // Fetch invoices for the logged-in admin only
   const fetchInvoices = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/admin/invoices");
-      setInvoices(data.data || data);
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/admin/invoices", config);
+      
+      // Ensure we're getting the data in the correct format
+      if (data.data) {
+        setInvoices(data.data); // If response has data property
+      } else if (Array.isArray(data)) {
+        setInvoices(data); // If response is directly an array
+      } else {
+        console.error("Unexpected API response format:", data);
+        setInvoices([]);
+      }
       
       // Calculate stats
       const total = data.data?.length || data.length || 0;
@@ -88,6 +114,12 @@ const Invoices = () => {
       });
     } catch (err) {
       console.error("Error fetching invoices", err);
+      if (err.response?.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+      setInvoices([]);
     }
     setLoading(false);
   };
@@ -95,6 +127,15 @@ const Invoices = () => {
   useEffect(() => {
     fetchInvoices();
   }, []);
+
+  // Toggle invoice selection
+  const toggleInvoiceSelection = (id) => {
+    if (selectedInvoices.includes(id)) {
+      setSelectedInvoices(selectedInvoices.filter(invoiceId => invoiceId !== id));
+    } else {
+      setSelectedInvoices([...selectedInvoices, id]);
+    }
+  };
 
   // Get status color
   const getStatusColor = (status) => {
@@ -146,6 +187,7 @@ const processBatchPayments = async () => {
   setBatchPaymentError("");
   
   try {
+    const config = createAxiosConfig();
     const payableInvoices = getPayableInvoices();
     let hasValidPayment = false;
     
@@ -201,7 +243,7 @@ const processBatchPayments = async () => {
         delete updateData.updatedAt;
         
         // Update invoice
-        await axios.put(`http://localhost:5000/api/admin/invoices/${invoice._id}`, updateData);
+        await axios.put(`http://localhost:5000/api/admin/invoices/${invoice._id}`, updateData, config);
       }
     }
     
@@ -213,6 +255,10 @@ const processBatchPayments = async () => {
     
   } catch (err) {
     console.error("Error processing batch payments", err);
+    if (err.response?.status === 401) {
+      localStorage.removeItem("crm_token");
+      navigate("/login");
+    }
     setBatchPaymentError("Error processing payments. Please try again.");
   }
   setBatchPaymentLoading(false);
@@ -302,22 +348,57 @@ const processBatchPayments = async () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this invoice?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/admin/invoices/${id}`);
+      const config = createAxiosConfig();
+      await axios.delete(`http://localhost:5000/api/admin/invoices/${id}`, config);
       setInvoices(invoices.filter((i) => i._id !== id));
+      // Remove from selected if it was selected
+      setSelectedInvoices(selectedInvoices.filter(invoiceId => invoiceId !== id));
       fetchInvoices(); // Refresh stats
     } catch (err) {
       console.error("Error deleting invoice", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+    }
+  };
+
+  // Bulk delete invoices
+  const handleBulkDelete = async () => {
+    if (!window.confirm(`Are you sure you want to delete ${selectedInvoices.length} invoices?`)) return;
+    try {
+      const config = createAxiosConfig();
+      await Promise.all(
+        selectedInvoices.map(id => 
+          axios.delete(`http://localhost:5000/api/admin/invoices/${id}`, config)
+        )
+      );
+      setInvoices(invoices.filter(i => !selectedInvoices.includes(i._id)));
+      setSelectedInvoices([]);
+      alert("Selected invoices deleted successfully!");
+    } catch (err) {
+      console.error("Error deleting invoices", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+      alert("Error deleting selected invoices.");
     }
   };
 
   // Update invoice
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/invoices/${editInvoice._id}`, formData);
+      const config = createAxiosConfig();
+      await axios.put(`http://localhost:5000/api/admin/invoices/${editInvoice._id}`, formData, config);
       setEditInvoice(null);
       fetchInvoices();
     } catch (err) {
       console.error("Error updating invoice", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
   };
 
@@ -325,7 +406,7 @@ const processBatchPayments = async () => {
   const filteredInvoices = invoices.filter(
     (invoice) =>
       invoice.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (invoice.invoiceNumber || "INV-" + invoice._id.slice(-6).toUpperCase()).toLowerCase().includes(searchTerm.toLowerCase()) ||
       invoice.reference?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -451,6 +532,16 @@ const processBatchPayments = async () => {
           >
             <FaMoneyCheckAlt /> Batch Payment
           </button>
+          
+          {/* Bulk delete button */}
+          {selectedInvoices.length > 0 && (
+            <button
+              className="bg-red-600 text-white px-3 py-1 rounded"
+              onClick={handleBulkDelete}
+            >
+              Delete Selected ({selectedInvoices.length})
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -515,24 +606,17 @@ const processBatchPayments = async () => {
 
           {/* Search */}
           <div className="relative">
-            <div className="relative flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Search invoices..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="border rounded pl-2 pr-3 py-1 text-sm"
-              />
-              <button
-                onClick={() => {
-                  setSearchTerm(searchInput);
-                  setCurrentPage(1);
-                }}
-                className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
-              >
-                Search
-              </button>
-            </div>
+            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+            <input
+              type="text"
+              placeholder="Search invoices..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="border rounded pl-8 pr-3 py-1 text-sm"
+            />
           </div>
         </div>
 
@@ -541,7 +625,20 @@ const processBatchPayments = async () => {
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Invoice#</th>
+                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedInvoices.length === currentInvoices.length && currentInvoices.length > 0}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedInvoices(currentInvoices.map(i => i._id));
+                      } else {
+                        setSelectedInvoices([]);
+                      }
+                    }}
+                  />
+                </th>
+                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Invoice#</th>
                 <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
                 {compactView ? (
                   <>
@@ -590,13 +687,21 @@ const processBatchPayments = async () => {
                       key={invoice._id}
                       className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
                       style={{ color: 'black' }}
-                      onMouseEnter={() => setHoveredId(invoice._id)}
-                      onMouseLeave={() => setHoveredId(null)}
                     >
-                      <td className="p-3 rounded-l-lg border-0 font-mono relative">
+                      <td className="p-3 rounded-l-lg border-0">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedInvoices.includes(invoice._id)}
+                            onChange={() => toggleInvoiceSelection(invoice._id)}
+                            className="h-4 w-4"
+                          />
+                        </div>
+                      </td>
+                      <td className="p-3 border-0 ">
                         {displayInvoiceNumber}
                       </td>
-                      <td className="p-3 border-0 text-right">{displayAmount}</td>
+                      <td className="p-3 border-0 ">{displayAmount}</td>
                       {compactView ? (
                         <>
                           <td className="p-3 border-0">{invoice.customer || "-"}</td>
@@ -640,7 +745,7 @@ const processBatchPayments = async () => {
                         </>
                       ) : (
                         <>
-                          <td className="p-3 border-0 text-right">
+                          <td className="p-3 border-0 ">
                             {new Intl.NumberFormat("en-US", {
                               style: "currency",
                               currency: invoice.currency || "USD",
@@ -696,8 +801,8 @@ const processBatchPayments = async () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={compactView ? 6 : 11} className="p-4 text-center text-gray-500">
-                    No invoices found
+                  <td colSpan={compactView ? 7 : 12} className="p-4 text-center text-gray-500 bg-white shadow rounded-lg">
+                    {invoices.length === 0 ? "No invoices found. Create your first invoice!" : "No invoices match your search."}
                   </td>
                 </tr>
               )}
@@ -706,37 +811,41 @@ const processBatchPayments = async () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-4 text-sm">
-          <span>
-            Showing {indexOfFirstInvoice + 1} to {Math.min(indexOfLastInvoice, filteredInvoices.length)} of{" "}
-            {filteredInvoices.length} entries
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="px-2 py-1 border rounded disabled:opacity-50"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
+        {filteredInvoices.length > 0 && (
+          <div className="flex justify-between items-center mt-4 text-sm">
+            <span>
+              Showing {indexOfFirstInvoice + 1} to {Math.min(indexOfLastInvoice, filteredInvoices.length)} of{" "}
+              {filteredInvoices.length} entries
+            </span>
+            <div className="flex items-center gap-2">
               <button
-                key={i}
-                className={`px-3 py-1 border rounded ${currentPage === i + 1 ? "bg-gray-200" : ""}`}
-                onClick={() => setCurrentPage(i + 1)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
               >
-                {i + 1}
+                Previous
               </button>
-            ))}
-            <button
-              className="px-2 py-1 border rounded disabled:opacity-50"
-              disabled={currentPage === totalPages || totalPages === 0}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Next
-            </button>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === i + 1 ? "bg-gray-200" : ""
+                  }`}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                className="px-2 py-1 border rounded disabled:opacity-50"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
+                Next
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* View & Edit Modals */}

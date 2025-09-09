@@ -23,7 +23,7 @@ const InvoiceForm = () => {
     discountValue: 0,
     adminNote: "",
     status: "Draft",
-    paidAmount: 0 // Add paidAmount field
+    paidAmount: 0
   });
 
   // Items state
@@ -39,7 +39,7 @@ const InvoiceForm = () => {
     tax2: 0
   });
   const [loading, setLoading] = useState(false);
-  const [showItemsDropdown, setShowItemsDropdown] = useState(false); // For item selection dropdown
+  const [showItemsDropdown, setShowItemsDropdown] = useState(false);
 
   // Customer search state
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
@@ -54,14 +54,35 @@ const InvoiceForm = () => {
   const statusOptions = ["Draft", "Unpaid", "Paid", "Partiallypaid", "Overdue"];
   const taxOptions = [0, 5, 10, 15, 20];
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   // Fetch items from database
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const { data } = await axios.get("http://localhost:5000/api/admin/items");
+        const config = createAxiosConfig();
+        const { data } = await axios.get("http://localhost:5000/api/admin/items", config);
         setDatabaseItems(data.data || data);
       } catch (err) {
         console.error("Error fetching items", err);
+        if (err.response?.status === 401) {
+          localStorage.removeItem("crm_token");
+          navigate("/login");
+        }
       }
     };
     fetchItems();
@@ -75,10 +96,15 @@ const InvoiceForm = () => {
     }
     
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`);
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`, config);
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
       setCustomerSearchResults([]);
     }
   };
@@ -183,10 +209,11 @@ const InvoiceForm = () => {
   const saveNewItemToDatabase = async (e) => {
     e.preventDefault();
     try {
+      const config = createAxiosConfig();
       const response = await axios.post("http://localhost:5000/api/admin/items", {
         ...newItem,
         rate: newItem.rate.startsWith('$') ? newItem.rate : `$${newItem.rate}`
-      });
+      }, config);
       
       // Add to database items
       setDatabaseItems([response.data, ...databaseItems]);
@@ -205,6 +232,10 @@ const InvoiceForm = () => {
       setShowItemForm(false);
     } catch (err) {
       console.error("Error saving item", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
       alert("Failed to save item: " + (err.response?.data?.message || err.message));
     }
   };
@@ -265,6 +296,8 @@ const InvoiceForm = () => {
     setLoading(true);
     
     try {
+      const config = createAxiosConfig();
+      
       // Prepare items with proper structure
       const items = invoiceItems.map(item => ({
         description: item.description,
@@ -303,9 +336,7 @@ const InvoiceForm = () => {
         invoiceData.paidAmount = formData.paidAmount;
       }
 
-      console.log("Submitting invoice:", invoiceData);
-
-      const response = await axios.post('http://localhost:5000/api/admin/invoices', invoiceData);
+      const response = await axios.post('http://localhost:5000/api/admin/invoices', invoiceData, config);
       
       if (response.data.success) {
         alert("Invoice saved successfully!");
@@ -318,7 +349,11 @@ const InvoiceForm = () => {
       
       let errorMessage = "Failed to save invoice. Please check your data and try again.";
       
-      if (error.response?.data?.errors) {
+      if (error.response?.status === 401) {
+        errorMessage = "Authentication failed. Please login again.";
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      } else if (error.response?.data?.errors) {
         errorMessage = error.response.data.errors.map(err => err.msg || err).join("\n");
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
@@ -447,7 +482,7 @@ const InvoiceForm = () => {
 
           {/* Right Column */}
           <div>
-            {/* Status Field - Added below Recurring Invoice */}
+            {/* Status Field */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
               <select
@@ -566,7 +601,7 @@ const InvoiceForm = () => {
                 value={formData.tags}
                 onChange={handleChange}
                 className="w-full border px-3 py-2 rounded text-sm border-gray-300"
-              >
+                >
                 <option value="">Select Tag</option>
                 {tagOptions.map((tag, i) => (
                   <option key={i} value={tag}>{tag}</option>
@@ -927,6 +962,7 @@ const InvoiceForm = () => {
                     </select>
                   </div>
                   <div>
+                   
                     <label className="block text-sm font-medium text-gray-700 mb-1">Tax 2</label>
                     <select
                       name="tax2"

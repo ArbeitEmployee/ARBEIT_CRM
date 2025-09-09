@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-// Counter schema for sequential numbering
+// Counter schema for sequential numbering (per admin)
 const counterSchema = new mongoose.Schema({
   _id: { type: String, required: true },
   seq: { type: Number, default: 1 }
@@ -9,13 +9,18 @@ const Counter = mongoose.model("InvoiceCounter", counterSchema);
 
 const invoiceSchema = new mongoose.Schema(
   {
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
+      required: true,
+      index: true
+    },
     customer: { type: String, required: true },
     billTo: { type: String },
     shipTo: { type: String },
 
     invoiceNumber: {
       type: String,
-      unique: true,
       index: true
     },
 
@@ -56,10 +61,10 @@ const invoiceSchema = new mongoose.Schema(
     subtotal: { type: Number, default: 0 },
     discount: { type: Number, default: 0 },
     total: { type: Number, default: 0 },
-    paidAmount: { type: Number, default: 0 }, // Add paidAmount field
+    paidAmount: { type: Number, default: 0 },
     status: {
       type: String,
-      enum: ["Draft", "Unpaid", "Paid", "Partiallypaid", "Overdue"], // Fixed spelling
+      enum: ["Draft", "Unpaid", "Paid", "Partiallypaid", "Overdue"],
       default: "Draft"
     }
   },
@@ -69,6 +74,9 @@ const invoiceSchema = new mongoose.Schema(
     toObject: { virtuals: true }
   }
 );
+
+// Compound index for admin-specific invoice numbers
+invoiceSchema.index({ admin: 1, invoiceNumber: 1 }, { unique: true });
 
 // Auto-generate sequential Invoice Number
 invoiceSchema.pre("save", async function (next) {
