@@ -33,6 +33,22 @@ const CsvExport = () => {
     { value: "custom", label: "Custom Range" }
   ];
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   const handleExport = async () => {
     if (!selectedType || !selectedPeriod) {
       setExportMessage("Please select both export type and period");
@@ -55,7 +71,9 @@ const CsvExport = () => {
         params.endDate = customEndDate;
       }
 
+      const config = createAxiosConfig();
       const response = await axios.get(`http://localhost:5000/api/csvexport/${selectedType}`, {
+        ...config,
         params,
         responseType: 'blob'
       });
@@ -76,7 +94,11 @@ const CsvExport = () => {
       setExportMessage("Export completed successfully!");
     } catch (error) {
       console.error("Export error:", error);
-      setExportMessage("Error during export. Please try again.");
+      if (error.response?.status === 401) {
+        setExportMessage("Session expired. Please login again.");
+      } else {
+        setExportMessage("Error during export. Please try again.");
+      }
     } finally {
       setIsExporting(false);
     }

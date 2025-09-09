@@ -77,7 +77,7 @@ const getDateRange = (period, startDate, endDate) => {
 
 // @desc    Export data as CSV
 // @route   GET /api/csvexport/:type
-// @access  Public
+// @access  Private (Admin only)
 export const exportToCSV = async (req, res) => {
   try {
     const { type } = req.params;
@@ -94,10 +94,11 @@ export const exportToCSV = async (req, res) => {
     // Build date query
     const dateQuery = period !== 'all-time' ? getDateRange(period, startDate, endDate) : {};
 
+    // Add admin filter to ensure each admin only exports their own data
+    const adminQuery = { admin: req.admin._id, ...dateQuery };
+
     if (type === 'expenses') {
-      const query = { ...dateQuery };
-      
-      data = await Expense.find(query)
+      data = await Expense.find(adminQuery)
         .populate('customer', 'company contact email')
         .sort({ createdAt: -1 });
 
@@ -117,9 +118,7 @@ export const exportToCSV = async (req, res) => {
       ];
 
     } else if (type === 'leads') {
-      const query = { ...dateQuery };
-      
-      data = await Lead.find(query)
+      data = await Lead.find(adminQuery)
         .populate('customer', 'company contact email')
         .sort({ createdAt: -1 });
 
@@ -159,9 +158,7 @@ export const exportToCSV = async (req, res) => {
       return res.status(200).send(csv);
 
     } else if (type === 'contacts') {
-      const query = { ...dateQuery };
-      
-      data = await Contact.find(query)
+      data = await Contact.find(adminQuery)
         .populate('customer', 'company contact email phone')
         .sort({ createdAt: -1 });
 
@@ -182,9 +179,7 @@ export const exportToCSV = async (req, res) => {
       ];
 
     } else if (type === 'customers') {
-      const query = { ...dateQuery };
-      
-      data = await Customer.find(query).sort({ createdAt: -1 });
+      data = await Customer.find(adminQuery).sort({ createdAt: -1 });
 
       fields = [
         { label: 'ID', value: '_id' },
