@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
-  FaTimes, FaEdit, FaTrash, FaEye, // Added FaEye
+  FaTimes, FaEdit, FaTrash, FaEye,
   FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare,
   FaExclamationTriangle, FaExclamationCircle
 } from "react-icons/fa";
@@ -44,8 +44,8 @@ const SupportPage = () => {
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [customerSearchResults, setCustomerSearchResults] = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-  const [showDescriptionModal, setShowDescriptionModal] = useState(false); // New state for description modal
-  const [currentDescription, setCurrentDescription] = useState(""); // New state for current description
+  const [showDescriptionModal, setShowDescriptionModal] = useState(false);
+  const [currentDescription, setCurrentDescription] = useState("");
 
   const priorityOptions = ["Low", "Medium", "High", "Urgent"];
   const statusOptions = ["Open", "Answered", "On Hold", "Closed", "In Progress"];
@@ -71,11 +71,28 @@ const SupportPage = () => {
 
   const [loading, setLoading] = useState(true);
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   // Fetch tickets from API
   const fetchTickets = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/support");
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/support", config);
       setTickets(data.tickets || []);
       setStats(data.stats || {
         totalTickets: 0,
@@ -87,6 +104,10 @@ const SupportPage = () => {
       });
     } catch (error) {
       console.error("Error fetching support tickets:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/admin/login";
+      }
       setTickets([]);
       setStats({
         totalTickets: 0,
@@ -112,7 +133,8 @@ const SupportPage = () => {
     }
     
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/support/customers/search?q=${searchTerm}`);
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/support/customers/search?q=${searchTerm}`, config);
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -132,7 +154,6 @@ const SupportPage = () => {
 
   // Search filter
   const filteredTickets = tickets.filter(ticket =>
-    // ticket._id.toLowerCase().includes(searchTerm.toLowerCase()) || // Removed ID from search
     ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (ticket.description && ticket.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
     (ticket.tags && ticket.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -190,16 +211,18 @@ const SupportPage = () => {
     setIsSaving(true);
     
     try {
+      const config = createAxiosConfig();
+      
       if (editingTicket) {
         // Update existing ticket
-        await axios.put(`http://localhost:5000/api/support/${editingTicket._id}`, newTicket);
+        await axios.put(`http://localhost:5000/api/support/${editingTicket._id}`, newTicket, config);
         setShowNewTicketForm(false);
         setEditingTicket(null);
         fetchTickets();
         alert("Ticket updated successfully!");
       } else {
         // Create new ticket
-        await axios.post("http://localhost:5000/api/support", newTicket);
+        await axios.post("http://localhost:5000/api/support", newTicket, config);
         setShowNewTicketForm(false);
         fetchTickets();
         alert("Ticket created successfully!");
@@ -244,7 +267,8 @@ const SupportPage = () => {
   const handleDeleteTicket = async (id) => {
     if (window.confirm("Are you sure you want to delete this ticket?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/support/${id}`);
+        const config = createAxiosConfig();
+        await axios.delete(`http://localhost:5000/api/support/${id}`, config);
         fetchTickets();
         alert("Ticket deleted successfully!");
       } catch (error) {
@@ -268,7 +292,6 @@ const SupportPage = () => {
   // Export functions
   const exportToExcel = () => {
     const dataToExport = filteredTickets.map(ticket => ({
-      // ID: ticket._id, // Removed ID from export
       Subject: ticket.subject,
       Description: ticket.description,
       Tags: ticket.tags,
@@ -277,7 +300,7 @@ const SupportPage = () => {
       Customer: ticket.customer ? ticket.customer.company : "N/A",
       Priority: ticket.priority,
       Status: ticket.status,
-      Created: formatDateTime(ticket.created), // Formatted date
+      Created: formatDateTime(ticket.created),
       "Last Reply": ticket.lastReply
     }));
 
@@ -290,7 +313,6 @@ const SupportPage = () => {
 
   const exportToCSV = () => {
     const dataToExport = filteredTickets.map(ticket => ({
-      // ID: ticket._id, // Removed ID from export
       Subject: ticket.subject,
       Description: ticket.description,
       Tags: ticket.tags,
@@ -299,7 +321,7 @@ const SupportPage = () => {
       Customer: ticket.customer ? ticket.customer.company : "N/A",
       Priority: ticket.priority,
       Status: ticket.status,
-      Created: formatDateTime(ticket.created), // Formatted date
+      Created: formatDateTime(ticket.created),
       "Last Reply": ticket.lastReply
     }));
 
@@ -321,7 +343,6 @@ const SupportPage = () => {
     const doc = new jsPDF();
 
     const tableColumn = [
-      // "ID", // Removed ID from PDF export
       "Subject",
       "Tags",
       "Service",
@@ -334,7 +355,6 @@ const SupportPage = () => {
     ];
     
     const tableRows = filteredTickets.map(ticket => [
-      // ticket._id, // Removed ID from PDF export
       ticket.subject.length > 20 ? ticket.subject.substring(0, 20) + '...' : ticket.subject,
       ticket.tags,
       ticket.service,
@@ -342,7 +362,7 @@ const SupportPage = () => {
       ticket.customer ? ticket.customer.company : "N/A",
       ticket.priority,
       ticket.status,
-      formatDateTime(ticket.created), // Formatted date
+      formatDateTime(ticket.created),
       ticket.lastReply
     ]);
 
@@ -379,7 +399,6 @@ const SupportPage = () => {
     
     // Table header
     printWindow.document.write('<thead><tr>');
-    // ['ID', 'Subject', 'Tags', 'Service', 'Department', 'Customer', 'Priority', 'Status', 'Created', 'Last Reply'].forEach(header => { // Removed ID from print
     ['Subject', 'Tags', 'Service', 'Department', 'Customer', 'Priority', 'Status', 'Created', 'Last Reply'].forEach(header => {
       printWindow.document.write(`<th>${header}</th>`);
     });
@@ -390,7 +409,6 @@ const SupportPage = () => {
     filteredTickets.forEach(ticket => {
       printWindow.document.write('<tr>');
       [
-        // ticket._id, // Removed ID from print
         ticket.subject,
         ticket.tags,
         ticket.service,
@@ -398,7 +416,7 @@ const SupportPage = () => {
         ticket.customer ? ticket.customer.company : "N/A",
         ticket.priority,
         ticket.status,
-        formatDateTime(ticket.created), // Formatted date
+        formatDateTime(ticket.created),
         ticket.lastReply
       ].forEach(value => {
         printWindow.document.write(`<td>${value}</td>`);
@@ -740,9 +758,10 @@ const SupportPage = () => {
                   onClick={async () => {
                     if (window.confirm(`Delete ${selectedTickets.length} selected tickets?`)) {
                       try {
+                        const config = createAxiosConfig();
                         await axios.post("http://localhost:5000/api/support/bulk-delete", {
                           ticketIds: selectedTickets
-                        });
+                        }, config);
                         setSelectedTickets([]);
                         fetchTickets();
                         alert("Selected tickets deleted!");
@@ -853,7 +872,6 @@ const SupportPage = () => {
                         }}
                       />
                     </th>
-                    {/* <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>ID</th> */} {/* Removed ID column */}
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Subject</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Service</th>
@@ -878,7 +896,6 @@ const SupportPage = () => {
                             className="h-4 w-4"
                           />
                         </td>
-                        {/* <td className="p-3 border-0 text-sm">{ticket._id}</td> */} {/* Removed ID cell */}
                         <td className="p-3 border-0 text-sm">{ticket.subject}</td>
                         <td className="p-3 border-0 text-sm">{ticket.tags}</td>
                         <td className="p-3 border-0 text-sm">{ticket.service}</td>
@@ -903,7 +920,7 @@ const SupportPage = () => {
                             {ticket.status}
                           </span>
                         </td>
-                        <td className="p-3 border-0 text-sm">{formatDateTime(ticket.created)}</td> {/* Formatted date */}
+                        <td className="p-3 border-0 text-sm">{formatDateTime(ticket.created)}</td>
                         <td className="p-3 border-0 text-sm">{ticket.lastReply}</td>
                         <td className="p-3 rounded-r-lg border-0">
                           <div className="flex items-center gap-2">
@@ -934,7 +951,7 @@ const SupportPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="11" className="p-4 text-center text-gray-500"> {/* Adjusted colspan */}
+                      <td colSpan="11" className="p-4 text-center text-gray-500">
                         {searchTerm ? "No matching tickets found" : "No support tickets available"}
                       </td>
                     </tr>
@@ -962,17 +979,30 @@ const SupportPage = () => {
                   let pageNum;
                   if (totalPages <= 5) {
                     pageNum = i + 1;
-                  } else if (currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (currentPage >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
                   } else {
-                    pageNum = currentPage - 2 + i;
+                    if (currentPage <= 3) {
+                      if (i < 3) pageNum = i + 1;
+                      else if (i === 3) pageNum = "...";
+                      else if (i === totalPages - 1) pageNum = totalPages;
+                    } else if (currentPage >= totalPages - 2) {
+                      if (i === 0) pageNum = 1;
+                      else if (i === totalPages - 4) pageNum = "...";
+                      else if (i >= totalPages - 3) pageNum = i + 1;
+                    } else {
+                      if (i === 0) pageNum = 1;
+                      else if (i === 1) pageNum = "...";
+                      else if (i === 2) pageNum = currentPage;
+                      else if (i === 3) pageNum = "...";
+                      else if (i === totalPages - 1) pageNum = totalPages;
+                    }
                   }
-                  return (
+                  
+                  return pageNum === "..." ? (
+                    <span key={i} className="px-2 py-1">...</span>
+                  ) : (
                     <button
-                      key={pageNum}
-                      className={`px-3 py-1 border rounded ${currentPage === pageNum ? "bg-gray-200" : ""}`}
+                      key={i}
+                      className={`px-2 py-1 border rounded ${currentPage === pageNum ? "bg-black text-white" : ""}`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
                       {pageNum}
@@ -986,13 +1016,6 @@ const SupportPage = () => {
                 >
                   Next
                 </button>
-                <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
-                  onClick={() => setCurrentPage(totalPages)}
-                  disabled={currentPage === totalPages}
-                >
-                  Last
-                </button>
               </div>
             </div>
           </div>
@@ -1001,10 +1024,10 @@ const SupportPage = () => {
 
       {/* Description Modal */}
       {showDescriptionModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Ticket Description</h2>
+              <h3 className="text-lg font-semibold">Ticket Description</h3>
               <button
                 onClick={() => setShowDescriptionModal(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -1012,8 +1035,10 @@ const SupportPage = () => {
                 <FaTimes />
               </button>
             </div>
-            <p className="text-gray-700 whitespace-pre-wrap">{currentDescription}</p>
-            <div className="mt-6 text-right">
+            <div className="border rounded p-4 bg-gray-50 max-h-96 overflow-y-auto">
+              <p className="whitespace-pre-wrap">{currentDescription}</p>
+            </div>
+            <div className="mt-4 flex justify-end">
               <button
                 onClick={() => setShowDescriptionModal(false)}
                 className="px-4 py-2 bg-black text-white rounded text-sm"

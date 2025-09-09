@@ -89,6 +89,22 @@ const TaskPage = () => {
     setShowStaffDropdown(false);
   });
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   // Format date from YYYY-MM-DD to DD-MM-YYYY
   const formatDateForBackend = (dateString) => {
     if (!dateString) return "";
@@ -115,7 +131,8 @@ const TaskPage = () => {
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/tasks");
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/tasks", config);
       setTasks(data.tasks || []);
       setStats(data.stats || {
         totalTasks: 0,
@@ -127,6 +144,10 @@ const TaskPage = () => {
       });
     } catch (error) {
       console.error("Error fetching tasks:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/admin/login";
+      }
       setTasks([]);
       setStats({
         totalTasks: 0,
@@ -152,7 +173,8 @@ const TaskPage = () => {
     }
     
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`);
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`, config);
       setStaffSearchResults(data.staffs || []);
     } catch (error) {
       console.error("Error searching staff:", error);
@@ -231,16 +253,18 @@ const TaskPage = () => {
     };
     
     try {
+      const config = createAxiosConfig();
+      
       if (editingTask) {
         // Update existing task
-        await axios.put(`http://localhost:5000/api/tasks/${editingTask._id}`, taskData);
+        await axios.put(`http://localhost:5000/api/tasks/${editingTask._id}`, taskData, config);
         setShowNewTaskForm(false);
         setEditingTask(null);
         fetchTasks();
         alert("Task updated successfully!");
       } else {
         // Create new task
-        await axios.post("http://localhost:5000/api/tasks", taskData);
+        await axios.post("http://localhost:5000/api/tasks", taskData, config);
         setShowNewTaskForm(false);
         fetchTasks();
         alert("Task created successfully!");
@@ -281,7 +305,8 @@ const TaskPage = () => {
   const handleDeleteTask = async (id) => {
     if (window.confirm("Are you sure you want to delete this task?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/tasks/${id}`);
+        const config = createAxiosConfig();
+        await axios.delete(`http://localhost:5000/api/tasks/${id}`, config);
         fetchTasks();
         alert("Task deleted successfully!");
       } catch (error) {
@@ -746,8 +771,9 @@ const TaskPage = () => {
                   onClick={async () => {
                     if (window.confirm(`Delete ${selectedTasks.length} selected tasks?`)) {
                       try {
+                        const config = createAxiosConfig();
                         await Promise.all(selectedTasks.map(id =>
-                          axios.delete(`http://localhost:5000/api/tasks/${id}`)
+                          axios.delete(`http://localhost:5000/api/tasks/${id}`, config)
                         ));
                         setSelectedTasks([]);
                         fetchTasks();
@@ -1007,7 +1033,9 @@ const TaskPage = () => {
                   <button
                     key={i}
                     className={`px-3 py-1 border rounded ${
-                      currentPage === i + 1 ? "bg-gray-200" : ""
+                      currentPage === i + 1
+                        ? "bg-black text-white"
+                        : "hover:bg-gray-100"
                     }`}
                     onClick={() => setCurrentPage(i + 1)}
                   >
@@ -1023,16 +1051,16 @@ const TaskPage = () => {
                 </button>
               </div>
             </div>
-            </div>
+          </div>
         </>
       )}
 
       {/* Description Modal */}
       {showDescriptionModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-11/12 md:w-2/3 lg:w-1/2">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Task Description</h2>
+              <h3 className="text-lg font-semibold">Task Description</h3>
               <button
                 onClick={() => setShowDescriptionModal(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -1040,10 +1068,14 @@ const TaskPage = () => {
                 <FaTimes />
               </button>
             </div>
-            <p className="text-gray-700 whitespace-pre-wrap">
-              {currentDescription || "No description provided."}
-            </p>
-            <div className="mt-6 flex justify-end">
+            <div className="border rounded p-4 h-64 overflow-y-auto">
+              {currentDescription ? (
+                <p className="whitespace-pre-wrap">{currentDescription}</p>
+              ) : (
+                <p className="text-gray-500 italic">No description provided</p>
+              )}
+            </div>
+            <div className="mt-4 flex justify-end">
               <button
                 onClick={() => setShowDescriptionModal(false)}
                 className="px-4 py-2 bg-black text-white rounded"

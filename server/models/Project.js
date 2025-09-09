@@ -5,7 +5,7 @@ const projectSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Admin",
     required: true,
-    index: true
+    // index: true
   },
   name: {
     type: String,

@@ -1,6 +1,11 @@
 import mongoose from "mongoose";
 
 const supportSchema = new mongoose.Schema({
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+  },
   subject: {
     type: String,
     required: [true, "Subject is required"],
@@ -47,8 +52,8 @@ const supportSchema = new mongoose.Schema({
     default: "Open"
   },
   created: {
-    type: Date, // Changed to Date type
-    default: Date.now // Default to current date and time
+    type: Date,
+    default: Date.now
   },
   lastReply: {
     type: String,
@@ -59,6 +64,7 @@ const supportSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
+supportSchema.index({ admin: 1 });
 supportSchema.index({ customerId: 1 });
 supportSchema.index({ status: 1 });
 supportSchema.index({ priority: 1 });

@@ -1,21 +1,36 @@
 import Task from "../../models/Task.js";
 import XLSX from "xlsx";
 
-// @desc    Get all tasks
+// @desc    Get all tasks for logged-in admin
 // @route   GET /api/tasks
-// @access  Public
+// @access  Private
 export const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({})
+    const tasks = await Task.find({ admin: req.admin._id })
       .sort({ createdAt: -1 });
     
     // Calculate stats
-    const totalTasks = await Task.countDocuments();
-    const notStarted = await Task.countDocuments({ status: "Not Started" });
-    const inProgress = await Task.countDocuments({ status: "In Progress" });
-    const testing = await Task.countDocuments({ status: "Testing" });
-    const feedback = await Task.countDocuments({ status: "Feedback" });
-    const complete = await Task.countDocuments({ status: "Complete" });
+    const totalTasks = await Task.countDocuments({ admin: req.admin._id });
+    const notStarted = await Task.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Not Started" 
+    });
+    const inProgress = await Task.countDocuments({ 
+      admin: req.admin._id, 
+      status: "In Progress" 
+    });
+    const testing = await Task.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Testing" 
+    });
+    const feedback = await Task.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Feedback" 
+    });
+    const complete = await Task.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Complete" 
+    });
     
     res.json({
       tasks,
@@ -26,7 +41,7 @@ export const getTasks = async (req, res) => {
         testing,
         feedback,
         complete
-      },
+      }
     });
   } catch (error) {
     console.error("Error fetching tasks:", error);
@@ -34,9 +49,9 @@ export const getTasks = async (req, res) => {
   }
 };
 
-// @desc    Create a task
+// @desc    Create a task for logged-in admin
 // @route   POST /api/tasks
-// @access  Public
+// @access  Private
 export const createTask = async (req, res) => {
   try {
     const { projectName } = req.body;
@@ -48,6 +63,7 @@ export const createTask = async (req, res) => {
     }
 
     const task = new Task({
+      admin: req.admin._id,
       projectName,
       priority: req.body.priority || "Medium",
       tags: req.body.tags || "",
@@ -71,9 +87,9 @@ export const createTask = async (req, res) => {
   }
 };
 
-// @desc    Import tasks from CSV
+// @desc    Import tasks from CSV for logged-in admin
 // @route   POST /api/tasks/import
-// @access  Public
+// @access  Private
 export const importTasks = async (req, res) => {
   try {
     if (!req.file) {
@@ -133,6 +149,7 @@ export const importTasks = async (req, res) => {
       }
 
       const taskData = {
+        admin: req.admin._id,
         projectName: row['Subject'],
         priority: row.Priority || "Medium",
         tags: row.Tags || "",
@@ -174,9 +191,9 @@ export const importTasks = async (req, res) => {
   }
 };
 
-// @desc    Update a task
+// @desc    Update a task for logged-in admin
 // @route   PUT /api/tasks/:id
-// @access  Public
+// @access  Private
 export const updateTask = async (req, res) => {
   try {
     const { projectName } = req.body;
@@ -187,7 +204,7 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, admin: req.admin._id });
     
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
@@ -215,18 +232,18 @@ export const updateTask = async (req, res) => {
   }
 };
 
-// @desc    Delete a task
+// @desc    Delete a task for logged-in admin
 // @route   DELETE /api/tasks/:id
-// @access  Public
+// @access  Private
 export const deleteTask = async (req, res) => {
   try {
-    const task = await Task.findById(req.params.id);
+    const task = await Task.findOne({ _id: req.params.id, admin: req.admin._id });
     
     if (!task) {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    await Task.deleteOne({ _id: req.params.id });
+    await Task.deleteOne({ _id: req.params.id, admin: req.admin._id });
     res.json({ message: "Task removed successfully" });
   } catch (error) {
     console.error("Error deleting task:", error);
@@ -234,9 +251,9 @@ export const deleteTask = async (req, res) => {
   }
 };
 
-// @desc    Bulk delete tasks
+// @desc    Bulk delete tasks for logged-in admin
 // @route   POST /api/tasks/bulk-delete
-// @access  Public
+// @access  Private
 export const bulkDeleteTasks = async (req, res) => {
   try {
     const { taskIds } = req.body;
@@ -245,7 +262,10 @@ export const bulkDeleteTasks = async (req, res) => {
       return res.status(400).json({ message: "Task IDs are required" });
     }
 
-    const result = await Task.deleteMany({ _id: { $in: taskIds } });
+    const result = await Task.deleteMany({ 
+      _id: { $in: taskIds }, 
+      admin: req.admin._id 
+    });
     
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "No tasks found to delete" });
@@ -259,4 +279,3 @@ export const bulkDeleteTasks = async (req, res) => {
     res.status(500).json({ message: "Server error while bulk deleting tasks" });
   }
 };
-

@@ -2,22 +2,37 @@ import Support from "../../models/Support.js";
 import Customer from "../../models/Customer.js";
 import XLSX from "xlsx";
 
-// @desc    Get all support tickets with customer details
+// @desc    Get all support tickets with customer details for logged-in admin
 // @route   GET /api/support
-// @access  Public
+// @access  Private
 export const getSupportTickets = async (req, res) => {
   try {
-    const tickets = await Support.find({})
+    const tickets = await Support.find({ admin: req.admin._id })
       .populate('customer', 'company contact email phone')
       .sort({ createdAt: -1 });
     
     // Calculate stats
-    const totalTickets = await Support.countDocuments();
-    const open = await Support.countDocuments({ status: "Open" });
-    const answered = await Support.countDocuments({ status: "Answered" });
-    const onHold = await Support.countDocuments({ status: "On Hold" });
-    const closed = await Support.countDocuments({ status: "Closed" });
-    const inProgress = await Support.countDocuments({ status: "In Progress" });
+    const totalTickets = await Support.countDocuments({ admin: req.admin._id });
+    const open = await Support.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Open" 
+    });
+    const answered = await Support.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Answered" 
+    });
+    const onHold = await Support.countDocuments({ 
+      admin: req.admin._id, 
+      status: "On Hold" 
+    });
+    const closed = await Support.countDocuments({ 
+      admin: req.admin._id, 
+      status: "Closed" 
+    });
+    const inProgress = await Support.countDocuments({ 
+      admin: req.admin._id, 
+      status: "In Progress" 
+    });
     
     res.json({
       tickets,
@@ -36,9 +51,9 @@ export const getSupportTickets = async (req, res) => {
   }
 };
 
-// @desc    Create a support ticket
+// @desc    Create a support ticket for logged-in admin
 // @route   POST /api/support
-// @access  Public
+// @access  Private
 export const createSupportTicket = async (req, res) => {
   try {
     const { subject, description, customerId } = req.body;
@@ -49,13 +64,14 @@ export const createSupportTicket = async (req, res) => {
       });
     }
 
-    // Check if customer exists
-    const customer = await Customer.findById(customerId);
+    // Check if customer exists and belongs to the same admin
+    const customer = await Customer.findOne({ _id: customerId, admin: req.admin._id });
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
 
     const ticket = new Support({
+      admin: req.admin._id,
       subject,
       description,
       customerId,
@@ -64,7 +80,7 @@ export const createSupportTicket = async (req, res) => {
       department: req.body.department || "Support",
       priority: req.body.priority || "Medium",
       status: req.body.status || "Open",
-      created: new Date() // Set created date with current timestamp
+      created: new Date()
     });
 
     const createdTicket = await ticket.save();
@@ -82,9 +98,9 @@ export const createSupportTicket = async (req, res) => {
   }
 };
 
-// @desc    Update a support ticket
+// @desc    Update a support ticket for logged-in admin
 // @route   PUT /api/support/:id
-// @access  Public
+// @access  Private
 export const updateSupportTicket = async (req, res) => {
   try {
     const { subject, description, customerId } = req.body;
@@ -95,16 +111,16 @@ export const updateSupportTicket = async (req, res) => {
       });
     }
 
-    // Check if customer exists
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: "Customer not found" });
-    }
-
-    const ticket = await Support.findById(req.params.id);
-    
+    // Check if ticket exists and belongs to the admin
+    const ticket = await Support.findOne({ _id: req.params.id, admin: req.admin._id });
     if (!ticket) {
       return res.status(404).json({ message: "Support ticket not found" });
+    }
+
+    // Check if customer exists and belongs to the same admin
+    const customer = await Customer.findOne({ _id: customerId, admin: req.admin._id });
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
     }
 
     ticket.subject = subject;
@@ -132,18 +148,18 @@ export const updateSupportTicket = async (req, res) => {
   }
 };
 
-// @desc    Delete a support ticket
+// @desc    Delete a support ticket for logged-in admin
 // @route   DELETE /api/support/:id
-// @access  Public
+// @access  Private
 export const deleteSupportTicket = async (req, res) => {
   try {
-    const ticket = await Support.findById(req.params.id);
+    const ticket = await Support.findOne({ _id: req.params.id, admin: req.admin._id });
     
     if (!ticket) {
       return res.status(404).json({ message: "Support ticket not found" });
     }
 
-    await Support.deleteOne({ _id: req.params.id });
+    await Support.deleteOne({ _id: req.params.id, admin: req.admin._id });
     res.json({ message: "Support ticket removed successfully" });
   } catch (error) {
     console.error("Error deleting support ticket:", error);
@@ -151,9 +167,9 @@ export const deleteSupportTicket = async (req, res) => {
   }
 };
 
-// @desc    Search customers by company name for support
+// @desc    Search customers by company name for logged-in admin
 // @route   GET /api/support/customers/search
-// @access  Public
+// @access  Private
 export const searchCustomers = async (req, res) => {
   try {
     const { q } = req.query;
@@ -163,6 +179,7 @@ export const searchCustomers = async (req, res) => {
     }
 
     const customers = await Customer.find({
+      admin: req.admin._id,
       company: { $regex: q, $options: 'i' }
     }).select('company contact email phone').limit(10);
     
@@ -173,9 +190,9 @@ export const searchCustomers = async (req, res) => {
   }
 };
 
-// @desc    Bulk delete support tickets
+// @desc    Bulk delete support tickets for logged-in admin
 // @route   POST /api/support/bulk-delete
-// @access  Public
+// @access  Private
 export const bulkDeleteSupportTickets = async (req, res) => {
   try {
     const { ticketIds } = req.body;
@@ -184,7 +201,10 @@ export const bulkDeleteSupportTickets = async (req, res) => {
       return res.status(400).json({ message: "Ticket IDs are required" });
     }
 
-    const result = await Support.deleteMany({ _id: { $in: ticketIds } });
+    const result = await Support.deleteMany({ 
+      _id: { $in: ticketIds },
+      admin: req.admin._id
+    });
     
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "No support tickets found to delete" });

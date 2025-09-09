@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const taskSchema = new mongoose.Schema({
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+    //index: true
+  },
   projectName: {
     type: String,
     required: [true, "Subject is required"],
@@ -27,6 +33,7 @@ const taskSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function(v) {
+        if (!v) return true;
         return /^((0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}|(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])-\d{4})$/.test(v);
       },
       message: "Start date must be in DD-MM-YYYY or MM-DD-YYYY format"
@@ -36,6 +43,7 @@ const taskSchema = new mongoose.Schema({
     type: String,
     validate: {
       validator: function(v) {
+        if (!v) return true;
         return /^((0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-\d{4}|(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])-\d{4})$/.test(v);
       },
       message: "Deadline must be in DD-MM-YYYY or MM-DD-YYYY format"
@@ -68,6 +76,7 @@ const taskSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
+taskSchema.index({ admin: 1 });
 taskSchema.index({ priority: 1 });
 taskSchema.index({ status: 1 });
 taskSchema.index({ deadline: 1 });
@@ -75,4 +84,3 @@ taskSchema.index({ deadline: 1 });
 const Task = mongoose.model("Task", taskSchema);
 
 export default Task;
-

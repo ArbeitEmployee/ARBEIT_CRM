@@ -7,26 +7,26 @@ import {
   importTasks,
   bulkDeleteTasks
 } from "../../controllers/admin/taskController.js";
+import { protect } from "../../middlewares/authMiddleware.js";
 import multer from "multer";
 
 const upload = multer();
 
 const router = express.Router();
 
-// Task routes
+// All task routes (protected with JWT middleware)
 router.route("/")
-  .get(getTasks)
-  .post(createTask);
+  .get(protect, getTasks)
+  .post(protect, createTask);
 
 router.route("/import")
-  .post(upload.single('file'), importTasks);
+  .post(protect, upload.single('file'), importTasks);
 
 router.route("/bulk-delete")
-  .post(bulkDeleteTasks);
+  .post(protect, bulkDeleteTasks);
 
 router.route("/:id")
-  .put(updateTask)
-  .delete(deleteTask);
+  .put(protect, updateTask)
+  .delete(protect, deleteTask);
 
 export default router;
-

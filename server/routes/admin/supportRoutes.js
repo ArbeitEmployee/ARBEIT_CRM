@@ -7,22 +7,23 @@ import {
   searchCustomers,
   bulkDeleteSupportTickets
 } from "../../controllers/admin/supportController.js";
+import { protect } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-// Support routes
+// All support routes (protected with JWT middleware)
 router.route("/")
-  .get(getSupportTickets)
-  .post(createSupportTicket);
+  .get(protect, getSupportTickets)
+  .post(protect, createSupportTicket);
 
 router.route("/bulk-delete")
-  .post(bulkDeleteSupportTickets);
+  .post(protect, bulkDeleteSupportTickets);
 
 router.route("/customers/search")
-  .get(searchCustomers);
+  .get(protect, searchCustomers);
 
 router.route("/:id")
-  .put(updateSupportTicket)
-  .delete(deleteSupportTicket);
+  .put(protect, updateSupportTicket)
+  .delete(protect, deleteSupportTicket);
 
 export default router;

@@ -5,7 +5,7 @@ const contactSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Admin",
     required: true,
-    index: true
+    //index: true
   },
   subject: {
     type: String,
