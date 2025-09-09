@@ -16,27 +16,32 @@ const CreditNotes = () => {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [creditNotes, setCreditNotes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [hoveredId, setHoveredId] = useState(null);
+  const [selectedCreditNotes, setSelectedCreditNotes] = useState([]);
   const [viewCreditNote, setViewCreditNote] = useState(null);
   const [editCreditNote, setEditCreditNote] = useState(null);
-  const [searchInput, setSearchInput] = useState("");
-  const [selectedCreditNotes, setSelectedCreditNotes] = useState([]);
   const [formData, setFormData] = useState({ 
     customer: "", 
     status: "Draft" 
   });
 
-  // Stats data
-  const [stats, setStats] = useState({
-    total: 0,
-    draft: 0,
-    issued: 0,
-    cancelled: 0,
-    pending: 0
-  });
-
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
+
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
   // Close export menu when clicking outside
   useEffect(() => {
@@ -52,32 +57,30 @@ const CreditNotes = () => {
     };
   }, []);
 
-  // Fetch credit notes
+  // Fetch credit notes for the logged-in admin only
   const fetchCreditNotes = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/admin/credit-notes");
-      const fetchedCreditNotes = data.data || []; // Ensure it's an array
-      setCreditNotes(fetchedCreditNotes);
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/admin/credit-notes", config);
       
-      // Calculate stats based on the fetchedCreditNotes
-      const total = fetchedCreditNotes.length;
-      const draft = fetchedCreditNotes.filter(note => note.status === "Draft").length;
-      const issued = fetchedCreditNotes.filter(note => note.status === "Issued").length;
-      const cancelled = fetchedCreditNotes.filter(note => note.status === "Cancelled").length;
-      const pending = fetchedCreditNotes.filter(note => note.status === "Pending").length;
-      
-      setStats({
-        total,
-        draft,
-        issued,
-        cancelled,
-        pending
-      });
+      // Ensure we're getting the data in the correct format
+      if (data.data) {
+        setCreditNotes(data.data); // If response has data property
+      } else if (Array.isArray(data)) {
+        setCreditNotes(data); // If response is directly an array
+      } else {
+        console.error("Unexpected API response format:", data);
+        setCreditNotes([]);
+      }
     } catch (err) {
       console.error("Error fetching credit notes", err);
-      setCreditNotes([]); // Set to empty array on error
-      setStats({ total: 0, draft: 0, issued: 0, cancelled: 0, pending: 0 }); // Reset stats on error
+      if (err.response?.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+      setCreditNotes([]);
     }
     setLoading(false);
   };
@@ -86,10 +89,10 @@ const CreditNotes = () => {
     fetchCreditNotes();
   }, []);
 
-  // Toggle selection of credit notes
+  // Toggle credit note selection
   const toggleCreditNoteSelection = (id) => {
     if (selectedCreditNotes.includes(id)) {
-      setSelectedCreditNotes(selectedCreditNotes.filter(noteId => noteId !== id));
+      setSelectedCreditNotes(selectedCreditNotes.filter(creditNoteId => creditNoteId !== id));
     } else {
       setSelectedCreditNotes([...selectedCreditNotes, id]);
     }
@@ -176,12 +179,17 @@ const CreditNotes = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this credit note?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/admin/credit-notes/${id}`);
+      const config = createAxiosConfig();
+      await axios.delete(`http://localhost:5000/api/admin/credit-notes/${id}`, config);
       setCreditNotes(creditNotes.filter((cn) => cn._id !== id));
-      // Re-fetch stats after deletion
-      fetchCreditNotes();
+      // Remove from selected if it was selected
+      setSelectedCreditNotes(selectedCreditNotes.filter(creditNoteId => creditNoteId !== id));
     } catch (err) {
       console.error("Error deleting credit note", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
   };
 
@@ -189,26 +197,38 @@ const CreditNotes = () => {
   const handleBulkDelete = async () => {
     if (!window.confirm(`Are you sure you want to delete ${selectedCreditNotes.length} credit notes?`)) return;
     try {
-      await Promise.all(selectedCreditNotes.map(id =>
-        axios.delete(`http://localhost:5000/api/admin/credit-notes/${id}`)
-      ));
-      setCreditNotes(creditNotes.filter((cn) => !selectedCreditNotes.includes(cn._id)));
+      const config = createAxiosConfig();
+      await Promise.all(
+        selectedCreditNotes.map(id => 
+          axios.delete(`http://localhost:5000/api/admin/credit-notes/${id}`, config)
+        )
+      );
+      setCreditNotes(creditNotes.filter(cn => !selectedCreditNotes.includes(cn._id)));
       setSelectedCreditNotes([]);
-      // Re-fetch stats after bulk deletion
-      fetchCreditNotes();
+      alert("Selected credit notes deleted successfully!");
     } catch (err) {
       console.error("Error deleting credit notes", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+      alert("Error deleting selected credit notes.");
     }
   };
 
   // Update credit note
   const handleUpdate = async () => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/credit-notes/${editCreditNote._id}`, formData);
+      const config = createAxiosConfig();
+      await axios.put(`http://localhost:5000/api/admin/credit-notes/${editCreditNote._id}`, formData, config);
       setEditCreditNote(null);
       fetchCreditNotes();
     } catch (err) {
       console.error("Error updating credit note", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
   };
 
@@ -216,7 +236,7 @@ const CreditNotes = () => {
   const filteredCreditNotes = creditNotes.filter(
     (creditNote) =>
       creditNote.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      creditNote.creditNoteNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (creditNote.creditNoteNumber || "CN-" + creditNote._id.slice(-6).toUpperCase()).toLowerCase().includes(searchTerm.toLowerCase()) ||
       creditNote.reference?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -225,6 +245,17 @@ const CreditNotes = () => {
   const indexOfFirstCreditNote = indexOfLastCreditNote - entriesPerPage;
   const currentCreditNotes = filteredCreditNotes.slice(indexOfFirstCreditNote, indexOfLastCreditNote);
   const totalPages = Math.ceil(filteredCreditNotes.length / entriesPerPage);
+
+  // Get status color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Draft": return "bg-gray-100 text-gray-800";
+      case "Pending": return "bg-blue-100 text-blue-800";
+      case "Issued": return "bg-green-100 text-green-800";
+      case "Cancelled": return "bg-red-100 text-red-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
+  };
 
   if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading credit notes...</div>;
 
@@ -247,10 +278,10 @@ const CreditNotes = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Credit Notes</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-2xl font-bold">{creditNotes.length}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
-              <FaUser className="text-blue-600" />
+              <FaEye className="text-blue-600" />
             </div>
           </div>
         </div>
@@ -260,23 +291,10 @@ const CreditNotes = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Draft</p>
-              <p className="text-2xl font-bold">{stats.draft}</p>
+              <p className="text-2xl font-bold">{creditNotes.filter(cn => cn.status === "Draft").length}</p>
             </div>
             <div className="bg-gray-100 p-3 rounded-full">
-              <FaUserClock className="text-gray-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Issued Credit Notes */}
-        <div className="bg-white p-4 rounded-lg shadow border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Issued</p>
-              <p className="text-2xl font-bold">{stats.issued}</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <FaUserCheck className="text-green-600" />
+              <FaEdit className="text-gray-600" />
             </div>
           </div>
         </div>
@@ -286,10 +304,23 @@ const CreditNotes = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Pending</p>
-              <p className="text-2xl font-bold">{stats.pending}</p>
+              <p className="text-2xl font-bold">{creditNotes.filter(cn => cn.status === "Pending").length}</p>
             </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <FaUserClock className="text-yellow-600" />
+            <div className="bg-blue-100 p-3 rounded-full">
+              <FaEye className="text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Issued Credit Notes */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Issued</p>
+              <p className="text-2xl font-bold">{creditNotes.filter(cn => cn.status === "Issued").length}</p>
+            </div>
+            <div className="bg-green-100 p-3 rounded-full">
+              <FaEye className="text-green-600" />
             </div>
           </div>
         </div>
@@ -299,10 +330,10 @@ const CreditNotes = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Cancelled</p>
-              <p className="text-2xl font-bold">{stats.cancelled}</p>
+              <p className="text-2xl font-bold">{creditNotes.filter(cn => cn.status === "Cancelled").length}</p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
-              <FaUserTimes className="text-red-600" />
+              <FaTimes className="text-red-600" />
             </div>
           </div>
         </div>
@@ -416,19 +447,13 @@ const CreditNotes = () => {
             <input
               type="text"
               placeholder="Search..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
-            />
-            <button
-              onClick={() => {
-                setSearchTerm(searchInput);
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="ml-2 px-3 py-1 bg-blue-600 text-white rounded text-sm"
-            >
-              Search
-            </button>
+              className="border rounded pl-8 pr-3 py-1 text-sm"
+            />
           </div>
         </div>
 
@@ -488,23 +513,11 @@ const CreditNotes = () => {
                     return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
                   };
 
-                  const getStatusColor = (status) => {
-                    switch(status) {
-                      case "Draft": return "bg-gray-100 text-gray-800";
-                      case "Issued": return "bg-green-100 text-green-800";
-                      case "Cancelled": return "bg-red-100 text-red-800";
-                      case "Pending": return "bg-yellow-100 text-yellow-800";
-                      default: return "bg-gray-100 text-gray-800";
-                    }
-                  };
-
                   return (
                     <tr
                       key={creditNote._id}
                       className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
                       style={{ color: 'black' }}
-                      onMouseEnter={() => setHoveredId(creditNote._id)}
-                      onMouseLeave={() => setHoveredId(null)}
                     >
                       <td className="p-3 rounded-l-lg border-0">
                         <div className="flex items-center">
@@ -516,11 +529,11 @@ const CreditNotes = () => {
                           />
                         </div>
                       </td>
-                      <td className="p-3 border-0 font-mono">{displayCreditNoteNumber}</td>
+                      <td className="p-3 border-0 ">{displayCreditNoteNumber}</td>
                       <td className="p-3 border-0">{creditNote.customer || "-"}</td>
                       {compactView ? (
                         <>
-                          <td className="p-3 border-0 text-right">{displayAmount}</td>
+                          <td className="p-3 border-0">{displayAmount}</td>
                           <td className="p-3 border-0">{formatDate(creditNote.creditNoteDate)}</td>
                           <td className="p-3 border-0">
                             <span className={`px-2 py-1 rounded text-xs ${getStatusColor(creditNote.status)}`}>
@@ -534,7 +547,7 @@ const CreditNotes = () => {
                                 className="text-blue-500 hover:text-blue-700"
                                 title="View"
                               >
-                                <FaEye />
+                                <FaEye size={16} />
                               </button>
                               <button
                                 onClick={() => {
@@ -563,7 +576,7 @@ const CreditNotes = () => {
                         <>
                           <td className="p-3 border-0">{creditNote.project || "-"}</td>
                           <td className="p-3 border-0">{creditNote.reference || "-"}</td>
-                          <td className="p-3 border-0 text-right">{displayAmount}</td>
+                          <td className="p-3 border-0">{displayAmount}</td>
                           <td className="p-3 border-0">{formatDate(creditNote.creditNoteDate)}</td>
                           <td className="p-3 border-0">
                             <span className={`px-2 py-1 rounded text-xs ${getStatusColor(creditNote.status)}`}>
@@ -577,7 +590,7 @@ const CreditNotes = () => {
                                 className="text-blue-500 hover:text-blue-700"
                                 title="View"
                               >
-                                <FaEye />
+                                <FaEye size={16} />
                               </button>
                               <button
                                 onClick={() => {
@@ -608,8 +621,11 @@ const CreditNotes = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={compactView ? 7 : 9} className="p-4 text-center text-gray-500">
-                    No credit notes found
+                  <td 
+                    colSpan={compactView ? 7 : 9} 
+                    className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
+                  >
+                    {creditNotes.length === 0 ? "No credit notes found. Create your first credit note!" : "No credit notes match your search."}
                   </td>
                 </tr>
               )}
@@ -618,82 +634,132 @@ const CreditNotes = () => {
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-4 text-sm">
-          <span>
-            Showing {indexOfFirstCreditNote + 1} to {Math.min(indexOfLastCreditNote, filteredCreditNotes.length)} of{" "}
-            {filteredCreditNotes.length} entries
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="px-2 py-1 border rounded disabled:opacity-50"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
+        {filteredCreditNotes.length > 0 && (
+          <div className="flex justify-between items-center mt-4 text-sm">
+            <span>
+              Showing {indexOfFirstCreditNote + 1} to {Math.min(indexOfLastCreditNote, filteredCreditNotes.length)} of{" "}
+              {filteredCreditNotes.length} entries
+            </span>
+            <div className="flex items-center gap-2">
               <button
-                key={i}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === i + 1 ? "bg-gray-200" : ""
-                }`}
-                onClick={() => setCurrentPage(i + 1)}
+                className="px-2 py-1 border rounded disabled:opacity-50"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
               >
-                {i + 1}
+                Previous
               </button>
-            ))}
-            <button
-              className="px-2 py-1 border rounded disabled:opacity-50"
-              disabled={currentPage === totalPages || totalPages === 0}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Next
-            </button>
+              {Array.from({ length: totalPages }, (_, i) => (
+                <button
+                  key={i}
+                  className={`px-3 py-1 border rounded ${
+                    currentPage === i + 1 ? "bg-gray-200" : ""
+                  }`}
+                  onClick={() => setCurrentPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+              <button
+                className="px-2 py-1 border rounded disabled:opacity-50"
+                disabled={currentPage === totalPages || totalPages === 0}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
+                Next
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* View & Edit Modals */}
       {viewCreditNote && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded p-4 w-96 shadow-lg">
-            <h2 className="text-lg font-bold mb-2">Credit Note Details</h2>
-            <p><b>Credit Note #:</b> {viewCreditNote.creditNoteNumber}</p>
-            <p><b>Customer:</b> {viewCreditNote.customer}</p>
-            <p><b>Reference:</b> {viewCreditNote.reference || "-"}</p>
-            <p><b>Amount:</b> {viewCreditNote.total}</p>
-            <p><b>Status:</b> {viewCreditNote.status}</p>
-            <div className="mt-4 flex justify-end">
-              <button onClick={() => setViewCreditNote(null)} className="px-3 py-1 bg-gray-200 rounded">Close</button>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Credit Note Details</h2>
+              <button 
+                onClick={() => setViewCreditNote(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <p><b>Credit Note #:</b> {viewCreditNote.creditNoteNumber || "CN-" + viewCreditNote._id.slice(-6).toUpperCase()}</p>
+              <p><b>Customer:</b> {viewCreditNote.customer || "-"}</p>
+              <p><b>Reference:</b> {viewCreditNote.reference || "-"}</p>
+              <p><b>Amount:</b> {new Intl.NumberFormat("en-US", {
+                style: "currency",
+                currency: viewCreditNote.currency || "USD",
+                minimumFractionDigits: 2,
+              }).format(viewCreditNote.total || 0)}</p>
+              <p><b>Status:</b> <span className={`px-2 py-1 rounded text-xs ${getStatusColor(viewCreditNote.status)}`}>
+                {viewCreditNote.status || "Draft"}
+              </span></p>
+              {viewCreditNote.creditNoteDate && <p><b>Date:</b> {new Date(viewCreditNote.creditNoteDate).toLocaleDateString()}</p>}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button 
+                onClick={() => setViewCreditNote(null)} 
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
       {editCreditNote && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded p-4 w-96 shadow-lg">
-            <h2 className="text-lg font-bold mb-2">Update Credit Note</h2>
-            <input
-              type="text"
-              value={formData.customer}
-              onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
-              className="border w-full p-2 mb-2 rounded"
-              placeholder="Customer Name"
-            />
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="border w-full p-2 mb-2 rounded"
-            >
-              <option value="Draft">Draft</option>
-              <option value="Pending">Pending</option>
-              <option value="Issued">Issued</option>
-              <option value="Cancelled">Cancelled</option>
-            </select>
-            <div className="mt-4 flex justify-end gap-2">
-              <button onClick={() => setEditCreditNote(null)} className="px-3 py-1 bg-gray-200 rounded">Cancel</button>
-              <button onClick={handleUpdate} className="px-3 py-1 bg-blue-600 text-white rounded">Save</button>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Update Credit Note</h2>
+              <button 
+                onClick={() => setEditCreditNote(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                <input
+                  type="text"
+                  value={formData.customer}
+                  onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Customer Name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Issued">Issued</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end space-x-3">
+              <button 
+                onClick={() => setEditCreditNote(null)} 
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleUpdate} 
+                className="px-4 py-2 bg-black text-white rounded text-sm"
+              >
+                Update Credit Note
+              </button>
             </div>
           </div>
         </div>

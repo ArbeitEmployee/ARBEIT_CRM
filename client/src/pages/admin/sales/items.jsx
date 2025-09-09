@@ -6,8 +6,10 @@ import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
+import { useNavigate } from "react-router-dom";
 
 const Items = () => {
+  const navigate = useNavigate();
   const [entriesPerPage, setEntriesPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,7 +33,23 @@ const Items = () => {
 
   const taxOptions = ["", "0%", "5%", "10%", "15%", "20%"];
 
-  // Fetch items from backend
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
+  // Fetch items from backend for the logged-in admin only
   useEffect(() => {
     fetchItems();
   }, []);
@@ -55,10 +73,16 @@ const Items = () => {
 
   const fetchItems = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/admin/items");
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/admin/items", config);
       setItems(data);
     } catch (err) {
       console.error("Error fetching items", err);
+      if (err.response?.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
   };
 
@@ -149,13 +173,18 @@ const Items = () => {
     if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} item(s)?`)) return;
 
     try {
-      await axios.post("http://localhost:5000/api/admin/items/bulk-delete", { ids: selectedItems });
+      const config = createAxiosConfig();
+      await axios.post("http://localhost:5000/api/admin/items/bulk-delete", { ids: selectedItems }, config);
       setItems(items.filter(item => !selectedItems.includes(item._id)));
       setSelectedItems([]);
       setSelectAll(false);
       alert("Items deleted successfully!");
     } catch (err) {
       console.error("Error deleting items", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
       alert("Error deleting items");
     }
   };
@@ -190,11 +219,12 @@ const Items = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const config = createAxiosConfig();
       const formattedItem = {
         ...formData,
         rate: formData.rate.startsWith('$') ? formData.rate : `$${formData.rate}`
       };
-      const { data } = await axios.post("http://localhost:5000/api/admin/items", formattedItem);
+      const { data } = await axios.post("http://localhost:5000/api/admin/items", formattedItem, config);
       setItems([data, ...items]);
       setFormData({
         description: "",
@@ -208,6 +238,10 @@ const Items = () => {
       setShowForm(false);
     } catch (err) {
       console.error("Error saving item", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
   };
 
@@ -253,6 +287,8 @@ const Items = () => {
     }
 
     try {
+      const config = createAxiosConfig();
+      
       // Format the data before sending - handle different CSV formats
       const formattedData = csvData.map(item => {
         // Handle different column name variations
@@ -275,7 +311,7 @@ const Items = () => {
         };
       });
 
-      const { data } = await axios.post("http://localhost:5000/api/admin/items/import", formattedData);
+      const { data } = await axios.post("http://localhost:5000/api/admin/items/import", formattedData, config);
       setItems([...data, ...items]);
       setShowImportForm(false);
       setCsvFile(null);
@@ -283,6 +319,10 @@ const Items = () => {
       alert("Items imported successfully!");
     } catch (err) {
       console.error("Error importing items", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
       alert("Error importing items. Please try again.");
     }
   };

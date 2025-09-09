@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { FaPlus, FaTimes, FaSearch } from "react-icons/fa";
+import { FaPlus, FaTimes, FaSearch, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const CreditNoteForm = () => {
@@ -45,6 +45,48 @@ const CreditNoteForm = () => {
   const statusOptions = ["Draft", "Pending", "Issued", "Cancelled"];
   const taxOptions = [0, 5, 10, 15, 20];
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
+  // Configure axios defaults
+  useEffect(() => {
+    const token = getAuthToken();
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+  }, []);
+
+  // Fetch items from database
+  useEffect(() => {
+    const fetchItems = async () => {
+      try {
+        const config = createAxiosConfig();
+        const { data } = await axios.get("http://localhost:5000/api/admin/items", config);
+        setDatabaseItems(data.data || data);
+      } catch (err) {
+        console.error("Error fetching items", err);
+        if (err.response?.status === 401) {
+          localStorage.removeItem("crm_token");
+          navigate("/login");
+        }
+      }
+    };
+    fetchItems();
+  }, []);
+
   // Customer search function
   const searchCustomers = async (searchTerm) => {
     if (searchTerm.length < 2) {
@@ -53,7 +95,11 @@ const CreditNoteForm = () => {
     }
     
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`);
+      const config = createAxiosConfig();
+      const { data } = await axios.get(
+        `http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`,
+        config
+      );
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -70,19 +116,6 @@ const CreditNoteForm = () => {
 
     return () => clearTimeout(delayDebounceFn);
   }, [customerSearchTerm]);
-
-  // Fetch items from database
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const { data } = await axios.get("http://localhost:5000/api/admin/items");
-        setDatabaseItems(data.data || data);
-      } catch (err) {
-        console.error("Error fetching items", err);
-      }
-    };
-    fetchItems();
-  }, []);
 
   // Form handlers
   const handleChange = (e) => {
@@ -163,10 +196,11 @@ const CreditNoteForm = () => {
   const saveNewItemToDatabase = async (e) => {
     e.preventDefault();
     try {
+      const config = createAxiosConfig();
       const response = await axios.post("http://localhost:5000/api/admin/items", {
         ...newItem,
         rate: newItem.rate.startsWith('$') ? newItem.rate : `$${newItem.rate}`
-      });
+      }, config);
       
       // Add to database items
       setDatabaseItems([response.data, ...databaseItems]);
@@ -185,6 +219,10 @@ const CreditNoteForm = () => {
       setShowItemForm(false);
     } catch (err) {
       console.error("Error saving item", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
       alert("Failed to save item: " + (err.response?.data?.message || err.message));
     }
   };
@@ -219,82 +257,107 @@ const CreditNoteForm = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+
   // Form submission
-  const handleSubmit = async (send = false) => {
-    if (!validate()) return;
-    
-    setLoading(true);
-    
-    try {
-      // Prepare items with proper structure
-      const items = creditNoteItems.map(item => ({
-        description: item.description,
-        quantity: Number(item.quantity),
-        rate: Number(item.rate),
-        tax1: Number(item.tax1 || 0),
-        tax2: Number(item.tax2 || 0),
-        amount: Number(item.amount || 0)
-      }));
-
-      // Prepare credit note data matching your schema
-      const creditNoteData = {
-        customer: formData.customer,
-        customerId: formData.customerId,
-        billTo: formData.billTo || undefined,
-        shipTo: formData.shipTo || undefined,
-        creditNoteDate: formData.creditNoteDate,
-        currency: formData.currency,
-        status: formData.status,
-        discountType: formData.discountType,
-        discountValue: parseFloat(formData.discountValue) || 0,
-        adminNote: formData.adminNote || undefined,
-        reference: formData.reference || undefined,
-        project: formData.project || undefined,
-        items: items,
-        subtotal: subtotal,
-        discount: discount,
-        total: total
-      };
-
-      // Remove undefined values
-      Object.keys(creditNoteData).forEach(key => {
-        if (creditNoteData[key] === undefined || creditNoteData[key] === "") {
-          delete creditNoteData[key];
-        }
-      });
-
-      console.log("Submitting credit note:", creditNoteData);
-
-      const response = await axios.post('http://localhost:5000/api/admin/credit-notes', creditNoteData);
-      
-      if (response.data.success) {
-        alert("Credit note saved successfully!");
-        navigate("../sales/creditNotes");
-      } else {
-        throw new Error(response.data.message || "Failed to save credit note");
-      }
-    } catch (error) {
-      console.error("Submission error:", error);
-      
-      let errorMessage = "Failed to save credit note. Please check your data and try again.";
-      
-      if (error.response?.data?.errors) {
-        errorMessage = error.response.data.errors.map(err => err.msg || err).join("\n");
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      alert(errorMessage);
-    } finally {
-      setLoading(false);
+const handleSubmit = async (send = false) => {
+  if (!validate()) return;
+  
+  setLoading(true);
+  
+  try {
+    const token = getAuthToken();
+    if (!token) {
+      alert("Authentication token missing. Please login again.");
+      navigate("/login");
+      return;
     }
-  };
+
+    // Prepare items with proper structure
+    const items = creditNoteItems.map(item => ({
+      description: item.description,
+      quantity: Number(item.quantity),
+      rate: Number(item.rate),
+      tax1: Number(item.tax1 || 0),
+      tax2: Number(item.tax2 || 0),
+      amount: Number(item.amount || 0)
+    }));
+
+    // Prepare credit note data matching your schema
+    // REMOVE customerId as it's not needed by the backend
+    const creditNoteData = {
+      customer: formData.customer, // Only send customer name, not customerId
+      billTo: formData.billTo || undefined,
+      shipTo: formData.shipTo || undefined,
+      creditNoteDate: formData.creditNoteDate,
+      currency: formData.currency,
+      status:formData.status,
+      discountType: formData.discountType,
+      discountValue: parseFloat(formData.discountValue) || 0,
+      adminNote: formData.adminNote || undefined,
+      reference: formData.reference || undefined,
+      project: formData.project || undefined,
+      items: items,
+      subtotal: subtotal,
+      discount: discount,
+      total: total
+    };
+
+    // Remove undefined values
+    Object.keys(creditNoteData).forEach(key => {
+      if (creditNoteData[key] === undefined || creditNoteData[key] === "") {
+        delete creditNoteData[key];
+      }
+    });
+
+    const config = createAxiosConfig();
+    const response = await axios.post(
+      'http://localhost:5000/api/admin/credit-notes', 
+      creditNoteData,
+      config
+    );
+    
+    if (response.data.success) {
+      alert("Credit note saved successfully!");
+      navigate("../sales/creditNotes");
+    } else {
+      throw new Error(response.data.message || "Failed to save credit note");
+    }
+  } catch (error) {
+    console.error("Submission error:", error);
+    
+    let errorMessage = "Failed to save credit note. Please check your data and try again.";
+    
+    if (error.response?.status === 401) {
+      errorMessage = "Authentication failed. Please login again.";
+      localStorage.removeItem("crm_token");
+      navigate("/login");
+    } else if (error.response?.data?.errors) {
+      errorMessage = error.response.data.errors.map(err => err.msg || err).join("\n");
+    } else if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    alert(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">New Credit Note</h2>
+      {/* Header */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">New Credit Note</h1>
+        <div className="flex items-center text-gray-600">
+          <span>Dashboard</span>
+          <FaChevronRight className="mx-1 text-xs" />
+          <span>Credit Notes</span>
+          <FaChevronRight className="mx-1 text-xs" />
+          <span>New Credit Note</span>
+        </div>
+      </div>
       
       {/* Main Form Container */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">

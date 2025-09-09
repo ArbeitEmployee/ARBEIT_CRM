@@ -2,6 +2,12 @@ import mongoose from "mongoose";
 
 const itemSchema = new mongoose.Schema(
   {
+    admin: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Admin",
+      required: true,
+      index: true
+    },
     description: { type: String, required: true },
     longDescription: { type: String },
     rate: { type: String, required: true },
@@ -12,6 +18,9 @@ const itemSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// Compound index to ensure unique items per admin
+itemSchema.index({ admin: 1, description: 1 }, { unique: true });
 
 const Item = mongoose.model("Item", itemSchema);
 export default Item;
