@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const leadSchema = new mongoose.Schema({
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true,
+    //index: true
+  },
   name: {
     type: String,
     required: [true, "Name is required"],
@@ -81,6 +87,7 @@ const leadSchema = new mongoose.Schema({
 });
 
 // Add indexes for better performance
+leadSchema.index({ admin: 1 });
 leadSchema.index({ company: 1 });
 leadSchema.index({ status: 1 });
 leadSchema.index({ email: 1 });

@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import {
   FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
-  FaTimes, FaEdit, FaTrash, FaChevronDown,
-  FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare,
+  FaTimes, FaEdit, FaTrash, FaChevronDown, FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare,
   FaUser, FaBuilding, FaEnvelope, FaPhone, FaDollarSign, FaTag, FaUserCheck,
   FaFileImport, FaFilter
 } from "react-icons/fa";
@@ -13,7 +12,28 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts'; // Import Recharts components
+} from 'recharts';
+
+// Custom hook for detecting outside clicks
+const useOutsideClick = (callback) => {
+  const ref = useRef();
+
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [ref, callback]);
+
+  return ref;
+};
 
 const LeadsPage = () => {
   const [selectedLeads, setSelectedLeads] = useState([]);
@@ -34,7 +54,7 @@ const LeadsPage = () => {
     customer: 0,
     lost: 0
   });
-  const [chartData, setChartData] = useState([]); // State for chart data
+  const [chartData, setChartData] = useState([]);
   const [newLead, setNewLead] = useState({
     name: "",
     company: "",
@@ -73,30 +93,36 @@ const LeadsPage = () => {
     "Other",
     ""
   ];
-  // Add a ref for the export menu
-  const exportMenuRef = useRef(null);
 
-  // Close export menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
-        setShowExportMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  // Use the custom hook for detecting outside clicks
+  const exportRef = useOutsideClick(() => {
+    setShowExportMenu(false);
+  });
 
   const [loading, setLoading] = useState(true);
+
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
   // Fetch leads from API
   const fetchLeads = async () => {
     setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/leads");
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/leads", config);
       setLeads(data.leads || []);
       setStats(data.stats || {
         totalLeads: 0,
@@ -107,9 +133,13 @@ const LeadsPage = () => {
         customer: 0,
         lost: 0
       });
-      setChartData(data.chartData || []); // Set chart data from API response
+      setChartData(data.chartData || []);
     } catch (error) {
       console.error("Error fetching leads:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/admin/login";
+      }
       setLeads([]);
       setStats({
         totalLeads: 0,
@@ -120,7 +150,7 @@ const LeadsPage = () => {
         customer: 0,
         lost: 0
       });
-      setChartData([]); // Clear chart data on error
+      setChartData([]);
     }
     setLoading(false);
   };
@@ -174,16 +204,18 @@ const LeadsPage = () => {
     setIsSaving(true);
 
     try {
+      const config = createAxiosConfig();
+      
       if (editingLead) {
         // Update existing lead
-        await axios.put(`http://localhost:5000/api/leads/${editingLead._id}`, newLead);
+        await axios.put(`http://localhost:5000/api/leads/${editingLead._id}`, newLead, config);
         setShowNewLeadForm(false);
         setEditingLead(null);
         fetchLeads();
         alert("Lead updated successfully!");
       } else {
         // Create new lead
-        await axios.post("http://localhost:5000/api/leads", newLead);
+        await axios.post("http://localhost:5000/api/leads", newLead, config);
         setShowNewLeadForm(false);
         fetchLeads();
         alert("Lead created successfully!");
@@ -232,7 +264,8 @@ const LeadsPage = () => {
   const handleDeleteLead = async (id) => {
     if (window.confirm("Are you sure you want to delete this lead?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/leads/${id}`);
+        const config = createAxiosConfig();
+        await axios.delete(`http://localhost:5000/api/leads/${id}`, config);
         fetchLeads();
         alert("Lead deleted successfully!");
       } catch (error) {
@@ -247,7 +280,8 @@ const LeadsPage = () => {
 
     if (window.confirm(`Are you sure you want to delete ${selectedLeads.length} selected leads?`)) {
       try {
-        await axios.post("http://localhost:5000/api/leads/bulk-delete", { ids: selectedLeads });
+        const config = createAxiosConfig();
+        await axios.post("http://localhost:5000/api/leads/bulk-delete", { ids: selectedLeads }, config);
         setSelectedLeads([]);
         fetchLeads();
         alert("Selected leads deleted successfully!");
@@ -281,11 +315,14 @@ const LeadsPage = () => {
     try {
       setImportProgress({ status: 'uploading', message: 'Uploading file...' });
 
-      const { data } = await axios.post('http://localhost:5000/api/leads/import', formData, {
+      const config = {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${getAuthToken()}`
         }
-      });
+      };
+
+      const { data } = await axios.post('http://localhost:5000/api/leads/import', formData, config);
 
       setImportProgress(null);
       setImportResult({
@@ -860,7 +897,7 @@ const LeadsPage = () => {
                 </select>
 
                 {/* Export button */}
-                <div className="relative">
+                <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
                     className="border px-2 py-1 rounded text-sm flex items-center gap-1"
@@ -870,7 +907,7 @@ const LeadsPage = () => {
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}
@@ -993,64 +1030,85 @@ const LeadsPage = () => {
                             <div className="ml-2">
                               <div className="text-sm font-medium text-gray-900">{lead.name}</div>
                               {lead.customer && (
-                                <div className="text-xs text-green-600">Customer Linked</div>
+                                <div className="text-xs text-gray-500">Customer</div>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="p-3 border-0">{lead.company}</td>
+                        <td className="p-3 border-0">
+                          <div className="flex items-center">
+                            <FaBuilding className="text-gray-400 mr-1" />
+                            <span>{lead.company}</span>
+                          </div>
+                        </td>
                         {compactView ? (
                           <>
                             <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(lead.status)}`}>
+                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(lead.status)}`}>
                                 {lead.status}
                               </span>
                             </td>
                             <td className="p-3 rounded-r-lg border-0">
-                              <div className="flex space-x-2">
+                              <div className="flex items-center space-x-2">
                                 <button
+                                  className="text-blue-600 hover:text-blue-800"
                                   onClick={() => handleEditLead(lead)}
-                                  className="text-blue-500 hover:text-blue-700"
-                                  title="Edit"
                                 >
-                                  <FaEdit size={16} />
+                                  <FaEdit />
                                 </button>
                                 <button
+                                  className="text-red-600 hover:text-red-800"
                                   onClick={() => handleDeleteLead(lead._id)}
-                                  className="text-red-500 hover:text-red-700"
-                                  title="Delete"
                                 >
-                                  <FaTrash size={16} />
+                                  <FaTrash />
                                 </button>
                               </div>
                             </td>
                           </>
                         ) : (
                           <>
-                            <td className="p-3 border-0">{lead.email}</td>
-                            <td className="p-3 border-0">{lead.phone || "-"}</td>
-                            <td className="p-3 border-0">{formatCurrency(lead.value)}</td>
                             <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs font-semibold ${getStatusColor(lead.status)}`}>
+                              <div className="flex items-center">
+                                <FaEnvelope className="text-gray-400 mr-1" />
+                                <span>{lead.email}</span>
+                              </div>
+                            </td>
+                            <td className="p-3 border-0">
+                              <div className="flex items-center">
+                                <FaPhone className="text-gray-400 mr-1" />
+                                <span>{lead.phone || "-"}</span>
+                              </div>
+                            </td>
+                            <td className="p-3 border-0">
+                              <div className="flex items-center">
+                                <FaDollarSign className="text-gray-400 mr-1" />
+                                <span>{formatCurrency(lead.value || 0)}</span>
+                              </div>
+                            </td>
+                            <td className="p-3 border-0">
+                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(lead.status)}`}>
                                 {lead.status}
                               </span>
                             </td>
-                            <td className="p-3 border-0">{lead.source || "-"}</td>
+                            <td className="p-3 border-0">
+                              <div className="flex items-center">
+                                <FaTag className="text-gray-400 mr-1" />
+                                <span>{lead.source || "-"}</span>
+                              </div>
+                            </td>
                             <td className="p-3 rounded-r-lg border-0">
-                              <div className="flex space-x-2">
+                              <div className="flex items-center space-x-2">
                                 <button
+                                  className="text-blue-600 hover:text-blue-800"
                                   onClick={() => handleEditLead(lead)}
-                                  className="text-blue-500 hover:text-blue-700"
-                                  title="Edit"
                                 >
-                                  <FaEdit size={16} />
+                                  <FaEdit />
                                 </button>
                                 <button
+                                  className="text-red-600 hover:text-red-800"
                                   onClick={() => handleDeleteLead(lead._id)}
-                                  className="text-red-500 hover:text-red-700"
-                                  title="Delete"
                                 >
-                                  <FaTrash size={16} />
+                                  <FaTrash />
                                 </button>
                               </div>
                             </td>
@@ -1065,13 +1123,13 @@ const LeadsPage = () => {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <div>
+              <div className="text-sm text-gray-700">
                 Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredLeads.length)} of {filteredLeads.length} entries
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  className="px-3 py-1 border rounded"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -1087,11 +1145,10 @@ const LeadsPage = () => {
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
-
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded ${currentPage === pageNum ? 'bg-black text-white' : ''}`}
+                      className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? 'bg-gray-200' : ''}`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
                       {pageNum}
@@ -1099,8 +1156,8 @@ const LeadsPage = () => {
                   );
                 })}
                 <button
-                  className="px-3 py-1 border rounded"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
                 >
                   Next
@@ -1116,7 +1173,7 @@ const LeadsPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Import Leads</h3>
+              <h2 className="text-xl font-semibold">Import Leads</h2>
               <button
                 onClick={closeImportModal}
                 className="text-gray-500 hover:text-gray-700"
@@ -1125,87 +1182,66 @@ const LeadsPage = () => {
               </button>
             </div>
 
-            {!importResult ? (
-              <>
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">
-                    Upload a CSV or Excel file with lead data. Required columns: Name, Company, Email
-                  </p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".csv,.xlsx,.xls"
-                    onChange={handleFileChange}
-                    className="w-full border rounded p-2"
-                  />
-                </div>
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">
+                Upload an Excel or CSV file with lead data. The file should include columns for Name, Company, Email, and optionally Phone, Value, Tags, Assigned, Status, Source.
+              </p>
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept=".xlsx,.xls,.csv"
+                onChange={handleFileChange}
+                className="w-full border rounded p-2"
+              />
+            </div>
 
-                {importProgress && (
-                  <div className="mb-4 p-2 bg-blue-50 text-blue-700 rounded text-sm">
-                    {importProgress.message}
-                  </div>
-                )}
+            {importProgress && (
+              <div className="mb-4 p-2 bg-blue-50 text-blue-700 rounded">
+                <p>{importProgress.message}</p>
+              </div>
+            )}
 
-                <div className="flex justify-end gap-2">
-                  <button
-                    onClick={closeImportModal}
-                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleImportSubmit}
-                    disabled={!importFile || importProgress}
-                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
-                  >
-                    Import
-                  </button>
-                </div>
-              </>
-            ) : (
-              <>
+            {importResult && (
+              <div className={`mb-4 p-2 rounded ${importResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                 {importResult.success ? (
-                  <div className="mb-4">
-                    <div className="p-3 bg-green-50 text-green-700 rounded mb-3">
-                      <p className="font-medium">Import completed successfully!</p>
-                      <p className="text-sm mt-1">
-                        Imported {importResult.imported} leads.
-                        {importResult.errorCount > 0 && (
-                          <span> {importResult.errorCount} rows had errors.</span>
-                        )}
-                      </p>
-                    </div>
-
+                  <div>
+                    <p>Import completed successfully!</p>
+                    <p>{importResult.imported} leads imported.</p>
                     {importResult.errorCount > 0 && (
-                      <div className="mb-4">
-                        <p className="font-medium text-sm mb-1">Error details:</p>
-                        <div className="max-h-40 overflow-y-auto text-xs">
+                      <p>{importResult.errorCount} rows had errors.</p>
+                    )}
+                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
+                      <div className="mt-2">
+                        <p className="font-semibold">Error details:</p>
+                        <ul className="text-xs">
                           {importResult.errorMessages.map((error, index) => (
-                            <div key={index} className="p-2 border-b">
-                              <p className="text-red-600">{error}</p>
-                            </div>
+                            <li key={index}>{error}</li>
                           ))}
-                        </div>
+                        </ul>
                       </div>
                     )}
                   </div>
                 ) : (
-                  <div className="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-200">
-                    <p className="font-medium">Import failed!</p>
-                    <p className="text-sm mt-1">{importResult.message}</p>
-                  </div>
+                  <p>Error: {importResult.message}</p>
                 )}
-
-                <div className="flex justify-end">
-                  <button
-                    onClick={closeImportModal}
-                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800"
-                  >
-                    Close
-                  </button>
-                </div>
-              </>
+              </div>
             )}
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={closeImportModal}
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleImportSubmit}
+                disabled={importProgress || !importFile}
+                className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+              >
+                Import
+              </button>
+            </div>
           </div>
         </div>
       )}

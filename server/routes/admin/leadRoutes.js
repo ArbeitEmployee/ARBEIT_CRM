@@ -7,25 +7,26 @@ import {
   importLeads,
   bulkDeleteLeads
 } from "../../controllers/admin/leadController.js";
+import { protect } from "../../middlewares/authMiddleware.js";
 import multer from "multer";
 
 const upload = multer();
 
 const router = express.Router();
 
-// Lead routes
+// All lead routes (protected with JWT middleware)
 router.route("/")
-  .get(getLeads)
-  .post(createLead);
+  .get(protect, getLeads)
+  .post(protect, createLead);
 
 router.route("/import")
-  .post(upload.single('file'), importLeads);
+  .post(protect, upload.single('file'), importLeads);
 
 router.route("/bulk-delete")
-  .post(bulkDeleteLeads);
+  .post(protect, bulkDeleteLeads);
 
 router.route("/:id")
-  .put(updateLead)
-  .delete(deleteLead);
+  .put(protect, updateLead)
+  .delete(protect, deleteLead);
 
 export default router;

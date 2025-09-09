@@ -50,13 +50,12 @@ const parseDate = (dateString) => {
   return `${year}-${month}-${day}`;
 };
 
-
-// @desc    Get all leads
+// @desc    Get all leads for logged-in admin
 // @route   GET /api/leads
-// @access  Public
+// @access  Private
 export const getLeads = async (req, res) => {
   try {
-    const leads = await Lead.find({})
+    const leads = await Lead.find({ admin: req.admin._id })
       .populate('customer', 'company contact email')
       .sort({ createdAt: -1 });
 
@@ -86,7 +85,7 @@ export const getLeads = async (req, res) => {
     res.json({
       leads,
       stats,
-      chartData // Added chartData to the response
+      chartData
     });
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -94,9 +93,9 @@ export const getLeads = async (req, res) => {
   }
 };
 
-// @desc    Create a lead
+// @desc    Create a lead for logged-in admin
 // @route   POST /api/leads
-// @access  Public
+// @access  Private
 export const createLead = async (req, res) => {
   try {
     const { name, company, email } = req.body;
@@ -110,6 +109,7 @@ export const createLead = async (req, res) => {
     // Check if customer exists by company name and link if found
     let customerId = null;
     const customer = await Customer.findOne({
+      admin: req.admin._id,
       company: { $regex: new RegExp(`^${company}$`, 'i') }
     });
 
@@ -118,6 +118,7 @@ export const createLead = async (req, res) => {
     }
 
     const lead = new Lead({
+      admin: req.admin._id,
       name,
       company,
       email,
@@ -147,9 +148,9 @@ export const createLead = async (req, res) => {
   }
 };
 
-// @desc    Update a lead
+// @desc    Update a lead for logged-in admin
 // @route   PUT /api/leads/:id
-// @access  Public
+// @access  Private
 export const updateLead = async (req, res) => {
   try {
     const { name, company, email } = req.body;
@@ -160,7 +161,7 @@ export const updateLead = async (req, res) => {
       });
     }
 
-    const lead = await Lead.findById(req.params.id);
+    const lead = await Lead.findOne({ _id: req.params.id, admin: req.admin._id });
 
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
@@ -169,6 +170,7 @@ export const updateLead = async (req, res) => {
     // Check if customer exists by company name and link if found
     let customerId = null;
     const customer = await Customer.findOne({
+      admin: req.admin._id,
       company: { $regex: new RegExp(`^${company}$`, 'i') }
     });
 
@@ -204,18 +206,18 @@ export const updateLead = async (req, res) => {
   }
 };
 
-// @desc    Delete a lead
+// @desc    Delete a lead for logged-in admin
 // @route   DELETE /api/leads/:id
-// @access  Public
+// @access  Private
 export const deleteLead = async (req, res) => {
   try {
-    const lead = await Lead.findById(req.params.id);
+    const lead = await Lead.findOne({ _id: req.params.id, admin: req.admin._id });
 
     if (!lead) {
       return res.status(404).json({ message: "Lead not found" });
     }
 
-    await Lead.deleteOne({ _id: req.params.id });
+    await Lead.deleteOne({ _id: req.params.id, admin: req.admin._id });
     res.json({ message: "Lead removed successfully" });
   } catch (error) {
     console.error("Error deleting lead:", error);
@@ -223,9 +225,9 @@ export const deleteLead = async (req, res) => {
   }
 };
 
-// @desc    Bulk delete leads
+// @desc    Bulk delete leads for logged-in admin
 // @route   POST /api/leads/bulk-delete
-// @access  Public
+// @access  Private
 export const bulkDeleteLeads = async (req, res) => {
   try {
     const { ids } = req.body;
@@ -234,7 +236,7 @@ export const bulkDeleteLeads = async (req, res) => {
       return res.status(400).json({ message: "No lead IDs provided" });
     }
 
-    const result = await Lead.deleteMany({ _id: { $in: ids } });
+    const result = await Lead.deleteMany({ _id: { $in: ids }, admin: req.admin._id });
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "No leads found to delete" });
@@ -250,9 +252,9 @@ export const bulkDeleteLeads = async (req, res) => {
   }
 };
 
-// @desc    Import leads from CSV/Excel
+// @desc    Import leads from CSV/Excel for logged-in admin
 // @route   POST /api/leads/import
-// @access  Public
+// @access  Private
 export const importLeads = async (req, res) => {
   try {
     if (!req.file) {
@@ -295,6 +297,7 @@ export const importLeads = async (req, res) => {
       let customerId = null;
       try {
         const customer = await Customer.findOne({
+          admin: req.admin._id,
           company: { $regex: new RegExp(`^${row.Company}$`, 'i') }
         });
 
@@ -332,6 +335,7 @@ export const importLeads = async (req, res) => {
       const formattedCreated = parseDate(row.Created);
 
       const leadData = {
+        admin: req.admin._id,
         name: row.Name,
         company: row.Company,
         email: row.Email,
