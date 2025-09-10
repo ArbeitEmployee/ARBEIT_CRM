@@ -39,18 +39,42 @@ const LeadsReport = () => {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i);
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   useEffect(() => {
     const fetchReportData = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get(`http://localhost:5000/api/reports/leads?month=${selectedMonth}&year=${selectedYear}`);
+        const config = createAxiosConfig();
+        const { data } = await axios.get(
+          `http://localhost:5000/api/reports/leads?month=${selectedMonth}&year=${selectedYear}`,
+          config
+        );
         setSourceChartData(data.sourceChartData || []);
         setWeekConversionData(data.weekConversionData || []);
         setDailyLeadsData(data.dailyLeadsData || []);
         setLoading(false);
       } catch (err) {
         console.error("Error fetching report data:", err);
-        setError("Failed to load report data. Please try again later.");
+        if (err.response?.status === 401) {
+          setError("Session expired. Please login again.");
+        } else {
+          setError("Failed to load report data. Please try again later.");
+        }
         setLoading(false);
       }
     };

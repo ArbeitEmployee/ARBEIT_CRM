@@ -54,14 +54,15 @@ const getDaysInMonth = (month, year) => {
 
 // @desc    Get leads report data
 // @route   GET /api/reports/leads
-// @access  Public
+// @access  Private (Admin only)
 export const getLeadsReport = async (req, res) => {
   try {
     const { month, year } = req.query;
     const currentMonth = month ? parseInt(month) : new Date().getMonth() + 1;
     const currentYear = year ? parseInt(year) : new Date().getFullYear();
     
-    const leads = await Lead.find({});
+    // Only fetch leads for the logged-in admin
+    const leads = await Lead.find({ admin: req.admin._id });
 
     // 1. Leads by Source (This Week)
     const { startOfWeek, endOfWeek } = getWeekRange();
