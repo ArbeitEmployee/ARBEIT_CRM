@@ -10,8 +10,10 @@ import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useNavigate } from "react-router-dom";
 
 const SalesReports = () => {
+  const navigate = useNavigate();
   const [activeReport, setActiveReport] = useState(null);
   const [activeChart, setActiveChart] = useState(null);
   const [invoicesData, setInvoicesData] = useState([]);
@@ -38,54 +40,68 @@ const SalesReports = () => {
     status: "Draft"
   });
   const [proposalsData, setProposalsData] = useState([]);
-const [proposalsLoading, setProposalsLoading] = useState(false);
-const [selectedProposals, setSelectedProposals] = useState([]);
-const [estimatesData, setEstimatesData] = useState([]);
-const [estimatesLoading, setEstimatesLoading] = useState(false);
-const [selectedEstimates, setSelectedEstimates] = useState([]);
-const [customersData, setCustomersData] = useState([]);
-const [customersLoading, setCustomersLoading] = useState(false);
-const [selectedCustomers, setSelectedCustomers] = useState([]);
-const [incomeData, setIncomeData] = useState([]);
-const [incomeLoading, setIncomeLoading] = useState(false);
-const [customerGroupsData, setCustomerGroupsData] = useState([]);
+  const [proposalsLoading, setProposalsLoading] = useState(false);
+  const [selectedProposals, setSelectedProposals] = useState([]);
+  const [estimatesData, setEstimatesData] = useState([]);
+  const [estimatesLoading, setEstimatesLoading] = useState(false);
+  const [selectedEstimates, setSelectedEstimates] = useState([]);
+  const [customersData, setCustomersData] = useState([]);
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [selectedCustomers, setSelectedCustomers] = useState([]);
+  const [incomeData, setIncomeData] = useState([]);
+  const [incomeLoading, setIncomeLoading] = useState(false);
+  const [customerGroupsData, setCustomerGroupsData] = useState([]);
 
-useEffect(() => {
-  if (activeChart === "totalIncome") {
-    fetchIncomeData();
-  } else if (activeChart === "paymentModes") {
-    fetchPaymentModesData();
-  }
-   else if (activeChart === "customerValue") {
-    fetchCustomerGroupsData();
-  }
-}, [activeChart]);
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
 
- 
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
-useEffect(() => {
-  if (activeReport === "invoices") {
-    fetchInvoices();
-  } else if (activeReport === "items") {
-    fetchItems();
-  } else if (activeReport === "payments") {
-    fetchPayments();
-  } else if (activeReport === "creditNotes") {
-    fetchCreditNotes();
-  } else if (activeReport === "proposals") {
-    fetchProposals();
-  } else if (activeReport === "estimates") {
-    fetchEstimates();
-  } else if (activeReport === "customers") {
-    fetchCustomers();
-  }
-}, [activeReport]);
+  useEffect(() => {
+    if (activeChart === "totalIncome") {
+      fetchIncomeData();
+    } else if (activeChart === "paymentModes") {
+      fetchPaymentModesData();
+    } else if (activeChart === "customerValue") {
+      fetchCustomerGroupsData();
+    }
+  }, [activeChart]);
 
+  useEffect(() => {
+    if (activeReport === "invoices") {
+      fetchInvoices();
+    } else if (activeReport === "items") {
+      fetchItems();
+    } else if (activeReport === "payments") {
+      fetchPayments();
+    } else if (activeReport === "creditNotes") {
+      fetchCreditNotes();
+    } else if (activeReport === "proposals") {
+      fetchProposals();
+    } else if (activeReport === "estimates") {
+      fetchEstimates();
+    } else if (activeReport === "customers") {
+      fetchCustomers();
+    }
+  }, [activeReport]);
 
   const fetchInvoices = async () => {
     setLoading(true);
     try {
-      const response = await axios.get("http://localhost:5000/api/admin/invoices");
+      const config = createAxiosConfig();
+      const response = await axios.get("http://localhost:5000/api/admin/invoices", config);
+      
       // Handle both response formats
       const data = response.data.data || response.data || [];
       setInvoicesData(data);
@@ -111,6 +127,10 @@ useEffect(() => {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching invoices:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
       setLoading(false);
     }
   };
@@ -118,81 +138,62 @@ useEffect(() => {
   const fetchItems = async () => {
     setItemsLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/admin/items");
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/admin/items", config);
       setItemsData(data);
       setItemsLoading(false);
     } catch (err) {
       console.error("Error fetching items", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
       setItemsLoading(false);
     }
   };
 
   const fetchPayments = async () => {
-    setPaymentsLoading(true);
-    try {
-      const response = await axios.get("http://localhost:5000/api/admin/invoices");
+  setPaymentsLoading(true);
+  try {
+    const config = createAxiosConfig();
+    const response = await axios.get("http://localhost:5000/api/admin/payments", config);
+    
+    if (response.data.success) {
+      // Use actual payment data from the payments API
+      const paymentRecords = response.data.data.map(payment => ({
+        paymentId: payment.paymentNumber,
       
-      if (response.data.success) {
-        // Transform invoice data into payment records
-        const paymentRecords = response.data.data
-          .filter(invoice => invoice.status !== "Draft") // Exclude drafts
-          .flatMap(invoice => {
-            // Create payment records based on payment status
-            const baseRecord = {
-              invoiceNumber: invoice.invoiceNumber || "INV-" + invoice._id.slice(-6).toUpperCase(),
-              customer: invoice.customer,
-              totalAmount: invoice.total,
-              invoiceDate: new Date(invoice.invoiceDate).toLocaleDateString(),
-              dueDate: invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "N/A",
-              status: invoice.status,
-              currency: invoice.currency || "USD"
-            };
-            
-            // For paid invoices, create a payment record
-            if (invoice.status === "Paid") {
-              return [{
-                ...baseRecord,
-                paymentId: `PAY-${invoice.invoiceNumber || invoice._id.slice(-6).toUpperCase()}`,
-                paymentMode: invoice.paymentMode || "Unknown",
-                transactionId: `TXN-${invoice.invoiceNumber || invoice._id.slice(-6).toUpperCase()}-${new Date(invoice.updatedAt).getTime()}`,
-                amount: invoice.total,
-                paidAmount: invoice.paidAmount || invoice.total,
-                paymentDate: new Date(invoice.updatedAt).toLocaleDateString(),
-                isFullPayment: true
-              }];
-            }
-            
-            // For partially paid invoices, create a payment record
-            if (invoice.status === "Partiallypaid" && invoice.paidAmount > 0) {
-              return [{
-                ...baseRecord,
-                paymentId: `PAY-${invoice.invoiceNumber || invoice._id.slice(-6).toUpperCase()}-PART`,
-                paymentMode: invoice.paymentMode || "Unknown",
-                transactionId: `TXN-${invoice.invoiceNumber || invoice._id.slice(-6).toUpperCase()}-PART-${new Date(invoice.updatedAt).getTime()}`,
-                amount: invoice.paidAmount,
-                paidAmount: invoice.paidAmount,
-                paymentDate: new Date(invoice.updatedAt).toLocaleDateString(),
-                isFullPayment: false
-              }];
-            }
-            
-            // For unpaid invoices, no payment records
-            return [];
-          });
-          
-        setPaymentsData(paymentRecords);
-      }
-    } catch (err) {
-      console.error("Failed to fetch payments:", err);
-    } finally {
-      setPaymentsLoading(false);
+        invoiceNumber: payment.invoiceNumber,
+        customer: payment.customer,
+        amount: payment.amount,
+        paidAmount: payment.amount, // For payments, amount is the paid amount
+        paymentMode: payment.paymentMode,
+        transactionId: payment.transactionId,
+        paymentDate: new Date(payment.paymentDate).toLocaleDateString(),
+        status: payment.status,
+        currency: payment.currency || "USD",
+        isFullPayment: true, // Payments are always full payments
+        notes: payment.notes || ""
+      }));
+      
+      setPaymentsData(paymentRecords);
     }
-  };
+  } catch (err) {
+    console.error("Failed to fetch payments:", err);
+    if (err.response?.status === 401) {
+      localStorage.removeItem("crm_token");
+      navigate("/login");
+    }
+  } finally {
+    setPaymentsLoading(false);
+  }
+};
 
   const fetchCreditNotes = async () => {
     setCreditNotesLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/admin/credit-notes");
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/admin/credit-notes", config);
       const creditNotes = data.data || data;
       setCreditNotesData(creditNotes);
       
@@ -213,131 +214,152 @@ useEffect(() => {
       }));
     } catch (err) {
       console.error("Error fetching credit notes", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     }
     setCreditNotesLoading(false);
   };
 
   const fetchProposals = async () => {
-  setProposalsLoading(true);
-  try {
-    const { data } = await axios.get("http://localhost:5000/api/admin/proposals");
-    setProposalsData(data.data || data);
-  } catch (err) {
-    console.error("Error fetching proposals", err);
-  }
-  setProposalsLoading(false);
-};
+    setProposalsLoading(true);
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/admin/proposals", config);
+      setProposalsData(data.data || data);
+    } catch (err) {
+      console.error("Error fetching proposals", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+    }
+    setProposalsLoading(false);
+  };
 
-const fetchEstimates = async () => {
-  setEstimatesLoading(true);
-  try {
-    const { data } = await axios.get("http://localhost:5000/api/admin/estimates");
-    setEstimatesData(data.data || data);
-  } catch (err) {
-    console.error("Error fetching estimates", err);
-  }
-  setEstimatesLoading(false);
-};
-const fetchCustomers = async () => {
-  setCustomersLoading(true);
-  try {
-    const { data } = await axios.get("http://localhost:5000/api/customers");
-    setCustomersData(data.customers || []);
-  } catch (err) {
-    console.error("Error fetching customers", err);
-    setCustomersData([]);
-  }
-  setCustomersLoading(false);
-};
+  const fetchEstimates = async () => {
+    setEstimatesLoading(true);
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/admin/estimates", config);
+      setEstimatesData(data.data || data);
+    } catch (err) {
+      console.error("Error fetching estimates", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+    }
+    setEstimatesLoading(false);
+  };
 
+  const fetchCustomers = async () => {
+    setCustomersLoading(true);
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/customers", config);
+      setCustomersData(data.customers || []);
+    } catch (err) {
+      console.error("Error fetching customers", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+      setCustomersData([]);
+    }
+    setCustomersLoading(false);
+  };
 
-
-const fetchPaymentModesData = async () => {
-  setIncomeLoading(true);
-  try {
-    // Fetch invoices data to process payment modes
-    const response = await axios.get("http://localhost:5000/api/admin/invoices");
-    
-    if (response.data.success) {
-      const invoices = response.data.data || response.data || [];
+  const fetchPaymentModesData = async () => {
+    setIncomeLoading(true);
+    try {
+      const config = createAxiosConfig();
+      // Fetch invoices data to process payment modes
+      const response = await axios.get("http://localhost:5000/api/admin/invoices", config);
       
-      // Filter paid and partially paid invoices
-      const paymentInvoices = invoices.filter(
-        invoice => invoice.status === "Paid" || invoice.status === "Partiallypaid"
-      );
-      
-      // Count payment modes
-      const paymentModesCount = {
-        "Bank": 0,
-        "Stripe Checkout": 0
-      };
-      
-      paymentInvoices.forEach(invoice => {
-        const paymentMode = invoice.paymentMode || "Unknown";
+      if (response.data.success) {
+        const invoices = response.data.data || response.data || [];
         
-        // Normalize payment mode names
-        if (paymentMode.toLowerCase().includes("bank")) {
-          paymentModesCount["Bank"] += 1;
-        } else if (paymentMode.toLowerCase().includes("stripe") || 
-                   paymentMode.toLowerCase().includes("checkout")) {
-          paymentModesCount["Stripe Checkout"] += 1;
-        } else {
-          // For any other payment mode, categorize appropriately
-          if (paymentMode !== "Unknown") {
-            paymentModesCount["Bank"] += 1; // Default to Bank for other modes
+        // Filter paid and partially paid invoices
+        const paymentInvoices = invoices.filter(
+          invoice => invoice.status === "Paid" || invoice.status === "Partiallypaid"
+        );
+        
+        // Count payment modes
+        const paymentModesCount = {
+          "Bank": 0,
+          "Stripe Checkout": 0
+        };
+        
+        paymentInvoices.forEach(invoice => {
+          const paymentMode = invoice.paymentMode || "Unknown";
+          
+          // Normalize payment mode names
+          if (paymentMode.toLowerCase().includes("bank")) {
+            paymentModesCount["Bank"] += 1;
+          } else if (paymentMode.toLowerCase().includes("stripe") || 
+                     paymentMode.toLowerCase().includes("checkout")) {
+            paymentModesCount["Stripe Checkout"] += 1;
+          } else {
+            // For any other payment mode, categorize appropriately
+            if (paymentMode !== "Unknown") {
+              paymentModesCount["Bank"] += 1; // Default to Bank for other modes
+            }
           }
-        }
-      });
-      
-      // Convert to array format for the chart
-      const chartData = Object.keys(paymentModesCount).map(mode => ({
-        name: mode,
-        count: paymentModesCount[mode],
-        amount: 0 // We'll calculate amounts if needed
-      }));
-      
-      // If you also want to calculate amounts by payment mode
-      paymentInvoices.forEach(invoice => {
-        const paymentMode = invoice.paymentMode || "Unknown";
-        const amount = invoice.status === "Partiallypaid" ? 
-          (invoice.paidAmount || 0) : 
-          (invoice.total || 0);
+        });
         
-        // Normalize payment mode names
-        if (paymentMode.toLowerCase().includes("bank")) {
-          const bankItem = chartData.find(item => item.name === "Bank");
-          if (bankItem) bankItem.amount += amount;
-        } else if (paymentMode.toLowerCase().includes("stripe") || 
-                   paymentMode.toLowerCase().includes("checkout")) {
-          const stripeItem = chartData.find(item => item.name === "Stripe Checkout");
-          if (stripeItem) stripeItem.amount += amount;
-        } else {
-          // For any other payment mode
-          if (paymentMode !== "Unknown") {
+        // Convert to array format for the chart
+        const chartData = Object.keys(paymentModesCount).map(mode => ({
+          name: mode,
+          count: paymentModesCount[mode],
+          amount: 0 // We'll calculate amounts if needed
+        }));
+        
+        // If you also want to calculate amounts by payment mode
+        paymentInvoices.forEach(invoice => {
+          const paymentMode = invoice.paymentMode || "Unknown";
+          const amount = invoice.status === "Partiallypaid" ? 
+            (invoice.paidAmount || 0) : 
+            (invoice.total || 0);
+          
+          // Normalize payment mode names
+          if (paymentMode.toLowerCase().includes("bank")) {
             const bankItem = chartData.find(item => item.name === "Bank");
             if (bankItem) bankItem.amount += amount;
+          } else if (paymentMode.toLowerCase().includes("stripe") || 
+                     paymentMode.toLowerCase().includes("checkout")) {
+            const stripeItem = chartData.find(item => item.name === "Stripe Checkout");
+            if (stripeItem) stripeItem.amount += amount;
+          } else {
+            // For any other payment mode
+            if (paymentMode !== "Unknown") {
+              const bankItem = chartData.find(item => item.name === "Bank");
+              if (bankItem) bankItem.amount += amount;
+            }
           }
-        }
-      });
-      
-      setIncomeData(chartData);
+        });
+        
+        setIncomeData(chartData);
+      }
+    } catch (error) {
+      console.error("Error fetching payment modes data:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+    } finally {
+      setIncomeLoading(false);
     }
-  } catch (error) {
-    console.error("Error fetching payment modes data:", error);
-  } finally {
-    setIncomeLoading(false);
-  }
-};
-
-
-
+  };
 
   // Add this function to fetch and process income data
   const fetchIncomeData = async () => {
     setIncomeLoading(true);
     try {
+      const config = createAxiosConfig();
       // Fetch invoices data to process payments
-      const response = await axios.get("http://localhost:5000/api/admin/invoices");
+      const response = await axios.get("http://localhost:5000/api/admin/invoices", config);
       
       if (response.data.success) {
         const invoices = response.data.data || response.data || [];
@@ -392,96 +414,104 @@ const fetchPaymentModesData = async () => {
       }
     } catch (error) {
       console.error("Error fetching income data:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
     } finally {
       setIncomeLoading(false);
     }
   };
 
-
   const fetchCustomerGroupsData = async () => {
-  setIncomeLoading(true);
-  try {
-    // Fetch customers data
-    const customersResponse = await axios.get("http://localhost:5000/api/customers");
-    const customers = customersResponse.data.customers || [];
-    
-    // Fetch invoices data to get payment information
-    const invoicesResponse = await axios.get("http://localhost:5000/api/admin/invoices");
-    const invoices = invoicesResponse.data.data || invoicesResponse.data || [];
-    
-    // Filter paid and partially paid invoices
-    const paymentInvoices = invoices.filter(
-      invoice => invoice.status === "Paid" || invoice.status === "Partiallypaid"
-    );
-    
-    // Create a mapping of customer names to their groups
-    const customerToGroupsMap = {};
-    customers.forEach(customer => {
-      if (customer.company && customer.groups && customer.groups.length > 0) {
-        customerToGroupsMap[customer.company] = customer.groups;
-      }
-    });
-    
-    // Group payments by customer group
-    const groupPayments = {};
-    
-    paymentInvoices.forEach(invoice => {
-      const customerName = invoice.customer;
-      const customerGroups = customerToGroupsMap[customerName] || ["Ungrouped"];
+    setIncomeLoading(true);
+    try {
+      const config = createAxiosConfig();
+      // Fetch customers data
+      const customersResponse = await axios.get("http://localhost:5000/api/customers", config);
+      const customers = customersResponse.data.customers || [];
       
-      // Use paidAmount if available, otherwise use total for paid invoices
-      const amount = invoice.status === "Partiallypaid" ? 
-        (invoice.paidAmount || 0) : 
-        (invoice.total || 0);
+      // Fetch invoices data to get payment information
+      const invoicesResponse = await axios.get("http://localhost:5000/api/admin/invoices", config);
+      const invoices = invoicesResponse.data.data || invoicesResponse.data || [];
       
-      // Add amount to each group this customer belongs to
-      customerGroups.forEach(group => {
-        if (!groupPayments[group]) {
-          groupPayments[group] = 0;
+      // Filter paid and partially paid invoices
+      const paymentInvoices = invoices.filter(
+        invoice => invoice.status === "Paid" || invoice.status === "Partiallypaid"
+      );
+      
+      // Create a mapping of customer names to their groups
+      const customerToGroupsMap = {};
+      customers.forEach(customer => {
+        if (customer.company && customer.groups && customer.groups.length > 0) {
+          customerToGroupsMap[customer.company] = customer.groups;
         }
-        groupPayments[group] += amount;
       });
-    });
-    
-    // Filter out "Ungrouped" category as requested
-    delete groupPayments["Ungrouped"];
-    
-    // Convert to array format for the chart, sorted by amount (descending)
-    const chartData = Object.keys(groupPayments)
-      .map(group => ({
-        name: group,
-        value: groupPayments[group],
-        count: 0 // We'll calculate customer count per group
-      }))
-      .sort((a, b) => b.value - a.value);
-    
-    // Calculate customer count per group
-    const groupCustomerCount = {};
-    customers.forEach(customer => {
-      if (customer.groups && customer.groups.length > 0) {
-        customer.groups.forEach(group => {
-          if (group !== "Ungrouped") {
-            if (!groupCustomerCount[group]) {
-              groupCustomerCount[group] = 0;
-            }
-            groupCustomerCount[group] += 1;
+      
+      // Group payments by customer group
+      const groupPayments = {};
+      
+      paymentInvoices.forEach(invoice => {
+        const customerName = invoice.customer;
+        const customerGroups = customerToGroupsMap[customerName] || ["Ungrouped"];
+        
+        // Use paidAmount if available, otherwise use total for paid invoices
+        const amount = invoice.status === "Partiallypaid" ? 
+          (invoice.paidAmount || 0) : 
+          (invoice.total || 0);
+        
+        // Add amount to each group this customer belongs to
+        customerGroups.forEach(group => {
+          if (!groupPayments[group]) {
+            groupPayments[group] = 0;
           }
+          groupPayments[group] += amount;
         });
+      });
+      
+      // Filter out "Ungrouped" category as requested
+      delete groupPayments["Ungrouped"];
+      
+      // Convert to array format for the chart, sorted by amount (descending)
+      const chartData = Object.keys(groupPayments)
+        .map(group => ({
+          name: group,
+          value: groupPayments[group],
+          count: 0 // We'll calculate customer count per group
+        }))
+        .sort((a, b) => b.value - a.value);
+      
+      // Calculate customer count per group
+      const groupCustomerCount = {};
+      customers.forEach(customer => {
+        if (customer.groups && customer.groups.length > 0) {
+          customer.groups.forEach(group => {
+            if (group !== "Ungrouped") {
+              if (!groupCustomerCount[group]) {
+                groupCustomerCount[group] = 0;
+              }
+              groupCustomerCount[group] += 1;
+            }
+          });
+        }
+      });
+      
+      // Add customer count to chart data
+      chartData.forEach(item => {
+        item.count = groupCustomerCount[item.name] || 0;
+      });
+      
+      setCustomerGroupsData(chartData);
+    } catch (error) {
+      console.error("Error fetching customer groups data:", error);
+      if (error.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
       }
-    });
-    
-    // Add customer count to chart data
-    chartData.forEach(item => {
-      item.count = groupCustomerCount[item.name] || 0;
-    });
-    
-    setCustomerGroupsData(chartData);
-  } catch (error) {
-    console.error("Error fetching customer groups data:", error);
-  } finally {
-    setIncomeLoading(false);
-  }
-};
+    } finally {
+      setIncomeLoading(false);
+    }
+  };
 
 
 
@@ -2038,8 +2068,9 @@ const toggleCustomerSelection = (id) => {
     }
   };
 
+  
   return (
-   <div className="bg-gray-50 min-h-screen p-6">
+    <div className="bg-gray-50 min-h-screen p-6">
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold mb-6">Sales Reports</h1>
         
@@ -2060,6 +2091,7 @@ const toggleCustomerSelection = (id) => {
             <span className="text-xs text-center">Invoices Report</span>
           </button>
           
+          {/* Other buttons remain the same */}
           <button
             className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all ${
               activeReport === "items" 
@@ -2214,4 +2246,5 @@ const toggleCustomerSelection = (id) => {
     </div>
   );
 };
+
 export default SalesReports;

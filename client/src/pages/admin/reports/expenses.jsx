@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
   BarChart,
@@ -20,10 +20,28 @@ const ExpensesReport = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [availableYears, setAvailableYears] = useState([]);
 
+  // Get auth token from localStorage (using the correct key "crm_token")
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   // Fetch expenses from API
   const fetchExpenses = async () => {
+    setLoading(true);
     try {
-      const { data } = await axios.get("http://localhost:5000/api/expenses");
+      const config = createAxiosConfig();
+      const { data } = await axios.get("http://localhost:5000/api/expenses", config);
       setExpenses(data.expenses || []);
       
       // Extract available years from expenses
@@ -39,6 +57,11 @@ const ExpensesReport = () => {
       processExpenseData(data.expenses || [], selectedYear);
     } catch (error) {
       console.error("Error fetching expenses:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        // Redirect to login page
+        window.location.href = "/admin/login";
+      }
       setExpenses([]);
       setAvailableYears([new Date().getFullYear()]);
     } finally {
@@ -272,7 +295,7 @@ const ExpensesReport = () => {
               margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="category" angle={-45} textAnchor="end" height={70} />
+              <XAxis dataKey="category" angle={0} textAnchor="middle" height={70} />
               <YAxis />
               <Tooltip formatter={(value) => [formatCurrency(value), 'Amount']} />
               <Legend />

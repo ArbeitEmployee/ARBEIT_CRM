@@ -23,6 +23,22 @@ const ExpensesVsIncome = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [availableYears, setAvailableYears] = useState([]);
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   // Format currency
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
@@ -36,18 +52,20 @@ const ExpensesVsIncome = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
+      const config = createAxiosConfig();
+      
       // Fetch expenses
-      const expensesResponse = await axios.get("http://localhost:5000/api/expenses");
+      const expensesResponse = await axios.get("http://localhost:5000/api/expenses", config);
       setExpenses(expensesResponse.data.expenses || []);
       
       // Fetch invoices
-      const invoicesResponse = await axios.get("http://localhost:5000/api/admin/invoices");
+      const invoicesResponse = await axios.get("http://localhost:5000/api/admin/invoices", config);
       setInvoices(invoicesResponse.data.data || invoicesResponse.data.invoices || []);
       
-      // Fetch payments if available
+      // Fetch payments using the new payment API
       try {
-        const paymentsResponse = await axios.get("http://localhost:5000/api/payments");
-        setPayments(paymentsResponse.data.payments || paymentsResponse.data || []);
+        const paymentsResponse = await axios.get("http://localhost:5000/api/admin/payments", config);
+        setPayments(paymentsResponse.data.data || paymentsResponse.data.payments || []);
       } catch (error) {
         console.log("Payments API not available, using invoice data instead");
         setPayments([]);
