@@ -43,14 +43,19 @@ const goalSchema = new mongoose.Schema({
     type: String,
     enum: ["Not Started", "In Progress", "Completed", "Cancelled"],
     default: "Not Started"
+  },
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Admin",
+    required: true
   }
 }, {
   timestamps: true
 });
 
 // Index for better query performance
-goalSchema.index({ createdAt: -1 });
-goalSchema.index({ startDate: 1, endDate: 1 });
+goalSchema.index({ admin: 1, createdAt: -1 });
+goalSchema.index({ admin: 1, startDate: 1, endDate: 1 });
 
 // Virtual for progress percentage
 goalSchema.virtual('progress').get(function() {

@@ -6,8 +6,12 @@ import {
   deleteAnnouncement,
   bulkDeleteAnnouncements
 } from "../../controllers/admin/announcementController.js";
+import { protect } from "../../middlewares/authMiddleware.js";
 
 const router = express.Router();
+
+// All routes are protected and require admin authentication
+router.use(protect);
 
 router.route("/")
   .get(getAnnouncements)

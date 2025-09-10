@@ -462,6 +462,22 @@ const Calendar = () => {
 
   const monthDays = generateMonthDays(currentYear, currentMonth);
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   useEffect(() => {
     fetchEvents();
   }, [currentYear, currentMonth]);
@@ -471,7 +487,9 @@ const Calendar = () => {
       const startOfMonth = new Date(currentYear, currentMonth, 1);
       const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
       
+      const config = createAxiosConfig();
       const response = await axios.get(`http://localhost:5000/api/admin/events/range`, {
+        ...config,
         params: {
           startDate: startOfMonth.toISOString(),
           endDate: endOfMonth.toISOString()
@@ -502,7 +520,8 @@ const Calendar = () => {
 
   const saveEvent = async (eventData) => {
     try {
-      await axios.post('http://localhost:5000/api/admin/events', eventData);
+      const config = createAxiosConfig();
+      await axios.post('http://localhost:5000/api/admin/events', eventData, config);
       fetchEvents();
       setShowModal(false);
     } catch (error) {
@@ -513,7 +532,8 @@ const Calendar = () => {
 
   const updateEvent = async (id, eventData) => {
     try {
-      await axios.put(`http://localhost:5000/api/admin/events/${id}`, eventData);
+      const config = createAxiosConfig();
+      await axios.put(`http://localhost:5000/api/admin/events/${id}`, eventData, config);
       fetchEvents();
       setShowModal(false);
       setEventToEdit(null);
@@ -527,7 +547,8 @@ const Calendar = () => {
     e.stopPropagation();
     if (window.confirm("Are you sure you want to delete this event?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/admin/events/${id}`);
+        const config = createAxiosConfig();
+        await axios.delete(`http://localhost:5000/api/admin/events/${id}`, config);
         fetchEvents();
       } catch (error) {
         console.error("Error deleting event:", error);

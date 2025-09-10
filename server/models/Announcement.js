@@ -15,13 +15,18 @@ const announcementSchema = new mongoose.Schema({
   date: {
     type: Date,
     required: [true, "Date is required"]
+  },
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Admin',
+    required: true
   }
 }, {
   timestamps: true
 });
 
 // Index for better query performance
-announcementSchema.index({ createdAt: -1 });
+announcementSchema.index({ admin: 1, createdAt: -1 });
 
 const Announcement = mongoose.model("Announcement", announcementSchema);
 

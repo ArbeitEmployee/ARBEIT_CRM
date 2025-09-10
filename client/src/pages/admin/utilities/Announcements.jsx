@@ -27,7 +27,23 @@ const AnnouncementsPage = () => {
   });
   const [editingAnnouncement, setEditingAnnouncement] = useState(null);
   const [viewingAnnouncement, setViewingAnnouncement] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
@@ -60,13 +76,13 @@ const AnnouncementsPage = () => {
     return date.toISOString().split('T')[0];
   };
 
-  const [loading, setLoading] = useState(true);
-
   // Fetch announcements from API
   const fetchAnnouncements = async () => {
     setLoading(true);
     try {
+      const config = createAxiosConfig();
       const { data } = await axios.get("http://localhost:5000/api/admin/announcements", {
+        ...config,
         params: {
           search: searchTerm
         }
@@ -121,16 +137,18 @@ const AnnouncementsPage = () => {
     setIsSaving(true);
     
     try {
+      const config = createAxiosConfig();
+      
       if (editingAnnouncement) {
         // Update existing announcement
-        await axios.put(`http://localhost:5000/api/admin/announcements/${editingAnnouncement._id}`, newAnnouncement);
+        await axios.put(`http://localhost:5000/api/admin/announcements/${editingAnnouncement._id}`, newAnnouncement, config);
         setShowNewAnnouncementForm(false);
         setEditingAnnouncement(null);
         fetchAnnouncements();
         alert("Announcement updated successfully!");
       } else {
         // Create new announcement
-        await axios.post("http://localhost:5000/api/admin/announcements", newAnnouncement);
+        await axios.post("http://localhost:5000/api/admin/announcements", newAnnouncement, config);
         setShowNewAnnouncementForm(false);
         fetchAnnouncements();
         alert("Announcement created successfully!");
@@ -163,7 +181,8 @@ const AnnouncementsPage = () => {
   const handleDeleteAnnouncement = async (id) => {
     if (window.confirm("Are you sure you want to delete this announcement?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/admin/announcements/${id}`);
+        const config = createAxiosConfig();
+        await axios.delete(`http://localhost:5000/api/admin/announcements/${id}`, config);
         fetchAnnouncements();
         alert("Announcement deleted successfully!");
       } catch (error) {
@@ -410,9 +429,10 @@ const AnnouncementsPage = () => {
                     onClick={async () => {
                       if (window.confirm(`Delete ${selectedAnnouncements.length} selected announcements?`)) {
                         try {
+                          const config = createAxiosConfig();
                           await axios.post("http://localhost:5000/api/admin/announcements/bulk-delete", {
                             announcementIds: selectedAnnouncements
-                          });
+                          }, config);
                           setSelectedAnnouncements([]);
                           fetchAnnouncements();
                           alert("Selected announcements deleted!");

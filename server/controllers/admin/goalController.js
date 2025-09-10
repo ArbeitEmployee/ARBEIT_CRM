@@ -1,13 +1,13 @@
 import Goal from "../../models/Goal.js";
 
-// @desc    Get all goals
-// @route   GET /api/goals
-// @access  Public
+// @desc    Get all goals for logged-in admin
+// @route   GET /api/admin/goals
+// @access  Private (Admin)
 export const getGoals = async (req, res) => {
   try {
     const { search, status, goalType } = req.query;
     
-    let filter = {};
+    let filter = { admin: req.admin._id };
     
     if (search) {
       filter.$or = [
@@ -35,9 +35,9 @@ export const getGoals = async (req, res) => {
   }
 };
 
-// @desc    Create a goal
-// @route   POST /api/goals
-// @access  Public
+// @desc    Create a goal for logged-in admin
+// @route   POST /api/admin/goals
+// @access  Private (Admin)
 export const createGoal = async (req, res) => {
   try {
     const { title, description, goalType, targetValue, currentValue, startDate, endDate, status } = req.body;
@@ -62,7 +62,8 @@ export const createGoal = async (req, res) => {
       currentValue: currentValue || 0,
       startDate,
       endDate,
-      status: status || "Not Started"
+      status: status || "Not Started",
+      admin: req.admin._id
     });
 
     const createdGoal = await goal.save();
@@ -77,9 +78,9 @@ export const createGoal = async (req, res) => {
   }
 };
 
-// @desc    Update a goal
-// @route   PUT /api/goals/:id
-// @access  Public
+// @desc    Update a goal (only if owned by admin)
+// @route   PUT /api/admin/goals/:id
+// @access  Private (Admin)
 export const updateGoal = async (req, res) => {
   try {
     const { id } = req.params;
@@ -97,7 +98,7 @@ export const updateGoal = async (req, res) => {
       });
     }
 
-    const goal = await Goal.findById(id);
+    const goal = await Goal.findOne({ _id: id, admin: req.admin._id });
     
     if (!goal) {
       return res.status(404).json({ message: "Goal not found" });
@@ -124,14 +125,14 @@ export const updateGoal = async (req, res) => {
   }
 };
 
-// @desc    Delete a goal
-// @route   DELETE /api/goals/:id
-// @access  Public
+// @desc    Delete a goal (only if owned by admin)
+// @route   DELETE /api/admin/goals/:id
+// @access  Private (Admin)
 export const deleteGoal = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const goal = await Goal.findById(id);
+    const goal = await Goal.findOne({ _id: id, admin: req.admin._id });
     
     if (!goal) {
       return res.status(404).json({ message: "Goal not found" });
@@ -145,9 +146,9 @@ export const deleteGoal = async (req, res) => {
   }
 };
 
-// @desc    Bulk delete goals
-// @route   POST /api/goals/bulk-delete
-// @access  Public
+// @desc    Bulk delete goals (only those owned by admin)
+// @route   POST /api/admin/goals/bulk-delete
+// @access  Private (Admin)
 export const bulkDeleteGoals = async (req, res) => {
   try {
     const { goalIds } = req.body;
@@ -156,7 +157,10 @@ export const bulkDeleteGoals = async (req, res) => {
       return res.status(400).json({ message: "No goal IDs provided" });
     }
 
-    const result = await Goal.deleteMany({ _id: { $in: goalIds } });
+    const result = await Goal.deleteMany({ 
+      _id: { $in: goalIds },
+      admin: req.admin._id
+    });
     
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "No goals found to delete" });

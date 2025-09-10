@@ -74,15 +74,24 @@ const GoalsPage = () => {
 
   const [loading, setLoading] = useState(true);
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
   // Fetch goals from API
   const fetchGoals = async () => {
     setLoading(true);
     try {
+      const token = getAuthToken();
       const { data } = await axios.get("http://localhost:5000/api/admin/goals", {
         params: {
           search: searchTerm,
           status: statusFilter !== "All" ? statusFilter : undefined,
           goalType: typeFilter !== "All" ? typeFilter : undefined
+        },
+        headers: {
+          Authorization: `Bearer ${token}`
         }
       });
       setGoals(data.goals || []);
@@ -140,6 +149,7 @@ const GoalsPage = () => {
     setIsSaving(true);
     
     try {
+      const token = getAuthToken();
       const goalData = {
         ...newGoal,
         targetValue: parseFloat(newGoal.targetValue),
@@ -148,14 +158,22 @@ const GoalsPage = () => {
 
       if (editingGoal) {
         // Update existing goal
-        await axios.put(`http://localhost:5000/api/admin/goals/${editingGoal._id}`, goalData);
+        await axios.put(`http://localhost:5000/api/admin/goals/${editingGoal._id}`, goalData, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         setShowNewGoalForm(false);
         setEditingGoal(null);
         fetchGoals();
         alert("Goal updated successfully!");
       } else {
         // Create new goal
-        await axios.post("http://localhost:5000/api/admin/goals", goalData);
+        await axios.post("http://localhost:5000/api/admin/goals", goalData, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         setShowNewGoalForm(false);
         fetchGoals();
         alert("Goal created successfully!");
@@ -198,7 +216,12 @@ const GoalsPage = () => {
   const handleDeleteGoal = async (id) => {
     if (window.confirm("Are you sure you want to delete this goal?")) {
       try {
-        await axios.delete(`http://localhost:5000/api/admin/goals/${id}`);
+        const token = getAuthToken();
+        await axios.delete(`http://localhost:5000/api/admin/goals/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         fetchGoals();
         alert("Goal deleted successfully!");
       } catch (error) {
@@ -545,8 +568,13 @@ const GoalsPage = () => {
                     onClick={async () => {
                       if (window.confirm(`Delete ${selectedGoals.length} selected goals?`)) {
                         try {
+                          const token = getAuthToken();
                           await axios.post("http://localhost:5000/api/admin/goals/bulk-delete", {
                             goalIds: selectedGoals
+                          }, {
+                            headers: {
+                              Authorization: `Bearer ${token}`
+                            }
                           });
                           setSelectedGoals([]);
                           fetchGoals();

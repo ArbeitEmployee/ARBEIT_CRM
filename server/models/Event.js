@@ -25,6 +25,11 @@ const eventSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  admin: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Admin',
+    required: true
+  },
   createdAt: {
     type: Date,
     default: Date.now

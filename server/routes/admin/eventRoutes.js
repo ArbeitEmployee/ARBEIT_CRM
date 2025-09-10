@@ -6,22 +6,15 @@ import {
   updateEvent,
   deleteEvent
 } from '../../controllers/admin/eventController.js';
+import { protect } from '../../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-// Get all events
-router.get('/', getAllEvents);
-
-// Get events by date range
-router.get('/range', getEventsByDateRange);
-
-// Create a new event
-router.post('/', createEvent);
-
-// Update an event
-router.put('/:id', updateEvent);
-
-// Delete an event
-router.delete('/:id', deleteEvent);
+// All routes are protected - only accessible to authenticated admins
+router.get('/', protect, getAllEvents);
+router.get('/range', protect, getEventsByDateRange);
+router.post('/', protect, createEvent);
+router.put('/:id', protect, updateEvent);
+router.delete('/:id', protect, deleteEvent);
 
 export default router;

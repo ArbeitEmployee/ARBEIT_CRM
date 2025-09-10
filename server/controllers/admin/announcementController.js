@@ -1,13 +1,13 @@
 import Announcement from "../../models/Announcement.js";
 
-// @desc    Get all announcements
-// @route   GET /api/announcements
-// @access  Public
+// @desc    Get all announcements for logged-in admin
+// @route   GET /api/admin/announcements
+// @access  Private (Admin)
 export const getAnnouncements = async (req, res) => {
   try {
     const { search } = req.query;
     
-    let filter = {};
+    let filter = { admin: req.admin._id };
     
     if (search) {
       filter.$or = [
@@ -27,9 +27,9 @@ export const getAnnouncements = async (req, res) => {
   }
 };
 
-// @desc    Create an announcement
-// @route   POST /api/announcements
-// @access  Public
+// @desc    Create an announcement for logged-in admin
+// @route   POST /api/admin/announcements
+// @access  Private (Admin)
 export const createAnnouncement = async (req, res) => {
   try {
     const { title, content, date } = req.body;
@@ -43,7 +43,8 @@ export const createAnnouncement = async (req, res) => {
     const announcement = new Announcement({
       title,
       content,
-      date
+      date,
+      admin: req.admin._id
     });
 
     const createdAnnouncement = await announcement.save();
@@ -58,9 +59,9 @@ export const createAnnouncement = async (req, res) => {
   }
 };
 
-// @desc    Update an announcement
-// @route   PUT /api/announcements/:id
-// @access  Public
+// @desc    Update an announcement (only if owned by admin)
+// @route   PUT /api/admin/announcements/:id
+// @access  Private (Admin)
 export const updateAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;
@@ -72,7 +73,7 @@ export const updateAnnouncement = async (req, res) => {
       });
     }
 
-    const announcement = await Announcement.findById(id);
+    const announcement = await Announcement.findOne({ _id: id, admin: req.admin._id });
     
     if (!announcement) {
       return res.status(404).json({ message: "Announcement not found" });
@@ -94,14 +95,14 @@ export const updateAnnouncement = async (req, res) => {
   }
 };
 
-// @desc    Delete an announcement
-// @route   DELETE /api/announcements/:id
-// @access  Public
+// @desc    Delete an announcement (only if owned by admin)
+// @route   DELETE /api/admin/announcements/:id
+// @access  Private (Admin)
 export const deleteAnnouncement = async (req, res) => {
   try {
     const { id } = req.params;
     
-    const announcement = await Announcement.findById(id);
+    const announcement = await Announcement.findOne({ _id: id, admin: req.admin._id });
     
     if (!announcement) {
       return res.status(404).json({ message: "Announcement not found" });
@@ -115,9 +116,9 @@ export const deleteAnnouncement = async (req, res) => {
   }
 };
 
-// @desc    Bulk delete announcements
-// @route   POST /api/announcements/bulk-delete
-// @access  Public
+// @desc    Bulk delete announcements (only if owned by admin)
+// @route   POST /api/admin/announcements/bulk-delete
+// @access  Private (Admin)
 export const bulkDeleteAnnouncements = async (req, res) => {
   try {
     const { announcementIds } = req.body;
@@ -126,7 +127,10 @@ export const bulkDeleteAnnouncements = async (req, res) => {
       return res.status(400).json({ message: "No announcement IDs provided" });
     }
 
-    const result = await Announcement.deleteMany({ _id: { $in: announcementIds } });
+    const result = await Announcement.deleteMany({ 
+      _id: { $in: announcementIds },
+      admin: req.admin._id 
+    });
     
     if (result.deletedCount === 0) {
       return res.status(404).json({ message: "No announcements found to delete" });
