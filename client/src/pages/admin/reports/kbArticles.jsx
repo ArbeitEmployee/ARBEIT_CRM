@@ -16,6 +16,22 @@ export default function KbArticles() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem('crm_token');
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   const onGroupChange = (e) => {
     setSelectedGroup(e.target.value);
   };
@@ -24,14 +40,20 @@ export default function KbArticles() {
   const fetchArticles = async () => {
     try {
       setLoading(true);
+      const config = createAxiosConfig();
       const { data } = await axios.get("http://localhost:5000/api/knowledge-base", {
         params: {
           group: selectedGroup !== "All" ? selectedGroup : null
-        }
+        },
+        ...config
       });
       setArticles(data.articles || []);
     } catch (error) {
       console.error("Error fetching articles:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        window.location.href = "/admin/login";
+      }
       setArticles([]);
     } finally {
       setLoading(false);

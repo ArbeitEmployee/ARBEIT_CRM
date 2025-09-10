@@ -1,13 +1,18 @@
 import { useState, useEffect, useRef } from "react";
-import { FaBars, FaBell, FaUserCircle, FaSignOutAlt, FaKey, FaSearch, FaTimes } from "react-icons/fa";
+import { FaBars, FaBell, FaUserCircle, FaSignOutAlt, FaKey, FaSearch, FaTimes, FaBullhorn, FaCalendarAlt, FaBullseye } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
   const [admin, setAdmin] = useState(propAdmin || null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef(null);
+  const notificationRef = useRef(null);
   const navigate = useNavigate();
 
   // Read from localStorage if not passed as prop
@@ -24,12 +29,87 @@ const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowResults(false);
       }
+      
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, []);
+
+  // Fetch notifications
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem("crm_token");
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      };
+      
+      // Fetch today's notifications
+      const today = new Date().toISOString().split('T')[0];
+      const { data: announcements } = await axios.get(`http://localhost:5000/api/admin/announcements?date=${today}`, config);
+      const { data: goals } = await axios.get(`http://localhost:5000/api/admin/goals?date=${today}`, config);
+      const { data: events } = await axios.get(`http://localhost:5000/api/admin/events/range?startDate=${today}T00:00:00&endDate=${today}T23:59:59`, config);
+      
+      // Format notifications
+      const announcementNotifications = announcements.announcements?.map(announcement => ({
+        id: announcement._id,
+        type: 'announcement',
+        title: announcement.title,
+        message: announcement.content.substring(0, 100) + '...',
+        date: announcement.date,
+        read: false
+      })) || [];
+      
+      const goalNotifications = goals.goals?.map(goal => ({
+        id: goal._id,
+        type: 'goal',
+        title: goal.title,
+        message: `${goal.goalType}: ${goal.currentValue}/${goal.targetValue}`,
+        date: goal.endDate,
+        read: false
+      })) || [];
+      
+      const eventNotifications = events.map(event => ({
+        id: event._id,
+        type: 'event',
+        title: event.title,
+        message: event.description ? event.description.substring(0, 100) + '...' : 'No description',
+        date: event.startDate,
+        read: false
+      })) || [];
+      
+      // Combine all notifications
+      const allNotifications = [
+        ...announcementNotifications,
+        ...goalNotifications,
+        ...eventNotifications
+      ];
+      
+      // Sort by date (newest first)
+      allNotifications.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      setNotifications(allNotifications);
+      setUnreadCount(allNotifications.length);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  // Fetch notifications on component mount and daily
+  useEffect(() => {
+    fetchNotifications();
+    
+    // Set up interval to check for new notifications daily
+    const interval = setInterval(fetchNotifications, 24 * 60 * 60 * 1000); // Check once per day
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Handle logout functionality
@@ -50,6 +130,33 @@ const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
   // Navigate to change password page
   const handleChangePassword = () => {
     navigate("/admin/change-password");
+  };
+
+  // Handle notification click
+  const handleNotificationClick = (notification) => {
+    // Mark as read
+    const updatedNotifications = notifications.map(n => 
+      n.id === notification.id ? { ...n, read: true } : n
+    );
+    
+    setNotifications(updatedNotifications);
+    setUnreadCount(prev => prev - 1);
+    setShowNotifications(false);
+    
+    // Navigate based on notification type
+    switch(notification.type) {
+      case 'announcement':
+        navigate('/admin/utilities/announcements');
+        break;
+      case 'goal':
+        navigate('/admin/utilities/goals');
+        break;
+      case 'event':
+        navigate('/admin/utilities/calendar');
+        break;
+      default:
+        break;
+    }
   };
 
   // Menu items structure (should match your sidebar)
@@ -120,6 +227,31 @@ const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
   const navigateToResult = (path) => {
     navigate(path);
     clearSearch();
+  };
+
+  // Format date for display
+  const formatNotificationDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-GB', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric' 
+    });
+  };
+
+  // Get icon based on notification type
+  const getNotificationIcon = (type) => {
+    switch(type) {
+      case 'announcement':
+        return <FaBullhorn className="text-blue-500" />;
+      case 'goal':
+        return <FaBullseye className="text-green-500" />;
+      case 'event':
+        return <FaCalendarAlt className="text-purple-500" />;
+      default:
+        return <FaBell className="text-gray-500" />;
+    }
   };
 
   return (
@@ -198,12 +330,82 @@ const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
         </div>
 
         {/* Notifications */}
-        <button className="relative">
-          <FaBell className="text-xl" />
-          <span className="absolute -top-1 -right-2 bg-red-500 rounded-full text-xs px-1">
-            3
-          </span>
-        </button>
+        <div className="relative" ref={notificationRef}>
+          <button 
+            className="relative"
+            onClick={() => setShowNotifications(!showNotifications)}
+          >
+            <FaBell className="text-xl" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-2 bg-red-500 rounded-full text-xs px-1 min-w-[18px] text-center">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+
+          {/* Notifications dropdown */}
+          {showNotifications && (
+            <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg overflow-hidden z-50">
+              <div className="p-3 border-b border-gray-200 bg-gray-700 text-white">
+                <h3 className="text-sm font-medium">Notifications</h3>
+              </div>
+              
+              <div className="max-h-96 overflow-y-auto">
+                {notifications.length > 0 ? (
+                  notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`p-3 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${notification.read ? 'bg-gray-50' : 'bg-white'}`}
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 pt-1 mr-3">
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {notification.title}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {notification.message}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {formatNotificationDate(notification.date)}
+                          </p>
+                        </div>
+                        {!notification.read && (
+                          <div className="flex-shrink-0 ml-2">
+                            <span className="inline-block h-2 w-2 rounded-full bg-blue-500"></span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-4 text-center text-gray-500">
+                    No notifications
+                  </div>
+                )}
+              </div>
+              
+              {notifications.length > 0 && (
+                <div className="p-2 border-t border-gray-200 bg-gray-50">
+                  <button
+                    className="w-full text-center text-xs text-blue-600 hover:text-blue-800"
+                    onClick={() => {
+                      // Mark all as read
+                      const updatedNotifications = notifications.map(n => ({ ...n, read: true }));
+                      setNotifications(updatedNotifications);
+                      setUnreadCount(0);
+                    }}
+                  >
+                    Mark all as read
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* User Name */}
         <div className="flex items-center gap-2 cursor-pointer">

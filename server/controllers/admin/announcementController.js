@@ -15,6 +15,9 @@ export const getAnnouncements = async (req, res) => {
         { content: { $regex: search, $options: 'i' } }
       ];
     }
+
+    // Header Notification
+   
     
     const announcements = await Announcement.find(filter).sort({ createdAt: -1 });
     
