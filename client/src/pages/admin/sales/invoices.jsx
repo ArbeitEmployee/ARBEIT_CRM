@@ -182,6 +182,7 @@ const Invoices = () => {
   };
 
  // Process batch payments
+// Process batch payments - UPDATED FOR NEW PAYMENT API
 const processBatchPayments = async () => {
   setBatchPaymentLoading(true);
   setBatchPaymentError("");
@@ -212,38 +213,23 @@ const processBatchPayments = async () => {
       return;
     }
     
+    // Process each payment through the new payment API
     for (const invoice of payableInvoices) {
       const paymentAmount = paymentAmounts[invoice._id] || 0;
       
       if (paymentAmount > 0) {
-        // Calculate new status
-        let newStatus = invoice.status;
-        const balanceDue = invoice.total - (invoice.paidAmount || 0);
-        
-        if (paymentAmount >= balanceDue) {
-          newStatus = "Paid";
-        } else if (paymentAmount > 0) {
-          newStatus = "Partiallypaid";
-        }
-        
-        // Prepare the complete update data
-        const updateData = {
-          ...invoice, // Include all existing invoice data
-          paidAmount: (invoice.paidAmount || 0) + paymentAmount,
-          status: newStatus,
+        // Create payment data for the new payment API
+        const paymentData = {
+          invoice: invoice._id,
           paymentDate: batchPaymentData.paymentDate,
           paymentMode: batchPaymentData.paymentMode,
-          transactionId: batchPaymentData.transactionId
+          transactionId: batchPaymentData.transactionId ,
+          amount: paymentAmount,
+          notes: `Batch payment processed on ${new Date().toLocaleDateString()}`
         };
         
-        // Remove MongoDB-specific fields that might cause issues
-        delete updateData._id;
-        delete updateData.__v;
-        delete updateData.createdAt;
-        delete updateData.updatedAt;
-        
-        // Update invoice
-        await axios.put(`http://localhost:5000/api/admin/invoices/${invoice._id}`, updateData, config);
+        // Create payment using the new payment API
+        await axios.post("http://localhost:5000/api/admin/payments", paymentData, config);
       }
     }
     
@@ -259,7 +245,7 @@ const processBatchPayments = async () => {
       localStorage.removeItem("crm_token");
       navigate("/login");
     }
-    setBatchPaymentError("Error processing payments. Please try again.");
+    setBatchPaymentError(err.response?.data?.message || "Error processing payments. Please try again.");
   }
   setBatchPaymentLoading(false);
 };

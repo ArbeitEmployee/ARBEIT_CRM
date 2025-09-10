@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
-import { FaSearch, FaSyncAlt, FaEye, FaChevronRight, FaTimes } from "react-icons/fa";
+import { FaSearch, FaSyncAlt, FaEye, FaChevronRight, FaTimes, FaPlus } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const Payments = () => {
+  const navigate = useNavigate();
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -15,9 +17,33 @@ const Payments = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [viewPayment, setViewPayment] = useState(null);
+  const [stats, setStats] = useState({
+    totalPayments: 0,
+    completedPayments: 0,
+    pendingPayments: 0,
+    failedPayments: 0,
+    refundedPayments: 0,
+    totalAmount: 0
+  });
 
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
+
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
 
   // Close export menu when clicking outside
   useEffect(() => {
@@ -33,72 +59,47 @@ const Payments = () => {
     };
   }, []);
   
-  // Fetch invoices data from API
-  useEffect(() => {
-    const fetchInvoices = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get("http://localhost:5000/api/admin/invoices");
+  // Fetch payments data from API
+  const fetchPayments = async () => {
+    try {
+      setLoading(true);
+      const config = createAxiosConfig();
+      const response = await axios.get("http://localhost:5000/api/admin/payments", config);
+      
+      if (response.data.success) {
+        setPayments(response.data.data);
         
-        if (response.data.success) {
-          // Transform invoice data into payment records
-          const paymentRecords = response.data.data
-            .filter(invoice => invoice.status !== "Draft") // Exclude drafts
-            .flatMap(invoice => {
-              // Create payment records based on payment status
-              const baseRecord = {
-                invoiceNumber: invoice.invoiceNumber,
-                customer: invoice.customer,
-                totalAmount: invoice.total,
-                invoiceDate: new Date(invoice.invoiceDate).toLocaleDateString(),
-                dueDate: invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "N/A",
-                status: invoice.status,
-                currency: invoice.currency || "USD"
-              };
-              
-              // For paid invoices, create a payment record
-              if (invoice.status === "Paid") {
-                return [{
-                  ...baseRecord,
-                  paymentId: `PAY-${invoice.invoiceNumber}`,
-                  paymentMode: invoice.paymentMode,
-                  transactionId: `TXN-${invoice.invoiceNumber}-${new Date(invoice.updatedAt).getTime()}`,
-                  amount: invoice.total,
-                  paidAmount: invoice.paidAmount || invoice.total,
-                  paymentDate: new Date(invoice.updatedAt).toLocaleDateString(),
-                  isFullPayment: true
-                }];
-              }
-              
-              // For partially paid invoices, create a payment record
-              if (invoice.status === "Partiallypaid" && invoice.paidAmount > 0) {
-                return [{
-                  ...baseRecord,
-                  paymentId: `PAY-${invoice.invoiceNumber}-PART`,
-                  paymentMode: invoice.paymentMode,
-                  transactionId: `TXN-${invoice.invoiceNumber}-PART-${new Date(invoice.updatedAt).getTime()}`,
-                  amount: invoice.paidAmount,
-                  paidAmount: invoice.paidAmount,
-                  paymentDate: new Date(invoice.updatedAt).toLocaleDateString(),
-                  isFullPayment: false
-                }];
-              }
-              
-              // For unpaid invoices, no payment records
-              return [];
-            });
-            
-          setPayments(paymentRecords);
-        }
-      } catch (err) {
-        console.error("Failed to fetch payments:", err);
-        setError(err.response?.data?.message || "Failed to load payment data");
-      } finally {
-        setLoading(false);
+        // Calculate stats
+        const total = response.data.data.length;
+        const completed = response.data.data.filter(p => p.status === "Completed").length;
+        const pending = response.data.data.filter(p => p.status === "Pending").length;
+        const failed = response.data.data.filter(p => p.status === "Failed").length;
+        const refunded = response.data.data.filter(p => p.status === "Refunded").length;
+        const totalAmount = response.data.data.reduce((sum, payment) => sum + payment.amount, 0);
+        
+        setStats({
+          totalPayments: total,
+          completedPayments: completed,
+          pendingPayments: pending,
+          failedPayments: failed,
+          refundedPayments: refunded,
+          totalAmount: totalAmount
+        });
       }
-    };
+    } catch (err) {
+      console.error("Failed to fetch payments:", err);
+      setError(err.response?.data?.message || "Failed to load payment data");
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchInvoices();
+  useEffect(() => {
+    fetchPayments();
   }, []);
 
   // Export handler
@@ -106,13 +107,13 @@ const Payments = () => {
     if (!payments.length) return;
 
     const exportData = payments.map((p) => ({
-      PaymentNumber: p.paymentId,
+      PaymentNumber: p.paymentNumber,
       InvoiceNumber: p.invoiceNumber,
       PaymentMode: p.paymentMode,
       TransactionID: p.transactionId,
       Customer: p.customer,
       Amount: formatCurrency(p.amount, p.currency),
-      PaymentDate: p.paymentDate,
+      PaymentDate: new Date(p.paymentDate).toLocaleDateString(),
       Status: p.status,
     }));
 
@@ -203,10 +204,10 @@ const Payments = () => {
   // Get status color
   const getStatusColor = (status) => {
     switch (status) {
-      case "Paid": return "bg-green-100 text-green-800";
-      case "Partiallypaid": return "bg-yellow-100 text-yellow-800";
-      case "Unpaid": return "bg-red-100 text-red-800";
-      case "Overdue": return "bg-orange-100 text-orange-800";
+      case "Completed": return "bg-green-100 text-green-800";
+      case "Pending": return "bg-yellow-100 text-yellow-800";
+      case "Failed": return "bg-red-100 text-red-800";
+      case "Refunded": return "bg-orange-100 text-orange-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
@@ -246,6 +247,49 @@ const Payments = () => {
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Payments</span>
+        </div>
+      </div>
+
+      {/* Stats Cards */}
+        
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        {/* Total Payments */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Total Payments</p>
+              <p className="text-2xl font-bold">{stats.totalPayments}</p>
+            </div>
+            <div className="bg-blue-100 p-3 rounded-full">
+              <FaSearch className="text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Completed Payments */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Completed</p>
+              <p className="text-2xl font-bold">{stats.completedPayments}</p>
+            </div>
+            <div className="bg-green-100 p-3 rounded-full">
+              <FaEye className="text-green-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Total Amount */}
+        <div className="bg-white p-4 rounded-lg shadow border">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-gray-500 text-sm">Total Amount</p>
+              <p className="text-2xl font-bold">{formatCurrency(stats.totalAmount)}</p>
+            </div>
+            <div className="bg-purple-100 p-3 rounded-full">
+              <FaPlus className="text-purple-600" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -313,7 +357,7 @@ const Payments = () => {
             {/* Refresh button */}
             <button
               className="border px-2.5 py-1.5 rounded text-sm flex items-center"
-              onClick={() => window.location.reload()}
+              onClick={fetchPayments}
             >
               <FaSyncAlt />
             </button>
@@ -357,17 +401,17 @@ const Payments = () => {
               {currentPayments.length > 0 ? (
                 currentPayments.map((payment) => (
                   <tr
-                    key={payment.paymentId}
+                    key={payment._id}
                     className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
                     style={{ color: 'black' }}
                   >
-                    <td className="p-3 rounded-l-lg border-0 font-mono">{payment.paymentId}</td>
-                    <td className="p-3 border-0 font-mono">{payment.invoiceNumber}</td>
+                    <td className="p-3 rounded-l-lg border-0">{payment.paymentNumber}</td>
+                    <td className="p-3 border-0 ">{payment.invoiceNumber}</td>
                     <td className="p-3 border-0">{payment.paymentMode}</td>
-                    <td className="p-3 border-0 font-mono">{payment.transactionId}</td>
+                    <td className="p-3 border-0 ">{payment.transactionId}</td>
                     <td className="p-3 border-0">{payment.customer}</td>
-                    <td className="p-3 border-0 text-right">{formatCurrency(payment.amount, payment.currency)}</td>
-                    <td className="p-3 border-0">{payment.paymentDate}</td>
+                    <td className="p-3 border-0 ">{formatCurrency(payment.amount, payment.currency)}</td>
+                    <td className="p-3 border-0">{new Date(payment.paymentDate).toLocaleDateString()}</td>
                     <td className="p-3 border-0">
                       <span className={`px-2 py-1 rounded text-xs ${getStatusColor(payment.status)}`}>
                         {payment.status}
@@ -454,18 +498,17 @@ const Payments = () => {
               </button>
             </div>
             <div className="space-y-3">
-              <p><b>Payment #:</b> {viewPayment.paymentId}</p>
+              <p><b>Payment #:</b> {viewPayment.paymentNumber}</p>
               <p><b>Invoice #:</b> {viewPayment.invoiceNumber}</p>
               <p><b>Customer:</b> {viewPayment.customer}</p>
               <p><b>Payment Mode:</b> {viewPayment.paymentMode}</p>
               <p><b>Transaction ID:</b> {viewPayment.transactionId}</p>
               <p><b>Amount:</b> {formatCurrency(viewPayment.amount, viewPayment.currency)}</p>
-              <p><b>Payment Date:</b> {viewPayment.paymentDate}</p>
+              <p><b>Payment Date:</b> {new Date(viewPayment.paymentDate).toLocaleDateString()}</p>
               <p><b>Status:</b> <span className={`px-2 py-1 rounded text-xs ${getStatusColor(viewPayment.status)}`}>
                 {viewPayment.status}
               </span></p>
-              {viewPayment.invoiceDate && <p><b>Invoice Date:</b> {viewPayment.invoiceDate}</p>}
-              {viewPayment.dueDate && viewPayment.dueDate !== "N/A" && <p><b>Due Date:</b> {viewPayment.dueDate}</p>}
+              {viewPayment.notes && <p><b>Notes:</b> {viewPayment.notes}</p>}
             </div>
             <div className="mt-6 flex justify-end">
               <button 

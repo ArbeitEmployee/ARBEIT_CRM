@@ -13,6 +13,8 @@ import itemRoutes from "./routes/admin/itemRoutes.js";
 import proposalRoutes from "./routes/admin/proposalRoutes.js";
 import estimateRoutes from "./routes/admin/estimateRoutes.js";
 import invoiceRoutes from "./routes/admin/invoiceRoutes.js";
+import paymentRoutes from "./routes/admin/paymentRoutes.js";
+
 import creditNoteRoutes from "./routes/admin/creditNoteRoutes.js";
 import subscriptionRoutes from "./routes/admin/subscriptionRoutes.js";
 import expenseRoutes from "./routes/admin/expenseRoutes.js";
@@ -44,6 +46,8 @@ app.use("/api/admin", itemRoutes);
 app.use("/api/admin", proposalRoutes);
 app.use("/api/admin", estimateRoutes);
 app.use("/api/admin", invoiceRoutes);
+
+app.use("/api/admin", paymentRoutes);
 app.use("/api/admin", creditNoteRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
 app.use("/api/expenses", expenseRoutes);
