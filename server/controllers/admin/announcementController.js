@@ -5,7 +5,7 @@ import Announcement from "../../models/Announcement.js";
 // @access  Private (Admin)
 export const getAnnouncements = async (req, res) => {
   try {
-    const { search } = req.query;
+    const { search, date } = req.query;
     
     let filter = { admin: req.admin._id };
     
@@ -16,9 +16,18 @@ export const getAnnouncements = async (req, res) => {
       ];
     }
 
-    // Header Notification
+    // Filter by specific date for notifications
+    if (date) {
+      const startOfDay = new Date(date);
+      startOfDay.setUTCHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+      filter.date = {
+        $gte: startOfDay,
+        $lte: endOfDay
+      };
+    }
    
-    
     const announcements = await Announcement.find(filter).sort({ createdAt: -1 });
     
     res.json({

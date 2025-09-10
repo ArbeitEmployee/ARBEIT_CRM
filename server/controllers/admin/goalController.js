@@ -5,7 +5,7 @@ import Goal from "../../models/Goal.js";
 // @access  Private (Admin)
 export const getGoals = async (req, res) => {
   try {
-    const { search, status, goalType } = req.query;
+    const { search, status, goalType, endDate } = req.query;
     
     let filter = { admin: req.admin._id };
     
@@ -23,11 +23,26 @@ export const getGoals = async (req, res) => {
     if (goalType && goalType !== "All") {
       filter.goalType = goalType;
     }
+
+    // Filter by specific end date for notifications
+    if (endDate) {
+      const startOfDay = new Date(endDate);
+      startOfDay.setUTCHours(0, 0, 0, 0);
+      const endOfDay = new Date(endDate);
+      endOfDay.setUTCHours(23, 59, 59, 999);
+      filter.endDate = {
+        $gte: startOfDay,
+        $lte: endOfDay
+      };
+    }
     
     const goals = await Goal.find(filter).sort({ createdAt: -1 });
     
     res.json({
-      goals
+      goals: goals.map(goal => ({
+        ...goal.toObject(),
+        progress: goal.progress // Include the virtual 'progress' field
+      }))
     });
   } catch (error) {
     console.error("Error fetching goals:", error);

@@ -51,11 +51,20 @@ const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
         }
       };
       
-      // Fetch today's notifications
-      const today = new Date().toISOString().split('T')[0];
-      const { data: announcements } = await axios.get(`http://localhost:5000/api/admin/announcements?date=${today}`, config);
-      const { data: goals } = await axios.get(`http://localhost:5000/api/admin/goals?date=${today}`, config);
-      const { data: events } = await axios.get(`http://localhost:5000/api/admin/events/range?startDate=${today}T00:00:00&endDate=${today}T23:59:59`, config);
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date();
+      const todayISO = today.toISOString().split('T')[0];
+      const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
+      const endOfDay = new Date(today.setHours(23, 59, 59, 999)).toISOString();
+
+      // Fetch today's announcements
+      const { data: announcements } = await axios.get(`http://localhost:5000/api/admin/announcements?date=${todayISO}`, config);
+      
+      // Fetch today's goals (ending today)
+      const { data: goals } = await axios.get(`http://localhost:5000/api/admin/goals?endDate=${todayISO}`, config);
+      
+      // Fetch today's events
+      const { data: events } = await axios.get(`http://localhost:5000/api/admin/events/range?startDate=${startOfDay}&endDate=${endOfDay}`, config);
       
       // Format notifications
       const announcementNotifications = announcements.announcements?.map(announcement => ({
@@ -71,7 +80,7 @@ const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
         id: goal._id,
         type: 'goal',
         title: goal.title,
-        message: `${goal.goalType}: ${goal.currentValue}/${goal.targetValue}`,
+        message: `Progress: ${goal.progress}% - ${goal.status}`, // Display progress percentage
         date: goal.endDate,
         read: false
       })) || [];
