@@ -10,106 +10,83 @@ const ClientKnowledgeBasePage = () => {
   const [groups, setGroups] = useState(["All"]);
   const [userVotes, setUserVotes] = useState({});
   const [userId, setUserId] = useState("");
+  const [clientToken, setClientToken] = useState("");
+  const [adminId, setAdminId] = useState("");
 
-  // Generate a persistent user ID using browser fingerprinting
+  // Get client token and user ID
   useEffect(() => {
-    const generateUserId = async () => {
-      try {
-        // Try to get existing user ID from localStorage
-        let storedUserId = localStorage.getItem("kb_user_id");
-        
-        if (!storedUserId) {
-          // Generate a more persistent user ID using browser fingerprint
-          const fingerprint = await generateBrowserFingerprint();
-          storedUserId = `client_${fingerprint}`;
-          localStorage.setItem("kb_user_id", storedUserId);
-        }
-        
-        setUserId(storedUserId);
-      } catch {
-        // Fallback to random ID if fingerprint fails
-        const fallbackId = `client_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
-        localStorage.setItem("kb_user_id", fallbackId);
-        setUserId(fallbackId);
-      }
-    };
-
-    generateUserId();
-  }, []);
-
-  // Simple browser fingerprint generator
-  const generateBrowserFingerprint = async () => {
-    try {
-      const components = [
-        navigator.userAgent,
-        navigator.language,
-        navigator.hardwareConcurrency || 'unknown',
-        screen.width,
-        screen.height,
-        screen.colorDepth,
-        new Date().getTimezoneOffset()
-      ].join('|');
-      
-      // Simple hash function
-      let hash = 0;
-      for (let i = 0; i < components.length; i++) {
-        const char = components.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
-      }
-      
-      return Math.abs(hash).toString(36);
-    } catch {
-      throw new Error("Fingerprint generation failed");
+    const token = localStorage.getItem("crm_client_token");
+    const clientData = localStorage.getItem("crm_client");
+    
+    if (token) {
+      setClientToken(token);
     }
-  };
+    
+    if (clientData) {
+      try {
+        const parsedClient = JSON.parse(clientData);
+        setUserId(parsedClient.id || "");
+        setAdminId(parsedClient.admin || "");
+      } catch (error) {
+        console.error("Error parsing client data:", error);
+      }
+    }
+  }, []);
 
   // Fetch articles
   const fetchArticles = async () => {
-  try {
-    const { data } = await axios.get("http://localhost:5000/api/client/knowledge-base", {
-      params: {
-        group: selectedGroup !== "All" ? selectedGroup : null,
-        search: searchTerm
+    try {
+      const { data } = await axios.get("http://localhost:5000/api/client/knowledge-base", {
+        headers: {
+          Authorization: `Bearer ${clientToken}`
+        },
+        params: {
+          group: selectedGroup !== "All" ? selectedGroup : null,
+          search: searchTerm,
+          adminId: adminId // Send admin ID to filter articles
+        }
+      });
+      setArticles(data.articles || []);
+      setFilteredArticles(data.articles || []);
+      setGroups(data.groups || ["All"]);
+      
+      // Fetch user votes for these articles
+      if (userId && data.articles.length > 0) {
+        fetchUserVotes(data.articles.map(article => article._id));
       }
-    });
-    setArticles(data.articles || []);
-    setFilteredArticles(data.articles || []);
-    setGroups(data.groups || ["All"]);
-    
-    // Fetch user votes for these articles
-    if (userId && data.articles.length > 0) {
-      fetchUserVotes(data.articles.map(article => article._id));
+    } catch (error) {
+      console.error("Error fetching articles:", error);
+      setArticles([]);
+      setFilteredArticles([]);
     }
-  } catch (error) {
-    console.error("Error fetching articles:", error);
-    setArticles([]);
-    setFilteredArticles([]);
-  }
-};
+  };
 
   // Fetch user votes
   const fetchUserVotes = async (articleIds) => {
-  try {
-    const { data } = await axios.post("http://localhost:5000/api/client/knowledge-base/user-votes", {
-      userId,
-      articleIds
-    });
-    setUserVotes(data.userVotes || {});
-  } catch (error) {
-    console.error("Error fetching user votes:", error);
-  }
-};
+    try {
+      const { data } = await axios.post("http://localhost:5000/api/client/knowledge-base/user-votes", {
+        userId,
+        articleIds
+      }, {
+        headers: {
+          Authorization: `Bearer ${clientToken}`
+        }
+      });
+      setUserVotes(data.userVotes || {});
+    } catch (error) {
+      console.error("Error fetching user votes:", error);
+    }
+  };
 
   useEffect(() => {
-    if (userId) {
+    if (clientToken && userId && adminId) {
       fetchArticles();
     }
-  }, [selectedGroup, searchTerm, userId]);
+  }, [selectedGroup, searchTerm, clientToken, userId, adminId]);
 
   // Handle vote
   const handleVote = async (articleId, voteType) => {
-    if (!userId) {
+    if (!userId || !clientToken) {
       alert("Please wait while we identify your browser...");
       return;
     }
@@ -117,7 +94,12 @@ const ClientKnowledgeBasePage = () => {
     try {
       const { data } = await axios.post(
         `http://localhost:5000/api/client/knowledge-base/${articleId}/vote`,
-        { voteType, userId }
+        { voteType, userId },
+        {
+          headers: {
+            Authorization: `Bearer ${clientToken}`
+          }
+        }
       );
       
       // Update the article with new vote counts
@@ -144,7 +126,11 @@ const ClientKnowledgeBasePage = () => {
       }));
     } catch (error) {
       console.error("Error voting:", error);
-      alert("Error submitting vote. Please try again.");
+      if (error.response?.status === 403) {
+        alert("You can only vote once per day on each article.");
+      } else {
+        alert("Error submitting vote. Please try again.");
+      }
     }
   };
 
@@ -233,7 +219,7 @@ const ClientKnowledgeBasePage = () => {
                     }`}
                     >
                     <FaThumbsUp className="text-sm" />
-                    <span>Yes ({article.votes?.helpful || 0})</span>
+                    <span>Yes</span>
                     </button>
                     
                     <button
@@ -245,15 +231,17 @@ const ClientKnowledgeBasePage = () => {
                     }`}
                     >
                     <FaThumbsDown className="text-sm" />
-                    <span>No ({article.votes?.notHelpful || 0})</span>
+                    <span>No</span>
                     </button>
                 </div>
               </div>
             </div>
           ))
         ) : (
-          <div className="bg-white rounded-lg shadow-md p-6 text-center">
-            <p className="text-gray-600">No articles found. Try a different search term or category.</p>
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">
+              {articles.length === 0 ? "No articles available yet." : "No articles match your search."}
+            </p>
           </div>
         )}
       </div>

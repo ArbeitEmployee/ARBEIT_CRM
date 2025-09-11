@@ -233,7 +233,7 @@ const KnowledgeBasePage = () => {
     }
   };
 
-  // Export functions (same as before)
+  // Export functions
   const exportToExcel = () => {
     const dataToExport = filteredArticles.map(article => ({
       ID: article._id,

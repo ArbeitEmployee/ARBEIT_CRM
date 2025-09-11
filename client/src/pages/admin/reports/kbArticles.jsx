@@ -15,11 +15,25 @@ export default function KbArticles() {
   const [selectedGroup, setSelectedGroup] = useState("All");
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [adminId, setAdminId] = useState("");
 
   // Get auth token from localStorage
   const getAuthToken = () => {
     return localStorage.getItem('crm_token');
   };
+
+  // Get admin ID from localStorage
+  useEffect(() => {
+    const adminData = localStorage.getItem('crm_admin');
+    if (adminData) {
+      try {
+        const parsedAdmin = JSON.parse(adminData);
+        setAdminId(parsedAdmin.id || "");
+      } catch (error) {
+        console.error("Error parsing admin data:", error);
+      }
+    }
+  }, []);
 
   // Create axios instance with auth headers
   const createAxiosConfig = () => {
@@ -43,7 +57,8 @@ export default function KbArticles() {
       const config = createAxiosConfig();
       const { data } = await axios.get("http://localhost:5000/api/knowledge-base", {
         params: {
-          group: selectedGroup !== "All" ? selectedGroup : null
+          group: selectedGroup !== "All" ? selectedGroup : null,
+          adminId: adminId // Filter by admin ID
         },
         ...config
       });
@@ -61,8 +76,10 @@ export default function KbArticles() {
   };
 
   useEffect(() => {
-    fetchArticles();
-  }, [selectedGroup]);
+    if (adminId) {
+      fetchArticles();
+    }
+  }, [selectedGroup, adminId]);
 
   // Calculate total votes, percentages and ensure no division by zero
   const getPercent = (num, total) => (total === 0 ? 0 : (num / total) * 100);

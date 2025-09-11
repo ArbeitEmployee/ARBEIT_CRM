@@ -1,13 +1,13 @@
 import KnowledgeBase from "../../models/KnowledgeBase.js";
 
-// @desc    Get all knowledge base articles for logged-in admin
+// @desc    Get all knowledge base articles
 // @route   GET /api/knowledge-base
 // @access  Private
 export const getArticles = async (req, res) => {
   try {
-    const { group, search } = req.query;
+    const { group, search, adminId } = req.query;
     
-    let filter = { admin: req.admin._id };
+    let filter = { admin: req.admin.id }; // Filter by logged-in admin
     
     if (group && group !== "All") {
       filter.group = group;
@@ -23,130 +23,96 @@ export const getArticles = async (req, res) => {
     
     const articles = await KnowledgeBase.find(filter).sort({ createdAt: -1 });
     
-    // Get unique groups for filter
-    const groups = await KnowledgeBase.distinct("group", { admin: req.admin._id });
-    
-    res.json({
-      articles,
-      groups: ["All", ...groups.sort()]
-    });
+    res.json({ articles });
   } catch (error) {
     console.error("Error fetching articles:", error);
     res.status(500).json({ message: "Server error while fetching articles" });
   }
 };
 
-// @desc    Create an article for logged-in admin
+// @desc    Create new article
 // @route   POST /api/knowledge-base
 // @access  Private
 export const createArticle = async (req, res) => {
   try {
     const { title, content, group, dateCreated } = req.body;
     
-    if (!title || !content || !group) {
-      return res.status(400).json({ 
-        message: "Title, content and group are required fields" 
-      });
-    }
-
-    const article = new KnowledgeBase({
-      admin: req.admin._id,
+    const article = await KnowledgeBase.create({
+      admin: req.admin.id,
       title,
       content,
       group,
-      dateCreated: dateCreated || ""
+      dateCreated
     });
-
-    const createdArticle = await article.save();
-    res.status(201).json(createdArticle);
+    
+    res.status(201).json({ message: "Article created successfully", article });
   } catch (error) {
     console.error("Error creating article:", error);
-    res.status(400).json({ 
-      message: error.message.includes("validation failed") 
-        ? "Validation error: " + error.message 
-        : error.message 
-    });
+    res.status(500).json({ message: "Server error while creating article" });
   }
 };
 
-// @desc    Update an article for logged-in admin
+// @desc    Update article
 // @route   PUT /api/knowledge-base/:id
 // @access  Private
 export const updateArticle = async (req, res) => {
   try {
+    const { id } = req.params;
     const { title, content, group, dateCreated } = req.body;
     
-    if (!title || !content || !group) {
-      return res.status(400).json({ 
-        message: "Title, content and group are required fields" 
-      });
-    }
-
-    const article = await KnowledgeBase.findOne({ _id: req.params.id, admin: req.admin._id });
+    const article = await KnowledgeBase.findOneAndUpdate(
+      { _id: id, admin: req.admin.id },
+      { title, content, group, dateCreated },
+      { new: true, runValidators: true }
+    );
     
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
     }
-
-    article.title = title;
-    article.content = content;
-    article.group = group;
-    article.dateCreated = dateCreated || "";
-
-    const updatedArticle = await article.save();
-    res.json(updatedArticle);
+    
+    res.json({ message: "Article updated successfully", article });
   } catch (error) {
     console.error("Error updating article:", error);
-    res.status(400).json({ 
-      message: error.message.includes("validation failed") 
-        ? "Validation error: " + error.message 
-        : error.message 
-    });
+    res.status(500).json({ message: "Server error while updating article" });
   }
 };
 
-// @desc    Delete an article for logged-in admin
+// @desc    Delete article
 // @route   DELETE /api/knowledge-base/:id
 // @access  Private
 export const deleteArticle = async (req, res) => {
   try {
-    const article = await KnowledgeBase.findOne({ _id: req.params.id, admin: req.admin._id });
+    const { id } = req.params;
+    
+    const article = await KnowledgeBase.findOneAndDelete({ 
+      _id: id, 
+      admin: req.admin.id 
+    });
     
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
     }
-
-    await KnowledgeBase.deleteOne({ _id: req.params.id, admin: req.admin._id });
-    res.json({ message: "Article removed successfully" });
+    
+    res.json({ message: "Article deleted successfully" });
   } catch (error) {
     console.error("Error deleting article:", error);
     res.status(500).json({ message: "Server error while deleting article" });
   }
 };
 
-// @desc    Bulk delete articles for logged-in admin
+// @desc    Bulk delete articles
 // @route   POST /api/knowledge-base/bulk-delete
 // @access  Private
 export const bulkDeleteArticles = async (req, res) => {
   try {
     const { articleIds } = req.body;
     
-    if (!articleIds || !Array.isArray(articleIds) || articleIds.length === 0) {
-      return res.status(400).json({ message: "Article IDs are required" });
-    }
-
-    const result = await KnowledgeBase.deleteMany({ 
+    const result = await KnowledgeBase.deleteMany({
       _id: { $in: articleIds },
-      admin: req.admin._id
+      admin: req.admin.id
     });
     
-    if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "No articles found to delete" });
-    }
-
-    res.json({ 
-      message: `${result.deletedCount} article(s) deleted successfully` 
-    });
+    res.json({ message: `${result.deletedCount} articles deleted successfully` });
   } catch (error) {
     console.error("Error bulk deleting articles:", error);
     res.status(500).json({ message: "Server error while bulk deleting articles" });

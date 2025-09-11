@@ -5,7 +5,7 @@ const knowledgeBaseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "Admin",
     required: true,
-    //index: true
+    index: true
   },
   title: {
     type: String,
@@ -35,7 +35,14 @@ const knowledgeBaseSchema = new mongoose.Schema({
   },
   votes: {
     helpful: { type: Number, default: 0 },
-    notHelpful: { type: Number, default: 0 }
+    notHelpful: { type: Number, default: 0 },
+    total: { 
+      type: Number, 
+      default: 0,
+      get: function() {
+        return this.helpful + this.notHelpful;
+      }
+    }
   },
   userVotes: [{
     userId: String,
@@ -43,13 +50,15 @@ const knowledgeBaseSchema = new mongoose.Schema({
     votedAt: { type: Date, default: Date.now }
   }]
 }, {
-  timestamps: true
+  timestamps: true,
+  toJSON: { getters: true }
 });
 
 // Add indexes for better performance
 knowledgeBaseSchema.index({ admin: 1 });
 knowledgeBaseSchema.index({ group: 1 });
 knowledgeBaseSchema.index({ dateCreated: 1 });
+knowledgeBaseSchema.index({ "userVotes.userId": 1, "userVotes.votedAt": 1 });
 
 const KnowledgeBase = mongoose.model("KnowledgeBase", knowledgeBaseSchema);
 

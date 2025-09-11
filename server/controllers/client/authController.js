@@ -80,7 +80,7 @@ export const registerClient = async (req, res) => {
   }
 };
 
-// LOGIN CLIENT - Updated to return client data
+// LOGIN CLIENT - Updated to return client data including admin ID
 export const loginClient = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -105,7 +105,7 @@ export const loginClient = async (req, res) => {
     client.lastLogin = new Date();
     await client.save();
 
-    // Return client data along with token
+    // Return client data along with token including admin ID
     res.json({ 
       message: "Login successful", 
       token,
@@ -115,7 +115,8 @@ export const loginClient = async (req, res) => {
         email: client.email,
         phone: client.phone,
         companyName: client.companyName,
-        customerCode: client.customerCode
+        customerCode: client.customerCode,
+        admin: client.admin // Include admin ID
       }
     });
   } catch (error) {
