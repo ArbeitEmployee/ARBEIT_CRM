@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { generateCustomerCode } from "../utils/codeGenerator.js";
 
 const customerSchema = new mongoose.Schema({
   admin: {
@@ -6,6 +7,14 @@ const customerSchema = new mongoose.Schema({
     ref: "Admin",
     required: true,
     index: true
+  },
+  customerCode: {
+    type: String,
+    unique: true,
+    required: true,
+    index: true,
+    uppercase: true,
+    match: [/^CUST-[A-Z0-9]{6}$/, "Invalid customer code format"]
   },
   company: {
     type: String,
@@ -68,13 +77,12 @@ const customerSchema = new mongoose.Schema({
     default: Date.now
   }
 }, {
-  timestamps: true // This adds createdAt and updatedAt fields
+  timestamps: true
 });
 
 // Add indexes for better performance
 customerSchema.index({ admin: 1, company: 1 });
-// CHANGED: Added compound unique index for admin and email
-customerSchema.index({ admin: 1, email: 1 }, { unique: true }); 
+customerSchema.index({ admin: 1, email: 1 });
 customerSchema.index({ admin: 1, active: 1 });
 customerSchema.index({ admin: 1, contactsActive: 1 });
 
@@ -83,7 +91,38 @@ customerSchema.index({
   company: 'text',
   contact: 'text',
   email: 'text',
-  phone: 'text'
+  phone: 'text',
+  customerCode: 'text'
+});
+
+// Pre-save middleware to generate customer code if not provided
+customerSchema.pre('save', async function(next) {
+  if (this.isNew && (!this.customerCode || this.customerCode.trim() === '')) {
+    let isUnique = false;
+    let attempts = 0;
+    const maxAttempts = 10; // Increased attempts for better reliability
+    
+    while (!isUnique && attempts < maxAttempts) {
+      const generatedCode = generateCustomerCode();
+      
+      // Check if code is unique
+      const existingCustomer = await mongoose.model('Customer').findOne({
+        customerCode: generatedCode
+      });
+      
+      if (!existingCustomer) {
+        this.customerCode = generatedCode;
+        isUnique = true;
+      }
+      
+      attempts++;
+    }
+    
+    if (!isUnique) {
+      return next(new Error('Failed to generate unique customer code after multiple attempts'));
+    }
+  }
+  next();
 });
 
 const Customer = mongoose.model("Customer", customerSchema);

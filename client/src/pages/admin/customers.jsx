@@ -582,6 +582,21 @@ const CustomersPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Code</label>
+                <input
+                  type="text"
+                  name="customerCode"
+                  placeholder="Leave blank to auto-generate"
+                  value={newCustomer.customerCode}
+                  onChange={handleNewCustomerChange}
+                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                  readOnly={!!editingCustomer} // Read-only when editing
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Format: CUST-ABC123. Leave blank to auto-generate.
+                </p>
+              </div>
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
                 <input
                   type="text"
@@ -1021,6 +1036,7 @@ const CustomersPage = () => {
                         }}
                       />
                     </th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer Code</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Company</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Primary Contact</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Primary Email</th>
@@ -1058,6 +1074,11 @@ const CustomersPage = () => {
                             className="h-4 w-4"
                           />
                         </div>
+                      </td>
+                      <td className="p-3 border-0">
+                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-mono">
+                          {customer.customerCode}
+                        </span>
                       </td>
                       <td className="p-3 border-0">{customer.company}</td>
                       <td className="p-3 border-0">{customer.contact}</td>

@@ -61,6 +61,11 @@ const ClientLogin = () => {
       localStorage.setItem("crm_client_token", data.token);
       localStorage.setItem("crm_client", JSON.stringify(data.client));
       
+      // Also save the customer code for data filtering
+      if (data.client.customerCode) {
+        localStorage.setItem("crm_client_customer_code", data.client.customerCode);
+      }
+
       // Remember me functionality
       if (rememberMe) {
         localStorage.setItem("crm_client_email", email);

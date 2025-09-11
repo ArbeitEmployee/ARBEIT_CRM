@@ -1,5 +1,50 @@
 import Customer from "../../models/Customer.js";
 import XLSX from "xlsx";
+import { isValidCustomerCode, generateCustomerCode } from "../../utils/codeGenerator.js";
+
+// Add this new method to validate customer code
+export const validateCustomerCode = async (req, res) => {
+  try {
+    const { customerCode } = req.body;
+    
+    if (!customerCode || !isValidCustomerCode(customerCode)) {
+      return res.status(400).json({ 
+        valid: false, 
+        message: "Invalid customer code format" 
+      });
+    }
+    
+    const normalizedCode = customerCode.toUpperCase();
+    const customer = await Customer.findOne({ customerCode: normalizedCode });
+    
+    if (!customer) {
+      return res.json({ 
+        valid: false, 
+        message: "Customer code not found" 
+      });
+    }
+    
+    if (!customer.active) {
+      return res.json({ 
+        valid: false, 
+        message: "Customer account is inactive" 
+      });
+    }
+    
+    res.json({ 
+      valid: true, 
+      customer: {
+        id: customer._id,
+        company: customer.company,
+        contact: customer.contact,
+        email: customer.email,
+        admin: customer.admin
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 // @desc    Get all customers for logged-in admin
 // @route   GET /api/customers
@@ -36,7 +81,7 @@ export const getCustomers = async (req, res) => {
 // @access  Protected
 export const createCustomer = async (req, res) => {
   try {
-    const { company, contact, email } = req.body;
+    const { company, contact, email, customerCode } = req.body;
     
     if (!company || !contact || !email) {
       return res.status(400).json({ 
@@ -44,20 +89,56 @@ export const createCustomer = async (req, res) => {
       });
     }
 
-    // CHANGED: Check if customer with email already exists for THIS ADMIN only
-    const existingCustomer = await Customer.findOne({ 
-      admin: req.admin._id, 
-      email: email.toLowerCase() 
-    });
-    
-    if (existingCustomer) {
-      return res.status(400).json({ 
-        message: "Customer with this email already exists" 
+    // If customerCode is provided, validate its format and uniqueness
+    let finalCustomerCode = customerCode;
+    if (customerCode && customerCode.trim() !== '') {
+      if (!isValidCustomerCode(customerCode)) {
+        return res.status(400).json({ 
+          message: "Invalid customer code format. Must be like CUST-ABC123" 
+        });
+      }
+      
+      const normalizedCode = customerCode.toUpperCase();
+      const existingCustomer = await Customer.findOne({ 
+        customerCode: normalizedCode 
       });
+      
+      if (existingCustomer) {
+        return res.status(400).json({ 
+          message: "Customer code already exists" 
+        });
+      }
+      finalCustomerCode = normalizedCode;
+    } else {
+      // Generate a unique customer code if not provided
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (!isUnique && attempts < maxAttempts) {
+        finalCustomerCode = generateCustomerCode();
+        
+        const existingCustomer = await Customer.findOne({ 
+          customerCode: finalCustomerCode 
+        });
+        
+        if (!existingCustomer) {
+          isUnique = true;
+        }
+        
+        attempts++;
+      }
+      
+      if (!isUnique) {
+        return res.status(500).json({ 
+          message: "Failed to generate unique customer code" 
+        });
+      }
     }
 
     const customer = new Customer({
       admin: req.admin._id,
+      customerCode: finalCustomerCode,
       company,
       vatNumber: req.body.vatNumber || "",
       contact,
@@ -144,6 +225,7 @@ export const importCustomers = async (req, res) => {
 
     // Process each row
     const importedCustomers = [];
+    const codeSet = new Set();
     const emailSet = new Set();
 
     for (const [index, row] of results.entries()) {
@@ -153,7 +235,8 @@ export const importCustomers = async (req, res) => {
       const company = row.Company || row.company;
       const contact = row.Contact || row.contact;
       const email = row.Email || row.email;
-      
+      const customerCode = row.CustomerCode || row.customerCode || row['Customer Code'];
+
       // Skip if required fields are missing
       if (!company || !contact || !email) {
         errorMessages.push(`Row ${rowNumber}: Missing required fields (Company, Contact, Email)`);
@@ -168,7 +251,7 @@ export const importCustomers = async (req, res) => {
         continue;
       }
 
-      // CHANGED: Check if email already exists for THIS ADMIN only
+      // Check if email already exists for THIS ADMIN only
       const existingCustomer = await Customer.findOne({ 
         admin: req.admin._id, 
         email: normalizedEmail 
@@ -179,10 +262,63 @@ export const importCustomers = async (req, res) => {
         continue;
       }
 
+      // Handle customer code
+      let finalCustomerCode = null;
+      if (customerCode && customerCode.trim() !== '') {
+        if (!isValidCustomerCode(customerCode)) {
+          errorMessages.push(`Row ${rowNumber}: Invalid customer code format (${customerCode})`);
+          continue;
+        }
+        
+        finalCustomerCode = customerCode.toUpperCase();
+        // Check if code is duplicate in file
+        if (codeSet.has(finalCustomerCode)) {
+          errorMessages.push(`Row ${rowNumber}: Duplicate customer code in file (${customerCode})`);
+          continue;
+        }
+        
+        // Check if code already exists in database
+        const existingCodeCustomer = await Customer.findOne({ 
+          customerCode: finalCustomerCode 
+        });
+        
+        if (existingCodeCustomer) {
+          errorMessages.push(`Row ${rowNumber}: Customer code ${customerCode} already exists`);
+          continue;
+        }
+        
+        codeSet.add(finalCustomerCode);
+      } else {
+        // Generate unique customer code if not provided
+        let isUnique = false;
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        while (!isUnique && attempts < maxAttempts) {
+          finalCustomerCode = generateCustomerCode();
+          
+          const existingCodeCustomer = await Customer.findOne({ 
+            customerCode: finalCustomerCode 
+          });
+          
+          if (!existingCodeCustomer) {
+            isUnique = true;
+          }
+          
+          attempts++;
+        }
+        
+        if (!isUnique) {
+          errorMessages.push(`Row ${rowNumber}: Failed to generate unique customer code`);
+          continue;
+        }
+      }
+
       emailSet.add(normalizedEmail);
 
       const customerData = {
         admin: req.admin._id,
+        customerCode: finalCustomerCode,
         company: company.trim(),
         contact: contact.trim(),
         email: normalizedEmail,
@@ -230,6 +366,29 @@ export const importCustomers = async (req, res) => {
   }
 };
 
+// Add this method to get customer by code
+export const getCustomerByCode = async (req, res) => {
+  try {
+    const { code } = req.params;
+    
+    if (!isValidCustomerCode(code)) {
+      return res.status(400).json({ message: "Invalid customer code format" });
+    }
+    
+    const customer = await Customer.findOne({ 
+      customerCode: code.toUpperCase() 
+    }).populate('admin', 'name email');
+    
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+    
+    res.json(customer);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Update a customer for logged-in admin
 // @route   PUT /api/customers/:id
 // @access  Protected
@@ -252,7 +411,7 @@ export const updateCustomer = async (req, res) => {
       return res.status(404).json({ message: "Customer not found" });
     }
 
-    // CHANGED: Check email uniqueness for THIS ADMIN only
+    // Check email uniqueness for THIS ADMIN only
     const normalizedEmail = email.toLowerCase().trim();
     if (normalizedEmail !== customer.email) {
       const existingCustomer = await Customer.findOne({ 

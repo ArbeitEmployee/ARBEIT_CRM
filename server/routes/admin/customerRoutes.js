@@ -7,7 +7,9 @@ import {
   deleteCustomer,
   updateCustomerStatus,
   updateContactsStatus,
-  importCustomers
+  importCustomers,
+  validateCustomerCode,
+  getCustomerByCode
 } from "../../controllers/admin/customerController.js";
 import multer from "multer";
 
@@ -24,6 +26,12 @@ router.route("/")
 
 router.route("/import")
   .post(protect, upload.single('file'), importCustomers);
+
+router.route("/validate-code")
+  .post(validateCustomerCode);
+
+router.route("/by-code/:code")
+  .get(getCustomerByCode);
 
 router.route("/:id")
   .put(protect, updateCustomer)

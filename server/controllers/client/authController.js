@@ -1,9 +1,10 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import Client from "../../models/Client.js";
+import Customer from "../../models/Customer.js"; // Added missing import
 import sendEmail from "../../utils/sendEmail.js";
 
-// REGISTER CLIENT
+// REGISTER CLIENT - Fixed for customer code system
 export const registerClient = async (req, res) => {
   try {
     const {
@@ -20,15 +21,31 @@ export const registerClient = async (req, res) => {
       country,
       city,
       address,
-      zipCode
+      zipCode,
+      customerCode
     } = req.body;
 
-    if (!name || !email || !password || !confirmPassword || !companyName) {
+    if (!name || !email || !password || !confirmPassword || !companyName || !customerCode) {
       return res.status(400).json({ message: "Required fields are missing" });
     }
 
     if (password !== confirmPassword) {
       return res.status(400).json({ message: "Passwords do not match" });
+    }
+
+    // Verify the customer code is valid
+    const customerRecord = await Customer.findOne({ 
+      customerCode: customerCode.toUpperCase() 
+    });
+    
+    if (!customerRecord) {
+      return res.status(400).json({ message: "Invalid customer code" });
+    }
+    
+    // Check if this customer code is already registered
+    const existingClientWithCode = await Client.findOne({ customerCode: customerCode.toUpperCase() });
+    if (existingClientWithCode) {
+      return res.status(400).json({ message: "Customer code already registered" });
     }
 
     const existingClient = await Client.findOne({ email });
@@ -51,7 +68,10 @@ export const registerClient = async (req, res) => {
       country,
       city,
       address,
-      zipCode
+      zipCode,
+      customerCode: customerCode.toUpperCase(),
+      admin: customerRecord.admin, // Get from customer record
+      customer: customerRecord._id // Get from customer record
     });
 
     res.status(201).json({ message: "Client registered successfully", client });
@@ -59,6 +79,7 @@ export const registerClient = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 // LOGIN CLIENT - Updated to return client data
 export const loginClient = async (req, res) => {
   try {
@@ -80,6 +101,10 @@ export const loginClient = async (req, res) => {
       { expiresIn: "1d" }
     );
 
+    // Update last login
+    client.lastLogin = new Date();
+    await client.save();
+
     // Return client data along with token
     res.json({ 
       message: "Login successful", 
@@ -90,13 +115,14 @@ export const loginClient = async (req, res) => {
         email: client.email,
         phone: client.phone,
         companyName: client.companyName,
-        // Add other fields you want to store
+        customerCode: client.customerCode
       }
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 // FORGOT PASSWORD - SEND OTP
 export const forgotPassword = async (req, res) => {
   try {
