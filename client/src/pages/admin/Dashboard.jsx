@@ -17,9 +17,16 @@ import {
   Cell
 } from "recharts";
 
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [expenses, setExpenses] = useState([]);
+  const [invoices, setInvoices] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [combinedData, setCombinedData] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [availableYears, setAvailableYears] = useState([]);
   const [stats, setStats] = useState({
     invoices: {
       total: 0,
@@ -36,11 +43,14 @@ const Dashboard = () => {
     estimates: {
       total: 0,
       draft: 0,
-      notSent: 0,
-      sent: 0,
-      expired: 0,
-      declined: 0,
-      accepted: 0
+      pending: 0,
+      approved: 0,
+      rejected:0,
+      expired: 0
+     
+
+
+
     },
     proposals: {
       total: 0,
@@ -67,7 +77,10 @@ const Dashboard = () => {
       cancelled: 0,
       finished: 0
     }
-  });
+
+    
+  }
+);
 
   // Colors for charts
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D'];
@@ -96,8 +109,24 @@ const Dashboard = () => {
     finished: '#10B981'
   };
 
+  // Get auth token from localStorage
+  const getAuthToken = () => {
+    return localStorage.getItem("crm_token");
+  };
+
+  // Create axios instance with auth headers
+  const createAxiosConfig = () => {
+    const token = getAuthToken();
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   useEffect(() => {
-    const token = localStorage.getItem("crm_token");
+    const token = getAuthToken();
     if (!token) {
       navigate("/admin/login");
     } else {
@@ -109,13 +138,15 @@ const Dashboard = () => {
     try {
       setLoading(true);
       
+      const config = createAxiosConfig();
+      
       // Fetch all data in parallel
       const requests = [
-        axios.get("http://localhost:5000/api/admin/invoices"),
-        axios.get("http://localhost:5000/api/admin/proposals"),
-        axios.get("http://localhost:5000/api/admin/estimates"),
-        axios.get("http://localhost:5000/api/leads"),
-        axios.get("http://localhost:5000/api/projects")
+        axios.get("http://localhost:5000/api/admin/invoices", config),
+        axios.get("http://localhost:5000/api/admin/proposals", config),
+        axios.get("http://localhost:5000/api/admin/estimates", config),
+        axios.get("http://localhost:5000/api/leads", config),
+        axios.get("http://localhost:5000/api/projects", config)
       ];
 
       const responses = await Promise.allSettled(requests);
@@ -138,6 +169,11 @@ const Dashboard = () => {
             paid: invoicesData.filter(i => i.status === "Paid").length,
           }
         }));
+      } else if (responses[0].reason?.response?.status === 401) {
+        // Token expired or invalid
+        localStorage.removeItem("crm_token");
+        navigate("/admin/login");
+        return;
       }
 
       // Process proposals data
@@ -157,6 +193,10 @@ const Dashboard = () => {
             accepted: proposalsData.filter(p => p.status === "Accepted").length
           }
         }));
+      } else if (responses[1].reason?.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/admin/login");
+        return;
       }
 
       // Process estimates data
@@ -169,13 +209,19 @@ const Dashboard = () => {
             ...prev.estimates,
             total: estimatesData.length,
             draft: estimatesData.filter(e => e.status === "Draft").length,
-            notSent: estimatesData.filter(e => e.status === "Not Sent").length,
-            sent: estimatesData.filter(e => e.status === "Sent").length,
-            expired: estimatesData.filter(e => e.status === "Expired").length,
-            declined: estimatesData.filter(e => e.status === "Declined").length,
-            accepted: estimatesData.filter(e => e.status === "Accepted").length
+            pending: estimatesData.filter(e => e.status === "Pending").length,
+            approved: estimatesData.filter(e => e.status === "Approved").length,
+            rejected: estimatesData.filter(e => e.status === "Rejected").length,
+            expired: estimatesData.filter(e => e.status === "Expired").length
+
+
+
           }
         }));
+      } else if (responses[2].reason?.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/admin/login");
+        return;
       }
 
       // Process leads data
@@ -203,6 +249,10 @@ const Dashboard = () => {
             lost: leadsStats.lost || leadsData.filter(l => l.status === "Lost").length
           }
         }));
+      } else if (responses[3].reason?.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/admin/login");
+        return;
       }
 
       // Process projects data
@@ -219,14 +269,151 @@ const Dashboard = () => {
             finished: projectsData.filter(p => p.status === "Finished").length
           }
         }));
+      } else if (responses[4].reason?.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/admin/login");
+        return;
       }
       
     } catch (err) {
       console.error("Error fetching dashboard data", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/admin/login");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+
+const fetchExpensesAndIncomeData = async () => {
+  try {
+    const config = createAxiosConfig();
+    
+    // Fetch expenses
+    const expensesResponse = await axios.get("http://localhost:5000/api/expenses", config);
+    setExpenses(expensesResponse.data.expenses || []);
+    
+    // Fetch invoices
+    const invoicesResponse = await axios.get("http://localhost:5000/api/admin/invoices", config);
+    setInvoices(invoicesResponse.data.data || invoicesResponse.data.invoices || []);
+    
+    // Fetch payments
+    try {
+      const paymentsResponse = await axios.get("http://localhost:5000/api/admin/payments", config);
+      setPayments(paymentsResponse.data.data || paymentsResponse.data.payments || []);
+    } catch (error) {
+      console.log("Payments API not available, using invoice data instead");
+      setPayments([]);
+    }
+    
+    // Extract available years
+    const expenseYears = [...new Set(expensesResponse.data.expenses.map(expense => {
+      const dateParts = expense.date.split('-');
+      if (dateParts.length === 3) {
+        return parseInt(dateParts[2]);
+      }
+      return new Date().getFullYear();
+    }))];
+    
+    const invoiceYears = [...new Set(invoicesResponse.data.data.map(invoice => {
+      const invoiceDate = new Date(invoice.invoiceDate || invoice.createdAt);
+      return invoiceDate.getFullYear();
+    }))];
+    
+    const paymentYears = payments.length > 0 ? [...new Set(payments.map(payment => {
+      const paymentDate = new Date(payment.paymentDate || payment.date);
+      return paymentDate.getFullYear();
+    }))] : [];
+    
+    const allYears = [...new Set([...expenseYears, ...invoiceYears, ...paymentYears])].sort((a, b) => b - a);
+    
+    setAvailableYears(allYears.length > 0 ? allYears : [new Date().getFullYear()]);
+  } catch (error) {
+    console.error("Error fetching expenses/income data:", error);
+    setExpenses([]);
+    setInvoices([]);
+    setPayments([]);
+    setAvailableYears([new Date().getFullYear()]);
+  }
+};
+
+const processCombinedData = () => {
+  const months = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  const monthlyData = months.map(month => ({
+    month,
+    expenses: 0,
+    income: 0
+  }));
+
+  // Process expenses
+  expenses.forEach(expense => {
+    const dateParts = expense.date.split('-');
+    if (dateParts.length === 3) {
+      const month = parseInt(dateParts[1]) - 1;
+      const expenseYear = parseInt(dateParts[2]);
+      
+      if (expenseYear === selectedYear && month >= 0 && month < 12) {
+        monthlyData[month].expenses += expense.amount;
+      }
+    }
+  });
+
+  // Process income
+  if (payments.length > 0) {
+    payments.forEach(payment => {
+      const paymentDate = new Date(payment.paymentDate || payment.date);
+      const paymentYear = paymentDate.getFullYear();
+      const paymentMonth = paymentDate.getMonth();
+      
+      if (paymentYear === selectedYear) {
+        monthlyData[paymentMonth].income += payment.amount || 0;
+      }
+    });
+  } else {
+    invoices.forEach(invoice => {
+      if (invoice.status === "Paid" || invoice.status === "Partiallypaid") {
+        const invoiceDate = new Date(invoice.updatedAt || invoice.invoiceDate || invoice.createdAt);
+        const invoiceYear = invoiceDate.getFullYear();
+        const invoiceMonth = invoiceDate.getMonth();
+        
+        if (invoiceYear === selectedYear) {
+          const amount = invoice.status === "Partiallypaid" ? 
+            (invoice.paidAmount || 0) : 
+            (invoice.total || 0);
+            
+          monthlyData[invoiceMonth].income += amount;
+        }
+      }
+    });
+  }
+
+  setCombinedData(monthlyData);
+};
+
+useEffect(() => {
+  const token = getAuthToken();
+  if (!token) {
+    navigate("/admin/login");
+  } else {
+    fetchDashboardData();
+    fetchExpensesAndIncomeData();
+  }
+}, [navigate]);
+
+useEffect(() => {
+  if (expenses.length > 0 || invoices.length > 0 || payments.length > 0) {
+    processCombinedData();
+  }
+}, [expenses, invoices, payments, selectedYear]);
+
+
+
 
   // Helper function to format numbers with commas
   const formatNumber = (num) => {
@@ -238,6 +425,19 @@ const Dashboard = () => {
     if (!total || total === 0) return "0.00%";
     return ((value / total) * 100).toFixed(2) + "%";
   };
+
+  const formatCurrency = (amount) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2
+  }).format(amount || 0);
+};
+
+// Calculate totals for expenses vs income
+const totalExpenses = combinedData.reduce((sum, item) => sum + item.expenses, 0);
+const totalIncome = combinedData.reduce((sum, item) => sum + item.income, 0);
+const netProfit = totalIncome - totalExpenses;
 
   // Prepare data for charts
   const invoiceChartData = [
@@ -287,9 +487,7 @@ const Dashboard = () => {
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600">
-              Welcome to the admin panel. Here you can manage leads, clients, and all CRM data.
-            </p>
+           
           </div>
           <button 
             onClick={fetchDashboardData}
@@ -461,47 +659,39 @@ const Dashboard = () => {
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Not Sent</span>
+                <span className="text-gray-600 text-sm">Pending</span>
                 <div className="text-right">
-                  <span className="font-medium">{formatNumber(stats.estimates.notSent)}</span>
+                  <span className="font-medium">{formatNumber(stats.estimates.pending)}</span>
                   <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(stats.estimates.notSent, stats.estimates.total)}
+                    {calculatePercentage(stats.estimates.pending, stats.estimates.total)}
                   </span>
                 </div>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Sent</span>
+                <span className="text-gray-600 text-sm">Approved</span>
                 <div className="text-right">
-                  <span className="font-medium">{formatNumber(stats.estimates.sent)}</span>
+                  <span className="font-medium">{formatNumber(stats.estimates.approved)}</span>
                   <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(stats.estimates.sent, stats.estimates.total)}
+                    {calculatePercentage(stats.estimates.approved, stats.estimates.total)}
                   </span>
                 </div>
               </div>
+              
               <div className="flex justify-between items-center">
+                <span className="text-gray-600 text-sm">Rejected</span>
+                <div className="text-right">
+                  <span className="font-medium">{formatNumber(stats.estimates.rejected)}</span>
+                  <span className="text-gray-500 text-xs ml-2">
+                    {calculatePercentage(stats.estimates.rejected, stats.estimates.total)}
+                  </span>
+                </div>
+              </div>
+             <div className="flex justify-between items-center">
                 <span className="text-gray-600 text-sm">Expired</span>
                 <div className="text-right">
                   <span className="font-medium">{formatNumber(stats.estimates.expired)}</span>
                   <span className="text-gray-500 text-xs ml-2">
                     {calculatePercentage(stats.estimates.expired, stats.estimates.total)}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Declined</span>
-                <div className="text-right">
-                  <span className="font-medium">{formatNumber(stats.estimates.declined)}</span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(stats.estimates.declined, stats.estimates.total)}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Accepted</span>
-                <div className="text-right">
-                  <span className="font-medium">{formatNumber(stats.estimates.accepted)}</span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(stats.estimates.accepted, stats.estimates.total)}
                   </span>
                 </div>
               </div>
@@ -511,12 +701,17 @@ const Dashboard = () => {
                 <BarChart
                   data={[
                     { name: 'Draft', value: stats.estimates.draft },
-                    { name: 'Not Sent', value: stats.estimates.notSent },
-                    { name: 'Sent', value: stats.estimates.sent },
+                    { name: 'Pending', value: stats.estimates.pending },
+                    { name: 'Approved', value: stats.estimates.approved },
+                    { name: 'Rejected', value: stats.estimates.rejected },
                     { name: 'Expired', value: stats.estimates.expired },
-                    { name: 'Declined', value: stats.estimates.declined },
-                    { name: 'Accepted', value: stats.estimates.accepted },
+                    
+                    
                   ]}
+
+
+
+
                   margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -684,6 +879,9 @@ const Dashboard = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
+
+
+            
             <div className="space-y-2">
               {projectChartData.map((item, index) => (
                 <div key={index} className="flex justify-between items-center text-sm">
@@ -699,11 +897,152 @@ const Dashboard = () => {
                   </div>
                 </div>
               ))}
+
+
+              
             </div>
           </div>
         </div>
+                {/* Expenses vs Income Overview */}
+        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-gray-800">Expenses vs Income ({selectedYear})</h2>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="border rounded px-3 py-1 text-sm"
+            >
+              {availableYears.map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))}
+            </select>
+          </div>
+          
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-500 text-sm">Total Income</p>
+                  <p className="text-xl font-bold text-blue-700">{formatCurrency(totalIncome)}</p>
+                </div>
+                <div className="bg-blue-100 p-2 rounded-full">
+                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-red-500 text-sm">Total Expenses</p>
+                  <p className="text-xl font-bold text-red-700">{formatCurrency(totalExpenses)}</p>
+                </div>
+                <div className="bg-red-100 p-2 rounded-full">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className={`p-4 rounded-lg border ${netProfit >= 0 ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className={`text-sm ${netProfit >= 0 ? 'text-green-500' : 'text-red-500'}`}>Net Profit/Loss</p>
+                  <p className={`text-xl font-bold ${netProfit >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                    {formatCurrency(netProfit)}
+                  </p>
+                </div>
+                <div className={`p-2 rounded-full ${netProfit >= 0 ? 'bg-green-100' : 'bg-red-100'}`}>
+                  <svg 
+                    className={`w-5 h-5 ${netProfit >= 0 ? 'text-green-600' : 'text-red-600'}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    {netProfit >= 0 ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13l-3 3m0 0l-3-3m3 3V8m0 13a9 9 0 110-18 9 9 0 010 18z" />
+                    )}
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bar Chart */}
+          <div className="h-80 mb-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={combinedData}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value, name) => [formatCurrency(value), name === 'income' ? 'Income' : 'Expenses']}
+                />
+                <Legend />
+                <Bar dataKey="income" name="Income" fill="#4CAF50" />
+                <Bar dataKey="expenses" name="Expenses" fill="#F44336" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Trend Line Chart */}
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={combinedData}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value, name) => [formatCurrency(value), name === 'income' ? 'Income' : 'Expenses']}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="income" 
+                  name="Income" 
+                  stroke="#4CAF50" 
+                  activeDot={{ r: 8 }} 
+                  strokeWidth={2}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="expenses" 
+                  name="Expenses" 
+                  stroke="#F44336" 
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+
+
       </div>
     </div>
+    
   );
 };
 
