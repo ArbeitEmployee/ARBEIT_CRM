@@ -1,7 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FaPlus, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+
+// Custom hook for detecting outside clicks
+const useOutsideClick = (callback) => {
+  const ref = useRef();
+
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [ref, callback]);
+
+  return ref;
+};
 
 const ProposalForm = () => {
   const navigate = useNavigate();
@@ -10,6 +31,7 @@ const ProposalForm = () => {
   const [formData, setFormData] = useState({
     title: "",
     clientName: "",
+    clientId: "",
     clientEmail: "",
     status: "Draft",
     items: [],
@@ -26,7 +48,8 @@ const ProposalForm = () => {
     country: "",
     zip: "",
     phone: "",
-    assigned: ""
+    assigned: "",
+    assignedId: ""
   });
 
   // Items state
@@ -44,9 +67,23 @@ const ProposalForm = () => {
     groupName: ""
   });
 
-  // Static data
-  const customers = ["Acme Corp", "Tech Solutions", "Global Traders"];
-  const staffMembers = ["John Doe", "Jane Smith", "Mike Johnson"];
+  // Search states
+  const [clientSearchTerm, setClientSearchTerm] = useState("");
+  const [clientSearchResults, setClientSearchResults] = useState([]);
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const [staffSearchTerm, setStaffSearchTerm] = useState("");
+  const [staffSearchResults, setStaffSearchResults] = useState([]);
+  const [showStaffDropdown, setShowStaffDropdown] = useState(false);
+
+  // Use the custom hook for detecting outside clicks
+  const clientRef = useOutsideClick(() => {
+    setShowClientDropdown(false);
+  });
+  
+  const staffRef = useOutsideClick(() => {
+    setShowStaffDropdown(false);
+  });
+
   const tagOptions = ["Bug", "Follow Up", "Urgent", "Design", "Development"];
   const statusOptions = ["Draft", "Sent", "Accepted", "Rejected"];
   const taxOptions = ["", "0%", "5%", "10%", "15%", "20%"];
@@ -94,6 +131,60 @@ const ProposalForm = () => {
     fetchItems();
   }, []);
 
+  // Search customers by company name
+  const searchCustomers = async (searchTerm) => {
+    if (searchTerm.length < 1) {
+      setClientSearchResults([]);
+      return;
+    }
+    
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/projects/customers/search?q=${searchTerm}`, config);
+      setClientSearchResults(data);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+      setClientSearchResults([]);
+    }
+  };
+
+  // Search staff by name
+  const searchStaff = async (searchTerm) => {
+    if (searchTerm.length < 1) {
+      setStaffSearchResults([]);
+      return;
+    }
+    
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`, config);
+      setStaffSearchResults(data.staffs || []);
+    } catch (error) {
+      console.error("Error searching staff:", error);
+      setStaffSearchResults([]);
+    }
+  };
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (clientSearchTerm) {
+        searchCustomers(clientSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [clientSearchTerm]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (staffSearchTerm) {
+        searchStaff(staffSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [staffSearchTerm]);
+
   // Form handlers
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -101,6 +192,50 @@ const ProposalForm = () => {
       ...formData,
       [name]: type === "checkbox" ? checked : value,
     });
+  };
+
+  const handleClientSearchChange = (e) => {
+    const value = e.target.value;
+    setFormData({
+      ...formData,
+      clientName: value,
+      clientId: "",
+      clientEmail: ""
+    });
+    setClientSearchTerm(value);
+    setShowClientDropdown(true);
+  };
+
+  const handleStaffSearchChange = (e) => {
+    const value = e.target.value;
+    setFormData({
+      ...formData,
+      assigned: value,
+      assignedId: ""
+    });
+    setStaffSearchTerm(value);
+    setShowStaffDropdown(true);
+  };
+
+  const handleSelectClient = (client) => {
+    setFormData({
+      ...formData,
+      clientId: client._id,
+      clientName: client.company,
+      clientEmail: client.email || ""
+    });
+    setShowClientDropdown(false);
+    setClientSearchTerm("");
+  };
+
+  const handleSelectStaff = (staff) => {
+    setFormData({
+      ...formData,
+      assignedId: staff._id,
+      assigned: staff.name
+    });
+    setShowStaffDropdown(false);
+    setStaffSearchTerm("");
   };
 
   const handleNewItemChange = (e) => {
@@ -188,7 +323,7 @@ const ProposalForm = () => {
   const validate = () => {
     let newErrors = {};
     if (!formData.title) newErrors.title = "Title is required";
-    if (!formData.clientName) newErrors.clientName = "Client name is required";
+    if (!formData.clientName || !formData.clientId) newErrors.clientName = "Client is required";
     if (!formData.clientEmail) newErrors.clientEmail = "Email is required";
     if (proposalItems.length === 0) newErrors.items = "At least one item is required";
     
@@ -221,9 +356,10 @@ const ProposalForm = () => {
 
       const proposalData = {
         title: formData.title,
+        clientId: formData.clientId,
         clientName: formData.clientName,
         clientEmail: formData.clientEmail,
-        status:formData.status,
+        status: formData.status,
         items: items,
         date: formData.date || new Date().toISOString().split('T')[0],
         openTill: formData.openTill || null,
@@ -237,7 +373,8 @@ const ProposalForm = () => {
         country: formData.country,
         zip: formData.zip,
         phone: formData.phone,
-        assigned: formData.assigned
+        assigned: formData.assigned,
+        assignedId: formData.assignedId
       };
 
       const config = createAxiosConfig();
@@ -271,7 +408,6 @@ const ProposalForm = () => {
     }
   };
 
-
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">New Proposal</h2>
@@ -300,15 +436,37 @@ const ProposalForm = () => {
             {/* Client Name */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Client Name*</label>
-              <input
-                type="text"
-                name="clientName"
-                value={formData.clientName}
-                onChange={handleChange}
-                className={`w-full border px-3 py-2 rounded text-sm ${
-                  errors.clientName ? "border-red-500" : "border-gray-300"
-                }`}
-              />
+              <div className="relative" ref={clientRef}>
+                <input
+                  type="text"
+                  name="clientName"
+                  value={formData.clientName}
+                  onChange={handleClientSearchChange}
+                  className={`w-full border px-3 py-2 rounded text-sm ${
+                    errors.clientName ? "border-red-500" : "border-gray-300"
+                  }`}
+                  placeholder="Search client by company name..."
+                />
+                {showClientDropdown && clientSearchResults.length > 0 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                    {clientSearchResults.map((client, index) => (
+                      <div
+                        key={index}
+                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => handleSelectClient(client)}
+                      >
+                        <div className="font-medium">{client.company}</div>
+                        <div className="text-sm text-gray-600">{client.contact} - {client.email}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {showClientDropdown && clientSearchResults.length === 0 && clientSearchTerm.length >= 2 && (
+                  <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                    <div className="px-3 py-2 text-gray-500">No clients found</div>
+                  </div>
+                )}
+              </div>
               {errors.clientName && <p className="text-red-500 text-xs mt-1">{errors.clientName}</p>}
             </div>
 
@@ -402,17 +560,35 @@ const ProposalForm = () => {
             </div>
             <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Assigned</label>
-                <select
-                  name="assigned"
-                  value={formData.assigned}
-                  onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
-                >
-                  <option value="">Select Staff</option>
-                  {staffMembers.map((staff, i) => (
-                    <option key={i} value={staff}>{staff}</option>
-                  ))}
-                </select>
+                <div className="relative" ref={staffRef}>
+                  <input
+                    type="text"
+                    name="assigned"
+                    value={formData.assigned}
+                    onChange={handleStaffSearchChange}
+                    className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                    placeholder="Search staff by name..."
+                  />
+                  {showStaffDropdown && staffSearchResults.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                      {staffSearchResults.map((staff, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelectStaff(staff)}
+                        >
+                          <div className="font-medium">{staff.name}</div>
+                          <div className="text-sm text-gray-600">{staff.position} - {staff.department}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showStaffDropdown && staffSearchResults.length === 0 && staffSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">No staff found</div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -508,9 +684,10 @@ const ProposalForm = () => {
           <h3 className="text-lg font-semibold">Item Database</h3>
           <button
             onClick={() => setShowItemForm(true)}
-            className="bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 flex items-center"
+            className="px-3 py-2 text-sm rounded flex items-center gap-2 text-white"
+            style={{ backgroundColor: '#333333' }}
           >
-            <FaPlus /> <span className="ml-1">Add New Item</span>
+            <FaPlus /> Add New Item
           </button>
         </div>
 
@@ -518,29 +695,29 @@ const ProposalForm = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-3 font-medium">Description</th>
-                <th className="p-3 font-medium">Rate</th>
-                <th className="p-3 font-medium">Unit</th>
-                <th className="p-3 font-medium">Tax 1</th>
-                <th className="p-3 font-medium">Tax 2</th>
-                <th className="p-3 font-medium">Group</th>
-                <th className="p-3 font-medium">Action</th>
+              <tr className="text-left" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th className="p-3 rounded-l-lg">Description</th>
+                <th className="p-3">Rate</th>
+                <th className="p-3">Unit</th>
+                <th className="p-3">Tax 1</th>
+                <th className="p-3">Tax 2</th>
+                <th className="p-3">Group</th>
+                <th className="p-3 rounded-r-lg">Action</th>
               </tr>
             </thead>
             <tbody>
               {databaseItems.map((item) => (
-                <tr key={item._id}>
-                  <td className="p-3">{item.description}</td>
-                  <td className="p-3">{item.rate}</td>
-                  <td className="p-3">{item.unit}</td>
-                  <td className="p-3">{item.tax1}</td>
-                  <td className="p-3">{item.tax2}</td>
-                  <td className="p-3">{item.groupName}</td>
-                  <td className="p-3">
+                <tr key={item._id} className="bg-white shadow rounded-lg hover:bg-gray-50">
+                  <td className="p-3 border-0">{item.description}</td>
+                  <td className="p-3 border-0">{item.rate}</td>
+                  <td className="p-3 border-0">{item.unit}</td>
+                  <td className="p-3 border-0">{item.tax1}</td>
+                  <td className="p-3 border-0">{item.tax2}</td>
+                  <td className="p-3 border-0">{item.groupName}</td>
+                  <td className="p-3 border-0">
                     <button 
                       onClick={() => addItemFromDatabase(item)}
-                      className="text-blue-500 hover:text-blue-700"
+                      className="text-black-600 hover:text-blue-800"
                     >
                       Add to Proposal
                     </button>
@@ -569,9 +746,10 @@ const ProposalForm = () => {
                 }
               ]);
             }}
-            className="bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 flex items-center"
+            className="px-3 py-2 text-sm rounded flex items-center gap-2 text-white"
+            style={{ backgroundColor: '#333333' }}
           >
-            <FaPlus /> <span className="ml-1">Add Custom Item</span>
+            <FaPlus /> Add Custom Item
           </button>
         </div>
 
@@ -581,22 +759,22 @@ const ProposalForm = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-3 font-medium">#</th>
-                <th className="p-3 font-medium">Item Description</th>
-                <th className="p-3 font-medium">Qty</th>
-                <th className="p-3 font-medium">Rate</th>
-                <th className="p-3 font-medium">Tax 1</th>
-                <th className="p-3 font-medium">Tax 2</th>
-                <th className="p-3 font-medium">Amount</th>
-                <th className="p-3 font-medium">Action</th>
+              <tr className="text-left" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th className="p-3 rounded-l-lg">#</th>
+                <th className="p-3">Item Description</th>
+                <th className="p-3">Qty</th>
+                <th className="p-3">Rate</th>
+                <th className="p-3">Tax 1</th>
+                <th className="p-3">Tax 2</th>
+                <th className="p-3">Amount</th>
+                <th className="p-3 rounded-r-lg">Action</th>
               </tr>
             </thead>
             <tbody>
               {proposalItems.map((item, i) => (
-                <tr key={i}>
-                  <td className="p-3">{i + 1}</td>
-                  <td className="p-3">
+                <tr key={i} className="bg-white shadow rounded-lg hover:bg-gray-50">
+                  <td className="p-3 border-0">{i + 1}</td>
+                  <td className="p-3 border-0">
                     <input
                       type="text"
                       value={item.description}
@@ -605,7 +783,7 @@ const ProposalForm = () => {
                       placeholder="Item description"
                     />
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 border-0">
                     <input
                       type="number"
                       value={item.quantity}
@@ -617,7 +795,7 @@ const ProposalForm = () => {
                       min="1"
                     />
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 border-0">
                     <input
                       type="number"
                       value={item.rate}
@@ -630,7 +808,7 @@ const ProposalForm = () => {
                       step="0.01"
                     />
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 border-0">
                     <input
                       type="number"
                       value={item.tax1}
@@ -640,7 +818,7 @@ const ProposalForm = () => {
                       step="0.01"
                     />
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 border-0">
                     <input
                       type="number"
                       value={item.tax2}
@@ -650,11 +828,11 @@ const ProposalForm = () => {
                       step="0.01"
                     />
                   </td>
-                  <td className="p-3 text-right">${(item.quantity * item.rate).toFixed(2)}</td>
-                  <td className="p-3 text-center">
+                  <td className="p-3 border-0 text-right">${(item.quantity * item.rate).toFixed(2)}</td>
+                  <td className="p-3 border-0 text-center">
                     <button
                       onClick={() => deleteItem(i)}
-                      className="text-red-500 hover:text-red-700"
+                      className="text-red-600 hover:text-red-800"
                       title="Remove"
                     >
                       <FaTimes />
@@ -830,7 +1008,8 @@ const ProposalForm = () => {
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  className="px-4 py-2 text-white rounded text-sm"
+                  style={{ backgroundColor: '#333333' }}
                 >
                   Save Item
                 </button>
@@ -850,7 +1029,7 @@ const ProposalForm = () => {
         </button>
         <button
           onClick={() => handleSubmit(true)}
-          className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800"
         >
           Save & Send
         </button>
