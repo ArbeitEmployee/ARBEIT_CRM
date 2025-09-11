@@ -275,22 +275,34 @@ export const resetPassword = async (req, res) => {
 export const changePassword = async (req, res) => {
   try {
     const adminId = req.admin.id; // from protect middleware
-    const { newPassword, confirmNewPassword } = req.body;
+    const { oldPassword, newPassword, confirmNewPassword } = req.body;
 
-    if (!newPassword || !confirmNewPassword) {
-      return res.status(400).json({ message: "Both fields are required" });
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
+      return res.status(400).json({ message: "All fields are required" });
     }
 
     if (newPassword.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+      return res.status(400).json({ message: "New password must be at least 6 characters long" });
     }
 
     if (newPassword !== confirmNewPassword) {
-      return res.status(400).json({ message: "Passwords do not match" });
+      return res.status(400).json({ message: "New passwords do not match" });
     }
 
     const admin = await Admin.findById(adminId);
     if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    // Verify old password
+    const isOldPasswordValid = await bcrypt.compare(oldPassword, admin.password);
+    if (!isOldPasswordValid) {
+      return res.status(400).json({ message: "Old password is incorrect" });
+    }
+
+    // Check if new password is same as old password
+    const isSamePassword = await bcrypt.compare(newPassword, admin.password);
+    if (isSamePassword) {
+      return res.status(400).json({ message: "New password cannot be the same as old password" });
+    }
 
     // Update password
     admin.password = await bcrypt.hash(newPassword, 10);
