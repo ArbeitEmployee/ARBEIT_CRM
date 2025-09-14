@@ -56,6 +56,7 @@ import GoalsPage from "../pages/admin/utilities/Goals";
 import AllAdmins from "../pages/admin/admins/all";
 import PendingAdmins from "../pages/admin/admins/pending";
 import ChangePassword from "../pages/admin/changePassword";
+import ClientChangePassword from "../pages/client/changePassword";
 
 
 const AppRoutes = () => {
@@ -134,6 +135,8 @@ const AppRoutes = () => {
               <Route index element={<Home />} />
               <Route path="home" element={<Home />} />
               <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />
+               <Route path="change-password" element={<ClientChangePassword/>} />
+              
               
               {/* Add more client routes here  <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />*/}
             </Routes>

@@ -196,3 +196,47 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+
+// CHANGE PASSWORD
+export const changePassword = async (req, res) => {
+  try {
+    const clientId = req.client.id; // from protect middleware
+    const { oldPassword, newPassword, confirmNewPassword } = req.body;
+
+    if (!oldPassword || !newPassword || !confirmNewPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "New password must be at least 6 characters long" });
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({ message: "New passwords do not match" });
+    }
+
+    const client = await Client.findById(clientId);
+    if (!client) return res.status(404).json({ message: "Client not found" });
+
+    // Verify old password
+    const isOldPasswordValid = await bcrypt.compare(oldPassword, client.password);
+    if (!isOldPasswordValid) {
+      return res.status(400).json({ message: "Old password is incorrect" });
+    }
+
+    // Check if new password is same as old password
+    const isSamePassword = await bcrypt.compare(newPassword, client.password);
+    if (isSamePassword) {
+      return res.status(400).json({ message: "New password cannot be the same as old password" });
+    }
+
+    // Update password
+    client.password = await bcrypt.hash(newPassword, 10);
+    await client.save();
+
+    res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -24,6 +24,12 @@ const ClientHeader = ({ onToggleSidebar, client: propClient, onLogout }) => {
     navigate("/client/login");
   };
 
+  
+  // Navigate to change password page
+  const handleChangePassword = () => {
+    navigate("/client/change-password");
+  };
+
   return (
     <header className="bg-gray-600 text-white flex items-center justify-between px-4 py-3 shadow-md fixed top-0 left-0 right-0 z-50 h-14">
       {/* Left - Sidebar Toggle + Brand */}
@@ -38,9 +44,14 @@ const ClientHeader = ({ onToggleSidebar, client: propClient, onLogout }) => {
       {/* Right Section */}
       <div className="flex items-center gap-6">
         {/* Change Password */}
-        <div className="flex items-center gap-1 cursor-pointer hover:text-gray-300">
-          <FaKey className="text-xl" />
-          <span className="hidden md:inline text-sm">Change Password</span>
+        <div className="flex items-center gap-4">
+          <div 
+            className="flex items-center gap-1 cursor-pointer hover:text-gray-300"
+            onClick={handleChangePassword}
+          >
+            <FaKey className="text-xl" />
+            <span className="hidden md:inline text-sm">Change Password</span>
+          </div>
         </div>
 
         {/* Notifications */}
