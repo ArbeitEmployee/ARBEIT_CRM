@@ -15,7 +15,7 @@ import ClientRegistration from "../pages/client/registration";
 import ClientForgotPassword from "../pages/client/forgotPassword";
 import Home from "../pages/client/Home";
 import ClientKnowledgeBasePage from "../pages/client/ClientKnowledgeBase";
-//import ClientKnowledgeBasePage from "../pages/client/ClientKnowledgeBase";
+import ClientProjectPage from "../pages/client/ClientProjectPage";
 
 //Admin Section
 import Customers from "../pages/admin/customers";
@@ -135,7 +135,8 @@ const AppRoutes = () => {
               <Route index element={<Home />} />
               <Route path="home" element={<Home />} />
               <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />
-               <Route path="change-password" element={<ClientChangePassword/>} />
+              <Route path="change-password" element={<ClientChangePassword/>} />
+              <Route path="projects" element={<ClientProjectPage />} />
               
               
               {/* Add more client routes here  <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />*/}

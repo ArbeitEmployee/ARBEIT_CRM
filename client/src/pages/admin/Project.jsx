@@ -10,7 +10,7 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// Custom hook for detecting outside clicks - ADDED THIS HOOK
+// Custom hook for detecting outside clicks
 const useOutsideClick = (callback) => {
   const ref = useRef();
 
@@ -52,6 +52,7 @@ const ProjectPage = () => {
     name: "",
     customerId: "",
     customerName: "",
+    customerCode: "",
     tags: "",
     startDate: "",
     deadline: "",
@@ -76,7 +77,7 @@ const ProjectPage = () => {
     "Finished"
   ];
 
-  // Use the custom hook for detecting outside clicks - ADDED THESE REFS
+  // Use the custom hook for detecting outside clicks
   const exportRef = useOutsideClick(() => {
     setShowExportMenu(false);
   });
@@ -172,6 +173,33 @@ const ProjectPage = () => {
     }
   };
 
+  // Search customer by code
+  const searchCustomerByCode = async (customerCode) => {
+    if (!customerCode || customerCode.length < 4) {
+      return;
+    }
+    
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/projects/customers/by-code/${customerCode}`, config);
+      if (data.customer) {
+        setNewProject(prev => ({
+          ...prev,
+          customerId: data.customer._id,
+          customerName: data.customer.company
+        }));
+      }
+    } catch (error) {
+      console.error("Error searching customer by code:", error);
+      // Clear customer info if code is not found
+      setNewProject(prev => ({
+        ...prev,
+        customerId: "",
+        customerName: ""
+      }));
+    }
+  };
+
   // Search staff by name
   const searchStaff = async (searchTerm) => {
     if (searchTerm.length < 1) {
@@ -208,6 +236,17 @@ const ProjectPage = () => {
 
     return () => clearTimeout(delayDebounceFn);
   }, [staffSearchTerm]);
+
+  // Debounce customer code search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (newProject.customerCode && newProject.customerCode.length >= 4) {
+        searchCustomerByCode(newProject.customerCode);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [newProject.customerCode]);
 
   // Search filter
   const filteredProjects = projects.filter(project => {
@@ -256,7 +295,8 @@ const ProjectPage = () => {
     setNewProject(prev => ({
       ...prev,
       customerId: customer._id,
-      customerName: customer.company
+      customerName: customer.company,
+      customerCode: customer.customerCode
     }));
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
@@ -304,6 +344,7 @@ const ProjectPage = () => {
         name: "",
         customerId: "",
         customerName: "",
+        customerCode: "",
         tags: "",
         startDate: "",
         deadline: "",
@@ -324,6 +365,7 @@ const ProjectPage = () => {
       name: project.name,
       customerId: project.customerId,
       customerName: project.customer ? project.customer.company : "",
+      customerCode: project.customer ? project.customer.customerCode : "",
       tags: project.tags || "",
       startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : "",
       deadline: project.deadline ? new Date(project.deadline).toISOString().split('T')[0] : "",
@@ -568,8 +610,23 @@ const ProjectPage = () => {
               </div>
 
               <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Code</label>
+                <input
+                  type="text"
+                  name="customerCode"
+                  value={newProject.customerCode}
+                  onChange={handleNewProjectChange}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Enter customer code (e.g., CUST-ABC123)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter customer code to auto-populate customer information
+                </p>
+              </div>
+
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                <div className="relative" ref={customerRef}> {/* ADDED REF HERE */}
+                <div className="relative" ref={customerRef}>
                   <input
                     type="text"
                     name="customerName"
@@ -589,6 +646,7 @@ const ProjectPage = () => {
                         >
                           <div className="font-medium">{customer.company}</div>
                           <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                          <div className="text-xs text-blue-600">{customer.customerCode}</div>
                         </div>
                       ))}
                     </div>
@@ -653,7 +711,7 @@ const ProjectPage = () => {
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Members</label>
-                <div className="relative" ref={staffRef}> {/* ADDED REF HERE */}
+                <div className="relative" ref={staffRef}>
                   <input
                     type="text"
                     name="members"
@@ -829,7 +887,7 @@ const ProjectPage = () => {
                 </select>
                 
                 {/* Filter button */}
-                <div className="relative" ref={filterRef}> {/* ADDED REF HERE */}
+                <div className="relative" ref={filterRef}>
                   <button 
                     className="border px-3 py-1 text-sm rounded flex items-center gap-2"
                     onClick={() => setShowFilterMenu(!showFilterMenu)}
@@ -867,7 +925,7 @@ const ProjectPage = () => {
                 </div>
                 
                 {/* Export button */}
-                <div className="relative" ref={exportRef}> {/* ADDED REF HERE */}
+                <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
                     className="border px-2 py-1 rounded text-sm flex items-center gap-1"
@@ -995,6 +1053,9 @@ const ProjectPage = () => {
                               <div className="text-xs text-gray-500">
                                 {project.customer.contact} • {project.customer.email}
                               </div>
+                              {project.customer.customerCode && (
+                                <div className="text-xs text-blue-600">{project.customer.customerCode}</div>
+                              )}
                             </div>
                           ) : (
                             "N/A"

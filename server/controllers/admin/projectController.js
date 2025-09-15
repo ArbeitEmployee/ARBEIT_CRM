@@ -8,7 +8,7 @@ import XLSX from "xlsx";
 export const getProjects = async (req, res) => {
   try {
     const projects = await Project.find({ admin: req.admin._id })
-      .populate('customer', 'company contact email phone')
+      .populate('customer', 'company contact email phone customerCode')
       .sort({ createdAt: -1 });
     
     // Calculate stats
@@ -79,7 +79,7 @@ export const createProject = async (req, res) => {
 
     const createdProject = await project.save();
     const populatedProject = await Project.findById(createdProject._id)
-      .populate('customer', 'company contact email phone');
+      .populate('customer', 'company contact email phone customerCode');
       
     res.status(201).json(populatedProject);
   } catch (error) {
@@ -201,7 +201,7 @@ export const importProjects = async (req, res) => {
         const project = new Project(projectData);
         const savedProject = await project.save();
         const populatedProject = await Project.findById(savedProject._id)
-          .populate('customer', 'company contact email phone');
+          .populate('customer', 'company contact email phone customerCode');
           
         importedProjects.push(populatedProject);
       } catch (error) {
@@ -276,7 +276,7 @@ export const updateProject = async (req, res) => {
 
     const updatedProject = await project.save();
     const populatedProject = await Project.findById(updatedProject._id)
-      .populate('customer', 'company contact email phone');
+      .populate('customer', 'company contact email phone customerCode');
       
     res.json(populatedProject);
   } catch (error) {
@@ -322,11 +322,38 @@ export const searchCustomers = async (req, res) => {
     const customers = await Customer.find({
       admin: req.admin._id,
       company: { $regex: q, $options: 'i' }
-    }).select('company contact email phone').limit(10);
+    }).select('company contact email phone customerCode').limit(10);
     
     res.json(customers);
   } catch (error) {
     console.error("Error searching customers:", error);
     res.status(500).json({ message: "Server error while searching customers" });
+  }
+};
+
+// @desc    Get customer by customer code for logged-in admin
+// @route   GET /api/projects/customers/by-code/:code
+// @access  Private
+export const getCustomerByCode = async (req, res) => {
+  try {
+    const { code } = req.params;
+    
+    if (!code || code.length < 4) {
+      return res.status(400).json({ message: "Customer code is required" });
+    }
+    
+    const customer = await Customer.findOne({ 
+      admin: req.admin._id,
+      customerCode: code.toUpperCase() 
+    }).select('_id company contact email phone customerCode');
+    
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+    
+    res.json({ customer });
+  } catch (error) {
+    console.error("Error finding customer by code:", error);
+    res.status(500).json({ message: "Server error while searching customer" });
   }
 };

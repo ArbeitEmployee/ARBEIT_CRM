@@ -32,6 +32,7 @@ import csvExportRoutes from './routes/admin/csvExportRoutes.js';
 import eventRoutes from './routes/admin/eventRoutes.js';
 import announcementRoutes from './routes/admin/announcementRoutes.js';
 import goalsRoutes from './routes/admin/goalRoutes.js';
+import clientProjectRoutes from './routes/client/clientProjectRoutes.js';
 
 
 const app = express();
@@ -67,6 +68,7 @@ app.use('/api/admin/goals', goalsRoutes);
 
 //client routes
 app.use('/api/client/knowledge-base', clientKnowledgeBaseRoutes);
+app.use('/api/client/projects', clientProjectRoutes );
 
 
 const PORT = process.env.PORT || 5000;
