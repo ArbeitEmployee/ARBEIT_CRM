@@ -5,7 +5,8 @@ import {
   updateContact,
   deleteContact,
   importContacts,
-  searchCustomers
+  searchCustomers,
+  getCustomerByCode
 } from "../../controllers/admin/contactController.js";
 import { protect } from "../../middlewares/authMiddleware.js";
 import multer from "multer";
@@ -24,6 +25,9 @@ router.route("/import")
 
 router.route("/customers/search")
   .get(protect, searchCustomers);
+
+router.route("/customers/by-code/:code")
+  .get(protect, getCustomerByCode);
 
 router.route("/:id")
   .put(protect, updateContact)

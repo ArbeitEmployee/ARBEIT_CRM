@@ -22,6 +22,27 @@ import {
   Cell
 } from 'recharts';
 
+// Custom hook for detecting outside clicks
+const useOutsideClick = (callback) => {
+  const ref = useRef();
+
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [ref, callback]);
+
+  return ref;
+};
+
 const ContactsPage = () => {
   const [selectedContacts, setSelectedContacts] = useState([]);
   const [compactView, setCompactView] = useState(false);
@@ -42,6 +63,7 @@ const ContactsPage = () => {
     subject: "",
     customerId: "",
     customerName: "",
+    customerCode: "",
     contractType: "Express Contract",
     contractValue: "",
     startDate: "",
@@ -64,8 +86,15 @@ const ContactsPage = () => {
     "Standard Contract",
     "Custom Contract"
   ];
-  // Add a ref for the export menu
-  const exportMenuRef = useRef(null);
+  
+  // Use the custom hook for detecting outside clicks
+  const exportRef = useOutsideClick(() => {
+    setShowExportMenu(false);
+  });
+  
+  const customerRef = useOutsideClick(() => {
+    setShowCustomerDropdown(false);
+  });
 
   // Get auth token from localStorage
   const getAuthToken = () => {
@@ -82,20 +111,6 @@ const ContactsPage = () => {
       }
     };
   };
-
-  // Close export menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
-        setShowExportMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
 
   const [loading, setLoading] = useState(true);
 
@@ -150,6 +165,34 @@ const ContactsPage = () => {
     }
   };
 
+  // Search customer by code
+  const searchCustomerByCode = async (customerCode) => {
+    if (!customerCode || customerCode.length < 4) {
+      return;
+    }
+    
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/contacts/customers/by-code/${customerCode}`, config);
+      if (data.customer) {
+        setNewContact(prev => ({
+          ...prev,
+          customerId: data.customer._id,
+          customerName: data.customer.company,
+          customerCode: data.customer.customerCode
+        }));
+      }
+    } catch (error) {
+      console.error("Error searching customer by code:", error);
+      // Clear customer info if code is not found
+      setNewContact(prev => ({
+        ...prev,
+        customerId: "",
+        customerName: ""
+      }));
+    }
+  };
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (customerSearchTerm) {
@@ -159,6 +202,17 @@ const ContactsPage = () => {
 
     return () => clearTimeout(delayDebounceFn);
   }, [customerSearchTerm]);
+
+  // Debounce customer code search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (newContact.customerCode && newContact.customerCode.length >= 4) {
+        searchCustomerByCode(newContact.customerCode);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [newContact.customerCode]);
 
   // Search filter
   const filteredContacts = contacts.filter(contact => 
@@ -199,7 +253,8 @@ const ContactsPage = () => {
     setNewContact(prev => ({
       ...prev,
       customerId: customer._id,
-      customerName: customer.company
+      customerName: customer.company,
+      customerCode: customer.customerCode
     }));
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
@@ -239,6 +294,7 @@ const ContactsPage = () => {
         subject: "",
         customerId: "",
         customerName: "",
+        customerCode: "",
         contractType: "Express Contract",
         contractValue: "",
         startDate: "",
@@ -260,6 +316,7 @@ const ContactsPage = () => {
       subject: contact.subject,
       customerId: contact.customerId,
       customerName: contact.customer ? contact.customer.company : "",
+      customerCode: contact.customer ? contact.customer.customerCode : "",
       contractType: contact.contractType,
       contractValue: contact.contractValue,
       startDate: contact.startDate ? new Date(contact.startDate).toISOString().split('T')[0] : "",
@@ -609,8 +666,23 @@ const ContactsPage = () => {
               </div>
 
               <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Code</label>
+                <input
+                  type="text"
+                  name="customerCode"
+                  value={newContact.customerCode}
+                  onChange={handleNewContactChange}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Enter customer code (e.g., CUST-ABC123)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter customer code to auto-populate customer information
+                </p>
+              </div>
+
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                <div className="relative">
+                <div className="relative" ref={customerRef}>
                   <input
                     type="text"
                     name="customerName"
@@ -630,6 +702,7 @@ const ContactsPage = () => {
                         >
                           <div className="font-medium">{customer.company}</div>
                           <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                          <div className="text-xs text-blue-600">{customer.customerCode}</div>
                         </div>
                       ))}
                     </div>
@@ -900,7 +973,7 @@ const ContactsPage = () => {
                 </select>
                 
                 {/* Export button */}
-                <div className="relative">
+                <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
                     className="border px-2 py-1 rounded text-sm flex items-center gap-1"
@@ -910,7 +983,7 @@ const ContactsPage = () => {
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}
@@ -964,6 +1037,7 @@ const ContactsPage = () => {
               </div>
             </div>
 
+            
             {/* Table */}
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-separate border-spacing-y-2">
@@ -984,30 +1058,19 @@ const ContactsPage = () => {
                     </th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Subject</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
-                    {compactView ? (
-                      <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Type</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Value</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>End Date</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
-                      </>
-                    ) : (
-                      <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Type</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Value</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>End Date</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Signature</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
-                      </>
-                    )}
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Type</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Value</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>End Date</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
+                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Signature</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentData.length === 0 ? (
                     <tr>
-                      <td colSpan={compactView ? 7 : 9} className="text-center py-4">
+                      <td colSpan="10" className="text-center py-4">
                         {searchTerm ? "No matching contracts found." : "No contracts available."}
                       </td>
                     </tr>
@@ -1024,63 +1087,40 @@ const ContactsPage = () => {
                         <td className="p-3">{contact.subject}</td>
                         <td className="p-3">
                           {contact.customer ? contact.customer.company : "N/A"}
+                          {contact.customer && contact.customer.customerCode && (
+                            <div className="text-xs text-blue-600">{contact.customer.customerCode}</div>
+                          )}
                         </td>
-                        {compactView ? (
-                          <>
-                            <td className="p-3">{contact.contractType}</td>
-                            <td className="p-3">{formatCurrency(contact.contractValue)}</td>
-                            <td className="p-3">{formatDate(contact.endDate)}</td>
-                            <td className="p-3 rounded-r-lg">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleEditContact(contact)}
-                                  className="text-blue-600 hover:text-blue-800"
-                                >
-                                  <FaEdit />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteContact(contact._id)}
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  <FaTrash />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        ) : (
-                          <>
-                            <td className="p-3">{contact.contractType}</td>
-                            <td className="p-3">{formatCurrency(contact.contractValue)}</td>
-                            <td className="p-3">{formatDate(contact.startDate)}</td>
-                            <td className="p-3">{formatDate(contact.endDate)}</td>
-                            <td className="p-3">{contact.project}</td>
-                            <td className="p-3">
-                              <span className={`px-2 py-1 rounded-full text-xs ${
-                                contact.signature === 'Signed' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {contact.signature}
-                              </span>
-                            </td>
-                            <td className="p-3 rounded-r-lg">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => handleEditContact(contact)}
-                                  className="text-blue-600 hover:text-blue-800"
-                                >
-                                  <FaEdit />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteContact(contact._id)}
-                                  className="text-red-600 hover:text-red-800"
-                                >
-                                  <FaTrash />
-                                </button>
-                              </div>
-                            </td>
-                          </>
-                        )}
+                        <td className="p-3">{contact.contractType}</td>
+                        <td className="p-3">{formatCurrency(contact.contractValue)}</td>
+                        <td className="p-3">{formatDate(contact.startDate)}</td>
+                        <td className="p-3">{formatDate(contact.endDate)}</td>
+                        <td className="p-3">{contact.project}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-1 rounded-full text-xs ${
+                            contact.signature === 'Signed' 
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {contact.signature}
+                          </span>
+                        </td>
+                        <td className="p-3 rounded-r-lg">
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleEditContact(contact)}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              <FaEdit />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteContact(contact._id)}
+                              className="text-red-600 hover:text-red-800"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))
                   )}
@@ -1089,19 +1129,19 @@ const ContactsPage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-gray-600">
+            <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+              <div className="text-sm text-gray-700">
                 Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredContacts.length)} of {filteredContacts.length} entries
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  className="px-2 py-1 border rounded text-sm disabled:opacity-50"
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
                 >
                   Previous
                 </button>
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                   let pageNum;
                   if (totalPages <= 5) {
                     pageNum = i + 1;
@@ -1115,16 +1155,21 @@ const ContactsPage = () => {
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? 'bg-gray-200' : ''}`}
+                      className={`px-2 py-1 border rounded text-sm ${
+                        currentPage === pageNum ? "bg-gray-200" : ""
+                      }`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
                       {pageNum}
                     </button>
                   );
                 })}
+                {totalPages > 5 && (
+                  <span className="px-1">...</span>
+                )}
                 <button
-                  className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  className="px-2 py-1 border rounded text-sm disabled:opacity-50"
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
                 >
                   Next
@@ -1139,93 +1184,75 @@ const ContactsPage = () => {
       {importModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Import Contracts</h2>
+            <h2 className="text-xl font-semibold mb-4">Import Contacts</h2>
             
             {importProgress ? (
-              <div className="text-center">
-                <div className="text-gray-600 mb-2">{importProgress.message}</div>
+              <div className="mb-4">
+                <p className="text-sm text-gray-600">{importProgress.message}</p>
                 {importProgress.status === 'processing' && (
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${importProgress.progress}%` }}></div>
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-2">
+                    <div 
+                      className="bg-blue-600 h-2.5 rounded-full" 
+                      style={{ width: `${importProgress.progress}%` }}
+                    ></div>
                   </div>
                 )}
               </div>
             ) : importResult ? (
-              <div className={`p-4 rounded mb-4 ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              <div className={`mb-4 p-3 rounded ${importResult.success ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                 {importResult.success ? (
-                  <>
+                  <div>
                     <p>Import completed successfully!</p>
-                    <p>Imported: {importResult.imported} contracts</p>
+                    <p className="text-sm mt-1">Imported: {importResult.imported}</p>
                     {importResult.errorCount > 0 && (
-                      <p>Errors: {importResult.errorCount}</p>
+                      <p className="text-sm mt-1">Errors: {importResult.errorCount}</p>
                     )}
                     {importResult.errorMessages && importResult.errorMessages.length > 0 && (
-                      <div className="mt-2">
+                      <div className="mt-2 text-xs">
                         <p className="font-semibold">Error details:</p>
-                        <ul className="text-xs">
+                        <ul className="list-disc pl-4 mt-1">
                           {importResult.errorMessages.map((error, index) => (
                             <li key={index}>{error}</li>
                           ))}
                         </ul>
                       </div>
                     )}
-                  </>
+                  </div>
                 ) : (
-                  <p>Import failed: {importResult.message}</p>
+                  <p>Error: {importResult.message}</p>
                 )}
               </div>
             ) : (
-              <>
-                <div className="mb-4">
-                  <p className="text-sm text-gray-600 mb-2">
-                    Upload an Excel file (.xlsx) with contract data. The file should include columns for:
-                    Subject, Customer ID, Contract Type, Contract Value, Start Date, End Date, Project, Signature.
-                  </p>
-                  <a href="/sample-contracts.xlsx" download className="text-blue-600 text-sm underline">
-                    Download sample template
-                  </a>
-                </div>
-                
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-2">Select an Excel file to import contacts:</p>
                 <input
-                  ref={fileInputRef}
                   type="file"
-                  accept=".xlsx,.xls"
+                  ref={fileInputRef}
                   onChange={handleFileChange}
-                  className="w-full border rounded p-2 mb-4"
+                  accept=".xlsx,.xls,.csv"
+                  className="w-full border rounded p-2 text-sm"
                 />
-                
-                {importFile && (
-                  <div className="mb-4 text-sm">
-                    Selected file: {importFile.name}
-                  </div>
-                )}
-              </>
+                <p className="text-xs text-gray-500 mt-1">
+                  Supported formats: Excel (.xlsx, .xls), CSV
+                </p>
+              </div>
             )}
-            
+
             <div className="flex justify-end space-x-3">
-              {!importProgress && !importResult && (
-                <>
-                  <button
-                    onClick={closeImportModal}
-                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleImportSubmit}
-                    disabled={!importFile}
-                    className="px-4 py-2 bg-black text-white rounded text-sm hover:bg-gray-800 disabled:opacity-50"
-                  >
-                    Import
-                  </button>
-                </>
-              )}
-              {importResult && (
+              <button
+                onClick={closeImportModal}
+                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50 text-sm"
+                disabled={importProgress !== null}
+              >
+                {importResult ? 'Close' : 'Cancel'}
+              </button>
+              {!importResult && (
                 <button
-                  onClick={closeImportModal}
-                  className="px-4 py-2 bg-black text-white rounded text-sm hover:bg-gray-800"
+                  onClick={handleImportSubmit}
+                  disabled={!importFile || importProgress !== null}
+                  className="px-4 py-2 bg-black text-white rounded text-sm hover:bg-gray-800 disabled:opacity-50"
                 >
-                  Close
+                  Import
                 </button>
               )}
             </div>
