@@ -1,3 +1,4 @@
+// File: routes/admin/estimateRequestRoutes.js
 import express from "express";
 import {
   getEstimateRequests,
@@ -5,7 +6,8 @@ import {
   updateEstimateRequest,
   deleteEstimateRequest,
   bulkDeleteEstimateRequests,
-  searchCustomers
+  searchCustomers,
+  getCustomerByCode
 } from "../../controllers/admin/estimateRequestController.js";
 import { protect } from "../../middlewares/authMiddleware.js";
 
@@ -21,6 +23,9 @@ router.route("/bulk-delete")
 
 router.route("/customers/search")
   .get(protect, searchCustomers);
+
+router.route("/customers/by-code/:code")
+  .get(protect, getCustomerByCode);
 
 router.route("/:id")
   .put(protect, updateEstimateRequest)

@@ -52,6 +52,7 @@ const EstimateRequestPage = () => {
   const [newEstimate, setNewEstimate] = useState({
     customerId: "",
     customerName: "",
+    customerCode: "",
     customerEmail: "",
     customerPhone: "",
     projectName: "",
@@ -177,6 +178,37 @@ const EstimateRequestPage = () => {
     }
   }, []);
 
+  // Search customer by code
+  const searchCustomerByCode = useCallback(async (customerCode) => {
+    if (!customerCode || customerCode.length < 4) {
+      return;
+    }
+    
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/estimate-requests/customers/by-code/${customerCode}`, config);
+      if (data.customer) {
+        setNewEstimate(prev => ({
+          ...prev,
+          customerId: data.customer._id,
+          customerName: data.customer.company,
+          customerEmail: data.customer.email,
+          customerPhone: data.customer.phone
+        }));
+      }
+    } catch (error) {
+      console.error("Error searching customer by code:", error);
+      // Clear customer info if code is not found
+      setNewEstimate(prev => ({
+        ...prev,
+        customerId: "",
+        customerName: "",
+        customerEmail: "",
+        customerPhone: ""
+      }));
+    }
+  }, []);
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (customerSearchTerm) {
@@ -186,6 +218,17 @@ const EstimateRequestPage = () => {
 
     return () => clearTimeout(delayDebounceFn);
   }, [customerSearchTerm, searchCustomers]);
+
+  // Debounce customer code search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (newEstimate.customerCode && newEstimate.customerCode.length >= 4) {
+        searchCustomerByCode(newEstimate.customerCode);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [newEstimate.customerCode, searchCustomerByCode]);
 
   // Search filter (client-side for now, can be moved to backend)
   const filteredEstimates = estimates.filter(estimate =>
@@ -227,7 +270,8 @@ const EstimateRequestPage = () => {
       customerId: customer._id,
       customerName: customer.company,
       customerEmail: customer.email,
-      customerPhone: customer.phone
+      customerPhone: customer.phone,
+      customerCode: customer.customerCode
     }));
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
@@ -267,6 +311,7 @@ const EstimateRequestPage = () => {
       setNewEstimate({
         customerId: "",
         customerName: "",
+        customerCode: "",
         customerEmail: "",
         customerPhone: "",
         projectName: "",
@@ -292,6 +337,7 @@ const EstimateRequestPage = () => {
     setNewEstimate({
       customerId: estimate.customerId,
       customerName: estimate.customer ? estimate.customer.company : "",
+      customerCode: estimate.customer ? estimate.customer.customerCode : "",
       customerEmail: estimate.customer ? estimate.customer.email : "",
       customerPhone: estimate.customer ? estimate.customer.phone : "",
       projectName: estimate.projectName,
@@ -347,6 +393,7 @@ const EstimateRequestPage = () => {
     const dataToExport = filteredEstimates.map(estimate => ({
       "Project Name": estimate.projectName,
       Customer: estimate.customer ? estimate.customer.company : "N/A",
+      "Customer Code": estimate.customer ? estimate.customer.customerCode : "N/A",
       "Customer Email": estimate.customer ? estimate.customer.email : "N/A",
       "Customer Phone": estimate.customer ? estimate.customer.phone : "N/A",
       Amount: estimate.amount,
@@ -366,6 +413,7 @@ const EstimateRequestPage = () => {
     const dataToExport = filteredEstimates.map(estimate => ({
       "Project Name": estimate.projectName,
       Customer: estimate.customer ? estimate.customer.company : "N/A",
+      "Customer Code": estimate.customer ? estimate.customer.customerCode : "N/A",
       "Customer Email": estimate.customer ? estimate.customer.email : "N/A",
       "Customer Phone": estimate.customer ? estimate.customer.phone : "N/A",
       Amount: estimate.amount,
@@ -522,6 +570,7 @@ const EstimateRequestPage = () => {
                 setNewEstimate({
                   customerId: "",
                   customerName: "",
+                  customerCode: "",
                   customerEmail: "",
                   customerPhone: "",
                   projectName: "",
@@ -553,6 +602,21 @@ const EstimateRequestPage = () => {
               </div>
 
               <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Code</label>
+                <input
+                  type="text"
+                  name="customerCode"
+                  value={newEstimate.customerCode}
+                  onChange={handleNewEstimateChange}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Enter customer code (e.g., CUST-ABC123)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter customer code to auto-populate customer information
+                </p>
+              </div>
+
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
                 <div className="relative" ref={customerRef}>
                   <input
@@ -574,6 +638,7 @@ const EstimateRequestPage = () => {
                         >
                           <div className="font-medium">{customer.company}</div>
                           <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                          <div className="text-xs text-blue-600">{customer.customerCode}</div>
                         </div>
                       ))}
                     </div>
@@ -676,6 +741,7 @@ const EstimateRequestPage = () => {
                 setNewEstimate({
                   customerId: "",
                   customerName: "",
+                  customerCode: "",
                   customerEmail: "",
                   customerPhone: "",
                   projectName: "",
@@ -954,6 +1020,11 @@ const EstimateRequestPage = () => {
                         <td className="p-3 bg-white">{estimate.projectName}</td>
                         <td className="p-3 bg-white">
                           {estimate.customer ? estimate.customer.company : "N/A"}
+                          {estimate.customer && estimate.customer.customerCode && (
+                            <div className="text-xs text-blue-600 mt-1">
+                              {estimate.customer.customerCode}
+                            </div>
+                          )}
                         </td>
                         {compactView ? (
                           <>
@@ -1122,6 +1193,11 @@ const EstimateRequestPage = () => {
                 <p className="font-medium">
                   {viewingEstimate.customer ? viewingEstimate.customer.company : "N/A"}
                 </p>
+                {viewingEstimate.customer && viewingEstimate.customer.customerCode && (
+                  <p className="text-sm text-blue-600 mt-1">
+                    {viewingEstimate.customer.customerCode}
+                  </p>
+                )}
               </div>
               <div>
                 <p className="text-sm text-gray-500">Customer Email</p>

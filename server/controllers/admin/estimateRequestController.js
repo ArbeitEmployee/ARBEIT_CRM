@@ -1,3 +1,4 @@
+// File: controllers/admin/estimateRequestController.js
 import EstimateRequest from "../../models/EstimateRequest.js";
 import Customer from "../../models/Customer.js";
 
@@ -23,7 +24,7 @@ export const getEstimateRequests = async (req, res) => {
     }
 
     const estimateRequests = await EstimateRequest.find(filter)
-      .populate('customer', 'company contact email phone')
+      .populate('customer', 'company contact email phone customerCode')
       .sort({ createdAt: -1 });
 
     // Calculate stats
@@ -89,7 +90,7 @@ export const createEstimateRequest = async (req, res) => {
 
     const createdEstimateRequest = await estimateRequest.save();
     const populatedEstimateRequest = await EstimateRequest.findById(createdEstimateRequest._id)
-      .populate('customer', 'company contact email phone');
+      .populate('customer', 'company contact email phone customerCode');
 
     res.status(201).json(populatedEstimateRequest);
   } catch (error) {
@@ -143,7 +144,7 @@ export const updateEstimateRequest = async (req, res) => {
 
     const updatedEstimateRequest = await estimateRequest.save();
     const populatedEstimateRequest = await EstimateRequest.findById(updatedEstimateRequest._id)
-      .populate('customer', 'company contact email phone');
+      .populate('customer', 'company contact email phone customerCode');
 
     res.json(populatedEstimateRequest);
   } catch (error) {
@@ -218,11 +219,38 @@ export const searchCustomers = async (req, res) => {
     const customers = await Customer.find({
       admin: req.admin._id,
       company: { $regex: q, $options: 'i' }
-    }).select('company contact email phone').limit(10);
+    }).select('company contact email phone customerCode').limit(10);
 
     res.json(customers);
   } catch (error) {
     console.error("Error searching customers:", error);
     res.status(500).json({ message: "Server error while searching customers" });
+  }
+};
+
+// @desc    Get customer by customer code for logged-in admin
+// @route   GET /api/estimate-requests/customers/by-code/:code
+// @access  Private
+export const getCustomerByCode = async (req, res) => {
+  try {
+    const { code } = req.params;
+    
+    if (!code || code.length < 4) {
+      return res.status(400).json({ message: "Customer code is required" });
+    }
+    
+    const customer = await Customer.findOne({ 
+      admin: req.admin._id,
+      customerCode: code.toUpperCase() 
+    }).select('_id company contact email phone customerCode');
+    
+    if (!customer) {
+      return res.status(404).json({ message: "Customer not found" });
+    }
+    
+    res.json({ customer });
+  } catch (error) {
+    console.error("Error finding customer by code:", error);
+    res.status(500).json({ message: "Server error while searching customer" });
   }
 };
