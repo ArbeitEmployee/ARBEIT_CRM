@@ -405,7 +405,7 @@ const ClientSupportPage = () => {
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Service</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Priority</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Created</th>
                   
                   </>
                 ) : (
@@ -416,7 +416,7 @@ const ClientSupportPage = () => {
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Priority</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Last Reply</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Last Reply</th>
                   </>
                 )}
               </tr>

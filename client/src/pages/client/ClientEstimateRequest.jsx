@@ -394,16 +394,14 @@ const ClientEstimateRequest = () => {
                   <>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
                   </>
                 ) : (
                   <>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
                   </>
                 )}
               </tr>
@@ -423,19 +421,10 @@ const ClientEstimateRequest = () => {
                       <>
                         <td className="p-3 border-0">{formatCurrency(estimate.amount)}</td>
                         <td className="p-3 border-0">{formatDate(estimate.createdDate)}</td>
-                        <td className="p-3 border-0">
+                        <td className="p-3 border-0 rounded-r-lg">
                           <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(estimate.status)}`}>
                             {estimate.status}
                           </span>
-                        </td>
-                        <td className="p-3 border-0 rounded-r-lg">
-                          <button
-                            onClick={() => setViewingEstimate(estimate)}
-                            className="text-blue-600 hover:text-blue-800 p-1"
-                            title="View Estimate Details"
-                          >
-                            <FaEye />
-                          </button>
                         </td>
                       </>
                     ) : (
@@ -450,19 +439,10 @@ const ClientEstimateRequest = () => {
                         </td>
                         <td className="p-3 border-0">{formatCurrency(estimate.amount)}</td>
                         <td className="p-3 border-0">{formatDate(estimate.createdDate)}</td>
-                        <td className="p-3 border-0">
+                        <td className="p-3 border-0 rounded-r-lg">
                           <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(estimate.status)}`}>
                             {estimate.status}
                           </span>
-                        </td>
-                        <td className="p-3 border-0 rounded-r-lg">
-                          <button
-                            onClick={() => setViewingEstimate(estimate)}
-                            className="text-blue-600 hover:text-blue-800 p-1"
-                            title="View Estimate Details"
-                          >
-                            <FaEye />
-                          </button>
                         </td>
                       </>
                     )}
@@ -470,7 +450,7 @@ const ClientEstimateRequest = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={compactView ? 5 : 6} className="p-8 text-center">
+                  <td colSpan={compactView ? 4 : 5} className="p-8 text-center">
                     <div className="text-gray-500">
                       <FaFileInvoiceDollar className="mx-auto mb-4 text-4xl text-gray-300" />
                       <h3 className="text-lg font-medium mb-2">No Estimates Found</h3>

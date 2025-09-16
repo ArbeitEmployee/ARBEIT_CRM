@@ -365,7 +365,7 @@ const ClientContactsPage = () => {
                   <>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Contract Value</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>End Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
                   </>
                 ) : (
                   <>
@@ -373,7 +373,7 @@ const ClientContactsPage = () => {
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>End Date</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
                   </>
                 )}
               </tr>

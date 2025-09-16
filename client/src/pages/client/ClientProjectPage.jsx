@@ -380,16 +380,14 @@ const ClientProjectPage = () => {
                 {compactView ? (
                   <>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
                   </>
                 ) : (
                   <>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
                     <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Members</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
                   </>
                 )}
               </tr>
@@ -417,15 +415,6 @@ const ClientProjectPage = () => {
                           </span>
                         </td>
                         <td className="p-3 border-0">{formatDate(project.deadline)}</td>
-                        <td className="p-3 border-0 rounded-r-lg">
-                          <button
-                            onClick={() => handleViewProject(project._id)}
-                            className="text-blue-600 hover:text-blue-800 p-1"
-                            title="View Project Details"
-                          >
-                            <FaEye />
-                          </button>
-                        </td>
                       </>
                     ) : (
                       <>
@@ -437,22 +426,13 @@ const ClientProjectPage = () => {
                             {project.status}
                           </span>
                         </td>
-                        <td className="p-3 border-0 rounded-r-lg">
-                          <button
-                            onClick={() => handleViewProject(project._id)}
-                            className="text-blue-600 hover:text-blue-800 p-1"
-                            title="View Project Details"
-                          >
-                            <FaEye />
-                          </button>
-                        </td>
                       </>
                     )}
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan={compactView ? 5 : 7} className="p-8 text-center">
+                  <td colSpan={compactView ? 4 : 6} className="p-8 text-center">
                     <div className="text-gray-500">
                       <FaTasks className="mx-auto mb-4 text-4xl text-gray-300" />
                       <h3 className="text-lg font-medium mb-2">No Projects Found</h3>
