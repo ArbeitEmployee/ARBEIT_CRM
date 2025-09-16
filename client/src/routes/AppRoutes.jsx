@@ -57,6 +57,7 @@ import AllAdmins from "../pages/admin/admins/all";
 import PendingAdmins from "../pages/admin/admins/pending";
 import ChangePassword from "../pages/admin/changePassword";
 import ClientChangePassword from "../pages/client/changePassword";
+import ClientContactsPage from "../pages/client/ClientContacts";
 
 
 const AppRoutes = () => {
@@ -137,6 +138,7 @@ const AppRoutes = () => {
               <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />
               <Route path="change-password" element={<ClientChangePassword/>} />
               <Route path="projects" element={<ClientProjectPage />} />
+              <Route path="contracts" element={<ClientContactsPage />} />
               
               
               {/* Add more client routes here  <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />*/}
