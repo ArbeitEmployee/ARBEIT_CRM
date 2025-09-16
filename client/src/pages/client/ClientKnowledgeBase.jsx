@@ -9,97 +9,125 @@ const ClientKnowledgeBasePage = () => {
   const [selectedGroup, setSelectedGroup] = useState("All");
   const [groups, setGroups] = useState(["All"]);
   const [userVotes, setUserVotes] = useState({});
-  const [userId, setUserId] = useState("");
   const [clientToken, setClientToken] = useState("");
-  const [adminId, setAdminId] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  // Get client token and user ID
+  // Get client token
   useEffect(() => {
     const token = localStorage.getItem("crm_client_token");
-    const clientData = localStorage.getItem("crm_client");
-    
     if (token) {
       setClientToken(token);
-    }
-    
-    if (clientData) {
-      try {
-        const parsedClient = JSON.parse(clientData);
-        setUserId(parsedClient.id || "");
-        setAdminId(parsedClient.admin || "");
-      } catch (error) {
-        console.error("Error parsing client data:", error);
-      }
+    } else {
+      console.error("No client token found");
     }
   }, []);
 
+  // Create axios config with authorization header
+  const createAxiosConfig = () => {
+    return {
+      headers: {
+        Authorization: `Bearer ${clientToken}`,
+        'Content-Type': 'application/json'
+      }
+    };
+  };
+
   // Fetch articles
   const fetchArticles = async () => {
+    if (!clientToken) return;
+    
     try {
+      setLoading(true);
+      const config = createAxiosConfig();
       const { data } = await axios.get("http://localhost:5000/api/client/knowledge-base", {
-        headers: {
-          Authorization: `Bearer ${clientToken}`
-        },
         params: {
           group: selectedGroup !== "All" ? selectedGroup : null,
-          search: searchTerm,
-          adminId: adminId // Send admin ID to filter articles
-        }
+          search: searchTerm
+        },
+        ...config
       });
+      
       setArticles(data.articles || []);
       setFilteredArticles(data.articles || []);
       setGroups(data.groups || ["All"]);
       
       // Fetch user votes for these articles
-      if (userId && data.articles.length > 0) {
+      if (data.articles && data.articles.length > 0) {
         fetchUserVotes(data.articles.map(article => article._id));
       }
     } catch (error) {
       console.error("Error fetching articles:", error);
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        // Redirect to login
+        localStorage.removeItem("crm_client_token");
+        localStorage.removeItem("crm_client");
+        window.location.href = "/client/login";
+      } else {
+        alert("Error loading articles. Please try again.");
+      }
       setArticles([]);
       setFilteredArticles([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Fetch user votes
   const fetchUserVotes = async (articleIds) => {
+    if (!clientToken) return;
+    
     try {
+      const config = createAxiosConfig();
       const { data } = await axios.post("http://localhost:5000/api/client/knowledge-base/user-votes", {
-        userId,
         articleIds
-      }, {
-        headers: {
-          Authorization: `Bearer ${clientToken}`
-        }
-      });
+      }, config);
       setUserVotes(data.userVotes || {});
     } catch (error) {
       console.error("Error fetching user votes:", error);
     }
   };
 
+  // Load articles when dependencies change
   useEffect(() => {
-    if (clientToken && userId && adminId) {
+    if (clientToken) {
       fetchArticles();
     }
-  }, [selectedGroup, searchTerm, clientToken, userId, adminId]);
+  }, [selectedGroup, searchTerm, clientToken]);
+
+  // Filter articles by search term (client-side filtering for better UX)
+  useEffect(() => {
+    if (searchTerm === "") {
+      setFilteredArticles(articles);
+    } else {
+      const filtered = articles.filter(article =>
+        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.group.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setFilteredArticles(filtered);
+    }
+  }, [searchTerm, articles]);
 
   // Handle vote
   const handleVote = async (articleId, voteType) => {
-    if (!userId || !clientToken) {
-      alert("Please wait while we identify your browser...");
+    if (!clientToken) {
+      alert("Please login to vote.");
+      return;
+    }
+
+    // Check if user has already voted today
+    if (userVotes[articleId]) {
+      alert("You have already voted on this article today.");
       return;
     }
 
     try {
+      const config = createAxiosConfig();
       const { data } = await axios.post(
         `http://localhost:5000/api/client/knowledge-base/${articleId}/vote`,
-        { voteType, userId },
-        {
-          headers: {
-            Authorization: `Bearer ${clientToken}`
-          }
-        }
+        { voteType },
+        config
       );
       
       // Update the article with new vote counts
@@ -122,11 +150,18 @@ const ClientKnowledgeBasePage = () => {
       // Update user votes
       setUserVotes(prev => ({
         ...prev,
-        [articleId]: data.userVote
+        [articleId]: voteType
       }));
+      
+      alert("Thank you for your feedback!");
     } catch (error) {
       console.error("Error voting:", error);
-      if (error.response?.status === 403) {
+      if (error.response?.status === 401) {
+        alert("Session expired. Please login again.");
+        localStorage.removeItem("crm_client_token");
+        localStorage.removeItem("crm_client");
+        window.location.href = "/client/login";
+      } else if (error.response?.status === 403) {
         alert("You can only vote once per day on each article.");
       } else {
         alert("Error submitting vote. Please try again.");
@@ -134,19 +169,15 @@ const ClientKnowledgeBasePage = () => {
     }
   };
 
-  // Filter articles by search term
-  useEffect(() => {
-    if (searchTerm === "") {
-      setFilteredArticles(articles);
-    } else {
-      const filtered = articles.filter(article =>
-        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.group.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      setFilteredArticles(filtered);
-    }
-  }, [searchTerm, articles]);
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-gray-600">Loading articles...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -210,30 +241,43 @@ const ClientKnowledgeBasePage = () => {
               <div className="border-t pt-4 mt-4">
                 <p className="text-sm text-gray-600 mb-2">Did you find this article useful?</p>
                 <div className="flex items-center space-x-4">
-                    <button
+                  <button
                     onClick={() => handleVote(article._id, 'helpful')}
+                    disabled={userVotes[article._id]} // Disable if already voted
                     className={`flex items-center space-x-1 px-3 py-1 rounded ${
-                        userVotes[article._id] === 'helpful'
+                      userVotes[article._id] === 'helpful'
                         ? "bg-green-100 text-green-800"
+                        : userVotes[article._id]
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                         : "bg-gray-100 text-gray-700 hover:bg-green-50"
                     }`}
-                    >
+                  >
                     <FaThumbsUp className="text-sm" />
-                    <span>Yes</span>
-                    </button>
-                    
-                    <button
+                    <span>Yes ({article.votes?.helpful || 0})</span>
+                  </button>
+                  
+                  <button
                     onClick={() => handleVote(article._id, 'notHelpful')}
+                    disabled={userVotes[article._id]} // Disable if already voted
                     className={`flex items-center space-x-1 px-3 py-1 rounded ${
-                        userVotes[article._id] === 'notHelpful'
+                      userVotes[article._id] === 'notHelpful'
                         ? "bg-red-100 text-red-800"
+                        : userVotes[article._id]
+                        ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                         : "bg-gray-100 text-gray-700 hover:bg-red-50"
                     }`}
-                    >
+                  >
                     <FaThumbsDown className="text-sm" />
-                    <span>No</span>
-                    </button>
+                    <span>No ({article.votes?.notHelpful || 0})</span>
+                  </button>
                 </div>
+                
+                {/* Show voting status */}
+                {userVotes[article._id] && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    You voted: {userVotes[article._id] === 'helpful' ? 'Helpful' : 'Not Helpful'}
+                  </p>
+                )}
               </div>
             </div>
           ))
@@ -242,6 +286,14 @@ const ClientKnowledgeBasePage = () => {
             <p className="text-gray-500 text-lg">
               {articles.length === 0 ? "No articles available yet." : "No articles match your search."}
             </p>
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="mt-2 text-blue-500 hover:text-blue-700"
+              >
+                Clear search
+              </button>
+            )}
           </div>
         )}
       </div>

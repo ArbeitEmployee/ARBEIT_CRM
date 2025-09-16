@@ -2,12 +2,15 @@ import KnowledgeBase from "../../models/KnowledgeBase.js";
 
 // @desc    Get all knowledge base articles for client
 // @route   GET /api/client/knowledge-base
-// @access  Public
+// @access  Protected (Client Auth)
 export const getClientArticles = async (req, res) => {
   try {
-    const { group, search, adminId } = req.query;
+    const { group, search } = req.query;
     
-    let filter = { admin: adminId }; // Filter by admin ID
+    // Get admin ID from authenticated client
+    const adminId = req.client.admin;
+    
+    let filter = { admin: adminId }; // Filter by client's admin ID
     
     if (group && group !== "All") {
       filter.group = group;
@@ -25,7 +28,7 @@ export const getClientArticles = async (req, res) => {
       .select('-userVotes') // Don't send user votes to client
       .sort({ createdAt: -1 });
     
-    // Get unique groups for filter
+    // Get unique groups for filter (only from this admin's articles)
     const groups = await KnowledgeBase.distinct("group", { admin: adminId });
     
     res.json({
@@ -39,12 +42,15 @@ export const getClientArticles = async (req, res) => {
 };
 
 // @desc    Vote on an article
-// @route   POST /api/client/knowledge-base/:id/vote
-// @access  Public
+// @route   POST /api/client/knowledge-base/:articleId/vote
+// @access  Protected (Client Auth)
 export const voteOnArticle = async (req, res) => {
   try {
     const { articleId } = req.params;
-    const { voteType, userId } = req.body;
+    const { voteType } = req.body;
+    
+    // Use client ID from authenticated client
+    const userId = req.client._id.toString();
     
     if (!['helpful', 'notHelpful'].includes(voteType)) {
       return res.status(400).json({ message: "Invalid vote type" });
@@ -56,23 +62,25 @@ export const voteOnArticle = async (req, res) => {
       return res.status(404).json({ message: "Article not found" });
     }
     
-    // Check if user already voted today
+    // Verify the article belongs to the client's admin
+    if (article.admin.toString() !== req.client.admin.toString()) {
+      return res.status(403).json({ message: "Access denied to this article" });
+    }
+    
+    // Check if user already voted today - FIXED TIMEZONE ISSUE
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
     
     const existingVote = article.userVotes.find(vote => 
       vote.userId === userId && 
-      new Date(vote.votedAt) >= today
+      vote.votedAt >= startOfDay &&
+      vote.votedAt < endOfDay
     );
     
     if (existingVote) {
       return res.status(403).json({ message: "You can only vote once per day on each article" });
     }
-    
-    // Remove any old votes from this user (older than today)
-    article.userVotes = article.userVotes.filter(vote => 
-      vote.userId !== userId || new Date(vote.votedAt) < today
-    );
     
     // Add new vote
     article.votes[voteType] += 1;
@@ -85,11 +93,11 @@ export const voteOnArticle = async (req, res) => {
     await article.save();
     
     // Return updated votes without userVotes data
-    const { votes } = await KnowledgeBase.findById(articleId).select('votes');
+    const updatedArticle = await KnowledgeBase.findById(articleId).select('votes');
     
     res.json({
       message: "Vote recorded successfully",
-      votes,
+      votes: updatedArticle.votes,
       userVote: voteType
     });
   } catch (error) {
@@ -100,17 +108,23 @@ export const voteOnArticle = async (req, res) => {
 
 // @desc    Get user's vote status for articles
 // @route   POST /api/client/knowledge-base/user-votes
-// @access  Public
+// @access  Protected (Client Auth)
 export const getUserVotes = async (req, res) => {
   try {
-    const { userId, articleIds } = req.body;
+    const { articleIds } = req.body;
     
-    if (!userId || !Array.isArray(articleIds)) {
-      return res.status(400).json({ message: "User ID and article IDs are required" });
+    // Use client ID from authenticated client
+    const userId = req.client._id.toString();
+    
+    if (!Array.isArray(articleIds)) {
+      return res.status(400).json({ message: "Article IDs are required" });
     }
     
     const articles = await KnowledgeBase.find(
-      { _id: { $in: articleIds } },
+      { 
+        _id: { $in: articleIds },
+        admin: req.client.admin // Only get articles from client's admin
+      },
       { userVotes: 1 }
     );
     
