@@ -5,9 +5,14 @@ import {
   updateSupportTicket,
   deleteSupportTicket,
   searchCustomers,
-  bulkDeleteSupportTickets
+  bulkDeleteSupportTickets,
+  getCustomerByCode,
+  importSupportTickets
 } from "../../controllers/admin/supportController.js";
 import { protect } from "../../middlewares/authMiddleware.js";
+import multer from "multer";
+
+const upload = multer();
 
 const router = express.Router();
 
@@ -16,11 +21,17 @@ router.route("/")
   .get(protect, getSupportTickets)
   .post(protect, createSupportTicket);
 
+router.route("/import")
+  .post(protect, upload.single('file'), importSupportTickets);
+
 router.route("/bulk-delete")
   .post(protect, bulkDeleteSupportTickets);
 
 router.route("/customers/search")
   .get(protect, searchCustomers);
+
+router.route("/customers/by-code/:code")
+  .get(protect, getCustomerByCode);
 
 router.route("/:id")
   .put(protect, updateSupportTicket)

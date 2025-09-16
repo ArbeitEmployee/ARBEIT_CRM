@@ -11,6 +11,27 @@ import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+// Custom hook for detecting outside clicks
+const useOutsideClick = (callback) => {
+  const ref = useRef();
+
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [ref, callback]);
+
+  return ref;
+};
+
 const SupportPage = () => {
   const [selectedTickets, setSelectedTickets] = useState([]);
   const [compactView, setCompactView] = useState(false);
@@ -37,6 +58,7 @@ const SupportPage = () => {
     department: "",
     customerId: "",
     customerName: "",
+    customerCode: "",
     priority: "Medium",
     status: "Open"
   });
@@ -52,22 +74,14 @@ const SupportPage = () => {
   const serviceOptions = ["FIELD", "STRATEGY", "TECHNICAL", "BILLING", "GENERAL"];
   const departmentOptions = ["Marketing", "Sales", "Support", "Development", "Operations"];
 
-  // Add a ref for the export menu
-  const exportMenuRef = useRef(null);
-
-  // Close export menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
-        setShowExportMenu(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  // Use the custom hook for detecting outside clicks
+  const exportRef = useOutsideClick(() => {
+    setShowExportMenu(false);
+  });
+  
+  const customerRef = useOutsideClick(() => {
+    setShowCustomerDropdown(false);
+  });
 
   const [loading, setLoading] = useState(true);
 
@@ -142,6 +156,34 @@ const SupportPage = () => {
     }
   };
 
+  // Search customer by code
+  const searchCustomerByCode = async (customerCode) => {
+    if (!customerCode || customerCode.length < 4) {
+      return;
+    }
+    
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/support/customers/by-code/${customerCode}`, config);
+      if (data.customer) {
+        setNewTicket(prev => ({
+          ...prev,
+          customerId: data.customer._id,
+          customerName: data.customer.company,
+          customerCode: data.customer.customerCode
+        }));
+      }
+    } catch (error) {
+      console.error("Error searching customer by code:", error);
+      // Clear customer info if code is not found
+      setNewTicket(prev => ({
+        ...prev,
+        customerId: "",
+        customerName: ""
+      }));
+    }
+  };
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (customerSearchTerm) {
@@ -151,6 +193,17 @@ const SupportPage = () => {
 
     return () => clearTimeout(delayDebounceFn);
   }, [customerSearchTerm]);
+
+  // Debounce customer code search
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (newTicket.customerCode && newTicket.customerCode.length >= 4) {
+        searchCustomerByCode(newTicket.customerCode);
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [newTicket.customerCode]);
 
   // Search filter
   const filteredTickets = tickets.filter(ticket =>
@@ -194,7 +247,8 @@ const SupportPage = () => {
     setNewTicket(prev => ({
       ...prev,
       customerId: customer._id,
-      customerName: customer.company
+      customerName: customer.company,
+      customerCode: customer.customerCode
     }));
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
@@ -237,6 +291,7 @@ const SupportPage = () => {
         department: "",
         customerId: "",
         customerName: "",
+        customerCode: "",
         priority: "Medium",
         status: "Open"
       });
@@ -258,6 +313,7 @@ const SupportPage = () => {
       department: ticket.department,
       customerId: ticket.customerId,
       customerName: ticket.customer ? ticket.customer.company : "",
+      customerCode: ticket.customer ? ticket.customer.customerCode : "",
       priority: ticket.priority,
       status: ticket.status
     });
@@ -514,8 +570,23 @@ const SupportPage = () => {
               </div>
 
               <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Code</label>
+                <input
+                  type="text"
+                  name="customerCode"
+                  value={newTicket.customerCode}
+                  onChange={handleNewTicketChange}
+                  className="w-full border rounded px-3 py-2"
+                  placeholder="Enter customer code (e.g., CUST-ABC123)"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Enter customer code to auto-populate customer information
+                </p>
+              </div>
+
+              <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
-                <div className="relative">
+                <div className="relative" ref={customerRef}>
                   <input
                     type="text"
                     name="customerName"
@@ -535,6 +606,7 @@ const SupportPage = () => {
                         >
                           <div className="font-medium">{customer.company}</div>
                           <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                          <div className="text-xs text-blue-600">{customer.customerCode}</div>
                         </div>
                       ))}
                     </div>
@@ -791,36 +863,38 @@ const SupportPage = () => {
                 </select>
                 
                 {/* Export button */}
-                <div className="relative">
+                <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
                     className="border px-2 py-1 rounded text-sm flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
+
+                  {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div ref={exportMenuRef} className="absolute right-0 mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
                       <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToExcel}
-                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                       >
                         Excel
                       </button>
                       <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToCSV}
-                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                       >
                         CSV
                       </button>
                       <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={exportToPDF}
-                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                       >
                         PDF
                       </button>
                       <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                         onClick={printTable}
-                        className="block w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                       >
                         Print
                       </button>
@@ -830,8 +904,8 @@ const SupportPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  onClick={fetchTickets}
                   className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  onClick={fetchTickets}
                 >
                   <FaSyncAlt />
                 </button>
@@ -905,6 +979,9 @@ const SupportPage = () => {
                             <div>
                               <div className="font-medium">{ticket.customer.company}</div>
                               <div className="text-xs text-gray-500">{ticket.customer.contact}</div>
+                              {ticket.customer.customerCode && (
+                                <div className="text-xs text-blue-600">{ticket.customer.customerCode}</div>
+                              )}
                             </div>
                           ) : (
                             "N/A"
@@ -923,27 +1000,27 @@ const SupportPage = () => {
                         <td className="p-3 border-0 text-sm">{formatDateTime(ticket.created)}</td>
                         <td className="p-3 border-0 text-sm">{ticket.lastReply}</td>
                         <td className="p-3 rounded-r-lg border-0">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center space-x-2">
                             <button
+                              className="text-blue-600 hover:text-blue-800"
                               onClick={() => handleViewDescription(ticket.description)}
-                              className="text-gray-500 hover:text-gray-700"
                               title="View Description"
                             >
-                              <FaEye size={16} />
+                              <FaEye />
                             </button>
                             <button
+                              className="text-green-600 hover:text-green-800"
                               onClick={() => handleEditTicket(ticket)}
-                              className="text-blue-500 hover:text-blue-700"
                               title="Edit"
                             >
-                              <FaEdit size={16} />
+                              <FaEdit />
                             </button>
                             <button
+                              className="text-red-600 hover:text-red-800"
                               onClick={() => handleDeleteTicket(ticket._id)}
-                              className="text-red-500 hover:text-red-700"
                               title="Delete"
                             >
-                              <FaTrash size={16} />
+                              <FaTrash />
                             </button>
                           </div>
                         </td>
@@ -952,7 +1029,7 @@ const SupportPage = () => {
                   ) : (
                     <tr>
                       <td colSpan="11" className="p-4 text-center text-gray-500">
-                        {searchTerm ? "No matching tickets found" : "No support tickets available"}
+                        No tickets found
                       </td>
                     </tr>
                   )}
@@ -961,58 +1038,31 @@ const SupportPage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <span>
-                Showing {startIndex + 1} to{" "}
-                {Math.min(startIndex + entriesPerPage, filteredTickets.length)} of{" "}
-                {filteredTickets.length} entries
-              </span>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
+              <div className="text-sm text-gray-700">
+                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredTickets.length)} of {filteredTickets.length} entries
+              </div>
+              <div className="flex items-center gap-1">
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((prev) => prev - 1)}
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => {
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else {
-                    if (currentPage <= 3) {
-                      if (i < 3) pageNum = i + 1;
-                      else if (i === 3) pageNum = "...";
-                      else if (i === totalPages - 1) pageNum = totalPages;
-                    } else if (currentPage >= totalPages - 2) {
-                      if (i === 0) pageNum = 1;
-                      else if (i === totalPages - 4) pageNum = "...";
-                      else if (i >= totalPages - 3) pageNum = i + 1;
-                    } else {
-                      if (i === 0) pageNum = 1;
-                      else if (i === 1) pageNum = "...";
-                      else if (i === 2) pageNum = currentPage;
-                      else if (i === 3) pageNum = "...";
-                      else if (i === totalPages - 1) pageNum = totalPages;
-                    }
-                  }
-                  
-                  return pageNum === "..." ? (
-                    <span key={i} className="px-2 py-1">...</span>
-                  ) : (
-                    <button
-                      key={i}
-                      className={`px-2 py-1 border rounded ${currentPage === pageNum ? "bg-black text-white" : ""}`}
-                      onClick={() => setCurrentPage(pageNum)}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    className={`px-3 py-1 border rounded text-sm ${currentPage === page ? 'bg-black text-white' : ''}`}
+                    onClick={() => setCurrentPage(page)}
+                  >
+                    {page}
+                  </button>
+                ))}
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                   disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((prev) => prev + 1)}
                 >
                   Next
                 </button>
@@ -1025,7 +1075,7 @@ const SupportPage = () => {
       {/* Description Modal */}
       {showDescriptionModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+          <div className="bg-white rounded-lg p-6 w-11/12 md:w-3/4 lg:w-1/2 max-h-screen overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Ticket Description</h3>
               <button
@@ -1035,13 +1085,13 @@ const SupportPage = () => {
                 <FaTimes />
               </button>
             </div>
-            <div className="border rounded p-4 bg-gray-50 max-h-96 overflow-y-auto">
-              <p className="whitespace-pre-wrap">{currentDescription}</p>
+            <div className="border rounded p-4 bg-gray-50 whitespace-pre-wrap">
+              {currentDescription || "No description available"}
             </div>
             <div className="mt-4 flex justify-end">
               <button
                 onClick={() => setShowDescriptionModal(false)}
-                className="px-4 py-2 bg-black text-white rounded text-sm"
+                className="px-4 py-2 bg-black text-white rounded"
               >
                 Close
               </button>

@@ -22,6 +22,10 @@ const supportSchema = new mongoose.Schema({
     ref: "Customer",
     required: [true, "Customer is required"]
   },
+  customerCode: {
+    type: String,
+    trim: true
+  },
   tags: {
     type: String,
     trim: true,
@@ -68,6 +72,7 @@ supportSchema.index({ admin: 1 });
 supportSchema.index({ customerId: 1 });
 supportSchema.index({ status: 1 });
 supportSchema.index({ priority: 1 });
+supportSchema.index({ customerCode: 1 });
 
 supportSchema.virtual('customer', {
   ref: 'Customer',
