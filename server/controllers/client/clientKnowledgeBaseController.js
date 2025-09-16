@@ -67,15 +67,16 @@ export const voteOnArticle = async (req, res) => {
       return res.status(403).json({ message: "Access denied to this article" });
     }
     
-    // Check if user already voted today - FIXED TIMEZONE ISSUE
+    // Check if user already voted today - FIXED DATE COMPARISON
     const today = new Date();
-    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
     const existingVote = article.userVotes.find(vote => 
       vote.userId === userId && 
-      vote.votedAt >= startOfDay &&
-      vote.votedAt < endOfDay
+      new Date(vote.votedAt) >= today &&
+      new Date(vote.votedAt) < tomorrow
     );
     
     if (existingVote) {
@@ -128,14 +129,18 @@ export const getUserVotes = async (req, res) => {
       { userVotes: 1 }
     );
     
+    // FIXED DATE COMPARISON
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
     
     const userVotes = {};
     articles.forEach(article => {
       const userVote = article.userVotes.find(vote => 
         vote.userId === userId && 
-        new Date(vote.votedAt) >= today
+        new Date(vote.votedAt) >= today &&
+        new Date(vote.votedAt) < tomorrow
       );
       if (userVote) {
         userVotes[article._id.toString()] = userVote.voteType;

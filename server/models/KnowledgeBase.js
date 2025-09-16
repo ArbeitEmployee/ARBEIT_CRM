@@ -92,25 +92,31 @@ knowledgeBaseSchema.index({ admin: 1, createdAt: -1 });
 knowledgeBaseSchema.index({ admin: 1, title: 'text', content: 'text' });
 knowledgeBaseSchema.index({ "userVotes.userId": 1, "userVotes.votedAt": 1 });
 
-// Instance method to check if user has voted today
+// Instance method to check if user has voted today - FIXED
 knowledgeBaseSchema.methods.hasUserVotedToday = function(userId) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
   
   return this.userVotes.some(vote => 
     vote.userId === userId && 
-    new Date(vote.votedAt) >= today
+    new Date(vote.votedAt) >= today &&
+    new Date(vote.votedAt) < tomorrow
   );
 };
 
-// Instance method to get user's vote for today
+// Instance method to get user's vote for today - FIXED
 knowledgeBaseSchema.methods.getUserVoteToday = function(userId) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
   
   const todayVote = this.userVotes.find(vote => 
     vote.userId === userId && 
-    new Date(vote.votedAt) >= today
+    new Date(vote.votedAt) >= today &&
+    new Date(vote.votedAt) < tomorrow
   );
   
   return todayVote ? todayVote.voteType : null;

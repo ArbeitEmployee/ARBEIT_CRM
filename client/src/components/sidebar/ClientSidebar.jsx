@@ -41,7 +41,7 @@ const ClientSidebar = ({ isOpen }) => {
       ]
     },
     { label: "Contracts", icon: <FaFileContract />, path: "/client/contracts" },
-    { label: "Estimates", icon: <FaClipboardList />, path: "/client/estimates" },
+    { label: "Estimate Request", icon: <FaClipboardList />, path: "/client/estimates" },
     { label: "Proposals", icon: <FaFileAlt />, path: "/client/proposals" },
     { label: "Support", icon: <FaHeadset />, path: "/client/support" }
   ];
