@@ -36,6 +36,10 @@ import clientProjectRoutes from './routes/client/clientProjectRoutes.js';
 import clientContactRoutes from './routes/client/clientContactRoutes.js';
 import clientEstimateRequestRoutes from './routes/client/clientEstimateRequestRoutes.js';
 import clientSupportRoutes from './routes/client/clientSupportRoutes.js';
+import clientProposalRoutes from  './routes/client/clientProposalRoutes.js'
+import clientEstimateRoutes from './routes/client/clientEstimateRoutes.js';
+
+
 
 const app = express();
 app.use(cors());
@@ -74,6 +78,9 @@ app.use('/api/client/projects', clientProjectRoutes );
 app.use('/api/client/contacts', clientContactRoutes);
 app.use('/api/client/estimate-requests', clientEstimateRequestRoutes);
 app.use('/api/client/support', clientSupportRoutes);
+app.use('/api/client', clientProposalRoutes);
+app.use('/api/client', clientEstimateRoutes);
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

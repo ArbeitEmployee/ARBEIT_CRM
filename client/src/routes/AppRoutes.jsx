@@ -60,6 +60,9 @@ import ClientChangePassword from "../pages/client/changePassword";
 import ClientContactsPage from "../pages/client/ClientContacts";
 import ClientEstimateRequest from "../pages/client/ClientEstimateRequest";
 import ClientSupportPage from "../pages/client/ClientSupport";
+import ClientProposals from "../pages/client/ClientProposals";
+import ClientEstimates from "../pages/client/ClientEstimates";
+
 
 
 const AppRoutes = () => {
@@ -143,7 +146,8 @@ const AppRoutes = () => {
               <Route path="contracts" element={<ClientContactsPage />} />
               <Route path="estimates" element={<ClientEstimateRequest />} />
               <Route path="support" element={<ClientSupportPage />} />
-              
+              <Route path="ClientProposal" element={<ClientProposals/>} />
+              <Route path="ClientEstimate" element={<ClientEstimates/>} />
               
               {/* Add more client routes here  <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />*/}
             </Routes>
