@@ -6,34 +6,34 @@ import KnowledgeBase from "../../models/KnowledgeBase.js";
 export const getClientArticles = async (req, res) => {
   try {
     const { group, search } = req.query;
-    
+
     // Get admin ID from authenticated client
     const adminId = req.client.admin;
-    
-    let filter = { admin: adminId }; // Filter by client's admin ID
-    
+
+    let filter = { admin: adminId };
+
     if (group && group !== "All") {
       filter.group = group;
     }
-    
+
     if (search) {
       filter.$or = [
-        { title: { $regex: search, $options: 'i' } },
-        { content: { $regex: search, $options: 'i' } },
-        { group: { $regex: search, $options: 'i' } }
+        { title: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
+        { group: { $regex: search, $options: "i" } },
       ];
     }
-    
+
     const articles = await KnowledgeBase.find(filter)
-      .select('-userVotes') // Don't send user votes to client
+      .select("-userVotes")
       .sort({ createdAt: -1 });
-    
-    // Get unique groups for filter (only from this admin's articles)
+
+    // Get unique groups for filter
     const groups = await KnowledgeBase.distinct("group", { admin: adminId });
-    
+
     res.json({
       articles,
-      groups: ["All", ...groups.sort()]
+      groups: ["All", ...groups.sort()],
     });
   } catch (error) {
     console.error("Error fetching articles:", error);
@@ -48,58 +48,57 @@ export const voteOnArticle = async (req, res) => {
   try {
     const { articleId } = req.params;
     const { voteType } = req.body;
-    
+
     // Use client ID from authenticated client
     const userId = req.client._id.toString();
-    
-    if (!['helpful', 'notHelpful'].includes(voteType)) {
+
+    if (!["helpful", "notHelpful"].includes(voteType)) {
       return res.status(400).json({ message: "Invalid vote type" });
     }
-    
+
     const article = await KnowledgeBase.findById(articleId);
-    
+
     if (!article) {
       return res.status(404).json({ message: "Article not found" });
     }
-    
+
     // Verify the article belongs to the client's admin
-    if (article.admin.toString() !== req.client.admin.toString()) {
+    if (article.admin.toString() !== req.client.admin._id.toString()) {
       return res.status(403).json({ message: "Access denied to this article" });
     }
-    
-    // Check if user already voted today - FIXED DATE COMPARISON
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    const existingVote = article.userVotes.find(vote => 
-      vote.userId === userId && 
-      new Date(vote.votedAt) >= today &&
-      new Date(vote.votedAt) < tomorrow
+
+    // Check if user already voted today
+    const today = new Date().toISOString().split("T")[0];
+
+    const existingVote = article.userVotes.find(
+      (vote) => vote.userId === userId && vote.voteDate === today
     );
-    
+
     if (existingVote) {
-      return res.status(403).json({ message: "You can only vote once per day on each article" });
+      return res
+        .status(403)
+        .json({ message: "You can only vote once per day on each article" });
     }
-    
+
     // Add new vote
     article.votes[voteType] += 1;
     article.userVotes.push({
-      userId,
-      voteType,
-      votedAt: new Date()
+      userId: userId,
+      voteType: voteType,
+      votedAt: new Date(),
+      voteDate: today,
     });
-    
+
     await article.save();
-    
+
     // Return updated votes without userVotes data
-    const updatedArticle = await KnowledgeBase.findById(articleId).select('votes');
-    
+    const updatedArticle = await KnowledgeBase.findById(articleId).select(
+      "votes"
+    );
+
     res.json({
       message: "Vote recorded successfully",
       votes: updatedArticle.votes,
-      userVote: voteType
     });
   } catch (error) {
     console.error("Error voting on article:", error);
@@ -113,40 +112,36 @@ export const voteOnArticle = async (req, res) => {
 export const getUserVotes = async (req, res) => {
   try {
     const { articleIds } = req.body;
-    
+
     // Use client ID from authenticated client
     const userId = req.client._id.toString();
-    
+
     if (!Array.isArray(articleIds)) {
       return res.status(400).json({ message: "Article IDs are required" });
     }
-    
+
+    // Get today's date for filtering
+    const today = new Date().toISOString().split("T")[0];
+
     const articles = await KnowledgeBase.find(
-      { 
+      {
         _id: { $in: articleIds },
-        admin: req.client.admin // Only get articles from client's admin
+        admin: req.client.admin,
       },
       { userVotes: 1 }
     );
-    
-    // FIXED DATE COMPARISON
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     const userVotes = {};
-    articles.forEach(article => {
-      const userVote = article.userVotes.find(vote => 
-        vote.userId === userId && 
-        new Date(vote.votedAt) >= today &&
-        new Date(vote.votedAt) < tomorrow
+    articles.forEach((article) => {
+      const userVote = article.userVotes.find(
+        (vote) => vote.userId === userId && vote.voteDate === today
       );
+
       if (userVote) {
         userVotes[article._id.toString()] = userVote.voteType;
       }
     });
-    
+
     res.json({ userVotes });
   } catch (error) {
     console.error("Error fetching user votes:", error);

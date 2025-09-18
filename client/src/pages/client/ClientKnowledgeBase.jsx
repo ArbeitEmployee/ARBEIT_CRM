@@ -1,5 +1,11 @@
 import { useState, useEffect } from "react";
-import { FaSearch, FaChevronRight, FaTimes, FaThumbsUp, FaThumbsDown } from "react-icons/fa";
+import {
+  FaSearch,
+  FaChevronRight,
+  FaTimes,
+  FaThumbsUp,
+  FaThumbsDown,
+} from "react-icons/fa";
 import axios from "axios";
 
 const ClientKnowledgeBasePage = () => {
@@ -27,33 +33,36 @@ const ClientKnowledgeBasePage = () => {
     return {
       headers: {
         Authorization: `Bearer ${clientToken}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
   // Fetch articles
   const fetchArticles = async () => {
     if (!clientToken) return;
-    
+
     try {
       setLoading(true);
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/client/knowledge-base", {
-        params: {
-          group: selectedGroup !== "All" ? selectedGroup : null,
-          search: searchTerm
-        },
-        ...config
-      });
-      
+      const { data } = await axios.get(
+        "http://localhost:5000/api/client/knowledge-base",
+        {
+          params: {
+            group: selectedGroup !== "All" ? selectedGroup : null,
+            search: searchTerm,
+          },
+          ...config,
+        }
+      );
+
       setArticles(data.articles || []);
       setFilteredArticles(data.articles || []);
       setGroups(data.groups || ["All"]);
-      
+
       // Fetch user votes for these articles
       if (data.articles && data.articles.length > 0) {
-        fetchUserVotes(data.articles.map(article => article._id));
+        fetchUserVotes(data.articles.map((article) => article._id));
       }
     } catch (error) {
       console.error("Error fetching articles:", error);
@@ -76,12 +85,16 @@ const ClientKnowledgeBasePage = () => {
   // Fetch user votes
   const fetchUserVotes = async (articleIds) => {
     if (!clientToken) return;
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.post("http://localhost:5000/api/client/knowledge-base/user-votes", {
-        articleIds
-      }, config);
+      const { data } = await axios.post(
+        "http://localhost:5000/api/client/knowledge-base/user-votes",
+        {
+          articleIds,
+        },
+        config
+      );
       setUserVotes(data.userVotes || {});
     } catch (error) {
       console.error("Error fetching user votes:", error);
@@ -100,10 +113,11 @@ const ClientKnowledgeBasePage = () => {
     if (searchTerm === "") {
       setFilteredArticles(articles);
     } else {
-      const filtered = articles.filter(article =>
-        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        article.group.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = articles.filter(
+        (article) =>
+          article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          article.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          article.group.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredArticles(filtered);
     }
@@ -129,30 +143,30 @@ const ClientKnowledgeBasePage = () => {
         { voteType },
         config
       );
-      
+
       // Update the article with new vote counts
-      setArticles(prevArticles => 
-        prevArticles.map(article => 
-          article._id === articleId 
-            ? { ...article, votes: data.votes } 
+      setArticles((prevArticles) =>
+        prevArticles.map((article) =>
+          article._id === articleId
+            ? { ...article, votes: data.votes }
             : article
         )
       );
-      
-      setFilteredArticles(prevArticles => 
-        prevArticles.map(article => 
-          article._id === articleId 
-            ? { ...article, votes: data.votes } 
+
+      setFilteredArticles((prevArticles) =>
+        prevArticles.map((article) =>
+          article._id === articleId
+            ? { ...article, votes: data.votes }
             : article
         )
       );
-      
+
       // Update user votes
-      setUserVotes(prev => ({
+      setUserVotes((prev) => ({
         ...prev,
-        [articleId]: voteType
+        [articleId]: voteType,
       }));
-      
+
       alert("Thank you for your feedback!");
     } catch (error) {
       console.error("Error voting:", error);
@@ -183,9 +197,11 @@ const ClientKnowledgeBasePage = () => {
     <div className="min-h-screen bg-gray-50 p-4">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Search Knowledge Base Articles</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          Search Knowledge Base Articles
+        </h1>
         <p className="text-gray-600 mb-4">Have a question?</p>
-        
+
         {/* Search */}
         <div className="relative max-w-2xl">
           <FaSearch className="absolute left-3 top-3 text-gray-400" />
@@ -202,7 +218,7 @@ const ClientKnowledgeBasePage = () => {
       {/* Group Filter */}
       <div className="mb-6">
         <div className="flex flex-wrap gap-2">
-          {groups.map(group => (
+          {groups.map((group) => (
             <button
               key={group}
               onClick={() => setSelectedGroup(group)}
@@ -221,31 +237,40 @@ const ClientKnowledgeBasePage = () => {
       {/* Articles */}
       <div className="space-y-6">
         {filteredArticles.length > 0 ? (
-          filteredArticles.map(article => (
-            <div key={article._id} className="bg-white rounded-lg shadow-md p-6">
+          filteredArticles.map((article) => (
+            <div
+              key={article._id}
+              className="bg-white rounded-lg shadow-md p-6"
+            >
               <div className="mb-2">
                 <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
                   {article.group}
                 </span>
               </div>
-              
-              <h2 className="text-xl font-semibold text-gray-800 mb-3">{article.title}</h2>
-              
+
+              <h2 className="text-xl font-semibold text-gray-800 mb-3">
+                {article.title}
+              </h2>
+
               <div className="text-gray-600 mb-4">
-                <p>{article.content.length > 200 
-                  ? `${article.content.substring(0, 200)}...` 
-                  : article.content}</p>
+                <p>
+                  {article.content.length > 200
+                    ? `${article.content.substring(0, 200)}...`
+                    : article.content}
+                </p>
               </div>
-              
+
               {/* Voting */}
               <div className="border-t pt-4 mt-4">
-                <p className="text-sm text-gray-600 mb-2">Did you find this article useful?</p>
+                <p className="text-sm text-gray-600 mb-2">
+                  Did you find this article useful?
+                </p>
                 <div className="flex items-center space-x-4">
                   <button
-                    onClick={() => handleVote(article._id, 'helpful')}
+                    onClick={() => handleVote(article._id, "helpful")}
                     disabled={userVotes[article._id]} // Disable if already voted
                     className={`flex items-center space-x-1 px-3 py-1 rounded ${
-                      userVotes[article._id] === 'helpful'
+                      userVotes[article._id] === "helpful"
                         ? "bg-green-100 text-green-800"
                         : userVotes[article._id]
                         ? "bg-gray-200 text-gray-500 cursor-not-allowed"
@@ -255,12 +280,12 @@ const ClientKnowledgeBasePage = () => {
                     <FaThumbsUp className="text-sm" />
                     <span>Yes ({article.votes?.helpful || 0})</span>
                   </button>
-                  
+
                   <button
-                    onClick={() => handleVote(article._id, 'notHelpful')}
+                    onClick={() => handleVote(article._id, "notHelpful")}
                     disabled={userVotes[article._id]} // Disable if already voted
                     className={`flex items-center space-x-1 px-3 py-1 rounded ${
-                      userVotes[article._id] === 'notHelpful'
+                      userVotes[article._id] === "notHelpful"
                         ? "bg-red-100 text-red-800"
                         : userVotes[article._id]
                         ? "bg-gray-200 text-gray-500 cursor-not-allowed"
@@ -271,11 +296,14 @@ const ClientKnowledgeBasePage = () => {
                     <span>No ({article.votes?.notHelpful || 0})</span>
                   </button>
                 </div>
-                
+
                 {/* Show voting status */}
                 {userVotes[article._id] && (
                   <p className="text-xs text-gray-500 mt-2">
-                    You voted: {userVotes[article._id] === 'helpful' ? 'Helpful' : 'Not Helpful'}
+                    You voted:{" "}
+                    {userVotes[article._id] === "helpful"
+                      ? "Helpful"
+                      : "Not Helpful"}
                   </p>
                 )}
               </div>
@@ -284,7 +312,9 @@ const ClientKnowledgeBasePage = () => {
         ) : (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">
-              {articles.length === 0 ? "No articles available yet." : "No articles match your search."}
+              {articles.length === 0
+                ? "No articles available yet."
+                : "No articles match your search."}
             </p>
             {searchTerm && (
               <button
