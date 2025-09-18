@@ -1,7 +1,15 @@
 import { useState, useEffect } from "react";
-import { 
-  FaSearch, FaSyncAlt, FaChevronRight, FaFileInvoiceDollar,
-  FaClock, FaCheckCircle, FaBan, FaEye 
+import {
+  FaSearch,
+  FaSyncAlt,
+  FaChevronRight,
+  FaFileInvoiceDollar,
+  FaClock,
+  FaCheckCircle,
+  FaBan,
+  FaEye,
+  FaCheck,
+  FaTimes,
 } from "react-icons/fa";
 import axios from "axios";
 
@@ -17,17 +25,20 @@ const ClientEstimateRequest = () => {
     sent: 0,
     accepted: 0,
     rejected: 0,
-    expired: 0
+    expired: 0,
   });
   const [clientInfo, setClientInfo] = useState({});
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [viewingEstimate, setViewingEstimate] = useState(null);
+  const [respondingEstimate, setRespondingEstimate] = useState(null);
+  const [responseNotes, setResponseNotes] = useState("");
+  const [isResponding, setIsResponding] = useState(false);
 
   // Get client token from localStorage
   const getClientToken = () => {
-    return localStorage.getItem('crm_client_token');
+    return localStorage.getItem("crm_client_token");
   };
 
   // Create axios instance with client auth headers
@@ -39,8 +50,8 @@ const ClientEstimateRequest = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -48,45 +59,49 @@ const ClientEstimateRequest = () => {
   const fetchClientEstimates = async () => {
     setLoading(true);
     setError("");
-    
+
     try {
       const config = createAxiosConfig();
       const params = {};
-      
+
       if (searchTerm) {
         params.search = searchTerm;
       }
-      
+
       if (statusFilter !== "All") {
         params.status = statusFilter;
       }
-      
-      const { data } = await axios.get("http://localhost:5000/api/client/estimate-requests", {
-        ...config,
-        params: params
-      });
-      
+
+      const { data } = await axios.get(
+        "http://localhost:5000/api/client/estimate-requests",
+        {
+          ...config,
+          params: params,
+        }
+      );
+
       setEstimates(data.estimates || []);
-      setStats(data.stats || {
-        totalEstimates: 0,
-        draft: 0,
-        sent: 0,
-        accepted: 0,
-        rejected: 0,
-        expired: 0
-      });
+      setStats(
+        data.stats || {
+          totalEstimates: 0,
+          draft: 0,
+          sent: 0,
+          accepted: 0,
+          rejected: 0,
+          expired: 0,
+        }
+      );
       setClientInfo(data.clientInfo || {});
-      
     } catch (error) {
       console.error("Error fetching client estimates:", error);
       setError(error.response?.data?.message || error.message);
-      
+
       if (error.response?.status === 401) {
         alert("Session expired. Please login again.");
-        localStorage.removeItem('crm_client_token');
+        localStorage.removeItem("crm_client_token");
         window.location.href = "/client/login";
       }
-      
+
       setEstimates([]);
       setStats({
         totalEstimates: 0,
@@ -94,7 +109,7 @@ const ClientEstimateRequest = () => {
         sent: 0,
         accepted: 0,
         rejected: 0,
-        expired: 0
+        expired: 0,
       });
       setClientInfo({});
     }
@@ -109,7 +124,7 @@ const ClientEstimateRequest = () => {
       window.location.href = "/client/login";
       return;
     }
-    
+
     fetchClientEstimates();
   }, [statusFilter]);
 
@@ -124,45 +139,83 @@ const ClientEstimateRequest = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
 
+  // Handle estimate response (accept/reject)
+  const handleEstimateResponse = async (status) => {
+    if (!respondingEstimate || isResponding) return;
+
+    setIsResponding(true);
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.put(
+        `http://localhost:5000/api/client/estimate-requests/${respondingEstimate._id}/respond`,
+        { status, responseNotes },
+        config
+      );
+
+      alert(`Estimate ${status.toLowerCase()} successfully!`);
+      setRespondingEstimate(null);
+      setResponseNotes("");
+      fetchClientEstimates(); // Refresh the estimates list
+    } catch (error) {
+      console.error("Error responding to estimate:", error);
+      alert(error.response?.data?.message || "Error responding to estimate");
+    } finally {
+      setIsResponding(false);
+    }
+  };
+
   // Filter estimates (client-side filtering as backup)
-  const filteredEstimates = estimates.filter(estimate => {
-    const matchesSearch = 
+  const filteredEstimates = estimates.filter((estimate) => {
+    const matchesSearch =
       estimate.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (estimate.customer && estimate.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (estimate.customer &&
+        estimate.customer.company
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
       estimate.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
       estimate.amount.toString().includes(searchTerm);
-    
-    const matchesStatus = statusFilter === "All" || estimate.status === statusFilter;
-    
+
+    const matchesStatus =
+      statusFilter === "All" || estimate.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
   // Pagination
   const totalPages = Math.ceil(filteredEstimates.length / entriesPerPage);
   const startIndex = (currentPage - 1) * entriesPerPage;
-  const currentData = filteredEstimates.slice(startIndex, startIndex + entriesPerPage);
+  const currentData = filteredEstimates.slice(
+    startIndex,
+    startIndex + entriesPerPage
+  );
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case "Draft": return "bg-gray-100 text-gray-800";
-      case "Sent": return "bg-blue-100 text-blue-800";
-      case "Accepted": return "bg-green-100 text-green-800";
-      case "Rejected": return "bg-red-100 text-red-800";
-      case "Expired": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (status) {
+      case "Draft":
+        return "bg-gray-100 text-gray-800";
+      case "Sent":
+        return "bg-blue-100 text-blue-800";
+      case "Accepted":
+        return "bg-green-100 text-green-800";
+      case "Rejected":
+        return "bg-red-100 text-red-800";
+      case "Expired":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB');
+    return date.toLocaleDateString("en-GB");
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
@@ -184,7 +237,7 @@ const ClientEstimateRequest = () => {
           <div className="text-red-600 text-center">
             <h2 className="text-xl font-bold mb-4">Error Loading Estimates</h2>
             <p className="mb-4">{error}</p>
-            <button 
+            <button
               onClick={fetchClientEstimates}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
@@ -206,21 +259,39 @@ const ClientEstimateRequest = () => {
           <FaChevronRight className="mx-1 text-xs" />
           <span>Estimates</span>
         </div>
-        
+
         {/* Client Info */}
         {clientInfo.company && (
           <div className="mt-4 p-4 bg-white rounded-lg shadow">
             <h3 className="text-lg font-semibold mb-2">Company Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600">Company: <span className="font-medium">{clientInfo.company}</span></p>
-                <p className="text-sm text-gray-600">Contact: <span className="font-medium">{clientInfo.contact}</span></p>
+                <p className="text-sm text-gray-600">
+                  Company:{" "}
+                  <span className="font-medium">{clientInfo.company}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Contact:{" "}
+                  <span className="font-medium">{clientInfo.contact}</span>
+                </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Email: <span className="font-medium">{clientInfo.email}</span></p>
-                <p className="text-sm text-gray-600">Phone: <span className="font-medium">{clientInfo.phone || 'N/A'}</span></p>
+                <p className="text-sm text-gray-600">
+                  Email: <span className="font-medium">{clientInfo.email}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Phone:{" "}
+                  <span className="font-medium">
+                    {clientInfo.phone || "N/A"}
+                  </span>
+                </p>
                 {clientInfo.customerCode && (
-                  <p className="text-sm text-blue-600">Customer Code: <span className="font-medium">{clientInfo.customerCode}</span></p>
+                  <p className="text-sm text-blue-600">
+                    Customer Code:{" "}
+                    <span className="font-medium">
+                      {clientInfo.customerCode}
+                    </span>
+                  </p>
                 )}
               </div>
             </div>
@@ -320,7 +391,11 @@ const ClientEstimateRequest = () => {
       </div>
 
       {/* White box for table */}
-      <div className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${compactView ? "w-full" : "w-full"}`}>
+      <div
+        className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+          compactView ? "w-full" : "w-full"
+        }`}
+      >
         {/* Controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
@@ -387,21 +462,65 @@ const ClientEstimateRequest = () => {
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th
+                  className="p-3 rounded-l-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
                   Project Name
                 </th>
                 {compactView ? (
                   <>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created Date</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Amount
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Created Date
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
                   </>
                 ) : (
                   <>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created Date</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Customer
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Amount
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Created Date
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Actions
+                    </th>
                   </>
                 )}
               </tr>
@@ -412,17 +531,25 @@ const ClientEstimateRequest = () => {
                   <tr
                     key={estimate._id}
                     className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                    style={{ color: 'black' }}
+                    style={{ color: "black" }}
                   >
                     <td className="p-3 rounded-l-lg border-0">
                       <div className="font-medium">{estimate.projectName}</div>
                     </td>
                     {compactView ? (
                       <>
-                        <td className="p-3 border-0">{formatCurrency(estimate.amount)}</td>
-                        <td className="p-3 border-0">{formatDate(estimate.createdDate)}</td>
+                        <td className="p-3 border-0">
+                          {formatCurrency(estimate.amount)}
+                        </td>
+                        <td className="p-3 border-0">
+                          {formatDate(estimate.createdDate)}
+                        </td>
                         <td className="p-3 border-0 rounded-r-lg">
-                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(estimate.status)}`}>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                              estimate.status
+                            )}`}
+                          >
                             {estimate.status}
                           </span>
                         </td>
@@ -430,19 +557,57 @@ const ClientEstimateRequest = () => {
                     ) : (
                       <>
                         <td className="p-3 border-0">
-                          {estimate.customer ? estimate.customer.company : "N/A"}
-                          {estimate.customer && estimate.customer.customerCode && (
-                            <div className="text-xs text-blue-600 mt-1">
-                              {estimate.customer.customerCode}
-                            </div>
-                          )}
+                          {estimate.customer
+                            ? estimate.customer.company
+                            : "N/A"}
                         </td>
-                        <td className="p-3 border-0">{formatCurrency(estimate.amount)}</td>
-                        <td className="p-3 border-0">{formatDate(estimate.createdDate)}</td>
-                        <td className="p-3 border-0 rounded-r-lg">
-                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(estimate.status)}`}>
+                        <td className="p-3 border-0">
+                          {formatCurrency(estimate.amount)}
+                        </td>
+                        <td className="p-3 border-0">
+                          {formatDate(estimate.createdDate)}
+                        </td>
+                        <td className="p-3 border-0">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                              estimate.status
+                            )}`}
+                          >
                             {estimate.status}
                           </span>
+                        </td>
+                        <td className="p-3 border-0 rounded-r-lg">
+                          <div className="flex items-center gap-2">
+                            <button
+                              className="text-blue-600 hover:text-blue-800"
+                              onClick={() => setViewingEstimate(estimate)}
+                            >
+                              <FaEye />
+                            </button>
+
+                            {estimate.status === "Sent" && (
+                              <div className="flex gap-1">
+                                <button
+                                  className="text-green-600 hover:text-green-800"
+                                  onClick={() =>
+                                    setRespondingEstimate(estimate)
+                                  }
+                                  title="Accept Estimate"
+                                >
+                                  <FaCheck />
+                                </button>
+                                <button
+                                  className="text-red-600 hover:text-red-800"
+                                  onClick={() =>
+                                    setRespondingEstimate(estimate)
+                                  }
+                                  title="Reject Estimate"
+                                >
+                                  <FaTimes />
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </td>
                       </>
                     )}
@@ -450,28 +615,13 @@ const ClientEstimateRequest = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={compactView ? 4 : 5} className="p-8 text-center">
-                    <div className="text-gray-500">
-                      <FaFileInvoiceDollar className="mx-auto mb-4 text-4xl text-gray-300" />
-                      <h3 className="text-lg font-medium mb-2">No Estimates Found</h3>
-                      <p className="text-sm">
-                        {searchTerm || statusFilter !== "All" 
-                          ? "No estimates match your current filters. Try adjusting your search or filter criteria."
-                          : "You don't have any estimates yet. Estimates will appear here once they are created for your account."
-                        }
-                      </p>
-                      {(searchTerm || statusFilter !== "All") && (
-                        <button
-                          onClick={() => {
-                            setSearchTerm("");
-                            setStatusFilter("All");
-                          }}
-                          className="mt-2 text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Clear filters
-                        </button>
-                      )}
-                    </div>
+                  <td
+                    colSpan={compactView ? 4 : 6}
+                    className="p-4 text-center text-gray-500"
+                  >
+                    {searchTerm || statusFilter !== "All"
+                      ? "No estimates match your search criteria"
+                      : "No estimates found for your account"}
                   </td>
                 </tr>
               )}
@@ -480,115 +630,227 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-            <div className="text-sm text-gray-600">
-              Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredEstimates.length)} of {filteredEstimates.length} entries
-            </div>
-            <div className="flex items-center gap-1">
-              <button
-                className="border px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </button>
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i;
-                return pageNum <= totalPages ? (
-                  <button
-                    key={pageNum}
-                    className={`border px-3 py-1 rounded text-sm hover:bg-gray-50 ${
-                      currentPage === pageNum ? "bg-gray-800 text-white hover:bg-gray-700" : ""
-                    }`}
-                    onClick={() => setCurrentPage(pageNum)}
-                  >
-                    {pageNum}
-                  </button>
-                ) : null;
-              })}
-              <button
-                className="border px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </button>
-            </div>
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-gray-600">
+            Showing {startIndex + 1} to{" "}
+            {Math.min(startIndex + entriesPerPage, filteredEstimates.length)} of{" "}
+            {filteredEstimates.length} entries
           </div>
-        )}
+          <div className="flex gap-1">
+            <button
+              className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+              onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (currentPage <= 3) {
+                pageNum = i + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = currentPage - 2 + i;
+              }
+
+              return (
+                <button
+                  key={pageNum}
+                  className={`px-3 py-1 border rounded text-sm ${
+                    currentPage === pageNum ? "bg-gray-200" : ""
+                  }`}
+                  onClick={() => setCurrentPage(pageNum)}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
+            <button
+              className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+              onClick={() =>
+                setCurrentPage(Math.min(totalPages, currentPage + 1))
+              }
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* View Estimate Modal */}
       {viewingEstimate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-11/12 max-w-2xl">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Estimate Details</h2>
+              <h3 className="text-xl font-bold">Estimate Details</h3>
               <button
                 onClick={() => setViewingEstimate(null)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                ×
+                &times;
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-sm text-gray-500">Project Name</p>
-                <p className="font-medium">{viewingEstimate.projectName}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Customer</p>
-                <p className="font-medium">
-                  {viewingEstimate.customer ? viewingEstimate.customer.company : "N/A"}
-                </p>
-                {viewingEstimate.customer && viewingEstimate.customer.customerCode && (
-                  <p className="text-sm text-blue-600 mt-1">
-                    {viewingEstimate.customer.customerCode}
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Project Name
+                  </label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded">
+                    {viewingEstimate.projectName}
                   </p>
-                )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Amount
+                  </label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded">
+                    {formatCurrency(viewingEstimate.amount)}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Customer Email</p>
-                <p className="font-medium">
-                  {viewingEstimate.customer ? viewingEstimate.customer.email : "N/A"}
-                </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Created Date
+                  </label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded">
+                    {formatDate(viewingEstimate.createdDate)}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Status
+                  </label>
+                  <p className="mt-1">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                        viewingEstimate.status
+                      )}`}
+                    >
+                      {viewingEstimate.status}
+                    </span>
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-sm text-gray-500">Customer Phone</p>
-                <p className="font-medium">
-                  {viewingEstimate.customer ? viewingEstimate.customer.phone : "N/A"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Amount</p>
-                <p className="font-medium">{formatCurrency(viewingEstimate.amount)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Created Date</p>
-                <p className="font-medium">{formatDate(viewingEstimate.createdDate)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Status</p>
-                <p className="font-medium">
-                  <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(viewingEstimate.status)}`}>
-                    {viewingEstimate.status}
-                  </span>
-                </p>
-              </div>
+
+              {viewingEstimate.sentDate && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Sent Date
+                  </label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded">
+                    {formatDate(viewingEstimate.sentDate)}
+                  </p>
+                </div>
+              )}
+
+              {viewingEstimate.responseDate && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Response Date
+                  </label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded">
+                    {formatDate(viewingEstimate.responseDate)}
+                  </p>
+                </div>
+              )}
+
+              {viewingEstimate.notes && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Admin Notes
+                  </label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded whitespace-pre-wrap">
+                    {viewingEstimate.notes}
+                  </p>
+                </div>
+              )}
+
+              {viewingEstimate.clientResponseNotes && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Your Response Notes
+                  </label>
+                  <p className="mt-1 p-2 bg-gray-50 rounded whitespace-pre-wrap">
+                    {viewingEstimate.clientResponseNotes}
+                  </p>
+                </div>
+              )}
             </div>
-            {viewingEstimate.notes && (
-              <div className="mb-4">
-                <p className="text-sm text-gray-500">Notes/Content</p>
-                <p className="font-medium mt-1 p-3 bg-gray-100 rounded">{viewingEstimate.notes}</p>
-              </div>
-            )}
-            <div className="flex justify-end">
+
+            <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setViewingEstimate(null)}
-                className="px-4 py-2 bg-black text-white rounded text-sm"
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Respond to Estimate Modal */}
+      {respondingEstimate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">Respond to Estimate</h3>
+              <button
+                onClick={() => {
+                  setRespondingEstimate(null);
+                  setResponseNotes("");
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="font-medium">{respondingEstimate.projectName}</p>
+              <p className="text-gray-600">
+                {formatCurrency(respondingEstimate.amount)}
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Response Notes (Optional)
+              </label>
+              <textarea
+                value={responseNotes}
+                onChange={(e) => setResponseNotes(e.target.value)}
+                className="w-full p-2 border rounded"
+                rows={3}
+                placeholder="Add any notes about your response..."
+              />
+            </div>
+
+            <div className="flex justify-between">
+              <button
+                onClick={() => handleEstimateResponse("Rejected")}
+                disabled={isResponding}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+              >
+                {isResponding ? "Processing..." : "Reject Estimate"}
+              </button>
+
+              <button
+                onClick={() => handleEstimateResponse("Accepted")}
+                disabled={isResponding}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+              >
+                {isResponding ? "Processing..." : "Accept Estimate"}
               </button>
             </div>
           </div>

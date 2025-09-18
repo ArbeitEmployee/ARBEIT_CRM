@@ -17,23 +17,40 @@ export const getEstimateRequests = async (req, res) => {
 
     if (search) {
       filter.$or = [
-        { projectName: { $regex: search, $options: 'i' } },
-        { status: { $regex: search, $options: 'i' } },
-        { amount: parseFloat(search) || 0 }
+        { projectName: { $regex: search, $options: "i" } },
+        { status: { $regex: search, $options: "i" } },
+        { amount: parseFloat(search) || 0 },
       ];
     }
 
     const estimateRequests = await EstimateRequest.find(filter)
-      .populate('customer', 'company contact email phone customerCode')
+      .populate("customer", "company contact email phone customerCode")
       .sort({ createdAt: -1 });
 
     // Calculate stats
-    const totalEstimates = await EstimateRequest.countDocuments({ admin: req.admin._id });
-    const draft = await EstimateRequest.countDocuments({ admin: req.admin._id, status: "Draft" });
-    const sent = await EstimateRequest.countDocuments({ admin: req.admin._id, status: "Sent" });
-    const accepted = await EstimateRequest.countDocuments({ admin: req.admin._id, status: "Accepted" });
-    const rejected = await EstimateRequest.countDocuments({ admin: req.admin._id, status: "Rejected" });
-    const expired = await EstimateRequest.countDocuments({ admin: req.admin._id, status: "Expired" });
+    const totalEstimates = await EstimateRequest.countDocuments({
+      admin: req.admin._id,
+    });
+    const draft = await EstimateRequest.countDocuments({
+      admin: req.admin._id,
+      status: "Draft",
+    });
+    const sent = await EstimateRequest.countDocuments({
+      admin: req.admin._id,
+      status: "Sent",
+    });
+    const accepted = await EstimateRequest.countDocuments({
+      admin: req.admin._id,
+      status: "Accepted",
+    });
+    const rejected = await EstimateRequest.countDocuments({
+      admin: req.admin._id,
+      status: "Rejected",
+    });
+    const expired = await EstimateRequest.countDocuments({
+      admin: req.admin._id,
+      status: "Expired",
+    });
 
     res.json({
       estimates: estimateRequests,
@@ -43,12 +60,14 @@ export const getEstimateRequests = async (req, res) => {
         sent,
         accepted,
         rejected,
-        expired
-      }
+        expired,
+      },
     });
   } catch (error) {
     console.error("Error fetching estimate requests:", error);
-    res.status(500).json({ message: "Server error while fetching estimate requests" });
+    res
+      .status(500)
+      .json({ message: "Server error while fetching estimate requests" });
   }
 };
 
@@ -57,23 +76,21 @@ export const getEstimateRequests = async (req, res) => {
 // @access  Private
 export const createEstimateRequest = async (req, res) => {
   try {
-    const {
-      customerId,
-      projectName,
-      amount,
-      createdDate,
-      status,
-      notes
-    } = req.body;
+    const { customerId, projectName, amount, createdDate, status, notes } =
+      req.body;
 
     if (!customerId || !projectName || !amount || !createdDate) {
       return res.status(400).json({
-        message: "Customer, Project Name, Amount, and Created Date are required fields"
+        message:
+          "Customer, Project Name, Amount, and Created Date are required fields",
       });
     }
 
     // Check if customer exists and belongs to the same admin
-    const customer = await Customer.findOne({ _id: customerId, admin: req.admin._id });
+    const customer = await Customer.findOne({
+      _id: customerId,
+      admin: req.admin._id,
+    });
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
@@ -85,12 +102,13 @@ export const createEstimateRequest = async (req, res) => {
       amount,
       createdDate: new Date(createdDate),
       status: status || "Draft",
-      notes: notes || ""
+      notes: notes || "",
     });
 
     const createdEstimateRequest = await estimateRequest.save();
-    const populatedEstimateRequest = await EstimateRequest.findById(createdEstimateRequest._id)
-      .populate('customer', 'company contact email phone customerCode');
+    const populatedEstimateRequest = await EstimateRequest.findById(
+      createdEstimateRequest._id
+    ).populate("customer", "company contact email phone customerCode");
 
     res.status(201).json(populatedEstimateRequest);
   } catch (error) {
@@ -98,7 +116,7 @@ export const createEstimateRequest = async (req, res) => {
     res.status(400).json({
       message: error.message.includes("validation failed")
         ? "Validation error: " + error.message
-        : error.message
+        : error.message,
     });
   }
 };
@@ -108,29 +126,30 @@ export const createEstimateRequest = async (req, res) => {
 // @access  Private
 export const updateEstimateRequest = async (req, res) => {
   try {
-    const {
-      customerId,
-      projectName,
-      amount,
-      createdDate,
-      status,
-      notes
-    } = req.body;
+    const { customerId, projectName, amount, createdDate, status, notes } =
+      req.body;
 
     if (!customerId || !projectName || !amount || !createdDate) {
       return res.status(400).json({
-        message: "Customer, Project Name, Amount, and Created Date are required fields"
+        message:
+          "Customer, Project Name, Amount, and Created Date are required fields",
       });
     }
 
     // Check if estimate request exists and belongs to the admin
-    const estimateRequest = await EstimateRequest.findOne({ _id: req.params.id, admin: req.admin._id });
+    const estimateRequest = await EstimateRequest.findOne({
+      _id: req.params.id,
+      admin: req.admin._id,
+    });
     if (!estimateRequest) {
       return res.status(404).json({ message: "Estimate request not found" });
     }
 
     // Check if customer exists and belongs to the same admin
-    const customer = await Customer.findOne({ _id: customerId, admin: req.admin._id });
+    const customer = await Customer.findOne({
+      _id: customerId,
+      admin: req.admin._id,
+    });
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
@@ -142,9 +161,15 @@ export const updateEstimateRequest = async (req, res) => {
     estimateRequest.status = status || "Draft";
     estimateRequest.notes = notes || "";
 
+    // If status is being changed to "Sent", update the sent date
+    if (status === "Sent" && estimateRequest.status !== "Sent") {
+      estimateRequest.sentDate = new Date();
+    }
+
     const updatedEstimateRequest = await estimateRequest.save();
-    const populatedEstimateRequest = await EstimateRequest.findById(updatedEstimateRequest._id)
-      .populate('customer', 'company contact email phone customerCode');
+    const populatedEstimateRequest = await EstimateRequest.findById(
+      updatedEstimateRequest._id
+    ).populate("customer", "company contact email phone customerCode");
 
     res.json(populatedEstimateRequest);
   } catch (error) {
@@ -152,7 +177,7 @@ export const updateEstimateRequest = async (req, res) => {
     res.status(400).json({
       message: error.message.includes("validation failed")
         ? "Validation error: " + error.message
-        : error.message
+        : error.message,
     });
   }
 };
@@ -162,17 +187,25 @@ export const updateEstimateRequest = async (req, res) => {
 // @access  Private
 export const deleteEstimateRequest = async (req, res) => {
   try {
-    const estimateRequest = await EstimateRequest.findOne({ _id: req.params.id, admin: req.admin._id });
+    const estimateRequest = await EstimateRequest.findOne({
+      _id: req.params.id,
+      admin: req.admin._id,
+    });
 
     if (!estimateRequest) {
       return res.status(404).json({ message: "Estimate request not found" });
     }
 
-    await EstimateRequest.deleteOne({ _id: req.params.id, admin: req.admin._id });
+    await EstimateRequest.deleteOne({
+      _id: req.params.id,
+      admin: req.admin._id,
+    });
     res.json({ message: "Estimate request removed successfully" });
   } catch (error) {
     console.error("Error deleting estimate request:", error);
-    res.status(500).json({ message: "Server error while deleting estimate request" });
+    res
+      .status(500)
+      .json({ message: "Server error while deleting estimate request" });
   }
 };
 
@@ -183,25 +216,33 @@ export const bulkDeleteEstimateRequests = async (req, res) => {
   try {
     const { estimateIds } = req.body;
 
-    if (!estimateIds || !Array.isArray(estimateIds) || estimateIds.length === 0) {
+    if (
+      !estimateIds ||
+      !Array.isArray(estimateIds) ||
+      estimateIds.length === 0
+    ) {
       return res.status(400).json({ message: "Estimate IDs are required" });
     }
 
-    const result = await EstimateRequest.deleteMany({ 
+    const result = await EstimateRequest.deleteMany({
       _id: { $in: estimateIds },
-      admin: req.admin._id 
+      admin: req.admin._id,
     });
 
     if (result.deletedCount === 0) {
-      return res.status(404).json({ message: "No estimate requests found to delete" });
+      return res
+        .status(404)
+        .json({ message: "No estimate requests found to delete" });
     }
 
     res.json({
-      message: `${result.deletedCount} estimate request(s) deleted successfully`
+      message: `${result.deletedCount} estimate request(s) deleted successfully`,
     });
   } catch (error) {
     console.error("Error bulk deleting estimate requests:", error);
-    res.status(500).json({ message: "Server error while bulk deleting estimate requests" });
+    res
+      .status(500)
+      .json({ message: "Server error while bulk deleting estimate requests" });
   }
 };
 
@@ -218,8 +259,10 @@ export const searchCustomers = async (req, res) => {
 
     const customers = await Customer.find({
       admin: req.admin._id,
-      company: { $regex: q, $options: 'i' }
-    }).select('company contact email phone customerCode').limit(10);
+      company: { $regex: q, $options: "i" },
+    })
+      .select("company contact email phone customerCode")
+      .limit(10);
 
     res.json(customers);
   } catch (error) {
@@ -234,20 +277,20 @@ export const searchCustomers = async (req, res) => {
 export const getCustomerByCode = async (req, res) => {
   try {
     const { code } = req.params;
-    
+
     if (!code || code.length < 4) {
       return res.status(400).json({ message: "Customer code is required" });
     }
-    
-    const customer = await Customer.findOne({ 
+
+    const customer = await Customer.findOne({
       admin: req.admin._id,
-      customerCode: code.toUpperCase() 
-    }).select('_id company contact email phone customerCode');
-    
+      customerCode: code.toUpperCase(),
+    }).select("_id company contact email phone customerCode");
+
     if (!customer) {
       return res.status(404).json({ message: "Customer not found" });
     }
-    
+
     res.json({ customer });
   } catch (error) {
     console.error("Error finding customer by code:", error);
