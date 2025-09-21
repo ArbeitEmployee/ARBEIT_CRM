@@ -62,6 +62,10 @@ import ClientEstimateRequest from "../pages/client/ClientEstimateRequest";
 import ClientSupportPage from "../pages/client/ClientSupport";
 import ClientProposals from "../pages/client/ClientProposals";
 import ClientEstimates from "../pages/client/ClientEstimates";
+import ClientInvoices from "../pages/client/ClientInvoices";
+import ClientPayments from "../pages/client/ClientPayments";
+
+
 
 
 
@@ -148,7 +152,8 @@ const AppRoutes = () => {
               <Route path="support" element={<ClientSupportPage />} />
               <Route path="ClientProposal" element={<ClientProposals/>} />
               <Route path="ClientEstimate" element={<ClientEstimates/>} />
-              
+              <Route path="ClientInvoice" element={<ClientInvoices/>} />
+              <Route path="ClientPayment" element={<ClientPayments/>} />
               {/* Add more client routes here  <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />*/}
             </Routes>
           </ClientLayout>

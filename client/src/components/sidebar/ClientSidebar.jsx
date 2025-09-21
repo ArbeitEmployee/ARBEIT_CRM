@@ -7,6 +7,7 @@ import {
   FaFileContract,
   FaClipboardList,
   FaFileAlt,
+   FaMoneyBillWave,
   FaHeadset,
   FaHome
 } from "react-icons/fa";
@@ -29,17 +30,9 @@ const ClientSidebar = ({ isOpen }) => {
     { label: "Home", icon: <FaHome />, path: "/client/home" },
     { label: "Knowledge Base", icon: <FaQuestionCircle />, path: "/client/knowledge-base" },
     { label: "Projects", icon: <FaProjectDiagram />, path: "/client/projects" },
-    { 
-      label: "Invoices", 
-      icon: <FaFileInvoiceDollar />,
-      hasSub: true,
-      subItems: [
-        { name: "All Invoices", path: "/client/invoices" },
-        { name: "Paid", path: "/client/invoices/paid" },
-        { name: "Unpaid", path: "/client/invoices/unpaid" },
-        { name: "Overdue", path: "/client/invoices/overdue" }
-      ]
-    },
+     { label: "Invoices", icon: <FaFileInvoiceDollar /> , path: "/client/clientInvoice" },
+    { label: "Payments", icon: <FaMoneyBillWave/> , path: "/client/clientPayment" },
+        
     { label: "Contracts", icon: <FaFileContract />, path: "/client/contracts" },
     { label: "Estimate Request", icon: <FaClipboardList />, path: "/client/estimates" },
     { label: "Estimates", icon: <FaClipboardList />, path: "/client/clientEstimate" },

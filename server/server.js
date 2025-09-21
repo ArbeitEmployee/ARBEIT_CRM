@@ -38,7 +38,8 @@ import clientEstimateRequestRoutes from './routes/client/clientEstimateRequestRo
 import clientSupportRoutes from './routes/client/clientSupportRoutes.js';
 import clientProposalRoutes from  './routes/client/clientProposalRoutes.js'
 import clientEstimateRoutes from './routes/client/clientEstimateRoutes.js';
-
+import clientInvoiceRoutes from './routes/client/clientInvoiceRoutes.js';
+import clientPaymentRoutes from './routes/client/clientPaymentRoutes.js';
 
 
 const app = express();
@@ -80,6 +81,8 @@ app.use('/api/client/estimate-requests', clientEstimateRequestRoutes);
 app.use('/api/client/support', clientSupportRoutes);
 app.use('/api/client', clientProposalRoutes);
 app.use('/api/client', clientEstimateRoutes);
+app.use('/api/client', clientInvoiceRoutes);
+app.use('/api/client', clientPaymentRoutes);
 
 
 const PORT = process.env.PORT || 5000;
