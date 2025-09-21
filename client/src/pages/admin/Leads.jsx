@@ -1,18 +1,43 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
-  FaTimes, FaEdit, FaTrash, FaChevronDown, FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare,
-  FaUser, FaBuilding, FaEnvelope, FaPhone, FaDollarSign, FaTag, FaUserCheck,
-  FaFileImport, FaFilter
+  FaPlus,
+  FaSearch,
+  FaSyncAlt,
+  FaChevronRight,
+  FaTimes,
+  FaEdit,
+  FaTrash,
+  FaChevronDown,
+  FaCheckCircle,
+  FaClock,
+  FaPauseCircle,
+  FaBan,
+  FaCheckSquare,
+  FaUser,
+  FaBuilding,
+  FaEnvelope,
+  FaPhone,
+  FaDollarSign,
+  FaTag,
+  FaUserCheck,
+  FaFileImport,
+  FaFilter,
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 // Custom hook for detecting outside clicks
 const useOutsideClick = (callback) => {
@@ -25,10 +50,10 @@ const useOutsideClick = (callback) => {
       }
     };
 
-    document.addEventListener('click', handleClick, true);
+    document.addEventListener("click", handleClick, true);
 
     return () => {
-      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener("click", handleClick, true);
     };
   }, [ref, callback]);
 
@@ -52,7 +77,7 @@ const LeadsPage = () => {
     qualified: 0,
     proposal: 0,
     customer: 0,
-    lost: 0
+    lost: 0,
   });
   const [chartData, setChartData] = useState([]);
   const [newLead, setNewLead] = useState({
@@ -66,7 +91,7 @@ const LeadsPage = () => {
     status: "New",
     source: "",
     lastContact: "",
-    created: ""
+    created: "",
   });
   const [editingLead, setEditingLead] = useState(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
@@ -81,7 +106,7 @@ const LeadsPage = () => {
     "Qualified",
     "Proposal",
     "Customer",
-    "Lost"
+    "Lost",
   ];
 
   const sourceOptions = [
@@ -91,7 +116,7 @@ const LeadsPage = () => {
     "Cold Call",
     "Event",
     "Other",
-    ""
+    "",
   ];
 
   // Use the custom hook for detecting outside clicks
@@ -103,7 +128,7 @@ const LeadsPage = () => {
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('crm_token');
+    return localStorage.getItem("crm_token");
   };
 
   // Create axios instance with auth headers
@@ -112,8 +137,8 @@ const LeadsPage = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -122,17 +147,22 @@ const LeadsPage = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/leads", config);
+      const { data } = await axios.get(
+        "http://localhost:5000/api/leads",
+        config
+      );
       setLeads(data.leads || []);
-      setStats(data.stats || {
-        totalLeads: 0,
-        new: 0,
-        contacted: 0,
-        qualified: 0,
-        proposal: 0,
-        customer: 0,
-        lost: 0
-      });
+      setStats(
+        data.stats || {
+          totalLeads: 0,
+          new: 0,
+          contacted: 0,
+          qualified: 0,
+          proposal: 0,
+          customer: 0,
+          lost: 0,
+        }
+      );
       setChartData(data.chartData || []);
     } catch (error) {
       console.error("Error fetching leads:", error);
@@ -148,7 +178,7 @@ const LeadsPage = () => {
         qualified: 0,
         proposal: 0,
         customer: 0,
-        lost: 0
+        lost: 0,
       });
       setChartData([]);
     }
@@ -160,16 +190,21 @@ const LeadsPage = () => {
   }, []);
 
   // Search filter
-  const filteredLeads = leads.filter(lead =>
-    lead._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (lead.phone && lead.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (lead.tags && lead.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    lead.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (lead.source && lead.source.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (lead.assigned && lead.assigned.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredLeads = leads.filter(
+    (lead) =>
+      lead._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.company.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (lead.phone &&
+        lead.phone.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (lead.tags &&
+        lead.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      lead.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (lead.source &&
+        lead.source.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (lead.assigned &&
+        lead.assigned.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Pagination
@@ -181,16 +216,14 @@ const LeadsPage = () => {
   );
 
   const toggleLeadSelection = (id) => {
-    setSelectedLeads(prev =>
-      prev.includes(id)
-        ? prev.filter(leadId => leadId !== id)
-        : [...prev, id]
+    setSelectedLeads((prev) =>
+      prev.includes(id) ? prev.filter((leadId) => leadId !== id) : [...prev, id]
     );
   };
 
   const handleNewLeadChange = (e) => {
     const { name, value } = e.target;
-    setNewLead(prev => ({ ...prev, [name]: value }));
+    setNewLead((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSaveLead = async () => {
@@ -205,10 +238,14 @@ const LeadsPage = () => {
 
     try {
       const config = createAxiosConfig();
-      
+
       if (editingLead) {
         // Update existing lead
-        await axios.put(`http://localhost:5000/api/leads/${editingLead._id}`, newLead, config);
+        await axios.put(
+          `http://localhost:5000/api/leads/${editingLead._id}`,
+          newLead,
+          config
+        );
         setShowNewLeadForm(false);
         setEditingLead(null);
         fetchLeads();
@@ -233,11 +270,13 @@ const LeadsPage = () => {
         status: "New",
         source: "",
         lastContact: "",
-        created: ""
+        created: "",
       });
     } catch (error) {
       console.error("Error saving lead:", error);
-      alert(`Error saving lead: ${error.response?.data?.message || error.message}`);
+      alert(
+        `Error saving lead: ${error.response?.data?.message || error.message}`
+      );
     } finally {
       setIsSaving(false);
     }
@@ -256,7 +295,7 @@ const LeadsPage = () => {
       status: lead.status,
       source: lead.source || "",
       lastContact: lead.lastContact || "",
-      created: lead.created || ""
+      created: lead.created || "",
     });
     setShowNewLeadForm(true);
   };
@@ -270,7 +309,11 @@ const LeadsPage = () => {
         alert("Lead deleted successfully!");
       } catch (error) {
         console.error("Error deleting lead:", error);
-        alert(`Error deleting lead: ${error.response?.data?.message || error.message}`);
+        alert(
+          `Error deleting lead: ${
+            error.response?.data?.message || error.message
+          }`
+        );
       }
     }
   };
@@ -278,16 +321,28 @@ const LeadsPage = () => {
   const handleBulkDelete = async () => {
     if (selectedLeads.length === 0) return;
 
-    if (window.confirm(`Are you sure you want to delete ${selectedLeads.length} selected leads?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete ${selectedLeads.length} selected leads?`
+      )
+    ) {
       try {
         const config = createAxiosConfig();
-        await axios.post("http://localhost:5000/api/leads/bulk-delete", { ids: selectedLeads }, config);
+        await axios.post(
+          "http://localhost:5000/api/leads/bulk-delete",
+          { ids: selectedLeads },
+          config
+        );
         setSelectedLeads([]);
         fetchLeads();
         alert("Selected leads deleted successfully!");
       } catch (error) {
         console.error("Error bulk deleting leads:", error);
-        alert(`Error deleting leads: ${error.response?.data?.message || error.message}`);
+        alert(
+          `Error deleting leads: ${
+            error.response?.data?.message || error.message
+          }`
+        );
       }
     }
   };
@@ -310,26 +365,30 @@ const LeadsPage = () => {
     }
 
     const formData = new FormData();
-    formData.append('file', importFile);
+    formData.append("file", importFile);
 
     try {
-      setImportProgress({ status: 'uploading', message: 'Uploading file...' });
+      setImportProgress({ status: "uploading", message: "Uploading file..." });
 
       const config = {
         headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${getAuthToken()}`
-        }
+          "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${getAuthToken()}`,
+        },
       };
 
-      const { data } = await axios.post('http://localhost:5000/api/leads/import', formData, config);
+      const { data } = await axios.post(
+        "http://localhost:5000/api/leads/import",
+        formData,
+        config
+      );
 
       setImportProgress(null);
       setImportResult({
         success: true,
         imported: data.importedCount,
         errorCount: data.errorMessages?.length || 0,
-        errorMessages: data.errorMessages
+        errorMessages: data.errorMessages,
       });
 
       // Refresh lead list
@@ -339,7 +398,8 @@ const LeadsPage = () => {
       setImportProgress(null);
       setImportResult({
         success: false,
-        message: error.response?.data?.message || error.message || 'Import failed'
+        message:
+          error.response?.data?.message || error.message || "Import failed",
       });
     }
   };
@@ -350,13 +410,13 @@ const LeadsPage = () => {
     setImportProgress(null);
     setImportResult(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
 
   // Export functions
   const exportToExcel = () => {
-    const dataToExport = filteredLeads.map(lead => ({
+    const dataToExport = filteredLeads.map((lead) => ({
       ID: lead._id,
       Name: lead.name,
       Company: lead.company,
@@ -368,7 +428,7 @@ const LeadsPage = () => {
       Status: lead.status,
       Source: lead.source || "",
       "Last Contact": lead.lastContact || "",
-      Created: lead.created || ""
+      Created: lead.created || "",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -379,7 +439,7 @@ const LeadsPage = () => {
   };
 
   const exportToCSV = () => {
-    const dataToExport = filteredLeads.map(lead => ({
+    const dataToExport = filteredLeads.map((lead) => ({
       ID: lead._id,
       Name: lead.name,
       Company: lead.company,
@@ -391,17 +451,17 @@ const LeadsPage = () => {
       Status: lead.status,
       Source: lead.source || "",
       "Last Contact": lead.lastContact || "",
-      Created: lead.created || ""
+      Created: lead.created || "",
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
 
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'Leads.csv');
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Leads.csv");
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -423,10 +483,10 @@ const LeadsPage = () => {
       "Status",
       "Source",
       "Last Contact",
-      "Created"
+      "Created",
     ];
 
-    const tableRows = filteredLeads.map(lead => [
+    const tableRows = filteredLeads.map((lead) => [
       lead._id,
       lead.name,
       lead.company,
@@ -438,10 +498,10 @@ const LeadsPage = () => {
       lead.status,
       lead.source || "-",
       lead.lastContact || "-",
-      lead.created || "-"
+      lead.created || "-",
     ]);
 
-    autoTable(doc,{
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       margin: { top: 20 },
@@ -453,9 +513,9 @@ const LeadsPage = () => {
   };
 
   const printTable = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<html><head><title>Leads</title>');
-    printWindow.document.write('<style>');
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Leads</title>");
+    printWindow.document.write("<style>");
     printWindow.document.write(`
       body { font-family: Arial, sans-serif; }
       table { border-collapse: collapse; width: 100%; }
@@ -467,22 +527,35 @@ const LeadsPage = () => {
         .no-print { display: none; }
       }
     `);
-    printWindow.document.write('</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<h1>Leads</h1>');
-    printWindow.document.write('<table>');
+    printWindow.document.write("</style>");
+    printWindow.document.write("</head><body>");
+    printWindow.document.write("<h1>Leads</h1>");
+    printWindow.document.write("<table>");
 
     // Table header
-    printWindow.document.write('<thead><tr>');
-    ['ID', 'Name', 'Company', 'Email', 'Phone', 'Value', 'Tags', 'Assigned', 'Status', 'Source', 'Last Contact', 'Created'].forEach(header => {
+    printWindow.document.write("<thead><tr>");
+    [
+      "ID",
+      "Name",
+      "Company",
+      "Email",
+      "Phone",
+      "Value",
+      "Tags",
+      "Assigned",
+      "Status",
+      "Source",
+      "Last Contact",
+      "Created",
+    ].forEach((header) => {
       printWindow.document.write(`<th>${header}</th>`);
     });
-    printWindow.document.write('</tr></thead>');
+    printWindow.document.write("</tr></thead>");
 
     // Table body
-    printWindow.document.write('<tbody>');
-    filteredLeads.forEach(lead => {
-      printWindow.document.write('<tr>');
+    printWindow.document.write("<tbody>");
+    filteredLeads.forEach((lead) => {
+      printWindow.document.write("<tr>");
       [
         lead._id,
         lead.name,
@@ -495,17 +568,19 @@ const LeadsPage = () => {
         lead.status,
         lead.source || "-",
         lead.lastContact || "-",
-        lead.created || "-"
-      ].forEach(value => {
+        lead.created || "-",
+      ].forEach((value) => {
         printWindow.document.write(`<td>${value}</td>`);
       });
-      printWindow.document.write('</tr>');
+      printWindow.document.write("</tr>");
     });
-    printWindow.document.write('</tbody>');
+    printWindow.document.write("</tbody>");
 
-    printWindow.document.write('</table>');
-    printWindow.document.write('<p class="no-print">Printed on: ' + new Date().toLocaleString() + '</p>');
-    printWindow.document.write('</body></html>');
+    printWindow.document.write("</table>");
+    printWindow.document.write(
+      '<p class="no-print">Printed on: ' + new Date().toLocaleString() + "</p>"
+    );
+    printWindow.document.write("</body></html>");
     printWindow.document.close();
 
     setTimeout(() => {
@@ -516,32 +591,46 @@ const LeadsPage = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case "New": return "bg-gray-100 text-gray-800";
-      case "Contacted": return "bg-blue-100 text-blue-800";
-      case "Qualified": return "bg-yellow-100 text-yellow-800";
-      case "Proposal": return "bg-purple-100 text-purple-800";
-      case "Customer": return "bg-green-100 text-green-800";
-      case "Lost": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (status) {
+      case "New":
+        return "bg-gray-100 text-gray-800";
+      case "Contacted":
+        return "bg-blue-100 text-blue-800";
+      case "Qualified":
+        return "bg-yellow-100 text-yellow-800";
+      case "Proposal":
+        return "bg-purple-100 text-purple-800";
+      case "Customer":
+        return "bg-green-100 text-green-800";
+      case "Lost":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      minimumFractionDigits: 2,
     }).format(amount);
   };
 
-  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading leads...</div>;
+  if (loading)
+    return <div className="bg-gray-100 min-h-screen p-4">Loading leads...</div>;
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">{showNewLeadForm ? (editingLead ? "Edit Lead" : "Add New Lead") : "Leads"}</h1>
+        <h1 className="text-2xl font-bold">
+          {showNewLeadForm
+            ? editingLead
+              ? "Edit Lead"
+              : "Add New Lead"
+            : "Leads"}
+        </h1>
         <div className="flex items-center text-gray-600">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
@@ -568,7 +657,9 @@ const LeadsPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name *
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -580,7 +671,9 @@ const LeadsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Company *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Company *
+                </label>
                 <input
                   type="text"
                   name="company"
@@ -592,7 +685,9 @@ const LeadsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email *
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -604,7 +699,9 @@ const LeadsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
                 <input
                   type="text"
                   name="phone"
@@ -615,7 +712,9 @@ const LeadsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Value
+                </label>
                 <input
                   type="number"
                   name="value"
@@ -631,7 +730,9 @@ const LeadsPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tags
+                </label>
                 <input
                   type="text"
                   name="tags"
@@ -643,7 +744,9 @@ const LeadsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Assigned To</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Assigned To
+                </label>
                 <input
                   type="text"
                   name="assigned"
@@ -655,21 +758,27 @@ const LeadsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
                 <select
                   name="status"
                   value={newLead.status}
                   onChange={handleNewLeadChange}
                   className="w-full border rounded px-3 py-2"
                 >
-                  {statusOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {statusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Source
+                </label>
                 <select
                   name="source"
                   value={newLead.source}
@@ -677,14 +786,18 @@ const LeadsPage = () => {
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">Select Source</option>
-                  {sourceOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {sourceOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Last Contact</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Contact
+                </label>
                 <input
                   type="date"
                   name="lastContact"
@@ -695,7 +808,9 @@ const LeadsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Created</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Created
+                </label>
                 <input
                   type="date"
                   name="created"
@@ -722,7 +837,11 @@ const LeadsPage = () => {
               disabled={isSaving}
               className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
             >
-              {isSaving ? 'Saving...' : (editingLead ? 'Update Lead' : 'Save Lead')}
+              {isSaving
+                ? "Saving..."
+                : editingLead
+                ? "Update Lead"
+                : "Save Lead"}
             </button>
           </div>
         </div>
@@ -736,7 +855,9 @@ const LeadsPage = () => {
                   <FaUser className="text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">Total Leads</h3>
+                  <h3 className="text-sm font-medium text-gray-600">
+                    Total Leads
+                  </h3>
                   <p className="text-2xl font-bold">{stats.totalLeads}</p>
                 </div>
               </div>
@@ -760,7 +881,9 @@ const LeadsPage = () => {
                   <FaUserCheck className="text-blue-600" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">Contacted</h3>
+                  <h3 className="text-sm font-medium text-gray-600">
+                    Contacted
+                  </h3>
                   <p className="text-2xl font-bold">{stats.contacted}</p>
                 </div>
               </div>
@@ -772,7 +895,9 @@ const LeadsPage = () => {
                   <FaCheckCircle className="text-yellow-600" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">Qualified</h3>
+                  <h3 className="text-sm font-medium text-gray-600">
+                    Qualified
+                  </h3>
                   <p className="text-2xl font-bold">{stats.qualified}</p>
                 </div>
               </div>
@@ -784,7 +909,9 @@ const LeadsPage = () => {
                   <FaPauseCircle className="text-purple-600" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">Proposal</h3>
+                  <h3 className="text-sm font-medium text-gray-600">
+                    Proposal
+                  </h3>
                   <p className="text-2xl font-bold">{stats.proposal}</p>
                 </div>
               </div>
@@ -796,7 +923,9 @@ const LeadsPage = () => {
                   <FaCheckCircle className="text-green-600" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">Customer</h3>
+                  <h3 className="text-sm font-medium text-gray-600">
+                    Customer
+                  </h3>
                   <p className="text-2xl font-bold">{stats.customer}</p>
                 </div>
               </div>
@@ -823,7 +952,10 @@ const LeadsPage = () => {
                 <BarChart
                   data={chartData}
                   margin={{
-                    top: 5, right: 30, left: 20, bottom: 5,
+                    top: 5,
+                    right: 30,
+                    left: 20,
+                    bottom: 5,
                   }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
@@ -841,7 +973,8 @@ const LeadsPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+                className="px-3 py-1 text-sm rounded flex items-center gap-2"
+                style={{ backgroundColor: "#333333", color: "white" }}
                 onClick={() => setShowNewLeadForm(true)}
               >
                 <FaPlus /> New Lead
@@ -860,14 +993,18 @@ const LeadsPage = () => {
               >
                 {compactView ? "<<" : ">>"}
               </button>
-              <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
+              {/* <button className="border px-3 py-1 text-sm rounded flex items-center gap-2">
                 <FaFilter /> Filters
-              </button>
+              </button> */}
             </div>
           </div>
 
           {/* White box for table */}
-          <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+          <div
+            className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+              compactView ? "w-1/2" : "w-full"
+            }`}
+          >
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
@@ -966,34 +1103,90 @@ const LeadsPage = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                    <th
+                      className="p-3 rounded-l-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
                       <input
                         type="checkbox"
-                        checked={selectedLeads.length === currentData.length && currentData.length > 0}
+                        checked={
+                          selectedLeads.length === currentData.length &&
+                          currentData.length > 0
+                        }
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedLeads(currentData.map(c => c._id));
+                            setSelectedLeads(currentData.map((c) => c._id));
                           } else {
                             setSelectedLeads([]);
                           }
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Name</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Company</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Name
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Company
+                    </th>
                     {compactView ? (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="p-3 rounded-r-lg"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Actions
+                        </th>
                       </>
                     ) : (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Email</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Phone</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Value</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Source</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Email
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Phone
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Value
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Source
+                        </th>
+                        <th
+                          className="p-3 rounded-r-lg"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Actions
+                        </th>
                       </>
                     )}
                   </tr>
@@ -1001,8 +1194,13 @@ const LeadsPage = () => {
                 <tbody>
                   {currentData.length === 0 ? (
                     <tr>
-                      <td colSpan={compactView ? 5 : 9} className="p-3 text-center text-gray-500">
-                        {leads.length === 0 ? "No leads found. Click 'New Lead' to get started." : "No matching leads found."}
+                      <td
+                        colSpan={compactView ? 5 : 9}
+                        className="p-3 text-center text-gray-500"
+                      >
+                        {leads.length === 0
+                          ? "No leads found. Click 'New Lead' to get started."
+                          : "No matching leads found."}
                       </td>
                     </tr>
                   ) : (
@@ -1010,7 +1208,7 @@ const LeadsPage = () => {
                       <tr
                         key={lead._id}
                         className="bg-white shadow rounded-lg hover:bg-gray-50"
-                        style={{ color: 'black' }}
+                        style={{ color: "black" }}
                       >
                         <td className="p-3 rounded-l-lg border-0">
                           <div className="flex items-center">
@@ -1028,9 +1226,13 @@ const LeadsPage = () => {
                               <FaUser className="text-blue-600 text-sm" />
                             </div>
                             <div className="ml-2">
-                              <div className="text-sm font-medium text-gray-900">{lead.name}</div>
+                              <div className="text-sm font-medium text-gray-900">
+                                {lead.name}
+                              </div>
                               {lead.customer && (
-                                <div className="text-xs text-gray-500">Customer</div>
+                                <div className="text-xs text-gray-500">
+                                  Customer
+                                </div>
                               )}
                             </div>
                           </div>
@@ -1044,7 +1246,11 @@ const LeadsPage = () => {
                         {compactView ? (
                           <>
                             <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(lead.status)}`}>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                  lead.status
+                                )}`}
+                              >
                                 {lead.status}
                               </span>
                             </td>
@@ -1086,7 +1292,11 @@ const LeadsPage = () => {
                               </div>
                             </td>
                             <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(lead.status)}`}>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                  lead.status
+                                )}`}
+                              >
                                 {lead.status}
                               </span>
                             </td>
@@ -1124,12 +1334,16 @@ const LeadsPage = () => {
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
               <div className="text-sm text-gray-700">
-                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredLeads.length)} of {filteredLeads.length} entries
+                Showing {startIndex + 1} to{" "}
+                {Math.min(startIndex + entriesPerPage, filteredLeads.length)} of{" "}
+                {filteredLeads.length} entries
               </div>
               <div className="flex items-center gap-1">
                 <button
                   className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -1148,7 +1362,9 @@ const LeadsPage = () => {
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? 'bg-gray-200' : ''}`}
+                      className={`px-3 py-1 border rounded text-sm ${
+                        currentPage === pageNum ? "bg-gray-200" : ""
+                      }`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
                       {pageNum}
@@ -1157,7 +1373,9 @@ const LeadsPage = () => {
                 })}
                 <button
                   className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   Next
@@ -1184,7 +1402,9 @@ const LeadsPage = () => {
 
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">
-                Upload an Excel or CSV file with lead data. The file should include columns for Name, Company, Email, and optionally Phone, Value, Tags, Assigned, Status, Source.
+                Upload an Excel or CSV file with lead data. The file should
+                include columns for Name, Company, Email, and optionally Phone,
+                Value, Tags, Assigned, Status, Source.
               </p>
               <input
                 type="file"
@@ -1202,7 +1422,13 @@ const LeadsPage = () => {
             )}
 
             {importResult && (
-              <div className={`mb-4 p-2 rounded ${importResult.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              <div
+                className={`mb-4 p-2 rounded ${
+                  importResult.success
+                    ? "bg-green-50 text-green-700"
+                    : "bg-red-50 text-red-700"
+                }`}
+              >
                 {importResult.success ? (
                   <div>
                     <p>Import completed successfully!</p>
@@ -1210,16 +1436,17 @@ const LeadsPage = () => {
                     {importResult.errorCount > 0 && (
                       <p>{importResult.errorCount} rows had errors.</p>
                     )}
-                    {importResult.errorMessages && importResult.errorMessages.length > 0 && (
-                      <div className="mt-2">
-                        <p className="font-semibold">Error details:</p>
-                        <ul className="text-xs">
-                          {importResult.errorMessages.map((error, index) => (
-                            <li key={index}>{error}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
+                    {importResult.errorMessages &&
+                      importResult.errorMessages.length > 0 && (
+                        <div className="mt-2">
+                          <p className="font-semibold">Error details:</p>
+                          <ul className="text-xs">
+                            {importResult.errorMessages.map((error, index) => (
+                              <li key={index}>{error}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                   </div>
                 ) : (
                   <p>Error: {importResult.message}</p>

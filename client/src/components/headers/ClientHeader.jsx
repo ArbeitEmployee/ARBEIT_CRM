@@ -1,5 +1,12 @@
 // ClientHeader.jsx - Updated version
-import { FaUserCircle, FaBars, FaBell, FaCog, FaSignOutAlt, FaKey } from "react-icons/fa";
+import {
+  FaUserCircle,
+  FaBars,
+  FaBell,
+  FaCog,
+  FaSignOutAlt,
+  FaKey,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 const ClientHeader = ({ onToggleSidebar, client: propClient, onLogout }) => {
@@ -14,17 +21,16 @@ const ClientHeader = ({ onToggleSidebar, client: propClient, onLogout }) => {
     // Clear client data from localStorage
     localStorage.removeItem("crm_client_token");
     localStorage.removeItem("crm_client");
-    
+
     // If a custom logout function is provided as prop, call it
     if (onLogout && typeof onLogout === "function") {
       onLogout();
     }
-    
+
     // Redirect to login page
     navigate("/client/login");
   };
 
-  
   // Navigate to change password page
   const handleChangePassword = () => {
     navigate("/client/change-password");
@@ -37,7 +43,11 @@ const ClientHeader = ({ onToggleSidebar, client: propClient, onLogout }) => {
         <button onClick={onToggleSidebar} className="text-white text-xl">
           <FaBars />
         </button>
-        <img src="/arbeit-logo.png" alt="ARBEIT Logo" className="inline-block h-7 mr-3" />
+        <img
+          src="/arbeit-logo.png"
+          alt="ARBEIT Logo"
+          className="inline-block h-7 mr-3"
+        />
         <h1 className="text-lg font-bold">ARBEIT Client</h1>
       </div>
 
@@ -45,7 +55,7 @@ const ClientHeader = ({ onToggleSidebar, client: propClient, onLogout }) => {
       <div className="flex items-center gap-6">
         {/* Change Password */}
         <div className="flex items-center gap-4">
-          <div 
+          <div
             className="flex items-center gap-1 cursor-pointer hover:text-gray-300"
             onClick={handleChangePassword}
           >
@@ -54,13 +64,13 @@ const ClientHeader = ({ onToggleSidebar, client: propClient, onLogout }) => {
           </div>
         </div>
 
-        {/* Notifications */}
+        {/* Notifications
         <button className="relative">
           <FaBell className="text-xl" />
           <span className="absolute -top-1 -right-2 bg-red-500 rounded-full text-xs px-1">
             3
           </span>
-        </button>
+        </button> */}
 
         {/* User */}
         <div className="flex items-center gap-2 cursor-pointer">
@@ -69,7 +79,10 @@ const ClientHeader = ({ onToggleSidebar, client: propClient, onLogout }) => {
         </div>
 
         {/* Logout */}
-        <button onClick={handleLogout} className="flex items-center gap-1 hover:text-gray-300">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1 hover:text-gray-300"
+        >
           <FaSignOutAlt className="text-xl" />
           <span className="hidden md:inline text-sm">Logout</span>
         </button>
