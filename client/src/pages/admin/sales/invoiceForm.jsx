@@ -1,7 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FaPlus, FaTimes, FaSearch, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+
+// Custom hook for detecting outside clicks
+const useOutsideClick = (callback) => {
+  const ref = useRef();
+
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [ref, callback]);
+
+  return ref;
+};
 
 const InvoiceForm = () => {
   const navigate = useNavigate();
@@ -18,6 +39,7 @@ const InvoiceForm = () => {
     paymentMode: "Bank",
     currency: "USD",
     salesAgent: "",
+    salesAgentId: "",
     recurringInvoice: "No",
     discountType: "percent",
     discountValue: 0,
@@ -46,8 +68,21 @@ const InvoiceForm = () => {
   const [customerSearchResults, setCustomerSearchResults] = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
+  // Staff search state
+  const [staffSearchTerm, setStaffSearchTerm] = useState("");
+  const [staffSearchResults, setStaffSearchResults] = useState([]);
+  const [showStaffDropdown, setShowStaffDropdown] = useState(false);
+
+  // Use the custom hook for detecting outside clicks
+  const customerRef = useOutsideClick(() => {
+    setShowCustomerDropdown(false);
+  });
+  
+  const staffRef = useOutsideClick(() => {
+    setShowStaffDropdown(false);
+  });
+
   // Static data matching your schema enums
-  const staffMembers = ["John Doe", "Jane Smith", "Mike Johnson"];
   const tagOptions = ["Bug", "Follow Up", "Urgent", "Design", "Development"];
   const paymentModes = ["Bank", "Stripe Checkout"];
   const recurringOptions = ["No", "Every one month", "Custom"];
@@ -69,6 +104,14 @@ const InvoiceForm = () => {
       }
     };
   };
+
+  // Configure axios defaults
+  useEffect(() => {
+    const token = getAuthToken();
+    if (token) {
+      axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+    }
+  }, []);
 
   // Fetch items from database
   useEffect(() => {
@@ -109,6 +152,23 @@ const InvoiceForm = () => {
     }
   };
 
+  // Search staff by name
+  const searchStaff = async (searchTerm) => {
+    if (searchTerm.length < 1) {
+      setStaffSearchResults([]);
+      return;
+    }
+    
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`, config);
+      setStaffSearchResults(data.staffs || []);
+    } catch (error) {
+      console.error("Error searching staff:", error);
+      setStaffSearchResults([]);
+    }
+  };
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (customerSearchTerm) {
@@ -118,6 +178,16 @@ const InvoiceForm = () => {
 
     return () => clearTimeout(delayDebounceFn);
   }, [customerSearchTerm]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (staffSearchTerm) {
+        searchStaff(staffSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [staffSearchTerm]);
 
   // Form handlers
   const handleChange = (e) => {
@@ -151,6 +221,17 @@ const InvoiceForm = () => {
     });
   };
 
+  const handleStaffSearchChange = (e) => {
+    const value = e.target.value;
+    setFormData({
+      ...formData,
+      salesAgent: value,
+      salesAgentId: ""
+    });
+    setStaffSearchTerm(value);
+    setShowStaffDropdown(true);
+  };
+
   const handleSelectCustomer = (customer) => {
     setFormData({
       ...formData,
@@ -161,6 +242,16 @@ const InvoiceForm = () => {
     });
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
+  };
+
+  const handleSelectStaff = (staff) => {
+    setFormData({
+      ...formData,
+      salesAgentId: staff._id,
+      salesAgent: staff.name
+    });
+    setShowStaffDropdown(false);
+    setStaffSearchTerm("");
   };
 
   const handleNewItemChange = (e) => {
@@ -319,7 +410,8 @@ const InvoiceForm = () => {
         tags: formData.tags || undefined,
         paymentMode: formData.paymentMode,
         currency: formData.currency,
-        salesAgent: formData.salesAgent || undefined,
+        salesAgent: formData.salesAgent,
+        salesAgentId: formData.salesAgentId,
         recurringInvoice: formData.recurringInvoice,
         discountType: formData.discountType,
         discountValue: formData.discountValue || 0,
@@ -380,7 +472,7 @@ const InvoiceForm = () => {
             {/* Customer */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer*</label>
-              <div className="relative">
+              <div className="relative" ref={customerRef}>
                 <input
                   type="text"
                   value={formData.customer}
@@ -551,17 +643,35 @@ const InvoiceForm = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Sales Agent</label>
-                <select
-                  name="salesAgent"
-                  value={formData.salesAgent}
-                  onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
-                >
-                  <option value="">Select Agent</option>
-                  {staffMembers.map((staff, i) => (
-                    <option key={i} value={staff}>{staff}</option>
-                  ))}
-                </select>
+                <div className="relative" ref={staffRef}>
+                  <input
+                    type="text"
+                    name="salesAgent"
+                    value={formData.salesAgent}
+                    onChange={handleStaffSearchChange}
+                    className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                    placeholder="Search staff by name..."
+                  />
+                  {showStaffDropdown && staffSearchResults.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                      {staffSearchResults.map((staff, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelectStaff(staff)}
+                        >
+                          <div className="font-medium">{staff.name}</div>
+                          <div className="text-sm text-gray-600">{staff.position} - {staff.department}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showStaffDropdown && staffSearchResults.length === 0 && staffSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">No staff found</div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -631,9 +741,10 @@ const InvoiceForm = () => {
           <h3 className="text-lg font-semibold">Item Database</h3>
           <button
             onClick={() => setShowItemForm(true)}
-            className="bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 flex items-center"
+            className="px-3 py-2 text-sm rounded flex items-center gap-2 text-white"
+            style={{ backgroundColor: '#333333' }}
           >
-            <FaPlus /> <span className="ml-1">Add New Item</span>
+            <FaPlus /> Add New Item
           </button>
         </div>
 
@@ -698,25 +809,25 @@ const InvoiceForm = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-gray-100 text-left">
-                  <th className="p-3 font-medium">Description</th>
-                  <th className="p-3 font-medium">Rate</th>
-                  <th className="p-3 font-medium">Tax 1</th>
-                  <th className="p-3 font-medium">Tax 2</th>
-                  <th className="p-3 font-medium">Action</th>
+                <tr className="text-left" style={{ backgroundColor: '#333333', color: 'white' }}>
+                  <th className="p-3 rounded-l-lg">Description</th>
+                  <th className="p-3">Rate</th>
+                  <th className="p-3">Tax 1</th>
+                  <th className="p-3">Tax 2</th>
+                  <th className="p-3 rounded-r-lg">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {databaseItems.map((item) => (
-                  <tr key={item._id}>
-                    <td className="p-3">{item.description}</td>
-                    <td className="p-3">{item.rate}</td>
-                    <td className="p-3">{item.tax1}%</td>
-                    <td className="p-3">{item.tax2}%</td>
-                    <td className="p-3">
+                  <tr key={item._id} className="bg-white shadow rounded-lg hover:bg-gray-50">
+                    <td className="p-3 border-0">{item.description}</td>
+                    <td className="p-3 border-0">{item.rate}</td>
+                    <td className="p-3 border-0">{item.tax1}%</td>
+                    <td className="p-3 border-0">{item.tax2}%</td>
+                    <td className="p-3 border-0">
                       <button 
                         onClick={() => addItemFromDatabase(item)}
-                        className="text-blue-500 hover:text-blue-700 px-2 py-1 border border-blue-500 rounded hover:bg-blue-50"
+                        className="text-black-600 hover:text-blue-800"
                       >
                         Add to Invoice
                       </button>
@@ -747,9 +858,10 @@ const InvoiceForm = () => {
                 }
               ]);
             }}
-            className="bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 flex items-center"
+            className="px-3 py-2 text-sm rounded flex items-center gap-2 text-white"
+            style={{ backgroundColor: '#333333' }}
           >
-            <FaPlus /> <span className="ml-1">Add Custom Item</span>
+            <FaPlus /> Add Custom Item
           </button>
         </div>
 
@@ -759,22 +871,22 @@ const InvoiceForm = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-3 font-medium">#</th>
-                <th className="p-3 font-medium">Item Description</th>
-                <th className="p-3 font-medium">Qty</th>
-                <th className="p-3 font-medium">Rate</th>
-                <th className="p-3 font-medium">Tax 1 (%)</th>
-                <th className="p-3 font-medium">Tax 2 (%)</th>
-                <th className="p-3 font-medium">Amount</th>
-                <th className="p-3 font-medium">Action</th>
+              <tr className="text-left" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th className="p-3 rounded-l-lg">#</th>
+                <th className="p-3">Item Description</th>
+                <th className="p-3">Qty</th>
+                <th className="p-3">Rate</th>
+                <th className="p-3">Tax 1 (%)</th>
+                <th className="p-3">Tax 2 (%)</th>
+                <th className="p-3">Amount</th>
+                <th className="p-3 rounded-r-lg">Action</th>
               </tr>
             </thead>
             <tbody>
               {invoiceItems.map((item, i) => (
-                <tr key={i}>
-                  <td className="p-3">{i + 1}</td>
-                  <td className="p-3">
+                <tr key={i} className="bg-white shadow rounded-lg hover:bg-gray-50">
+                  <td className="p-3 border-0">{i + 1}</td>
+                  <td className="p-3 border-0">
                     <input
                       type="text"
                       value={item.description}
@@ -789,7 +901,7 @@ const InvoiceForm = () => {
                       <p className="text-red-500 text-xs mt-1">{errors[`item-${i}-description`]}</p>
                     )}
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 border-0">
                     <input
                       type="number"
                       value={item.quantity}
@@ -805,7 +917,7 @@ const InvoiceForm = () => {
                       <p className="text-red-500 text-xs mt-1">{errors[`item-${i}-quantity`]}</p>
                     )}
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 border-0">
                     <input
                       type="number"
                       value={item.rate}
@@ -821,7 +933,7 @@ const InvoiceForm = () => {
                       <p className="text-red-500 text-xs mt-1">{errors[`item-${i}-rate`]}</p>
                     )}
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 border-0">
                     <select
                       value={item.tax1}
                       onChange={(e) => handleItemChange(i, "tax1", e.target.value)}
@@ -832,7 +944,7 @@ const InvoiceForm = () => {
                       ))}
                     </select>
                   </td>
-                  <td className="p-3">
+                  <td className="p-3 border-0">
                     <select
                       value={item.tax2}
                       onChange={(e) => handleItemChange(i, "tax2", e.target.value)}
@@ -843,11 +955,11 @@ const InvoiceForm = () => {
                       ))}
                     </select>
                   </td>
-                  <td className="p-3 text-right">${item.amount.toFixed(2)}</td>
-                  <td className="p-3 text-center">
+                  <td className="p-3 border-0 text-right">${item.amount.toFixed(2)}</td>
+                  <td className="p-3 border-0 text-center">
                     <button
                       onClick={() => deleteItem(i)}
-                      className="text-red-500 hover:text-red-700 p-1"
+                      className="text-red-600 hover:text-red-800"
                       title="Remove"
                       type="button"
                     >
@@ -873,7 +985,7 @@ const InvoiceForm = () => {
             <div className="flex items-center">
               <span className="font-medium mr-2">Discount:</span>
               <span className="text-sm">
-                ({formData.discountType === "percent" ? `${formData.discountValue}%` : `$${formData.discountValue}`})
+                              ({formData.discountType === "percent" ? `${formData.discountValue}%` : `$${formData.discountValue}`})
               </span>
             </div>
             <div className="flex items-center">
@@ -962,7 +1074,6 @@ const InvoiceForm = () => {
                     </select>
                   </div>
                   <div>
-                   
                     <label className="block text-sm font-medium text-gray-700 mb-1">Tax 2</label>
                     <select
                       name="tax2"
@@ -988,7 +1099,8 @@ const InvoiceForm = () => {
                 </button>
                 <button 
                   type="submit" 
-                  className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  className="px-4 py-2 text-white rounded text-sm"
+                  style={{ backgroundColor: '#333333' }}
                 >
                   Save Item
                 </button>
@@ -1011,7 +1123,8 @@ const InvoiceForm = () => {
         <button
           onClick={() => handleSubmit(true)}
           disabled={loading}
-          className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+          className="px-6 py-2 text-white rounded hover:bg-gray-800 disabled:opacity-50"
+          style={{ backgroundColor: '#000000' }}
           type="button"
         >
           {loading ? "Saving..." : "Save & Send"}

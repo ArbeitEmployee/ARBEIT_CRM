@@ -1,7 +1,28 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FaPlus, FaTimes, FaSearch, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+
+// Custom hook for detecting outside clicks
+const useOutsideClick = (callback) => {
+  const ref = useRef();
+
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        callback();
+      }
+    };
+
+    document.addEventListener('click', handleClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+    };
+  }, [ref, callback]);
+
+  return ref;
+};
 
 const EstimateForm = () => {
   const navigate = useNavigate();
@@ -19,6 +40,7 @@ const EstimateForm = () => {
     status: "Draft",
     reference: "",
     salesAgent: "",
+    salesAgentId: "",
     discountType: "percent",
     discountValue: 0,
     adminNote: "",
@@ -43,11 +65,24 @@ const EstimateForm = () => {
   const [customerSearchResults, setCustomerSearchResults] = useState([]);
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
 
+  // Staff search state
+  const [staffSearchTerm, setStaffSearchTerm] = useState("");
+  const [staffSearchResults, setStaffSearchResults] = useState([]);
+  const [showStaffDropdown, setShowStaffDropdown] = useState(false);
+
   // Static data
-  const staffMembers = ["John Doe", "Jane Smith", "Mike Johnson"];
   const tagOptions = ["Bug", "Follow Up", "Urgent", "Design", "Development"];
   const statusOptions = ["Draft", "Pending", "Approved", "Rejected"];
   const taxOptions = [0, 5, 10, 15, 20];
+
+  // Use the custom hook for detecting outside clicks
+  const customerRef = useOutsideClick(() => {
+    setShowCustomerDropdown(false);
+  });
+  
+  const staffRef = useOutsideClick(() => {
+    setShowStaffDropdown(false);
+  });
 
   // Get auth token from localStorage
   const getAuthToken = () => {
@@ -111,6 +146,23 @@ const EstimateForm = () => {
     }
   };
 
+  // Search staff by name
+  const searchStaff = async (searchTerm) => {
+    if (searchTerm.length < 1) {
+      setStaffSearchResults([]);
+      return;
+    }
+    
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`, config);
+      setStaffSearchResults(data.staffs || []);
+    } catch (error) {
+      console.error("Error searching staff:", error);
+      setStaffSearchResults([]);
+    }
+  };
+
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       if (customerSearchTerm) {
@@ -120,6 +172,16 @@ const EstimateForm = () => {
 
     return () => clearTimeout(delayDebounceFn);
   }, [customerSearchTerm]);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (staffSearchTerm) {
+        searchStaff(staffSearchTerm);
+      }
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [staffSearchTerm]);
 
   // Form handlers
   const handleChange = (e) => {
@@ -143,6 +205,17 @@ const EstimateForm = () => {
     });
   };
 
+  const handleStaffSearchChange = (e) => {
+    const value = e.target.value;
+    setFormData({
+      ...formData,
+      salesAgent: value,
+      salesAgentId: ""
+    });
+    setStaffSearchTerm(value);
+    setShowStaffDropdown(true);
+  };
+
   const handleSelectCustomer = (customer) => {
     setFormData({
       ...formData,
@@ -153,6 +226,16 @@ const EstimateForm = () => {
     });
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
+  };
+
+  const handleSelectStaff = (staff) => {
+    setFormData({
+      ...formData,
+      salesAgentId: staff._id,
+      salesAgent: staff.name
+    });
+    setShowStaffDropdown(false);
+    setStaffSearchTerm("");
   };
 
   const handleNewItemChange = (e) => {
@@ -281,6 +364,7 @@ const EstimateForm = () => {
         status: send ? "Pending" : formData.status,
         reference: formData.reference,
         salesAgent: formData.salesAgent,
+        salesAgentId: formData.salesAgentId,
         discountType: formData.discountType,
         discountValue: parseFloat(formData.discountValue),
         adminNote: formData.adminNote,
@@ -343,7 +427,7 @@ const EstimateForm = () => {
             {/* Customer */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer*</label>
-              <div className="relative">
+              <div className="relative" ref={customerRef}>
                 <input
                   type="text"
                   value={formData.customer}
@@ -460,17 +544,35 @@ const EstimateForm = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Sales Agent</label>
-                <select
-                  name="salesAgent"
-                  value={formData.salesAgent}
-                  onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
-                >
-                  <option value="">Select Agent</option>
-                  {staffMembers.map((staff, i) => (
-                    <option key={i} value={staff}>{staff}</option>
-                  ))}
-                </select>
+                <div className="relative" ref={staffRef}>
+                  <input
+                    type="text"
+                    name="salesAgent"
+                    value={formData.salesAgent}
+                    onChange={handleStaffSearchChange}
+                    className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                    placeholder="Search staff by name..."
+                  />
+                  {showStaffDropdown && staffSearchResults.length > 0 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                      {staffSearchResults.map((staff, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelectStaff(staff)}
+                        >
+                          <div className="font-medium">{staff.name}</div>
+                          <div className="text-sm text-gray-600">{staff.position} - {staff.department}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {showStaffDropdown && staffSearchResults.length === 0 && staffSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">No staff found</div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
