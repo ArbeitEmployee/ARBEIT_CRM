@@ -1,4 +1,3 @@
-
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
@@ -37,7 +36,6 @@ import LeadsPage from "../pages/admin/Leads";
 import EstimateRequestPage from "../pages/admin/EstimateRequest";
 import KnowledgeBase from "../pages/admin/KnowledgeBase";
 
-
 import InvoiceForm from "../pages/admin/sales/invoiceForm";
 import CreditNoteForm from "../pages/admin/sales/creditNoteForm";
 import SalesReports from "../pages/admin/reports/sales";
@@ -65,9 +63,10 @@ import ClientEstimates from "../pages/client/ClientEstimates";
 import ClientInvoices from "../pages/client/ClientInvoices";
 import ClientPayments from "../pages/client/ClientPayments";
 
-
-
-
+// Staff pages
+import StaffLogin from "../pages/staff/staffLogin";
+import StaffRegistration from "../pages/staff/staffRegistration";
+import StaffForgotPassword from "../pages/staff/forgotPassword";
 
 const AppRoutes = () => {
   return (
@@ -83,7 +82,15 @@ const AppRoutes = () => {
       {/* Client Auth Routes */}
       <Route path="/client/login" element={<ClientLogin />} />
       <Route path="/client/registration" element={<ClientRegistration />} />
-      <Route path="/client/forgot-password" element={<ClientForgotPassword />} />
+      <Route
+        path="/client/forgot-password"
+        element={<ClientForgotPassword />}
+      />
+
+      {/* Staff Auth Routes */}
+      <Route path="/staff/login" element={<StaffLogin />} />
+      <Route path="/staff/registration" element={<StaffRegistration />} />
+      <Route path="/staff/forgot-password" element={<StaffForgotPassword />} />
 
       {/* Admin Dashboard Routes */}
       <Route
@@ -93,22 +100,25 @@ const AppRoutes = () => {
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="customers" element={<Customers />} />
-              <Route path="staffs" element={<StaffsPage/>} />
-              <Route path="sales/proposals" element={<Proposals/>} />
+              <Route path="staffs" element={<StaffsPage />} />
+              <Route path="sales/proposals" element={<Proposals />} />
               <Route path="/proposals/new" element={<ProposalForm />} />
               <Route path="sales/estimates" element={<Estimates />} />
               <Route path="/estimates/new" element={<EstimateForm />} />
-              <Route path="sales/invoices" element={<Invoices/>} />
-              <Route path="/invoices/new" element={<InvoiceForm/>} />
-              <Route path="sales/payments" element={<Payments/>} />
-              <Route path="sales/creditNotes" element={<CreditNotes/>} />
+              <Route path="sales/invoices" element={<Invoices />} />
+              <Route path="/invoices/new" element={<InvoiceForm />} />
+              <Route path="sales/payments" element={<Payments />} />
+              <Route path="sales/creditNotes" element={<CreditNotes />} />
               <Route path="reports/sales" element={<SalesReports />} />
               <Route path="reports/expenses" element={<ExpenseReports />} />
-              <Route path="reports/expenses-vs-income" element={<ExpensesVsIncome />} />
-              <Route path="change-password" element={<ChangePassword/>} />
-              
-              <Route path="/credit-notes/new" element={<CreditNoteForm/>} />
-              <Route path="sales/items" element={<Items/>} />
+              <Route
+                path="reports/expenses-vs-income"
+                element={<ExpensesVsIncome />}
+              />
+              <Route path="change-password" element={<ChangePassword />} />
+
+              <Route path="/credit-notes/new" element={<CreditNoteForm />} />
+              <Route path="sales/items" element={<Items />} />
               <Route path="subscriptions" element={<SubscriptionPage />} />
               <Route path="expenses" element={<ExpensesPage />} />
               <Route path="contracts" element={<ContactsPage />} />
@@ -116,18 +126,27 @@ const AppRoutes = () => {
               <Route path="tasks" element={<TasksPage />} />
               <Route path="support" element={<SupportPage />} />
               <Route path="leads" element={<LeadsPage />} />
-              <Route path="estimate-request" element={<EstimateRequestPage />} />
+              <Route
+                path="estimate-request"
+                element={<EstimateRequestPage />}
+              />
               <Route path="knowledge-base" element={<KnowledgeBase />} />
               <Route path="reports/leads" element={<LeadsReport />} />
-              <Route path="reports/kb-articles" element={<KbArticlesReport />} />
+              <Route
+                path="reports/kb-articles"
+                element={<KbArticlesReport />}
+              />
               <Route path="admins/all" element={<AllAdmins />} />
-              <Route path="admins/pending" element={< PendingAdmins/>} />
+              <Route path="admins/pending" element={<PendingAdmins />} />
 
               {/*Utilities */}
               <Route path="utilities/bulk-pdf" element={<BulkPdfExport />} />
               <Route path="utilities/csv" element={<CsvExport />} />
               <Route path="utilities/calendar" element={<Calendar />} />
-              <Route path="utilities/announcements" element={<AnnouncementsPage />} />
+              <Route
+                path="utilities/announcements"
+                element={<AnnouncementsPage />}
+              />
               <Route path="utilities/goals" element={<GoalsPage />} />
 
               {/* Add more admin routes here */}
@@ -144,16 +163,22 @@ const AppRoutes = () => {
             <Routes>
               <Route index element={<Home />} />
               <Route path="home" element={<Home />} />
-              <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />
-              <Route path="change-password" element={<ClientChangePassword/>} />
+              <Route
+                path="knowledge-base"
+                element={<ClientKnowledgeBasePage />}
+              />
+              <Route
+                path="change-password"
+                element={<ClientChangePassword />}
+              />
               <Route path="projects" element={<ClientProjectPage />} />
               <Route path="contracts" element={<ClientContactsPage />} />
               <Route path="estimates" element={<ClientEstimateRequest />} />
               <Route path="support" element={<ClientSupportPage />} />
-              <Route path="ClientProposal" element={<ClientProposals/>} />
-              <Route path="ClientEstimate" element={<ClientEstimates/>} />
-              <Route path="ClientInvoice" element={<ClientInvoices/>} />
-              <Route path="ClientPayment" element={<ClientPayments/>} />
+              <Route path="ClientProposal" element={<ClientProposals />} />
+              <Route path="ClientEstimate" element={<ClientEstimates />} />
+              <Route path="ClientInvoice" element={<ClientInvoices />} />
+              <Route path="ClientPayment" element={<ClientPayments />} />
               {/* Add more client routes here  <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />*/}
             </Routes>
           </ClientLayout>
