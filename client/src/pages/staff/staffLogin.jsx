@@ -35,24 +35,25 @@ const StaffLogin = () => {
 
     setLoading(true);
 
-    // Simulate login process
-    setTimeout(() => {
-      // Frontend simulation - in real app, you'd call your API
-      const simulatedStaffData = {
-        id: "STAFF001",
-        name: "John Doe",
-        email: email,
-        department: "Administration",
-        position: "Staff Member",
-        employeeId: "EMP2024001",
-        role: "staff",
-      };
+    try {
+      const res = await fetch("http://localhost:5000/api/staff/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Login failed");
+        return;
+      }
 
       toast.success("Staff login successful!");
 
-      // Save staff data in localStorage (simulation)
-      localStorage.setItem("crm_staff_token", "simulated_staff_token_12345");
-      localStorage.setItem("crm_staff", JSON.stringify(simulatedStaffData));
+      // Save staff data in localStorage
+      localStorage.setItem("crm_staff_token", data.token);
+      localStorage.setItem("crm_staff", JSON.stringify(data.staff));
 
       // Remember me functionality
       if (rememberMe) {
@@ -65,9 +66,11 @@ const StaffLogin = () => {
       setTimeout(() => {
         navigate("/staff/dashboard");
       }, 1000);
-
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (

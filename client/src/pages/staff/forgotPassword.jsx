@@ -39,95 +39,132 @@ export default function StaffForgotPassword() {
     }
   };
 
-  const getLineClass = (lineNum) =>
-    `h-1 rounded-full transition-all duration-300 ${
-      step === lineNum ? "bg-white w-8" : "bg-white/30 w-6"
-    }`;
-
-  // 1. Send Reset Code to Email (Frontend Simulation)
-  const sendResetCode = async () => {
+  const handleSendCode = async () => {
     if (!email) {
       setErrors({ ...errors, email: "Email is required" });
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setErrors({ ...errors, email: "Please enter a valid email" });
+      toast.error("Please enter your email");
       return;
     }
 
     setLoading(true);
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/staff/forgot-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
 
-    // Simulate API call
-    setTimeout(() => {
-      // Frontend validation simulation
-      const validStaffEmails = [
-        "staff@company.com",
-        "admin@company.com",
-        "hr@company.com",
-      ];
+      const data = await res.json();
 
-      if (
-        validStaffEmails.includes(email.toLowerCase()) ||
-        email.includes("staff")
-      ) {
-        toast.success("Reset code sent to your staff email");
-        setStep(2);
-      } else {
-        toast.error("No staff account found with this email");
+      if (!res.ok) {
+        toast.error(data.message || "Failed to send reset code");
+        return;
       }
+
+      toast.success("Reset code sent to your email!");
+      setStep(2);
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
-  // 2. Verify Reset Code (Frontend Simulation)
-  const verifyCode = async () => {
-    if (code.some((digit) => digit === "")) {
-      setErrors({ ...errors, code: "Please enter complete code" });
+  const handleVerifyCode = async () => {
+    const verificationCode = code.join("");
+    if (verificationCode.length !== 4) {
+      setErrors({ ...errors, code: "Please enter the 4-digit code" });
+      toast.error("Please enter the complete 4-digit code");
       return;
     }
 
-    const codeString = code.join("");
     setLoading(true);
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/staff/verify-reset-code",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, code: verificationCode }),
+        }
+      );
 
-    // Simulate API call
-    setTimeout(() => {
-      // Frontend validation simulation - any 4-digit code works for demo
-      if (codeString.length === 4) {
-        toast.success("Code verified. You can set a new password.");
-        setStep(3);
-      } else {
-        toast.error("Invalid reset code");
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.message || "Invalid or expired code");
+        return;
       }
+
+      toast.success("Code verified successfully!");
+      setStep(3);
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
-  // 3. Reset Password (Frontend Simulation)
-  const resetPassword = async () => {
-    if (newPassword.length < 6) {
-      setErrors({
-        ...errors,
-        newPassword: "Password must be at least 6 characters",
-      });
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setErrors({ ...errors, confirmPassword: "Passwords do not match" });
+  const handleResetPassword = async () => {
+    const verificationCode = code.join("");
+    const newErrors = {
+      newPassword: !newPassword
+        ? "New password is required"
+        : newPassword.length < 6
+        ? "Password must be at least 6 characters"
+        : "",
+      confirmPassword: !confirmPassword
+        ? "Please confirm your password"
+        : confirmPassword !== newPassword
+        ? "Passwords do not match"
+        : "",
+    };
+
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some((error) => error !== "")) {
+      if (newPassword.length < 6) {
+        toast.error("Password must be at least 6 characters");
+      } else if (confirmPassword !== newPassword) {
+        toast.error("Passwords do not match");
+      }
       return;
     }
 
     setLoading(true);
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/staff/reset-password",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            code: verificationCode,
+            newPassword,
+          }),
+        }
+      );
 
-    // Simulate API call
-    setTimeout(() => {
-      toast.success("Staff password reset successful! Redirecting to login...");
+      const data = await res.json();
 
+      if (!res.ok) {
+        toast.error(data.message || "Failed to reset password");
+        return;
+      }
+
+      toast.success("Password reset successfully!");
       setTimeout(() => {
         window.location.href = "/staff/login";
-      }, 1500);
-
+      }, 2000);
+    } catch (error) {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
   return (
@@ -142,50 +179,21 @@ export default function StaffForgotPassword() {
     >
       {/* Title */}
       <div className="text-center mb-6">
-        {step === 1 && (
-          <>
-            <h2 className="text-lg font-semibold text-white">
-              Staff Forgot Password
-            </h2>
-            <p className="text-xs text-gray-300">
-              Enter your staff email to receive reset instructions
-            </p>
-          </>
-        )}
-        {step === 2 && (
-          <>
-            <h2 className="text-lg font-semibold text-white">
-              Staff Password Reset
-            </h2>
-            <p className="text-xs text-gray-300">
-              We sent a code to {email || "your staff email"}
-            </p>
-          </>
-        )}
-        {step === 3 && (
-          <>
-            <h2 className="text-lg font-semibold text-white">
-              Set New Staff Password
-            </h2>
-            <p className="text-xs text-gray-300">
-              Must be at least 6 characters
-            </p>
-          </>
-        )}
+        <h2 className="text-2xl font-bold text-white">Staff Password Reset</h2>
+        <p className="text-sm text-gray-300">
+          {step === 1 && "Enter your email to receive a reset code"}
+          {step === 2 && "Enter the 4-digit code sent to your email"}
+          {step === 3 && "Create your new password"}
+        </p>
       </div>
 
-      {/* Card */}
+      {/* Reset Card */}
       <div className="w-full max-w-sm bg-[#0c123d] bg-opacity-80 p-6 rounded-xl shadow-xl text-white">
+        {/* Step 1: Email Input */}
         {step === 1 && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              sendResetCode();
-            }}
-            className="space-y-4"
-          >
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">Staff Email Address</label>
+              <label className="block text-sm mb-1">Staff Email</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FiLock className="text-gray-400" />
@@ -206,94 +214,78 @@ export default function StaffForgotPassword() {
               {errors.email && (
                 <p className="text-red-400 text-xs mt-1">{errors.email}</p>
               )}
-              <p className="text-xs text-gray-400 mt-1">
-                Use your company staff email address
-              </p>
             </div>
+
             <button
-              type="submit"
+              onClick={handleSendCode}
               disabled={loading}
-              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition disabled:opacity-50"
+              className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+                loading
+                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                  : "bg-white text-[#0c123d] hover:bg-gray-200"
+              }`}
             >
-              {loading ? "Sending..." : "Send Reset Code"}
+              {loading ? "Sending Code..." : "SEND RESET CODE"}
             </button>
-          </form>
+          </div>
         )}
 
+        {/* Step 2: Code Verification */}
         {step === 2 && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              verifyCode();
-            }}
-            className="space-y-4"
-          >
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm mb-3 text-center">
-                Enter the 4-digit code sent to your staff email
+              <label className="block text-sm mb-1 text-center">
+                Enter 4-digit verification code
               </label>
-              <div className="flex justify-between space-x-2 mb-6">
-                {code.map((digit, idx) => (
+              <div className="flex justify-center space-x-2">
+                {code.map((digit, index) => (
                   <input
-                    key={idx}
-                    ref={codeRefs[idx]}
+                    key={index}
+                    ref={codeRefs[index]}
                     type="text"
                     maxLength={1}
                     value={digit}
-                    onChange={(e) => handleCodeChange(idx, e.target.value)}
-                    onKeyDown={(e) => handleKeyDown(idx, e)}
-                    className={`w-16 h-14 text-center rounded bg-[#10194f] text-white text-lg font-semibold focus:outline-none focus:ring-2 ${
-                      errors.code ? "focus:ring-red-500" : "focus:ring-blue-500"
+                    onChange={(e) => handleCodeChange(index, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(index, e)}
+                    className={`w-12 h-12 text-center text-lg rounded-md bg-[#10194f] text-white focus:outline-none focus:ring-2 ${
+                      errors.code ? "focus:ring-red-500" : "focus:ring-gray-700"
                     }`}
                   />
                 ))}
               </div>
               {errors.code && (
-                <p className="text-red-400 text-xs -mt-4 mb-2 text-center">
+                <p className="text-red-400 text-xs mt-1 text-center">
                   {errors.code}
                 </p>
               )}
             </div>
 
             <button
-              type="submit"
+              onClick={handleVerifyCode}
               disabled={loading}
-              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition disabled:opacity-50"
+              className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+                loading
+                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                  : "bg-white text-[#0c123d] hover:bg-gray-200"
+              }`}
             >
               {loading ? "Verifying..." : "VERIFY CODE"}
             </button>
-
-            <p className="text-center text-xs mt-2">
-              Didn't receive the email?{" "}
-              <button
-                type="button"
-                className="underline text-blue-400 hover:text-blue-300"
-                disabled={loading}
-                onClick={sendResetCode}
-              >
-                Resend Code
-              </button>
-            </p>
-          </form>
+          </div>
         )}
 
+        {/* Step 3: New Password */}
         {step === 3 && (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              resetPassword();
-            }}
-            className="space-y-4"
-          >
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">New Staff Password</label>
+              <label className="block text-sm mb-1">New Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FiLock className="text-gray-400" />
                 </div>
                 <input
                   type="password"
-                  placeholder="Enter your new password"
+                  placeholder="Enter new password"
                   value={newPassword}
                   onChange={(e) => {
                     setNewPassword(e.target.value);
@@ -302,9 +294,8 @@ export default function StaffForgotPassword() {
                   className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
                     errors.newPassword
                       ? "focus:ring-red-500"
-                      : "focus:ring-blue-400"
+                      : "focus:ring-gray-700"
                   }`}
-                  required
                 />
               </div>
               {errors.newPassword && (
@@ -315,16 +306,14 @@ export default function StaffForgotPassword() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1">
-                Confirm Staff Password
-              </label>
+              <label className="block text-sm mb-1">Confirm New Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <FiLock className="text-gray-400" />
                 </div>
                 <input
                   type="password"
-                  placeholder="Confirm your new password"
+                  placeholder="Confirm new password"
                   value={confirmPassword}
                   onChange={(e) => {
                     setConfirmPassword(e.target.value);
@@ -333,9 +322,8 @@ export default function StaffForgotPassword() {
                   className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
                     errors.confirmPassword
                       ? "focus:ring-red-500"
-                      : "focus:ring-blue-400"
+                      : "focus:ring-gray-700"
                   }`}
-                  required
                 />
               </div>
               {errors.confirmPassword && (
@@ -346,40 +334,27 @@ export default function StaffForgotPassword() {
             </div>
 
             <button
-              type="submit"
+              onClick={handleResetPassword}
               disabled={loading}
-              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition disabled:opacity-50"
+              className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+                loading
+                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                  : "bg-white text-[#0c123d] hover:bg-gray-200"
+              }`}
             >
-              {loading ? "Resetting..." : "RESET STAFF PASSWORD"}
+              {loading ? "Resetting..." : "RESET PASSWORD"}
             </button>
-          </form>
+          </div>
         )}
 
-        {/* Back to login link */}
-        <p className="text-center text-sm mt-4">
+        {/* Back to Login */}
+        <div className="text-center mt-6">
           <Link
             to="/staff/login"
-            className="text-white hover:underline transition"
+            className="text-sm text-gray-100 hover:underline"
           >
             ← Back to Staff Login
           </Link>
-        </p>
-
-        {/* Client Forgot Password Link */}
-        <p className="text-center text-sm mt-2">
-          <Link
-            to="/client/forgot-password"
-            className="text-gray-400 hover:text-white transition text-xs"
-          >
-            Are you a client? Reset client password
-          </Link>
-        </p>
-
-        {/* Progress indicator */}
-        <div className="flex justify-center space-x-3 mt-6">
-          <div className={getLineClass(1)}></div>
-          <div className={getLineClass(2)}></div>
-          <div className={getLineClass(3)}></div>
         </div>
       </div>
     </div>

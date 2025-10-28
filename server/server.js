@@ -25,22 +25,22 @@ import knowledgeBaseRoutes from "./routes/admin/knowledgeBaseRoutes.js";
 import leadRoutes from "./routes/admin/leadRoutes.js";
 import supportRoutes from "./routes/admin/supportRoutes.js";
 import estimateRequestRoutes from "./routes/admin/estimateRequestRoutes.js";
-import reportLeadRoutes from './routes/admin/reportLeadRoutes.js';
-import clientKnowledgeBaseRoutes from './routes/client/clientKnowledgeBaseRoutes.js';
+import reportLeadRoutes from "./routes/admin/reportLeadRoutes.js";
+import clientKnowledgeBaseRoutes from "./routes/client/clientKnowledgeBaseRoutes.js";
 import exportBulkPdfRoutes from "./routes/admin/exportBulkPdfRoutes.js";
-import csvExportRoutes from './routes/admin/csvExportRoutes.js';
-import eventRoutes from './routes/admin/eventRoutes.js';
-import announcementRoutes from './routes/admin/announcementRoutes.js';
-import goalsRoutes from './routes/admin/goalRoutes.js';
-import clientProjectRoutes from './routes/client/clientProjectRoutes.js';
-import clientContactRoutes from './routes/client/clientContactRoutes.js';
-import clientEstimateRequestRoutes from './routes/client/clientEstimateRequestRoutes.js';
-import clientSupportRoutes from './routes/client/clientSupportRoutes.js';
-import clientProposalRoutes from  './routes/client/clientProposalRoutes.js'
-import clientEstimateRoutes from './routes/client/clientEstimateRoutes.js';
-import clientInvoiceRoutes from './routes/client/clientInvoiceRoutes.js';
-import clientPaymentRoutes from './routes/client/clientPaymentRoutes.js';
-
+import csvExportRoutes from "./routes/admin/csvExportRoutes.js";
+import eventRoutes from "./routes/admin/eventRoutes.js";
+import announcementRoutes from "./routes/admin/announcementRoutes.js";
+import goalsRoutes from "./routes/admin/goalRoutes.js";
+import clientProjectRoutes from "./routes/client/clientProjectRoutes.js";
+import clientContactRoutes from "./routes/client/clientContactRoutes.js";
+import clientEstimateRequestRoutes from "./routes/client/clientEstimateRequestRoutes.js";
+import clientSupportRoutes from "./routes/client/clientSupportRoutes.js";
+import clientProposalRoutes from "./routes/client/clientProposalRoutes.js";
+import clientEstimateRoutes from "./routes/client/clientEstimateRoutes.js";
+import clientInvoiceRoutes from "./routes/client/clientInvoiceRoutes.js";
+import clientPaymentRoutes from "./routes/client/clientPaymentRoutes.js";
+import staffAuthRoutes from "./routes/staff/staffAuthRoutes.js";
 
 const app = express();
 app.use(cors());
@@ -48,6 +48,7 @@ app.use(express.json());
 
 app.use("/api/admin", adminAuthRoutes);
 app.use("/api/client", clientAuthRoutes);
+app.use("/api/staff", staffAuthRoutes);
 app.use("/api/customers", customerRoutes);
 app.use("/api/staffs", staffRoutes);
 app.use("/api/admin", itemRoutes);
@@ -66,24 +67,23 @@ app.use("/api/knowledge-base", knowledgeBaseRoutes);
 app.use("/api/leads", leadRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/estimate-requests", estimateRequestRoutes);
-app.use('/api/reports', reportLeadRoutes);
-app.use('/api/admin', exportBulkPdfRoutes);
-app.use('/api/csvexport', csvExportRoutes);
-app.use('/api/admin/events', eventRoutes);
-app.use('/api/admin/announcements', announcementRoutes);
-app.use('/api/admin/goals', goalsRoutes);
+app.use("/api/reports", reportLeadRoutes);
+app.use("/api/admin", exportBulkPdfRoutes);
+app.use("/api/csvexport", csvExportRoutes);
+app.use("/api/admin/events", eventRoutes);
+app.use("/api/admin/announcements", announcementRoutes);
+app.use("/api/admin/goals", goalsRoutes);
 
 //client routes
-app.use('/api/client/knowledge-base', clientKnowledgeBaseRoutes);
-app.use('/api/client/projects', clientProjectRoutes );
-app.use('/api/client/contacts', clientContactRoutes);
-app.use('/api/client/estimate-requests', clientEstimateRequestRoutes);
-app.use('/api/client/support', clientSupportRoutes);
-app.use('/api/client', clientProposalRoutes);
-app.use('/api/client', clientEstimateRoutes);
-app.use('/api/client', clientInvoiceRoutes);
-app.use('/api/client', clientPaymentRoutes);
-
+app.use("/api/client/knowledge-base", clientKnowledgeBaseRoutes);
+app.use("/api/client/projects", clientProjectRoutes);
+app.use("/api/client/contacts", clientContactRoutes);
+app.use("/api/client/estimate-requests", clientEstimateRequestRoutes);
+app.use("/api/client/support", clientSupportRoutes);
+app.use("/api/client", clientProposalRoutes);
+app.use("/api/client", clientEstimateRoutes);
+app.use("/api/client", clientInvoiceRoutes);
+app.use("/api/client", clientPaymentRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
