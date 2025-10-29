@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import Staff from "../../models/staffLogReg.js";
+import StaffLogReg from "../../models/staffLogReg.js";
+import Staff from "../../models/Staff.js"; // ADDED: Import Staff model
 import sendEmail from "../../utils/sendEmail.js";
 
 // STAFF REGISTER
@@ -22,20 +23,34 @@ export const registerStaff = async (req, res) => {
         .json({ message: "Password must be at least 6 characters long" });
     }
 
-    // Validate staff code (frontend simulation - in real app, validate against predefined codes)
-    const validStaffCodes = ["STAFF-2024", "STAFF-ADMIN", "STAFF-RECRUIT"];
-    if (!validStaffCodes.includes(staffCode.toUpperCase())) {
+    // VALIDATE STAFF CODE AGAINST STAFF MODEL (CORRECTED)
+    const validStaff = await Staff.findOne({
+      staffCode: staffCode.toUpperCase(),
+      active: true,
+    });
+
+    if (!validStaff) {
       return res
         .status(400)
-        .json({ message: "Invalid staff registration code" });
+        .json({ message: "Invalid or inactive staff registration code" });
     }
 
-    const existingStaff = await Staff.findOne({ email: email.toLowerCase() });
-    if (existingStaff) {
-      return res.status(400).json({ message: "Email already exists" });
+    // Check if email matches the staff record
+    if (validStaff.email.toLowerCase() !== email.toLowerCase()) {
+      return res.status(400).json({
+        message: "Email does not match the staff record for this code",
+      });
     }
 
-    const staff = await Staff.register({
+    // Check if staff is already registered
+    const existingStaffAuth = await StaffLogReg.findOne({
+      email: email.toLowerCase(),
+    });
+    if (existingStaffAuth) {
+      return res.status(400).json({ message: "Staff is already registered" });
+    }
+
+    const staff = await StaffLogReg.register({
       name,
       email,
       password,
@@ -61,6 +76,60 @@ export const registerStaff = async (req, res) => {
   }
 };
 
+// STAFF VALIDATE CODE (NEW ENDPOINT - ADD THIS)
+export const validateStaffCode = async (req, res) => {
+  try {
+    const { staffCode } = req.body;
+
+    if (!staffCode) {
+      return res.status(400).json({ message: "Staff code is required" });
+    }
+
+    // Validate staff code against Staff model
+    const validStaff = await Staff.findOne({
+      staffCode: staffCode.toUpperCase(),
+      active: true,
+    });
+
+    if (!validStaff) {
+      return res.status(400).json({
+        valid: false,
+        message: "Invalid or inactive staff registration code",
+      });
+    }
+
+    // Check if staff is already registered
+    const existingStaffAuth = await StaffLogReg.findOne({
+      email: validStaff.email.toLowerCase(),
+    });
+
+    if (existingStaffAuth) {
+      return res.status(400).json({
+        valid: false,
+        message: "Staff is already registered with this code",
+      });
+    }
+
+    res.json({
+      valid: true,
+      message: "Staff code validated successfully",
+      staff: {
+        name: validStaff.name,
+        email: validStaff.email,
+        position: validStaff.position,
+        department: validStaff.department,
+        company: "Your Company", // You can customize this
+      },
+    });
+  } catch (error) {
+    console.error("Staff code validation error:", error);
+    res.status(500).json({
+      valid: false,
+      message: error.message,
+    });
+  }
+};
+
 // STAFF LOGIN
 export const loginStaff = async (req, res) => {
   try {
@@ -72,7 +141,7 @@ export const loginStaff = async (req, res) => {
         .json({ message: "Email and password are required" });
     }
 
-    const staff = await Staff.findByEmail(email.toLowerCase());
+    const staff = await StaffLogReg.findByEmail(email.toLowerCase());
     if (!staff) {
       return res.status(400).json({ message: "Invalid email or password" });
     }
@@ -129,7 +198,7 @@ export const staffForgotPassword = async (req, res) => {
       return res.status(400).json({ message: "Email is required" });
     }
 
-    const staff = await Staff.findByEmail(email.toLowerCase());
+    const staff = await StaffLogReg.findByEmail(email.toLowerCase());
     if (!staff) {
       return res
         .status(404)
@@ -178,7 +247,7 @@ export const staffVerifyResetCode = async (req, res) => {
       return res.status(400).json({ message: "Email and code are required" });
     }
 
-    const staff = await Staff.findByEmail(email.toLowerCase());
+    const staff = await StaffLogReg.findByEmail(email.toLowerCase());
     if (!staff) {
       return res.status(404).json({ message: "Staff email not found" });
     }
@@ -212,7 +281,7 @@ export const staffResetPassword = async (req, res) => {
         .json({ message: "Password must be at least 6 characters long" });
     }
 
-    const staff = await Staff.findByEmail(email.toLowerCase());
+    const staff = await StaffLogReg.findByEmail(email.toLowerCase());
     if (!staff) {
       return res.status(404).json({ message: "Staff email not found" });
     }
@@ -256,7 +325,7 @@ export const staffChangePassword = async (req, res) => {
       return res.status(400).json({ message: "New passwords do not match" });
     }
 
-    const staff = await Staff.findById(staffId);
+    const staff = await StaffLogReg.findById(staffId);
     if (!staff) {
       return res.status(404).json({ message: "Staff not found" });
     }
@@ -281,7 +350,7 @@ export const staffChangePassword = async (req, res) => {
 // GET STAFF PROFILE
 export const getStaffProfile = async (req, res) => {
   try {
-    const staff = await Staff.findById(req.staff._id).select(
+    const staff = await StaffLogReg.findById(req.staff._id).select(
       "-password -resetCode -resetCodeExpire"
     );
 
@@ -302,7 +371,7 @@ export const updateStaffProfile = async (req, res) => {
     const staffId = req.staff._id;
     const { name, phone } = req.body;
 
-    const staff = await Staff.findById(staffId);
+    const staff = await StaffLogReg.findById(staffId);
     if (!staff) {
       return res.status(404).json({ message: "Staff not found" });
     }
@@ -314,7 +383,7 @@ export const updateStaffProfile = async (req, res) => {
     await staff.save();
 
     // Return updated staff without sensitive data
-    const updatedStaff = await Staff.findById(staffId).select(
+    const updatedStaff = await StaffLogReg.findById(staffId).select(
       "-password -resetCode -resetCodeExpire"
     );
 

@@ -8,12 +8,14 @@ import {
   staffChangePassword,
   getStaffProfile,
   updateStaffProfile,
+  validateStaffCode, // ADDED: Import the new validation function
 } from "../../controllers/staff/staffAuthController.js";
 import { staffProtect } from "../../middlewares/staffAuth.js";
 
 const router = express.Router();
 
 // Public routes
+router.post("/validate-code", validateStaffCode); // ADDED: Staff code validation route
 router.post("/register", registerStaff);
 router.post("/login", loginStaff);
 router.post("/forgot-password", staffForgotPassword);
