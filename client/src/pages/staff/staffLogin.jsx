@@ -4,8 +4,18 @@ import { FiMail, FiLock } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import backgroundImage from "../../assets/login-background.jpg";
+import { useEffect } from "react";
 
 const StaffLogin = () => {
+  // In staffLogin.jsx - Add this useEffect
+  useEffect(() => {
+    // Clear any admin tokens when staff logs in
+    const adminToken = localStorage.getItem("crm_token");
+    if (adminToken) {
+      localStorage.removeItem("crm_token");
+      localStorage.removeItem("crm_admin");
+    }
+  }, []);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);

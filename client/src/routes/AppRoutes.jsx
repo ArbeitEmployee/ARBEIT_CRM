@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout";
+import StaffLayout from "../layouts/StaffLayout";
 import ClientLayout from "../layouts/ClientLayout";
 
 // Admin Pages
@@ -16,7 +17,7 @@ import Home from "../pages/client/Home";
 import ClientKnowledgeBasePage from "../pages/client/ClientKnowledgeBase";
 import ClientProjectPage from "../pages/client/ClientProjectPage";
 
-//Admin Section
+// Admin Section
 import Customers from "../pages/admin/customers";
 import Proposals from "../pages/admin/sales/proposals";
 import Estimates from "../pages/admin/sales/estimates";
@@ -71,7 +72,7 @@ import StaffForgotPassword from "../pages/staff/forgotPassword";
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Redirect root to  admin */}
+      {/* Redirect root to admin login */}
       <Route path="/" element={<Navigate to="/admin/login" replace />} />
 
       {/* Admin Auth Routes */}
@@ -92,11 +93,11 @@ const AppRoutes = () => {
       <Route path="/staff/registration" element={<StaffRegistration />} />
       <Route path="/staff/forgot-password" element={<StaffForgotPassword />} />
 
-      {/* Admin Dashboard Routes - Full Access */}
+      {/* Admin Dashboard Routes */}
       <Route
         path="/admin/*"
         element={
-          <AdminLayout userType="admin">
+          <AdminLayout>
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="customers" element={<Customers />} />
@@ -139,7 +140,7 @@ const AppRoutes = () => {
               <Route path="admins/all" element={<AllAdmins />} />
               <Route path="admins/pending" element={<PendingAdmins />} />
 
-              {/*Utilities */}
+              {/* Utilities */}
               <Route path="utilities/bulk-pdf" element={<BulkPdfExport />} />
               <Route path="utilities/csv" element={<CsvExport />} />
               <Route path="utilities/calendar" element={<Calendar />} />
@@ -155,20 +156,19 @@ const AppRoutes = () => {
         }
       />
 
-      {/* ==================== STAFF ROUTES - LIMITED ACCESS ==================== */}
-      {/* CHANGED: Added staff routes with limited pages */}
+      {/* Staff Dashboard Routes - Limited Access */}
       <Route
         path="/staff/*"
         element={
-          <AdminLayout userType="staff">
+          <StaffLayout>
             <Routes>
-              {/* Staff can access only these specific pages */}
+              {/* Staff can access these specific pages (shared with admin) */}
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="customers" element={<Customers />} />
+              <Route path="leads" element={<LeadsPage />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="tasks" element={<TasksPage />} />
               <Route path="support" element={<SupportPage />} />
-              <Route path="customers" element={<Customers />} />
-              <Route path="leads" element={<LeadsPage />} />
               <Route
                 path="estimate-request"
                 element={<EstimateRequestPage />}
@@ -177,13 +177,12 @@ const AppRoutes = () => {
               <Route path="change-password" element={<ChangePassword />} />
 
               {/* Redirect to staff dashboard */}
-              <Route path="" element={<Navigate to="dashboard" replace />} />
-              <Route path="*" element={<Navigate to="dashboard" replace />} />
+              {/* <Route path="" element={<Navigate to="dashboard" replace />} />
+              <Route path="*" element={<Navigate to="dashboard" replace />} /> */}
             </Routes>
-          </AdminLayout>
+          </StaffLayout>
         }
       />
-      {/* ==================== END STAFF ROUTES ==================== */}
 
       {/* Client Routes */}
       <Route
@@ -209,7 +208,6 @@ const AppRoutes = () => {
               <Route path="ClientEstimate" element={<ClientEstimates />} />
               <Route path="ClientInvoice" element={<ClientInvoices />} />
               <Route path="ClientPayment" element={<ClientPayments />} />
-              {/* Add more client routes here  <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />*/}
             </Routes>
           </ClientLayout>
         }

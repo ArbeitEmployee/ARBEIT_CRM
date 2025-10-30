@@ -11,56 +11,56 @@ export default function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!email || !password) {
-    toast.error("Please fill in all fields.");
-    return;
-  }
+    if (!email || !password) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
 
-  try {
-    const res = await fetch("http://localhost:5000/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const text = await res.text();
-    let data = {};
     try {
-      data = text ? JSON.parse(text) : {};
-    } catch (parseErr) {
-      data = { message: text || "" };
+      const res = await fetch("http://localhost:5000/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        data = { message: text || "" };
+      }
+
+      console.log("LOGIN response:", res.status, data);
+
+      if (!res.ok) {
+        toast.error(data.message || `Login failed (status ${res.status})`);
+        return;
+      }
+
+      const token = data.token;
+      if (!token) {
+        toast.error(data.message || "Login succeeded but token missing.");
+        return;
+      }
+
+      // Store both token AND admin data in localStorage
+      localStorage.setItem("crm_token", token);
+      localStorage.setItem("crm_admin", JSON.stringify(data.admin)); // 👈 ADD THIS LINE
+
+      toast.success(data.message || "Login successful!");
+
+      setTimeout(() => {
+        navigate("/admin/dashboard");
+      }, 900);
+    } catch (err) {
+      console.error("Network/login error:", err);
+      toast.error("Something went wrong. Please try again.");
     }
-
-    console.log("LOGIN response:", res.status, data);
-
-    if (!res.ok) {
-      toast.error(data.message || `Login failed (status ${res.status})`);
-      return;
-    }
-
-    const token = data.token;
-    if (!token) {
-      toast.error(data.message || "Login succeeded but token missing.");
-      return;
-    }
-
-    // Store both token AND admin data in localStorage
-    localStorage.setItem("crm_token", token);
-    localStorage.setItem("crm_admin", JSON.stringify(data.admin)); // 👈 ADD THIS LINE
-
-    toast.success(data.message || "Login successful!");
-    
-    setTimeout(() => {
-      navigate("/admin/dashboard");
-    }, 900);
-  } catch (err) {
-    console.error("Network/login error:", err);
-    toast.error("Something went wrong. Please try again.");
-  }
-};
+  };
   const getInputClasses = (field, value) =>
     `w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
       touched[field] && !value

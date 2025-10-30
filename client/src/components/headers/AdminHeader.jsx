@@ -14,13 +14,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-// CHANGED: Added userType prop to distinguish between admin and staff
-const AdminHeader = ({
-  onToggleSidebar,
-  admin: propAdmin,
-  onLogout,
-  userType = "admin",
-}) => {
+const AdminHeader = ({ onToggleSidebar, admin: propAdmin, onLogout }) => {
   const [admin, setAdmin] = useState(propAdmin || null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -32,18 +26,13 @@ const AdminHeader = ({
   const notificationRef = useRef(null);
   const navigate = useNavigate();
 
-  // CHANGED: Read from different localStorage based on userType
+  // Read from localStorage if not passed as prop
   useEffect(() => {
     if (!propAdmin) {
-      if (userType === "staff") {
-        const storedStaff = JSON.parse(localStorage.getItem("crm_staff"));
-        if (storedStaff) setAdmin(storedStaff);
-      } else {
-        const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
-        if (storedAdmin) setAdmin(storedAdmin);
-      }
+      const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
+      if (storedAdmin) setAdmin(storedAdmin);
     }
-  }, [propAdmin, userType]);
+  }, [propAdmin]);
 
   // Close search results when clicking outside
   useEffect(() => {
@@ -69,13 +58,11 @@ const AdminHeader = ({
   // Fetch notifications
   const fetchNotifications = async () => {
     try {
-      // CHANGED: Get different tokens based on userType
-      const token =
-        userType === "staff"
-          ? localStorage.getItem("crm_staff_token")
-          : localStorage.getItem("crm_token");
+      const token = localStorage.getItem("crm_token");
+      const userRole = localStorage.getItem("user_role");
 
-      if (!token) return;
+      // Only fetch notifications if user is admin
+      if (userRole !== "admin") return;
 
       const config = {
         headers: {
@@ -165,39 +152,27 @@ const AdminHeader = ({
     const interval = setInterval(fetchNotifications, 24 * 60 * 60 * 1000);
 
     return () => clearInterval(interval);
-  }, [userType]); // CHANGED: Added userType dependency
+  }, []);
 
-  // CHANGED: Handle logout for both admin and staff
+  // Handle logout functionality
   const handleLogout = () => {
-    if (userType === "staff") {
-      // Clear staff data from localStorage
-      localStorage.removeItem("crm_staff_token");
-      localStorage.removeItem("crm_staff");
+    // Clear all admin related items from localStorage
+    localStorage.removeItem("crm_token");
+    localStorage.removeItem("crm_admin");
+    localStorage.removeItem("user_role");
 
-      // Redirect to staff login
-      navigate("/staff/login");
-    } else {
-      // Clear admin data from localStorage
-      localStorage.removeItem("crm_token");
-      localStorage.removeItem("crm_admin");
-
-      // If a custom logout function is provided as prop, call it
-      if (onLogout && typeof onLogout === "function") {
-        onLogout();
-      }
-
-      // Redirect to admin login
-      navigate("/admin/login");
+    // If a custom logout function is provided as prop, call it
+    if (onLogout && typeof onLogout === "function") {
+      onLogout();
     }
+
+    // Redirect to login page
+    navigate("/admin/login");
   };
 
-  // CHANGED: Navigate to different change password pages based on userType
+  // Navigate to change password page
   const handleChangePassword = () => {
-    if (userType === "staff") {
-      navigate("/staff/change-password");
-    } else {
-      navigate("/admin/change-password");
-    }
+    navigate("/admin/change-password");
   };
 
   // Handle notification click
@@ -211,105 +186,68 @@ const AdminHeader = ({
     setUnreadCount((prev) => prev - 1);
     setShowNotifications(false);
 
-    // CHANGED: Navigate to different routes based on userType
-    const basePath = userType === "staff" ? "/staff" : "/admin";
-
+    // Navigate based on notification type
     switch (notification.type) {
       case "announcement":
-        navigate(`${basePath}/utilities/announcements`);
+        navigate("/admin/utilities/announcements");
         break;
       case "goal":
-        navigate(`${basePath}/utilities/goals`);
+        navigate("/admin/utilities/goals");
         break;
       case "event":
-        navigate(`${basePath}/utilities/calendar`);
+        navigate("/admin/utilities/calendar");
         break;
       default:
         break;
     }
   };
 
-  // CHANGED: Different menu items for admin vs staff
-  const getMenuItems = () => {
-    const adminMenu = [
-      { label: "Dashboard", icon: "📊", path: "/admin/dashboard" },
-      { label: "Customers", icon: "👥", path: "/admin/customers" },
-      { label: "Staffs", icon: "👥", path: "/admin/staffs" },
-      { label: "Proposals", icon: "📋", path: "/admin/sales/proposals" },
-      { label: "Estimates", icon: "📊", path: "/admin/sales/estimates" },
-      { label: "Invoices", icon: "🧾", path: "/admin/sales/invoices" },
-      { label: "Payments", icon: "💳", path: "/admin/sales/payments" },
-      { label: "Credit Notes", icon: "📝", path: "/admin/sales/creditNotes" },
-      { label: "Items", icon: "📦", path: "/admin/sales/items" },
-      { label: "Subscriptions", icon: "🛒", path: "/admin/subscriptions" },
-      { label: "Expenses", icon: "💰", path: "/admin/expenses" },
-      { label: "Contracts", icon: "📄", path: "/admin/contracts" },
-      { label: "Projects", icon: "📂", path: "/admin/projects" },
-      { label: "Tasks", icon: "✅", path: "/admin/tasks" },
-      { label: "Support", icon: "🎧", path: "/admin/support" },
-      { label: "Leads", icon: "📈", path: "/admin/leads" },
-      {
-        label: "Estimate Request",
-        icon: "📋",
-        path: "/admin/estimate-request",
-      },
-      { label: "Knowledge Base", icon: "❓", path: "/admin/knowledge-base" },
-      {
-        label: "Bulk PDF Export",
-        icon: "📄",
-        path: "/admin/utilities/bulk-pdf",
-      },
-      { label: "CSV Export", icon: "📊", path: "/admin/utilities/csv" },
-      { label: "Calendar", icon: "📅", path: "/admin/utilities/calendar" },
-      {
-        label: "Announcements",
-        icon: "📢",
-        path: "/admin/utilities/announcements",
-      },
-      { label: "Goals", icon: "🎯", path: "/admin/utilities/goals" },
-      { label: "Sales Reports", icon: "📈", path: "/admin/reports/sales" },
-      {
-        label: "Expenses Reports",
-        icon: "💰",
-        path: "/admin/reports/expenses",
-      },
-      {
-        label: "Expenses vs Income",
-        icon: "⚖️",
-        path: "/admin/reports/expenses-vs-income",
-      },
-      { label: "Leads Reports", icon: "📊", path: "/admin/reports/leads" },
-      {
-        label: "KB Articles Reports",
-        icon: "📝",
-        path: "/admin/reports/kb-articles",
-      },
-    ];
+  // Menu items structure (should match your sidebar)
+  const menuItems = [
+    { label: "Dashboard", icon: "📊", path: "/admin/dashboard" },
+    { label: "Customers", icon: "👥", path: "/admin/customers" },
+    { label: "Staffs", icon: "👥", path: "/admin/staffs" },
+    { label: "Proposals", icon: "📋", path: "/admin/sales/proposals" },
+    { label: "Estimates", icon: "📊", path: "/admin/sales/estimates" },
+    { label: "Invoices", icon: "🧾", path: "/admin/sales/invoices" },
+    { label: "Payments", icon: "💳", path: "/admin/sales/payments" },
+    { label: "Credit Notes", icon: "📝", path: "/admin/sales/creditNotes" },
+    { label: "Items", icon: "📦", path: "/admin/sales/items" },
+    { label: "Subscriptions", icon: "🛒", path: "/admin/subscriptions" },
+    { label: "Expenses", icon: "💰", path: "/admin/expenses" },
+    { label: "Contracts", icon: "📄", path: "/admin/contracts" },
+    { label: "Projects", icon: "📂", path: "/admin/projects" },
+    { label: "Tasks", icon: "✅", path: "/admin/tasks" },
+    { label: "Support", icon: "🎧", path: "/admin/support" },
+    { label: "Leads", icon: "📈", path: "/admin/leads" },
+    { label: "Estimate Request", icon: "📋", path: "/admin/estimate-request" },
+    { label: "Knowledge Base", icon: "❓", path: "/admin/knowledge-base" },
+    { label: "Bulk PDF Export", icon: "📄", path: "/admin/utilities/bulk-pdf" },
+    { label: "CSV Export", icon: "📊", path: "/admin/utilities/csv" },
+    { label: "Calendar", icon: "📅", path: "/admin/utilities/calendar" },
+    {
+      label: "Announcements",
+      icon: "📢",
+      path: "/admin/utilities/announcements",
+    },
+    { label: "Goals", icon: "🎯", path: "/admin/utilities/goals" },
+    { label: "Sales Reports", icon: "📈", path: "/admin/reports/sales" },
+    { label: "Expenses Reports", icon: "💰", path: "/admin/reports/expenses" },
+    {
+      label: "Expenses vs Income",
+      icon: "⚖️",
+      path: "/admin/reports/expenses-vs-income",
+    },
+    { label: "Leads Reports", icon: "📊", path: "/admin/reports/leads" },
+    {
+      label: "KB Articles Reports",
+      icon: "📝",
+      path: "/admin/reports/kb-articles",
+    },
+  ];
 
-    const staffMenu = [
-      { label: "Dashboard", icon: "📊", path: "/staff/dashboard" },
-      { label: "Customers", icon: "👥", path: "/staff/customers" },
-      { label: "Leads", icon: "📈", path: "/staff/leads" },
-      { label: "Projects", icon: "📂", path: "/staff/projects" },
-      { label: "Tasks", icon: "✅", path: "/staff/tasks" },
-      { label: "Support", icon: "🎧", path: "/staff/support" },
-      {
-        label: "Estimate Request",
-        icon: "📋",
-        path: "/staff/estimate-request",
-      },
-      { label: "Knowledge Base", icon: "❓", path: "/staff/knowledge-base" },
-      { label: "Change Password", icon: "🔒", path: "/staff/change-password" },
-    ];
-
-    return userType === "staff" ? staffMenu : adminMenu;
-  };
-
-  // CHANGED: Get menu items based on userType
-  let menuItems = getMenuItems();
-
-  // Add admin menus if user is superAdmin (only for admin users)
-  if (userType === "admin" && admin?.role === "superAdmin") {
+  // Add admin menus if user is superAdmin
+  if (admin?.role === "superAdmin") {
     menuItems.push(
       { label: "All Admins", icon: "👥", path: "/admin/admins/all" },
       { label: "Pending Admins", icon: "⏳", path: "/admin/admins/pending" }
@@ -371,11 +309,6 @@ const AdminHeader = ({
     }
   };
 
-  // CHANGED: Get header title based on userType
-  const getHeaderTitle = () => {
-    return userType === "staff" ? "Staff Portal" : "Admin Dashboard";
-  };
-
   return (
     <header className="bg-gray-600 text-white flex items-center justify-between px-4 py-3 shadow-md fixed top-0 left-0 right-0 z-50 h-14">
       {/* Left - Sidebar Toggle + Brand */}
@@ -388,13 +321,7 @@ const AdminHeader = ({
           alt="ARBEIT Logo"
           className="inline-block h-7 mr-3"
         />
-        {/* CHANGED: Dynamic title based on userType */}
-        <div>
-          <h1 className="text-lg font-bold">ARBEIT CRM</h1>
-          <p className="text-xs text-gray-300 hidden md:block">
-            {getHeaderTitle()}
-          </p>
-        </div>
+        <h1 className="text-lg font-bold">ARBEIT CRM</h1>
       </div>
 
       {/* Center: Search bar with results */}
@@ -402,7 +329,7 @@ const AdminHeader = ({
         <div className="relative">
           <input
             type="text"
-            placeholder={`Search ${userType} menu items...`}
+            placeholder="Search menu items..."
             className="w-full px-3 py-1 pl-8 pr-8 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none"
             value={searchQuery}
             onChange={handleSearchChange}
@@ -484,10 +411,6 @@ const AdminHeader = ({
             <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg overflow-hidden z-50">
               <div className="p-3 border-b border-gray-200 bg-gray-700 text-white">
                 <h3 className="text-sm font-medium">Notifications</h3>
-                {/* CHANGED: Show user type in notifications header */}
-                <p className="text-xs text-gray-300 capitalize">
-                  {userType} Portal
-                </p>
               </div>
 
               <div className="max-h-96 overflow-y-auto">
@@ -555,13 +478,9 @@ const AdminHeader = ({
         {/* User Name */}
         <div className="flex items-center gap-2 cursor-pointer">
           <FaUserCircle className="text-2xl" />
-          <div className="hidden md:block text-right">
-            <h2 className="text-sm font-semibold">
-              {admin?.name || "Unknown User"}
-            </h2>
-            {/* CHANGED: Show user type */}
-            <p className="text-xs text-gray-300 capitalize">{userType}</p>
-          </div>
+          <h2 className="hidden md:inline text-sm font-semibold">
+            {admin?.name || "Unknown User"}
+          </h2>
         </div>
 
         {/* Logout */}
