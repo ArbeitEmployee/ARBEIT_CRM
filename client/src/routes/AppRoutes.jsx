@@ -92,11 +92,11 @@ const AppRoutes = () => {
       <Route path="/staff/registration" element={<StaffRegistration />} />
       <Route path="/staff/forgot-password" element={<StaffForgotPassword />} />
 
-      {/* Admin Dashboard Routes */}
+      {/* Admin Dashboard Routes - Full Access */}
       <Route
         path="/admin/*"
         element={
-          <AdminLayout>
+          <AdminLayout userType="admin">
             <Routes>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="customers" element={<Customers />} />
@@ -154,6 +154,36 @@ const AppRoutes = () => {
           </AdminLayout>
         }
       />
+
+      {/* ==================== STAFF ROUTES - LIMITED ACCESS ==================== */}
+      {/* CHANGED: Added staff routes with limited pages */}
+      <Route
+        path="/staff/*"
+        element={
+          <AdminLayout userType="staff">
+            <Routes>
+              {/* Staff can access only these specific pages */}
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="projects" element={<ProjectsPage />} />
+              <Route path="tasks" element={<TasksPage />} />
+              <Route path="support" element={<SupportPage />} />
+              <Route path="customers" element={<Customers />} />
+              <Route path="leads" element={<LeadsPage />} />
+              <Route
+                path="estimate-request"
+                element={<EstimateRequestPage />}
+              />
+              <Route path="knowledge-base" element={<KnowledgeBase />} />
+              <Route path="change-password" element={<ChangePassword />} />
+
+              {/* Redirect to staff dashboard */}
+              <Route path="" element={<Navigate to="dashboard" replace />} />
+              <Route path="*" element={<Navigate to="dashboard" replace />} />
+            </Routes>
+          </AdminLayout>
+        }
+      />
+      {/* ==================== END STAFF ROUTES ==================== */}
 
       {/* Client Routes */}
       <Route
