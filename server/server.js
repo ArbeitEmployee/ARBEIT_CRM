@@ -8,7 +8,8 @@ import connectDB from "./config/db.js";
 import adminAuthRoutes from "./routes/admin/authRoutes.js";
 import clientAuthRoutes from "./routes/client/authRoutes.js";
 import customerRoutes from "./routes/admin/customerRoutes.js";
-import staffRoutes from "./routes/admin/staffRoutes.js";
+import staffRoutes from "./routes/admin/staffRoutes.js"; // ADMIN staff management
+import staffDashboardRoutes from "./routes/staffRoutes.js"; // STAFF dashboard features - RENAMED THIS
 import itemRoutes from "./routes/admin/itemRoutes.js";
 import proposalRoutes from "./routes/admin/proposalRoutes.js";
 import estimateRoutes from "./routes/admin/estimateRoutes.js";
@@ -49,8 +50,9 @@ app.use(express.json());
 app.use("/api/admin", adminAuthRoutes);
 app.use("/api/client", clientAuthRoutes);
 app.use("/api/staff", staffAuthRoutes);
+app.use("/api/staff", staffDashboardRoutes); // Use the renamed variable
 app.use("/api/customers", customerRoutes);
-app.use("/api/staffs", staffRoutes);
+app.use("/api/staffs", staffRoutes); // Admin staff management
 app.use("/api/admin", itemRoutes);
 app.use("/api/admin", proposalRoutes);
 app.use("/api/admin", estimateRoutes);

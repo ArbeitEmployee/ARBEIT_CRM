@@ -2,7 +2,7 @@ import { useState } from "react";
 import AdminHeader from "../components/headers/AdminHeader";
 import AdminSideBar from "../components/sidebar/AdminSidebar";
 
-const AdminLayout = ({ children }) => {
+const AdminLayout = ({ children, userType = "admin" }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const handleToggleSidebar = () => {
@@ -12,11 +12,11 @@ const AdminLayout = ({ children }) => {
   return (
     <div className="flex flex-col min-h-screen bg-gray-100">
       {/* Header */}
-      <AdminHeader onToggleSidebar={handleToggleSidebar} />
+      <AdminHeader onToggleSidebar={handleToggleSidebar} userType={userType} />
 
-      <div className="flex flex-1 pt-14"> {/* Added pt-14 to account for header height */}
+      <div className="flex flex-1 pt-14">
         {/* Sidebar */}
-        <AdminSideBar isOpen={isSidebarOpen} />
+        <AdminSideBar isOpen={isSidebarOpen} userType={userType} />
 
         {/* Main content with push effect */}
         <main

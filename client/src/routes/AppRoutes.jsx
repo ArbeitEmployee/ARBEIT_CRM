@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "../layouts/AdminLayout";
 import ClientLayout from "../layouts/ClientLayout";
+import StaffLayout from "../layouts/StaffLayout";
 
 // Admin Pages
 import Dashboard from "../pages/admin/Dashboard";
@@ -16,7 +17,7 @@ import Home from "../pages/client/Home";
 import ClientKnowledgeBasePage from "../pages/client/ClientKnowledgeBase";
 import ClientProjectPage from "../pages/client/ClientProjectPage";
 
-//Admin Section
+// Admin Section
 import Customers from "../pages/admin/customers";
 import Proposals from "../pages/admin/sales/proposals";
 import Estimates from "../pages/admin/sales/estimates";
@@ -67,11 +68,12 @@ import ClientPayments from "../pages/client/ClientPayments";
 import StaffLogin from "../pages/staff/staffLogin";
 import StaffRegistration from "../pages/staff/staffRegistration";
 import StaffForgotPassword from "../pages/staff/forgotPassword";
+import StaffDashboard from "../pages/staff/StaffDashboard";
 
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Redirect root to  admin */}
+      {/* Redirect root to admin */}
       <Route path="/" element={<Navigate to="/admin/login" replace />} />
 
       {/* Admin Auth Routes */}
@@ -155,6 +157,20 @@ const AppRoutes = () => {
         }
       />
 
+      {/* Staff Routes */}
+      <Route
+        path="/staff/*"
+        element={
+          <StaffLayout>
+            <Routes>
+              <Route path="dashboard" element={<StaffDashboard />} />
+              <Route path="tasks" element={<TasksPage />} />
+              {/* Staff can only access dashboard and tasks */}
+            </Routes>
+          </StaffLayout>
+        }
+      />
+
       {/* Client Routes */}
       <Route
         path="/client/*"
@@ -179,7 +195,6 @@ const AppRoutes = () => {
               <Route path="ClientEstimate" element={<ClientEstimates />} />
               <Route path="ClientInvoice" element={<ClientInvoices />} />
               <Route path="ClientPayment" element={<ClientPayments />} />
-              {/* Add more client routes here  <Route path="knowledge-base" element={<ClientKnowledgeBasePage />} />*/}
             </Routes>
           </ClientLayout>
         }

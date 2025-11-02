@@ -19,89 +19,141 @@ import {
 import { MdOutlineLeaderboard } from "react-icons/md";
 import { IoIosArrowForward } from "react-icons/io";
 
-const AdminSideBar = ({ isOpen }) => {
+const AdminSideBar = ({ isOpen, userType = "admin" }) => {
   const [activeMenu, setActiveMenu] = useState("");
-  const [admin, setAdmin] = useState(null);
+  const [user, setUser] = useState(null);
 
-  // Load logged-in admin details from localStorage
+  // Load logged-in user details from localStorage based on user type
   useEffect(() => {
-    const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
-    console.log("Loaded admin from storage:", storedAdmin); // 👈 Add logging
-    if (storedAdmin) setAdmin(storedAdmin);
-  }, []);
+    if (userType === "staff") {
+      const storedStaff = JSON.parse(localStorage.getItem("crm_staff"));
+      console.log("Loaded staff from storage:", storedStaff);
+      if (storedStaff) setUser(storedStaff);
+    } else {
+      const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
+      console.log("Loaded admin from storage:", storedAdmin);
+      if (storedAdmin) setUser(storedAdmin);
+    }
+  }, [userType]);
 
   // Add this useEffect to listen for storage changes
   useEffect(() => {
     const handleStorageChange = () => {
-      const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
-      setAdmin(storedAdmin);
+      if (userType === "staff") {
+        const storedStaff = JSON.parse(localStorage.getItem("crm_staff"));
+        setUser(storedStaff);
+      } else {
+        const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
+        setUser(storedAdmin);
+      }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-  // Load logged-in admin details from localStorage (after login/signup)
-  useEffect(() => {
-    const storedAdmin = JSON.parse(localStorage.getItem("crm_admin")); // 👈 save this in login/signup
-    if (storedAdmin) setAdmin(storedAdmin);
-  }, []);
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [userType]);
 
-  const defaultImage = "https://via.placeholder.com/40"; // fallback avatar
+  const defaultImage = "https://via.placeholder.com/40";
 
-  const menuItems = [
-    { label: "Dashboard", icon: <FaTachometerAlt />, path: "/admin/dashboard" },
-    { label: "Customers", icon: <FaUsers />, path: "/admin/customers" },
-    { label: "Staffs", icon: <FaUsers />, path: "/admin/staffs" },
-    {
-      label: "Sales",
-      icon: <FaChartLine />,
-      hasSub: true,
-      subItems: [
-        { name: "Proposals", path: "/admin/sales/proposals" },
-        { name: "Estimates", path: "/admin/sales/estimates" },
-        { name: "Invoices", path: "/admin/sales/invoices" },
-        { name: "Payments", path: "/admin/sales/payments" },
-        { name: "Credit Notes", path: "/admin/sales/creditNotes" },
-        { name: "Items", path: "/admin/sales/items" },
-      ],
-    },
-    { label: "Subscriptions", icon: <FaShoppingCart />, path: "/admin/subscriptions" },
-    { label: "Expenses", icon: <FaFileInvoiceDollar />, path: "/admin/expenses" },
-    { label: "Contracts", icon: <FaFileContract />, path: "/admin/contracts" },
-    { label: "Projects", icon: <FaProjectDiagram />, path: "/admin/projects" },
-    { label: "Tasks", icon: <FaTasks />, path: "/admin/tasks" },
-    { label: "Support", icon: <FaHeadset />, path: "/admin/support" },
-    { label: "Leads", icon: <MdOutlineLeaderboard />, path: "/admin/leads" },
-    { label: "Estimate Request", icon: <FaClipboardList />, path: "/admin/estimate-request" },
-    { label: "Knowledge Base", icon: <FaQuestionCircle />, path: "/admin/knowledge-base" },
-    {
-      label: "Utilities",
-      icon: <FaToolbox />,
-      hasSub: true,
-      subItems: [
-        { name: "Bulk PDF Export", path: "/admin/utilities/bulk-pdf" },
-        { name: "CSV Export", path: "/admin/utilities/csv" },
-        { name: "Calendar", path: "/admin/utilities/calendar" },
-        { name: "Announcements", path: "/admin/utilities/announcements" },
-        { name: "Goals", path: "/admin/utilities/goals" },
-      ],
-    },
-    {
-      label: "Reports",
-      icon: <FaFileAlt />,
-      hasSub: true,
-      subItems: [
-        { name: "Sales", path: "/admin/reports/sales" },
-        { name: "Expenses", path: "/admin/reports/expenses" },
-        { name: "Expenses vs Income", path: "/admin/reports/expenses-vs-income" },
-        { name: "Leads", path: "/admin/reports/leads" },
-        { name: "KB Articles", path: "/admin/reports/kb-articles" },
-      ],
-    },
-  ];
+  // Base menu items - different for staff and admin
+  const getBaseMenuItems = () => {
+    if (userType === "staff") {
+      // Staff only sees Tasks
+      return [{ label: "Tasks", icon: <FaTasks />, path: "/staff/tasks" }];
+    } else {
+      // Admin sees all menu items
+      return [
+        {
+          label: "Dashboard",
+          icon: <FaTachometerAlt />,
+          path: "/admin/dashboard",
+        },
+        { label: "Customers", icon: <FaUsers />, path: "/admin/customers" },
+        { label: "Staffs", icon: <FaUsers />, path: "/admin/staffs" },
+        {
+          label: "Sales",
+          icon: <FaChartLine />,
+          hasSub: true,
+          subItems: [
+            { name: "Proposals", path: "/admin/sales/proposals" },
+            { name: "Estimates", path: "/admin/sales/estimates" },
+            { name: "Invoices", path: "/admin/sales/invoices" },
+            { name: "Payments", path: "/admin/sales/payments" },
+            { name: "Credit Notes", path: "/admin/sales/creditNotes" },
+            { name: "Items", path: "/admin/sales/items" },
+          ],
+        },
+        {
+          label: "Subscriptions",
+          icon: <FaShoppingCart />,
+          path: "/admin/subscriptions",
+        },
+        {
+          label: "Expenses",
+          icon: <FaFileInvoiceDollar />,
+          path: "/admin/expenses",
+        },
+        {
+          label: "Contracts",
+          icon: <FaFileContract />,
+          path: "/admin/contracts",
+        },
+        {
+          label: "Projects",
+          icon: <FaProjectDiagram />,
+          path: "/admin/projects",
+        },
+        { label: "Tasks", icon: <FaTasks />, path: "/admin/tasks" },
+        { label: "Support", icon: <FaHeadset />, path: "/admin/support" },
+        {
+          label: "Leads",
+          icon: <MdOutlineLeaderboard />,
+          path: "/admin/leads",
+        },
+        {
+          label: "Estimate Request",
+          icon: <FaClipboardList />,
+          path: "/admin/estimate-request",
+        },
+        {
+          label: "Knowledge Base",
+          icon: <FaQuestionCircle />,
+          path: "/admin/knowledge-base",
+        },
+        {
+          label: "Utilities",
+          icon: <FaToolbox />,
+          hasSub: true,
+          subItems: [
+            { name: "Bulk PDF Export", path: "/admin/utilities/bulk-pdf" },
+            { name: "CSV Export", path: "/admin/utilities/csv" },
+            { name: "Calendar", path: "/admin/utilities/calendar" },
+            { name: "Announcements", path: "/admin/utilities/announcements" },
+            { name: "Goals", path: "/admin/utilities/goals" },
+          ],
+        },
+        {
+          label: "Reports",
+          icon: <FaFileAlt />,
+          hasSub: true,
+          subItems: [
+            { name: "Sales", path: "/admin/reports/sales" },
+            { name: "Expenses", path: "/admin/reports/expenses" },
+            {
+              name: "Expenses vs Income",
+              path: "/admin/reports/expenses-vs-income",
+            },
+            { name: "Leads", path: "/admin/reports/leads" },
+            { name: "KB Articles", path: "/admin/reports/kb-articles" },
+          ],
+        },
+      ];
+    }
+  };
 
-  // If superAdmin → add "Admins" menu
-  if (admin?.role === "superAdmin") {
+  let menuItems = getBaseMenuItems();
+
+  // If superAdmin → add "Admins" menu (only for admin)
+  if (userType === "admin" && user?.role === "superAdmin") {
     menuItems.push({
       label: "Admins",
       icon: <FaUsers />,
@@ -121,13 +173,17 @@ const AdminSideBar = ({ isOpen }) => {
       {/* User profile */}
       <div className="flex items-center gap-3 p-4 border-b border-gray-700">
         <img
-          src={admin?.image || defaultImage}
+          src={user?.image || defaultImage}
           alt="Profile"
           className="w-10 h-10 rounded-full object-cover"
         />
         <div>
-          <h2 className="text-sm font-semibold">{admin?.name || "Unknown User"}</h2>
-          <p className="text-xs text-gray-400">{admin?.email || "no-email@crm.com"}</p>
+          <h2 className="text-sm font-semibold">
+            {user?.name || "Unknown User"}
+          </h2>
+          <p className="text-xs text-gray-400">
+            {user?.email || "no-email@crm.com"} ({userType})
+          </p>
         </div>
       </div>
 

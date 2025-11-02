@@ -1,5 +1,7 @@
 import Staff from "../../models/Staff.js";
+//import Staff from "../../models/staffLogReg.js"; // Use the correct staff authentication model
 import XLSX from "xlsx";
+import Task from "../../models/Task.js";
 import { Readable } from "stream";
 import {
   generateStaffCode,
@@ -338,5 +340,156 @@ export const importStaffs = async (req, res) => {
     res
       .status(500)
       .json({ success: false, message: "Server error while importing staffs" });
+  }
+};
+
+// Get staff's assigned tasks
+export const getStaffTasks = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verify the staff exists and is active
+    const staff = await Staff.findById(id);
+    if (!staff || !staff.isActive) {
+      return res.status(404).json({ message: "Staff not found or inactive" });
+    }
+
+    // Get tasks assigned to this staff member
+    // Assuming you have a Task model with assignee field
+    const tasks = await Task.find({
+      assignee: id,
+      status: { $in: ["pending", "in-progress"] },
+    }).sort({ dueDate: 1 });
+
+    res.json({
+      success: true,
+      tasks,
+    });
+  } catch (error) {
+    console.error("Get staff tasks error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching tasks",
+    });
+  }
+};
+
+// Update task status
+export const updateTaskStatus = async (req, res) => {
+  try {
+    const { id, taskId } = req.params;
+    const { status } = req.body;
+
+    // Validate status
+    const validStatuses = ["pending", "in-progress", "completed", "cancelled"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status",
+      });
+    }
+
+    // Find the task and verify it's assigned to this staff
+    const task = await Task.findOne({
+      _id: taskId,
+      assignee: id,
+    });
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found or not assigned to this staff",
+      });
+    }
+
+    // Update task status
+    task.status = status;
+    task.updatedAt = new Date();
+
+    // If completed, set completion date
+    if (status === "completed") {
+      task.completedAt = new Date();
+    }
+
+    await task.save();
+
+    res.json({
+      success: true,
+      message: "Task status updated successfully",
+      task,
+    });
+  } catch (error) {
+    console.error("Update task status error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating task",
+    });
+  }
+};
+
+// Get staff profile
+export const getStaffProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const staff = await Staff.findById(id).select("-password");
+
+    if (!staff) {
+      return res.status(404).json({
+        success: false,
+        message: "Staff not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      staff,
+    });
+  } catch (error) {
+    console.error("Get staff profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while fetching profile",
+    });
+  }
+};
+
+// Update staff profile
+export const updateStaffProfile = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone, department } = req.body;
+
+    const staff = await Staff.findById(id);
+
+    if (!staff) {
+      return res.status(404).json({
+        success: false,
+        message: "Staff not found",
+      });
+    }
+
+    // Update allowed fields only
+    if (name) staff.name = name;
+    if (email) staff.email = email;
+    if (phone) staff.phone = phone;
+    if (department) staff.department = department;
+
+    await staff.save();
+
+    // Return staff without password
+    const staffResponse = await Staff.findById(id).select("-password");
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      staff: staffResponse,
+    });
+  } catch (error) {
+    console.error("Update staff profile error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error while updating profile",
+    });
   }
 };
