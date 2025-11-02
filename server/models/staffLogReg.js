@@ -35,12 +35,6 @@ const staffLogRegSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Additional fields
-    phone: {
-      type: String,
-      trim: true,
-    },
-
     // Status & Login (used in login)
     isActive: {
       type: Boolean,

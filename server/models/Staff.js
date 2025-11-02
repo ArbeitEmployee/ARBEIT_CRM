@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import { generateStaffCode } from "../utils/codeGenerator.js";
 
 const staffSchema = new mongoose.Schema(
   {
