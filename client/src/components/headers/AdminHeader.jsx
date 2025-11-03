@@ -213,8 +213,11 @@ const AdminHeader = ({ onToggleSidebar, userType = "admin" }) => {
   // Menu items structure - different for staff and admin
   const getMenuItems = () => {
     if (userType === "staff") {
-      // Staff only sees Tasks
-      return [{ label: "Tasks", icon: "✅", path: "/staff/tasks" }];
+      // Staff sees Dashboard and Tasks
+      return [
+        { label: "Dashboard", icon: "📊", path: "/staff/dashboard" },
+        { label: "Tasks", icon: "✅", path: "/staff/tasks" },
+      ];
     } else {
       // Admin sees all menu items
       return [

@@ -57,8 +57,19 @@ const AdminSideBar = ({ isOpen, userType = "admin" }) => {
   // Base menu items - different for staff and admin
   const getBaseMenuItems = () => {
     if (userType === "staff") {
-      // Staff only sees Tasks
-      return [{ label: "Tasks", icon: <FaTasks />, path: "/staff/tasks" }];
+      // Staff sees Dashboard and Tasks
+      return [
+        {
+          label: "Dashboard",
+          icon: <FaTachometerAlt />,
+          path: "/staff/dashboard",
+        },
+        {
+          label: "Tasks",
+          icon: <FaTasks />,
+          path: "/staff/tasks",
+        },
+      ];
     } else {
       // Admin sees all menu items
       return [

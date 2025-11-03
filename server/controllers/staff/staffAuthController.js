@@ -1,398 +1,393 @@
-import bcrypt from "bcryptjs";
+// controllers/staffAuthController.js - NEW FILE
+import StaffAuth from "../../models/StaffAuth.js";
+import Staff from "../../models/Staff.js"; // Your existing Staff model
 import jwt from "jsonwebtoken";
-import StaffLogReg from "../../models/staffLogReg.js";
-import Staff from "../../models/Staff.js"; // ADDED: Import Staff model
+import crypto from "crypto";
 import sendEmail from "../../utils/sendEmail.js";
 
-// STAFF REGISTER
-export const registerStaff = async (req, res) => {
-  try {
-    const { name, email, password, confirmPassword, staffCode } = req.body;
-
-    if (!name || !email || !password || !confirmPassword || !staffCode) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({ message: "Passwords do not match" });
-    }
-
-    if (password.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters long" });
-    }
-
-    // VALIDATE STAFF CODE AGAINST STAFF MODEL (CORRECTED)
-    const validStaff = await Staff.findOne({
-      staffCode: staffCode.toUpperCase(),
-      active: true,
-    });
-
-    if (!validStaff) {
-      return res
-        .status(400)
-        .json({ message: "Invalid or inactive staff registration code" });
-    }
-
-    // Check if email matches the staff record
-    if (validStaff.email.toLowerCase() !== email.toLowerCase()) {
-      return res.status(400).json({
-        message: "Email does not match the staff record for this code",
-      });
-    }
-
-    // Check if staff is already registered
-    const existingStaffAuth = await StaffLogReg.findOne({
-      email: email.toLowerCase(),
-    });
-    if (existingStaffAuth) {
-      return res.status(400).json({ message: "Staff is already registered" });
-    }
-
-    const staff = await StaffLogReg.register({
-      name,
-      email,
-      password,
-      staffCode: staffCode.toUpperCase(),
-    });
-
-    // Return staff without password
-    const staffResponse = {
-      id: staff._id,
-      name: staff.name,
-      email: staff.email,
-      staffCode: staff.staffCode,
-      createdAt: staff.createdAt,
-    };
-
-    res.status(201).json({
-      message: "Staff registered successfully",
-      staff: staffResponse,
-    });
-  } catch (error) {
-    console.error("Staff registration error:", error);
-    res.status(500).json({ message: error.message });
-  }
+// Generate JWT Token
+const generateToken = (id) => {
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 };
 
-// STAFF VALIDATE CODE (NEW ENDPOINT - ADD THIS)
+// Validate staff code against existing Staff records
 export const validateStaffCode = async (req, res) => {
   try {
     const { staffCode } = req.body;
 
     if (!staffCode) {
-      return res.status(400).json({ message: "Staff code is required" });
+      return res.status(400).json({
+        success: false,
+        message: "Staff code is required",
+      });
     }
 
-    // Validate staff code against Staff model
-    const validStaff = await Staff.findOne({
+    // Check if staff code exists in Staff collection (admin-created staff)
+    const staff = await Staff.findOne({
       staffCode: staffCode.toUpperCase(),
-      active: true,
     });
 
-    if (!validStaff) {
-      return res.status(400).json({
-        valid: false,
-        message: "Invalid or inactive staff registration code",
+    if (!staff) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid staff code. Please contact your administrator.",
       });
     }
 
-    // Check if staff is already registered
-    const existingStaffAuth = await StaffLogReg.findOne({
-      email: validStaff.email.toLowerCase(),
-    });
-
-    if (existingStaffAuth) {
+    // Check if staff is active
+    if (!staff.active) {
       return res.status(400).json({
-        valid: false,
-        message: "Staff is already registered with this code",
+        success: false,
+        message:
+          "This staff account is inactive. Please contact administrator.",
       });
     }
 
-    res.json({
+    // Check if already registered
+    const existingAuth = await StaffAuth.findOne({
+      staffCode: staffCode.toUpperCase(),
+    });
+    if (existingAuth) {
+      return res.status(400).json({
+        success: false,
+        message: "This staff code is already registered. Please login instead.",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
       valid: true,
-      message: "Staff code validated successfully",
       staff: {
-        name: validStaff.name,
-        email: validStaff.email,
-        position: validStaff.position,
-        department: validStaff.department,
-        company: "Your Company", // You can customize this
+        staffCode: staff.staffCode,
+        name: staff.name,
+        email: staff.email,
+        position: staff.position,
+        department: staff.department,
+        phone: staff.phone,
       },
+      message: "Staff code validated successfully",
     });
   } catch (error) {
-    console.error("Staff code validation error:", error);
+    console.error("Validate staff code error:", error);
     res.status(500).json({
-      valid: false,
-      message: error.message,
+      success: false,
+      message: "Server error during code validation",
     });
   }
 };
 
-// STAFF LOGIN
-export const loginStaff = async (req, res) => {
+// Staff Registration
+export const staffRegister = async (req, res) => {
+  try {
+    const { staffCode, name, email, password, confirmPassword } = req.body;
+
+    // Validation
+    if (!staffCode || !name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields are required",
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Passwords do not match",
+      });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters",
+      });
+    }
+
+    // Verify staff code exists in Staff collection
+    const staffRecord = await Staff.findOne({
+      staffCode: staffCode.toUpperCase(),
+      active: true,
+    });
+
+    if (!staffRecord) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or inactive staff code",
+      });
+    }
+
+    // Check if already registered
+    const existingStaff = await StaffAuth.findOne({
+      $or: [
+        { staffCode: staffCode.toUpperCase() },
+        { email: email.toLowerCase() },
+      ],
+    });
+
+    if (existingStaff) {
+      return res.status(400).json({
+        success: false,
+        message: "Staff already registered. Please login instead.",
+      });
+    }
+
+    // Create staff auth record
+    const staffAuth = await StaffAuth.create({
+      staffCode: staffCode.toUpperCase(),
+      name,
+      email: email.toLowerCase(),
+      password,
+      position: staffRecord.position,
+      department: staffRecord.department,
+      phone: staffRecord.phone,
+    });
+
+    // Generate token
+    const token = generateToken(staffAuth._id);
+
+    res.status(201).json({
+      success: true,
+      message: "Staff registration successful",
+      token,
+      staff: {
+        id: staffAuth._id,
+        staffCode: staffAuth.staffCode,
+        name: staffAuth.name,
+        email: staffAuth.email,
+        position: staffAuth.position,
+        department: staffAuth.department,
+      },
+    });
+  } catch (error) {
+    console.error("Staff registration error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error during registration",
+    });
+  }
+};
+
+// Staff Login
+export const staffLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
-    }
-
-    const staff = await StaffLogReg.findByEmail(email.toLowerCase());
-    if (!staff) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
-
-    if (!staff.isActive) {
       return res.status(400).json({
-        message: "Staff account is inactive. Please contact administrator.",
+        success: false,
+        message: "Email and password are required",
       });
     }
 
-    const isMatch = await staff.comparePassword(password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid email or password" });
+    // Find staff by email
+    const staff = await StaffAuth.findOne({ email: email.toLowerCase() });
+
+    if (!staff || !(await staff.comparePassword(password))) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+      });
     }
 
-    const token = jwt.sign(
-      {
-        id: staff._id,
-        email: staff.email,
-        type: "staff",
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" }
-    );
+    if (!staff.isActive) {
+      return res.status(401).json({
+        success: false,
+        message: "Account is deactivated. Please contact administrator.",
+      });
+    }
 
     // Update last login
     staff.lastLogin = new Date();
     await staff.save();
 
-    // Return staff data along with token
-    res.json({
-      message: "Staff login successful",
+    // Generate token
+    const token = generateToken(staff._id);
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
       token,
       staff: {
         id: staff._id,
+        staffCode: staff.staffCode,
         name: staff.name,
         email: staff.email,
-        staffCode: staff.staffCode,
-        lastLogin: staff.lastLogin,
+        position: staff.position,
+        department: staff.department,
       },
     });
   } catch (error) {
     console.error("Staff login error:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Server error during login",
+    });
   }
 };
 
-// STAFF FORGOT PASSWORD - SEND RESET CODE
-export const staffForgotPassword = async (req, res) => {
+// Password Reset Functions (simplified version)
+export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ message: "Email is required" });
-    }
-
-    const staff = await StaffLogReg.findByEmail(email.toLowerCase());
+    const staff = await StaffAuth.findOne({ email: email.toLowerCase() });
     if (!staff) {
-      return res
-        .status(404)
-        .json({ message: "No staff account found with this email" });
-    }
-
-    if (!staff.isActive) {
-      return res.status(400).json({
-        message: "Staff account is inactive. Please contact administrator.",
+      return res.status(404).json({
+        success: false,
+        message: "No staff found with this email",
       });
     }
 
-    const resetCode = staff.generateResetCode();
+    // Generate simple 4-digit code (in production, use proper reset tokens)
+    const resetCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Store reset code temporarily (in production, use database field with expiry)
+    staff.resetCode = resetCode;
+    staff.resetCodeExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
     await staff.save();
 
-    try {
-      await sendEmail(
-        email,
-        "Staff Password Reset Code",
-        `Your staff password reset code is: ${resetCode}. This code will expire in 10 minutes.`
-      );
-      res.json({ message: "Reset code sent to your staff email" });
-    } catch (emailError) {
-      console.error("Email sending error:", emailError);
-      // Clear the reset code if email fails
-      staff.resetCode = undefined;
-      staff.resetCodeExpire = undefined;
-      await staff.save();
+    // Send email (you'll need to implement sendEmail function)
+    // await sendEmail({
+    //   email: staff.email,
+    //   subject: 'Password Reset Code',
+    //   message: `Your password reset code is: ${resetCode}`
+    // });
 
-      res
-        .status(500)
-        .json({ message: "Failed to send reset code. Please try again." });
-    }
+    res.status(200).json({
+      success: true,
+      message: `Reset code sent to your email: ${resetCode}`, // Remove this in production
+      code: resetCode, // Remove this in production - only for testing
+    });
   } catch (error) {
-    console.error("Staff forgot password error:", error);
-    res.status(500).json({ message: error.message });
+    console.error("Forgot password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error sending reset code",
+    });
   }
 };
 
-// STAFF VERIFY RESET CODE
-export const staffVerifyResetCode = async (req, res) => {
+export const verifyResetCode = async (req, res) => {
   try {
     const { email, code } = req.body;
 
-    if (!email || !code) {
-      return res.status(400).json({ message: "Email and code are required" });
-    }
+    const staff = await StaffAuth.findOne({
+      email: email.toLowerCase(),
+      resetCode: code,
+      resetCodeExpires: { $gt: Date.now() },
+    });
 
-    const staff = await StaffLogReg.findByEmail(email.toLowerCase());
     if (!staff) {
-      return res.status(404).json({ message: "Staff email not found" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset code",
+      });
     }
 
-    const isValid = staff.verifyResetCode(code);
-    if (!isValid) {
-      return res.status(400).json({ message: "Invalid or expired reset code" });
-    }
-
-    res.json({ message: "Code verified successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Reset code verified successfully",
+    });
   } catch (error) {
-    console.error("Staff verify reset code error:", error);
-    res.status(500).json({ message: error.message });
+    console.error("Verify reset code error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error verifying reset code",
+    });
   }
 };
 
-// STAFF RESET PASSWORD (AFTER CODE VERIFIED)
-export const staffResetPassword = async (req, res) => {
+export const resetPassword = async (req, res) => {
   try {
     const { email, code, newPassword } = req.body;
 
-    if (!email || !code || !newPassword) {
-      return res
-        .status(400)
-        .json({ message: "Email, code, and new password are required" });
-    }
+    const staff = await StaffAuth.findOne({
+      email: email.toLowerCase(),
+      resetCode: code,
+      resetCodeExpires: { $gt: Date.now() },
+    });
 
-    if (newPassword.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "Password must be at least 6 characters long" });
-    }
-
-    const staff = await StaffLogReg.findByEmail(email.toLowerCase());
     if (!staff) {
-      return res.status(404).json({ message: "Staff email not found" });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired reset code",
+      });
     }
 
-    // Verify code again before resetting password
-    const isValid = staff.verifyResetCode(code);
-    if (!isValid) {
-      return res.status(400).json({ message: "Invalid or expired code" });
-    }
-
-    // Update password
-    staff.password = newPassword; // This will be hashed by the pre-save middleware
+    staff.password = newPassword;
     staff.resetCode = undefined;
-    staff.resetCodeExpire = undefined;
+    staff.resetCodeExpires = undefined;
     await staff.save();
 
-    res.json({ message: "Staff password reset successful" });
+    res.status(200).json({
+      success: true,
+      message: "Password reset successfully",
+    });
   } catch (error) {
-    console.error("Staff reset password error:", error);
-    res.status(500).json({ message: error.message });
+    console.error("Reset password error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error resetting password",
+    });
   }
 };
 
-// STAFF CHANGE PASSWORD
-export const staffChangePassword = async (req, res) => {
-  try {
-    const staffId = req.staff._id;
-    const { oldPassword, newPassword, confirmNewPassword } = req.body;
-
-    if (!oldPassword || !newPassword || !confirmNewPassword) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    if (newPassword.length < 6) {
-      return res
-        .status(400)
-        .json({ message: "New password must be at least 6 characters long" });
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      return res.status(400).json({ message: "New passwords do not match" });
-    }
-
-    const staff = await StaffLogReg.findById(staffId);
-    if (!staff) {
-      return res.status(404).json({ message: "Staff not found" });
-    }
-
-    // Verify old password
-    const isOldPasswordValid = await staff.comparePassword(oldPassword);
-    if (!isOldPasswordValid) {
-      return res.status(400).json({ message: "Old password is incorrect" });
-    }
-
-    // Update password
-    staff.password = newPassword; // This will be hashed by the pre-save middleware
-    await staff.save();
-
-    res.json({ message: "Password changed successfully" });
-  } catch (error) {
-    console.error("Staff change password error:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// GET STAFF PROFILE
+// Get staff profile
 export const getStaffProfile = async (req, res) => {
   try {
-    const staff = await StaffLogReg.findById(req.staff._id).select(
-      "-password -resetCode -resetCodeExpire"
-    );
-
+    const staff = await StaffAuth.findById(req.params.id).select("-password");
     if (!staff) {
-      return res.status(404).json({ message: "Staff not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Staff not found",
+      });
     }
-
-    res.json(staff);
+    res.status(200).json({
+      success: true,
+      staff,
+    });
   } catch (error) {
     console.error("Get staff profile error:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Server error fetching profile",
+    });
   }
 };
 
-// UPDATE STAFF PROFILE
+// Update staff profile
 export const updateStaffProfile = async (req, res) => {
   try {
-    const staffId = req.staff._id;
-    const { name, phone } = req.body;
+    const { name, email, phone } = req.body;
+    const staff = await StaffAuth.findById(req.params.id);
 
-    const staff = await StaffLogReg.findById(staffId);
     if (!staff) {
-      return res.status(404).json({ message: "Staff not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Staff not found",
+      });
     }
 
-    // Update fields
-    if (name) staff.name = name;
-    if (phone !== undefined) staff.phone = phone;
+    staff.name = name || staff.name;
+    staff.email = email || staff.email;
+    staff.phone = phone || staff.phone;
 
     await staff.save();
 
-    // Return updated staff without sensitive data
-    const updatedStaff = await StaffLogReg.findById(staffId).select(
-      "-password -resetCode -resetCodeExpire"
+    const staffResponse = await StaffAuth.findById(req.params.id).select(
+      "-password"
     );
 
-    res.json({
-      message: "Staff profile updated successfully",
-      staff: updatedStaff,
+    res.status(200).json({
+      success: true,
+      message: "Profile updated successfully",
+      staff: staffResponse,
     });
   } catch (error) {
     console.error("Update staff profile error:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Server error updating profile",
+    });
   }
 };

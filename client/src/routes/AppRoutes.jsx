@@ -69,6 +69,8 @@ import StaffLogin from "../pages/staff/staffLogin";
 import StaffRegistration from "../pages/staff/staffRegistration";
 import StaffForgotPassword from "../pages/staff/forgotPassword";
 import StaffDashboard from "../pages/staff/StaffDashboard";
+import StaffTasks from "../pages/staff/StaffTasks";
+import StaffProfile from "../pages/staff/StaffProfile";
 
 const AppRoutes = () => {
   return (
@@ -164,8 +166,13 @@ const AppRoutes = () => {
           <StaffLayout>
             <Routes>
               <Route path="dashboard" element={<StaffDashboard />} />
-              <Route path="tasks" element={<TasksPage />} />
-              {/* Staff can only access dashboard and tasks */}
+              <Route path="tasks" element={<StaffTasks />} />
+              <Route path="profile" element={<StaffProfile />} />
+              {/* Redirect staff root to dashboard */}
+              <Route
+                path="/"
+                element={<Navigate to="/staff/dashboard" replace />}
+              />
             </Routes>
           </StaffLayout>
         }

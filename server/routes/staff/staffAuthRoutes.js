@@ -1,30 +1,22 @@
+// routes/staffAuthRoutes.js - NEW FILE
 import express from "express";
 import {
-  registerStaff,
-  loginStaff,
-  staffForgotPassword,
-  staffVerifyResetCode,
-  staffResetPassword,
-  staffChangePassword,
-  getStaffProfile,
-  updateStaffProfile,
-  validateStaffCode, // ADDED: Import the new validation function
+  staffRegister,
+  staffLogin,
+  validateStaffCode,
+  forgotPassword,
+  verifyResetCode,
+  resetPassword,
 } from "../../controllers/staff/staffAuthController.js";
-import { staffProtect } from "../../middlewares/staffAuth.js";
 
 const router = express.Router();
 
 // Public routes
-router.post("/validate-code", validateStaffCode); // ADDED: Staff code validation route
-router.post("/register", registerStaff);
-router.post("/login", loginStaff);
-router.post("/forgot-password", staffForgotPassword);
-router.post("/verify-reset-code", staffVerifyResetCode);
-router.post("/reset-password", staffResetPassword);
-
-// Protected routes (require staff authentication)
-router.put("/change-password", staffProtect, staffChangePassword);
-router.get("/profile", staffProtect, getStaffProfile);
-router.put("/profile", staffProtect, updateStaffProfile);
+router.post("/register", staffRegister);
+router.post("/login", staffLogin);
+router.post("/validate-code", validateStaffCode);
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-reset-code", verifyResetCode);
+router.post("/reset-password", resetPassword);
 
 export default router;
