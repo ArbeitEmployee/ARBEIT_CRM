@@ -1,253 +1,346 @@
-import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+/* eslint-disable no-unused-vars */
+import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  FaTachometerAlt,
-  FaUsers,
-  FaChartLine,
-  FaShoppingCart,
-  FaFileInvoiceDollar,
-  FaFileContract,
-  FaProjectDiagram,
-  FaTasks,
-  FaHeadset,
-  FaClipboardList,
-  FaQuestionCircle,
-  FaToolbox,
-  FaFileAlt,
-  FaCog,
-} from "react-icons/fa";
+  FiHome,
+  FiUsers,
+  FiSettings,
+  FiBell,
+  FiChevronDown,
+  FiChevronUp,
+  FiLogOut,
+  FiUser,
+  FiLayers,
+  FiBook,
+  FiGlobe,
+  FiCalendar,
+  FiFlag,
+  FiEdit,
+  FiBookOpen,
+  FiPhoneCall,
+  FiDollarSign,
+  FiFileText,
+  FiBriefcase,
+  FiTarget,
+  FiHelpCircle,
+  FiBarChart,
+  FiShoppingCart,
+  FiClipboard,
+} from "react-icons/fi";
+import { FaUserGraduate, FaProjectDiagram, FaHeadset } from "react-icons/fa";
+import { TiBusinessCard } from "react-icons/ti";
 import { MdOutlineLeaderboard } from "react-icons/md";
-import { IoIosArrowForward } from "react-icons/io";
+import { motion, AnimatePresence } from "framer-motion";
 
-const AdminSideBar = ({ isOpen, userType = "admin" }) => {
-  const [activeMenu, setActiveMenu] = useState("");
+const AdminSidebar = ({ isOpen, onToggle, userType = "admin" }) => {
+  const [expandedMenus, setExpandedMenus] = useState({});
   const [user, setUser] = useState(null);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Load logged-in user details from localStorage based on user type
   useEffect(() => {
     if (userType === "staff") {
-      const storedStaff = JSON.parse(localStorage.getItem("crm_staff"));
-      console.log("Loaded staff from storage:", storedStaff);
-      if (storedStaff) setUser(storedStaff);
+      const storedStaff = JSON.parse(
+        localStorage.getItem("crm_staff") || "null"
+      );
+      setUser(storedStaff);
     } else {
-      const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
-      console.log("Loaded admin from storage:", storedAdmin);
-      if (storedAdmin) setUser(storedAdmin);
+      const storedAdmin = JSON.parse(
+        localStorage.getItem("crm_admin") || "null"
+      );
+      setUser(storedAdmin);
     }
   }, [userType]);
 
-  // Add this useEffect to listen for storage changes
-  useEffect(() => {
-    const handleStorageChange = () => {
-      if (userType === "staff") {
-        const storedStaff = JSON.parse(localStorage.getItem("crm_staff"));
-        setUser(storedStaff);
-      } else {
-        const storedAdmin = JSON.parse(localStorage.getItem("crm_admin"));
-        setUser(storedAdmin);
-      }
-    };
+  const baseNavItems = [
+    { name: "Dashboard", icon: <FiHome />, path: `/${userType}/dashboard` },
+    {
+      name: "Staffs",
+      icon: <FiUsers />,
+      path: `/${userType}/staffs`,
+    },
+    {
+      name: "Staff Tasks",
+      icon: <FiTarget />,
+      path: `/${userType}/tasks`,
+    },
+    {
+      name: "Leads",
+      icon: <MdOutlineLeaderboard />,
+      path: `/${userType}/leads`,
+    },
+    {
+      name: "Customers",
+      icon: <FiUsers />,
+      path: `/${userType}/customers`,
+    },
+    {
+      name: "Subscriptions",
+      icon: <FiShoppingCart />,
+      path: `/${userType}/subscriptions`,
+    },
+    {
+      name: "Sales",
+      icon: <FiDollarSign />,
+      children: [
+        { name: "Proposals", path: `/${userType}/sales/proposals` },
+        { name: "Estimates", path: `/${userType}/sales/estimates` },
+        { name: "Invoices", path: `/${userType}/sales/invoices` },
+        { name: "Payments", path: `/${userType}/sales/payments` },
+        { name: "Credit Notes", path: `/${userType}/sales/creditNotes` },
+        { name: "Items", path: `/${userType}/sales/items` },
+      ],
+    },
+    {
+      name: "Expenses",
+      icon: <FiFileText />,
+      path: `/${userType}/expenses`,
+    },
+    {
+      name: "Estimate Requests",
+      icon: <FiEdit />,
+      path: `/${userType}/estimate-request`,
+    },
+    {
+      name: "Projects",
+      icon: <FaProjectDiagram />,
+      path: `/${userType}/projects`,
+    },
 
-    window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, [userType]);
+    {
+      name: "Contracts",
+      icon: <FiClipboard />,
+      path: `/${userType}/contracts`,
+    },
+    {
+      name: "Knowledge Base",
+      icon: <FiHelpCircle />,
+      path: `/${userType}/knowledge-base`,
+    },
+    {
+      name: "Utilities",
+      icon: <FiSettings />,
+      children: [
+        { name: "Bulk PDF Export", path: `/${userType}/utilities/bulk-pdf` },
+        { name: "CSV Export", path: `/${userType}/utilities/csv` },
+        { name: "Calendar", path: `/${userType}/utilities/calendar` },
+        { name: "Announcements", path: `/${userType}/utilities/announcements` },
+        { name: "Goals", path: `/${userType}/utilities/goals` },
+      ],
+    },
+    {
+      name: "Reports",
+      icon: <FiBarChart />,
+      children: [
+        { name: "Sales Reports", path: `/${userType}/reports/sales` },
+        { name: "Expenses Reports", path: `/${userType}/reports/expenses` },
+        {
+          name: "Expenses vs Income",
+          path: `/${userType}/reports/expenses-vs-income`,
+        },
+        { name: "Leads Reports", path: `/${userType}/reports/leads` },
+        { name: "KB Articles", path: `/${userType}/reports/kb-articles` },
+      ],
+    },
 
-  const defaultImage = "https://via.placeholder.com/40";
+    {
+      name: "Support",
+      icon: <FaHeadset />,
+      path: `/${userType}/support`,
+    },
+  ];
 
-  // Base menu items - different for staff and admin
-  const getBaseMenuItems = () => {
-    if (userType === "staff") {
-      // Staff sees Dashboard and Tasks
-      return [
-        {
-          label: "Dashboard",
-          icon: <FaTachometerAlt />,
-          path: "/staff/dashboard",
-        },
-        {
-          label: "Tasks",
-          icon: <FaTasks />,
-          path: "/staff/tasks",
-        },
-      ];
-    } else {
-      // Admin sees all menu items
-      return [
-        {
-          label: "Dashboard",
-          icon: <FaTachometerAlt />,
-          path: "/admin/dashboard",
-        },
-        { label: "Customers", icon: <FaUsers />, path: "/admin/customers" },
-        { label: "Staffs", icon: <FaUsers />, path: "/admin/staffs" },
-        {
-          label: "Sales",
-          icon: <FaChartLine />,
-          hasSub: true,
-          subItems: [
-            { name: "Proposals", path: "/admin/sales/proposals" },
-            { name: "Estimates", path: "/admin/sales/estimates" },
-            { name: "Invoices", path: "/admin/sales/invoices" },
-            { name: "Payments", path: "/admin/sales/payments" },
-            { name: "Credit Notes", path: "/admin/sales/creditNotes" },
-            { name: "Items", path: "/admin/sales/items" },
-          ],
-        },
-        {
-          label: "Subscriptions",
-          icon: <FaShoppingCart />,
-          path: "/admin/subscriptions",
-        },
-        {
-          label: "Expenses",
-          icon: <FaFileInvoiceDollar />,
-          path: "/admin/expenses",
-        },
-        {
-          label: "Contracts",
-          icon: <FaFileContract />,
-          path: "/admin/contracts",
-        },
-        {
-          label: "Projects",
-          icon: <FaProjectDiagram />,
-          path: "/admin/projects",
-        },
-        { label: "Tasks", icon: <FaTasks />, path: "/admin/tasks" },
-        { label: "Support", icon: <FaHeadset />, path: "/admin/support" },
-        {
-          label: "Leads",
-          icon: <MdOutlineLeaderboard />,
-          path: "/admin/leads",
-        },
-        {
-          label: "Estimate Request",
-          icon: <FaClipboardList />,
-          path: "/admin/estimate-request",
-        },
-        {
-          label: "Knowledge Base",
-          icon: <FaQuestionCircle />,
-          path: "/admin/knowledge-base",
-        },
-        {
-          label: "Utilities",
-          icon: <FaToolbox />,
-          hasSub: true,
-          subItems: [
-            { name: "Bulk PDF Export", path: "/admin/utilities/bulk-pdf" },
-            { name: "CSV Export", path: "/admin/utilities/csv" },
-            { name: "Calendar", path: "/admin/utilities/calendar" },
-            { name: "Announcements", path: "/admin/utilities/announcements" },
-            { name: "Goals", path: "/admin/utilities/goals" },
-          ],
-        },
-        {
-          label: "Reports",
-          icon: <FaFileAlt />,
-          hasSub: true,
-          subItems: [
-            { name: "Sales", path: "/admin/reports/sales" },
-            { name: "Expenses", path: "/admin/reports/expenses" },
-            {
-              name: "Expenses vs Income",
-              path: "/admin/reports/expenses-vs-income",
-            },
-            { name: "Leads", path: "/admin/reports/leads" },
-            { name: "KB Articles", path: "/admin/reports/kb-articles" },
-          ],
-        },
-      ];
-    }
-  };
-
-  let menuItems = getBaseMenuItems();
-
-  // If superAdmin → add "Admins" menu (only for admin)
+  // Add Admin management for superAdmin
   if (userType === "admin" && user?.role === "superAdmin") {
-    menuItems.push({
-      label: "Admins",
-      icon: <FaUsers />,
-      hasSub: true,
-      subItems: [
+    baseNavItems.splice(3, 0, {
+      name: "Admins",
+      icon: <FiUser />,
+      children: [
         { name: "All Admins", path: "/admin/admins/all" },
         { name: "Pending Admins", path: "/admin/admins/pending" },
       ],
     });
   }
 
-  return (
-    <aside
-      className={`bg-gray-900 text-white h-[calc(100vh-56px)] fixed top-[56px] left-0 z-40 flex flex-col transition-all duration-300
-        ${isOpen ? "w-60" : "w-0 overflow-hidden"}`}
-    >
-      {/* User profile */}
-      <div className="flex items-center gap-3 p-4 border-b border-gray-700">
-        <img
-          src={user?.image || defaultImage}
-          alt="Profile"
-          className="w-10 h-10 rounded-full object-cover"
-        />
-        <div>
-          <h2 className="text-sm font-semibold">
-            {user?.name || "Unknown User"}
-          </h2>
-          <p className="text-xs text-gray-400">
-            {user?.email || "no-email@crm.com"} ({userType})
-          </p>
-        </div>
-      </div>
+  // For staff, show limited menu
+  const staffNavItems = [
+    { name: "Dashboard", icon: <FiHome />, path: "/staff/dashboard" },
+    { name: "Tasks", icon: <FiTarget />, path: "/staff/tasks" },
+  ];
 
-      {/* Menu */}
-      <nav className="flex-1 overflow-y-auto">
-        {menuItems.map((item, idx) => (
-          <div key={idx}>
-            {item.hasSub ? (
-              <>
-                <button
-                  className="flex items-center justify-between w-full px-4 py-2 hover:bg-gray-800 transition-colors"
-                  onClick={() =>
-                    setActiveMenu(activeMenu === item.label ? "" : item.label)
-                  }
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg">{item.icon}</span>
-                    <span className="text-sm">{item.label}</span>
-                  </div>
-                  <IoIosArrowForward
-                    className={`transition-transform ${
-                      activeMenu === item.label ? "rotate-90" : ""
-                    }`}
-                  />
-                </button>
-                {activeMenu === item.label && (
-                  <div className="pl-12 bg-gray-800">
-                    {item.subItems.map((sub, sIdx) => (
-                      <Link
-                        to={sub.path}
-                        key={sIdx}
-                        className="block py-1 text-xs text-gray-300 hover:text-white cursor-pointer"
-                      >
-                        {sub.name}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <Link
-                to={item.path}
-                className="flex items-center gap-3 px-4 py-2 hover:bg-gray-800 transition-colors"
-              >
-                <span className="text-lg">{item.icon}</span>
-                <span className="text-sm">{item.label}</span>
-              </Link>
-            )}
+  const navItems = userType === "staff" ? staffNavItems : baseNavItems;
+
+  const toggleMenu = (menuName) => {
+    setExpandedMenus((prev) => ({
+      ...prev,
+      [menuName]: !prev[menuName],
+    }));
+  };
+
+  const handleLogout = () => {
+    if (userType === "staff") {
+      localStorage.removeItem("crm_staff_token");
+      localStorage.removeItem("crm_staff");
+      navigate("/staff/login");
+    } else {
+      localStorage.removeItem("crm_token");
+      localStorage.removeItem("crm_admin");
+      navigate("/admin/login");
+    }
+  };
+
+  const isActivePath = (path) => {
+    return (
+      location.pathname === path || location.pathname.startsWith(path + "/")
+    );
+  };
+
+  const isParentActive = (item) => {
+    if (item.path) return isActivePath(item.path);
+    if (item.children) {
+      return item.children.some((child) => isActivePath(child.path));
+    }
+    return false;
+  };
+
+  return (
+    <>
+      {/* Mobile Overlay */}
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          onClick={onToggle}
+        />
+      )}
+
+      {/* Sidebar */}
+      <motion.aside
+        initial={false}
+        animate={{
+          x: isOpen ? 0 : -300,
+          width: isOpen ? 280 : 0,
+        }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="bg-gradient-to-b from-gray-50 to-gray-100 h-screen flex flex-col border-r border-gray-200 shadow-xl overflow-hidden fixed lg:relative z-50"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-gray-200">
+          <div className="flex items-center space-x-3">
+            <img src="/arbeit-logo.png" alt="ARBEIT Logo" className="h-8" />
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">ARBEIT CRM</h1>
+              <p className="text-sm text-gray-600 capitalize">
+                {userType} Portal
+              </p>
+            </div>
           </div>
-        ))}
-      </nav>
-    </aside>
+
+          <button
+            onClick={onToggle}
+            className="lg:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors"
+          >
+            <FiChevronDown className="w-5 h-5 transform rotate-90" />
+          </button>
+        </div>
+
+        {/* Navigation - Added padding bottom for better scroll */}
+        <nav className="flex-1 overflow-y-auto py-4 px-4 pb-20">
+          <ul className="space-y-2">
+            {navItems.map((item) => {
+              const isActive = isParentActive(item);
+              const isExpanded = expandedMenus[item.name];
+
+              return (
+                <li key={item.name}>
+                  {item.children ? (
+                    <>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => toggleMenu(item.name)}
+                        className={`flex items-center justify-between w-full p-3 rounded-xl transition-all ${
+                          isActive
+                            ? "bg-blue-50 text-blue-600 shadow-sm border border-blue-100"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <span className="w-5 h-5 flex items-center justify-center">
+                            {item.icon}
+                          </span>
+                          <span className="font-medium text-sm">
+                            {item.name}
+                          </span>
+                        </div>
+                        {isExpanded ? (
+                          <FiChevronUp className="w-4 h-4" />
+                        ) : (
+                          <FiChevronDown className="w-4 h-4" />
+                        )}
+                      </motion.button>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <ul className="ml-8 border-l border-gray-200 pl-3 mt-2 space-y-1">
+                              {item.children.map((child) => (
+                                <motion.li
+                                  key={child.name}
+                                  whileHover={{ x: 2 }}
+                                  className="mb-1"
+                                >
+                                  <Link
+                                    to={child.path}
+                                    className={`block text-sm py-2.5 px-3 rounded-lg transition-colors ${
+                                      isActivePath(child.path)
+                                        ? "bg-blue-500 text-white font-medium shadow-sm"
+                                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                    }`}
+                                  >
+                                    {child.name}
+                                  </Link>
+                                </motion.li>
+                              ))}
+                            </ul>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </>
+                  ) : (
+                    <Link
+                      to={item.path}
+                      className={`flex items-center w-full p-3 rounded-xl transition-all ${
+                        isActive
+                          ? "bg-blue-50 text-blue-600 shadow-sm border border-blue-100"
+                          : "text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <span className="w-5 h-5 flex items-center justify-center">
+                          {item.icon}
+                        </span>
+                        <span className="font-medium text-sm">{item.name}</span>
+                      </div>
+                    </Link>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </motion.aside>
+    </>
   );
 };
 
-export default AdminSideBar;
+export default AdminSidebar;

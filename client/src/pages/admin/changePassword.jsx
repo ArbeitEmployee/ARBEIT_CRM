@@ -88,7 +88,7 @@ const ChangePassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-200 flex items-center justify-center py-8 px-4">
+    <div className="flex items-center justify-center py-8 px-4">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl">
         <div className="text-center">
           <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100">
@@ -138,7 +138,7 @@ const ChangePassword = () => {
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors mt-5"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                   onClick={() => togglePasswordVisibility("oldPassword")}
                 >
                   {showPasswords.oldPassword ? (
@@ -203,7 +203,7 @@ const ChangePassword = () => {
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors mt-5"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                   onClick={() => togglePasswordVisibility("newPassword")}
                 >
                   {showPasswords.newPassword ? (
@@ -268,7 +268,7 @@ const ChangePassword = () => {
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors mt-5"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                   onClick={() => togglePasswordVisibility("confirmNewPassword")}
                 >
                   {showPasswords.confirmNewPassword ? (

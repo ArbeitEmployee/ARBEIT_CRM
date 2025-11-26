@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FiMail, FiLock, FiUser } from "react-icons/fi";
+import { FiMail, FiLock, FiUser, FiEye, FiEyeOff } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import backgroundImage from "../../assets/login-background.jpg";
@@ -16,7 +16,8 @@ export default function AdminSignup() {
     password: false,
     confirmPassword: false,
   });
-
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const emailRegex = /^\S+@\S+\.\S+$/;
 
@@ -183,7 +184,7 @@ export default function AdminSignup() {
                 <FiLock className="text-gray-400" />
               </span>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"} // toggle input type
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -192,6 +193,14 @@ export default function AdminSignup() {
                   touched.password && password.length < 6
                 )}
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword((show) => !show)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200"
+                tabIndex={-1}
+              >
+                {showPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
             </div>
             {touched.password && password.length === 0 && (
               <p className="text-red-400 text-xs mt-1">
@@ -213,7 +222,7 @@ export default function AdminSignup() {
                 <FiLock className="text-gray-400" />
               </span>
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"} // toggle input type
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -225,6 +234,14 @@ export default function AdminSignup() {
                     (confirmPassword === "" || confirmPassword !== password)
                 )}
               />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword((show) => !show)}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? <FiEyeOff /> : <FiEye />}
+              </button>
             </div>
             {touched.confirmPassword && confirmPassword === "" && (
               <p className="text-red-400 text-xs mt-1">

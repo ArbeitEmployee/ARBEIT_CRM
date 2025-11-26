@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { FiLock } from "react-icons/fi";
+import { FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import backgroundImage from "../../assets/login-background.jpg";
 
@@ -11,6 +11,8 @@ export default function ForgotPassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // refs for code inputs
   const codeRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
@@ -246,28 +248,56 @@ export default function ForgotPassword() {
             }}
             className="space-y-4"
           >
-            <div>
+            <div className="relative">
               <label className="block text-sm mb-1">New Password</label>
-              <input
-                type="password"
-                placeholder="Enter your new password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  placeholder="Enter your new password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-2 pr-10 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPassword((show) => !show)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200"
+                  tabIndex={-1}
+                >
+                  {showNewPassword ? (
+                    <FiEyeOff size={18} />
+                  ) : (
+                    <FiEye size={18} />
+                  )}
+                </button>
+              </div>
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block text-sm mb-1">Confirm Password</label>
-              <input
-                type="password"
-                placeholder="Enter your confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  placeholder="Enter your confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-3 py-2 pr-10 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((show) => !show)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-200"
+                  tabIndex={-1}
+                >
+                  {showConfirmPassword ? (
+                    <FiEyeOff size={18} />
+                  ) : (
+                    <FiEye size={18} />
+                  )}
+                </button>
+              </div>
             </div>
 
             <button

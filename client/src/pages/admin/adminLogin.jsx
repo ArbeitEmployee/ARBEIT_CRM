@@ -1,6 +1,6 @@
 /* eslint-disable no-unused-vars */
 import { useState } from "react";
-import { FiMail, FiLock } from "react-icons/fi";
+import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import backgroundImage from "../../assets/login-background.jpg";
@@ -11,6 +11,7 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState({ email: false, password: false });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,7 +23,7 @@ export default function AdminLogin() {
     }
 
     try {
-      const res = await fetch(`${API_BASE_URL}/api/admin/login`, {
+      const res = await fetch(`${API_BASE_URL}/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -128,7 +129,7 @@ export default function AdminLogin() {
                 <FiLock className="text-gray-400" />
               </div>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 autoComplete="new-password"
                 value={password}
@@ -136,6 +137,17 @@ export default function AdminLogin() {
                 onBlur={() => setTouched({ ...touched, password: true })}
                 className={getInputClasses("password", password)}
               />
+              <div
+                className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? (
+                  <FiEyeOff className="text-gray-400" />
+                ) : (
+                  <FiEye className="text-gray-400" />
+                )}
+              </div>
             </div>
             {touched.password && !password && (
               <p className="text-red-400 text-xs mt-1">
