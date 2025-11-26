@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // staff-login.jsx
 import { useState } from "react";
 import { FiMail, FiLock } from "react-icons/fi";
@@ -6,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import backgroundImage from "../../assets/login-background.jpg";
 
 const StaffLogin = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -36,7 +38,7 @@ const StaffLogin = () => {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/staff/login", {
+      const res = await fetch(`${API_BASE_URL}/staff/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

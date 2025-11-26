@@ -3,17 +3,18 @@ import axios from "axios";
 import { FaDownload } from "react-icons/fa";
 
 const BulkPdfExport = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [exportData, setExportData] = useState({
     type: "",
     startDate: "",
-    endDate: ""
+    endDate: "",
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('crm_token');
+    return localStorage.getItem("crm_token");
   };
 
   // Create axios instance with auth headers
@@ -22,8 +23,8 @@ const BulkPdfExport = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -31,7 +32,7 @@ const BulkPdfExport = () => {
     const { name, value } = e.target;
     setExportData({
       ...exportData,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -52,34 +53,34 @@ const BulkPdfExport = () => {
     try {
       const config = createAxiosConfig();
       const response = await axios.post(
-        "http://localhost:5000/api/admin/export/bulk-pdf",
+        `${API_BASE_URL}/admin/export/bulk-pdf`,
         exportData,
         {
           ...config,
-          responseType: "blob"
+          responseType: "blob",
         }
       );
 
       // Create a blob from the PDF stream
       const blob = new Blob([response.data], { type: "application/pdf" });
-      
+
       // Create a link element and trigger download
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      
+
       // Create filename based on type and date range
       const start = exportData.startDate.split("-").join("");
       const end = exportData.endDate.split("-").join("");
       link.download = `${exportData.type}_${start}_to_${end}.pdf`;
-      
+
       document.body.appendChild(link);
       link.click();
-      
+
       // Clean up
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
-      
+
       setMessage("PDF exported successfully!");
     } catch (error) {
       console.error("Export error:", error);
@@ -98,9 +99,11 @@ const BulkPdfExport = () => {
       <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="bg-gray-900 text-white p-6">
           <h1 className="text-3xl font-bold">Bulk PDF Export</h1>
-          <p className="mt-2 opacity-90">Export multiple documents as PDF files in one batch</p>
+          <p className="mt-2 opacity-90">
+            Export multiple documents as PDF files in one batch
+          </p>
         </div>
-        
+
         <div className="p-8">
           {/* Document Type Selection */}
           <div className="mb-8">
@@ -161,9 +164,25 @@ const BulkPdfExport = () => {
           >
             {loading ? (
               <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
                 </svg>
                 Processing...
               </span>
@@ -177,14 +196,23 @@ const BulkPdfExport = () => {
 
           {/* Message Display */}
           {message && (
-            <div className={`mt-6 p-4 rounded-lg text-base ${message.includes("success") ? "bg-green-100 text-green-800 border border-green-200" : "bg-red-100 text-red-800 border border-red-200"}`}>
+            <div
+              className={`mt-6 p-4 rounded-lg text-base ${
+                message.includes("success")
+                  ? "bg-green-100 text-green-800 border border-green-200"
+                  : "bg-red-100 text-red-800 border border-red-200"
+              }`}
+            >
               {message}
             </div>
           )}
         </div>
-        
+
         <div className="bg-gray-100 p-6 text-center text-gray-600">
-          <p>Select a document type and date range to export multiple PDFs at once</p>
+          <p>
+            Select a document type and date range to export multiple PDFs at
+            once
+          </p>
         </div>
       </div>
     </div>

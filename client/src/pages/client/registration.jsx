@@ -1,10 +1,22 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
-import { FiUser, FiMail, FiPhone, FiGlobe, FiBriefcase, FiLock, FiHome, FiMapPin, FiKey } from "react-icons/fi";
+import {
+  FiUser,
+  FiMail,
+  FiPhone,
+  FiGlobe,
+  FiBriefcase,
+  FiLock,
+  FiHome,
+  FiMapPin,
+  FiKey,
+} from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import backgroundImage from "../../assets/login-background.jpg";
 
 const ClientRegistration = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -19,7 +31,7 @@ const ClientRegistration = () => {
     country: "",
     city: "",
     address: "",
-    zipCode: ""
+    zipCode: "",
   });
 
   const [customerCode, setCustomerCode] = useState("");
@@ -43,7 +55,7 @@ const ClientRegistration = () => {
     setCodeError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/customers/validate-code", {
+      const res = await fetch(`${API_BASE_URL}/customers/validate-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customerCode }),
@@ -61,10 +73,10 @@ const ClientRegistration = () => {
       if (data.valid) {
         setCustomerInfo(data.customer);
         setCodeValidated(true);
-        setFormData(prev => ({
+        setFormData((prev) => ({
           ...prev,
           companyName: data.customer.company,
-          email: data.customer.email || ""
+          email: data.customer.email || "",
         }));
         toast.success("Customer code validated successfully!");
       } else {
@@ -83,7 +95,7 @@ const ClientRegistration = () => {
 
   const validateField = (name, value) => {
     let error = "";
-    
+
     if (!value) {
       error = "This field is required";
     } else {
@@ -112,17 +124,17 @@ const ClientRegistration = () => {
       }
     }
 
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
     return !error;
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Validate field on change
     if (errors[name]) {
       validateField(name, value);
@@ -137,12 +149,12 @@ const ClientRegistration = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!codeValidated || !customerInfo) {
       toast.error("Please validate your customer code first");
       return;
     }
-    
+
     // Validate all required fields
     const requiredFields = {
       name: formData.name,
@@ -150,7 +162,7 @@ const ClientRegistration = () => {
       phone: formData.phone,
       password: formData.password,
       confirmPassword: formData.confirmPassword,
-      companyName: formData.companyName
+      companyName: formData.companyName,
     };
 
     let isValid = true;
@@ -169,10 +181,10 @@ const ClientRegistration = () => {
     try {
       const registrationData = {
         ...formData,
-        customerCode
+        customerCode,
       };
 
-      const res = await fetch("http://localhost:5000/api/client/register", {
+      const res = await fetch(`${API_BASE_URL}/client/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registrationData),
@@ -187,7 +199,6 @@ const ClientRegistration = () => {
 
       toast.success("Registration successful! Please login.");
       navigate("/client/login");
-
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
     } finally {
@@ -208,17 +219,20 @@ const ClientRegistration = () => {
       {/* Title */}
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-white">Welcome to CRM</h2>
-        <p className="text-sm text-gray-300">Register your new client account</p>
+        <p className="text-sm text-gray-300">
+          Register your new client account
+        </p>
       </div>
 
       {/* Registration Card */}
       <div className="w-full max-w-4xl bg-[#0c123d] bg-opacity-80 p-6 rounded-xl shadow-xl text-white">
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-
           {/* Customer Code Validation */}
           <div className="mb-6 p-4 bg-[#10194f] rounded-lg">
-            <h3 className="text-lg font-semibold text-white mb-3">Step 1: Validate Your Customer Code</h3>
-            
+            <h3 className="text-lg font-semibold text-white mb-3">
+              Step 1: Validate Your Customer Code
+            </h3>
+
             <div className="flex items-end gap-2">
               <div className="flex-1">
                 <label className="block text-sm mb-1">Customer Code</label>
@@ -230,33 +244,44 @@ const ClientRegistration = () => {
                     type="text"
                     placeholder="Enter your customer code (e.g., CUST-ABC123)"
                     value={customerCode}
-                    onChange={(e) => setCustomerCode(e.target.value.toUpperCase())}
+                    onChange={(e) =>
+                      setCustomerCode(e.target.value.toUpperCase())
+                    }
                     disabled={codeValidated}
                     className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#0a0f30] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                      codeError ? "focus:ring-red-500 border border-red-500" : "focus:ring-blue-500"
+                      codeError
+                        ? "focus:ring-red-500 border border-red-500"
+                        : "focus:ring-blue-500"
                     } ${codeValidated ? "opacity-70" : ""}`}
                   />
                 </div>
-                {codeError && <p className="text-red-400 text-xs mt-1">{codeError}</p>}
+                {codeError && (
+                  <p className="text-red-400 text-xs mt-1">{codeError}</p>
+                )}
                 <p className="text-xs text-gray-400 mt-1">
                   This code was provided by your account manager
                 </p>
               </div>
-              
+
               <button
                 type="button"
                 onClick={validateCode}
                 disabled={validatingCode || codeValidated}
                 className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition disabled:opacity-50"
               >
-                {validatingCode ? "Validating..." : codeValidated ? "✓ Validated" : "Validate Code"}
+                {validatingCode
+                  ? "Validating..."
+                  : codeValidated
+                  ? "✓ Validated"
+                  : "Validate Code"}
               </button>
             </div>
 
             {customerInfo && (
               <div className="mt-4 p-3 bg-green-900/20 rounded border border-green-800/50">
                 <p className="text-green-400 text-sm">
-                  ✓ Validated for: <strong>{customerInfo.company}</strong> ({customerInfo.contact})
+                  ✓ Validated for: <strong>{customerInfo.company}</strong> (
+                  {customerInfo.contact})
                 </p>
               </div>
             )}
@@ -272,7 +297,6 @@ const ClientRegistration = () => {
                     Primary Contact Information
                   </h3>
                   <div className="space-y-4">
-
                     {/* Name */}
                     <div>
                       <label className="block text-sm mb-1">Name</label>
@@ -287,10 +311,18 @@ const ClientRegistration = () => {
                           value={formData.name}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.name ? "focus:ring-red-500" : "focus:ring-gray-700"}`}
+                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                            errors.name
+                              ? "focus:ring-red-500"
+                              : "focus:ring-gray-700"
+                          }`}
                         />
                       </div>
-                      {errors.name && <p className="text-red-400 text-xs mt-1">{errors.name}</p>}
+                      {errors.name && (
+                        <p className="text-red-400 text-xs mt-1">
+                          {errors.name}
+                        </p>
+                      )}
                     </div>
 
                     {/* Email */}
@@ -307,10 +339,18 @@ const ClientRegistration = () => {
                           value={formData.email}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.email ? "focus:ring-red-500" : "focus:ring-gray-700"}`}
+                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                            errors.email
+                              ? "focus:ring-red-500"
+                              : "focus:ring-gray-700"
+                          }`}
                         />
                       </div>
-                      {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+                      {errors.email && (
+                        <p className="text-red-400 text-xs mt-1">
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
 
                     {/* Phone */}
@@ -327,10 +367,18 @@ const ClientRegistration = () => {
                           value={formData.phone}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.phone ? "focus:ring-red-500" : "focus:ring-gray-700"}`}
+                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                            errors.phone
+                              ? "focus:ring-red-500"
+                              : "focus:ring-gray-700"
+                          }`}
                         />
                       </div>
-                      {errors.phone && <p className="text-red-400 text-xs mt-1">{errors.phone}</p>}
+                      {errors.phone && (
+                        <p className="text-red-400 text-xs mt-1">
+                          {errors.phone}
+                        </p>
+                      )}
                     </div>
 
                     {/* Website */}
@@ -383,15 +431,25 @@ const ClientRegistration = () => {
                           value={formData.password}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.password ? "focus:ring-red-500" : "focus:ring-gray-700"}`}
+                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                            errors.password
+                              ? "focus:ring-red-500"
+                              : "focus:ring-gray-700"
+                          }`}
                         />
                       </div>
-                      {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+                      {errors.password && (
+                        <p className="text-red-400 text-xs mt-1">
+                          {errors.password}
+                        </p>
+                      )}
                     </div>
 
                     {/* Confirm Password */}
                     <div>
-                      <label className="block text-sm mb-1">Confirm Password</label>
+                      <label className="block text-sm mb-1">
+                        Confirm Password
+                      </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <FiLock className="text-gray-400" />
@@ -403,10 +461,18 @@ const ClientRegistration = () => {
                           value={formData.confirmPassword}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.confirmPassword ? "focus:ring-red-500" : "focus:ring-gray-700"}`}
+                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                            errors.confirmPassword
+                              ? "focus:ring-red-500"
+                              : "focus:ring-gray-700"
+                          }`}
                         />
                       </div>
-                      {errors.confirmPassword && <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>}
+                      {errors.confirmPassword && (
+                        <p className="text-red-400 text-xs mt-1">
+                          {errors.confirmPassword}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -431,10 +497,18 @@ const ClientRegistration = () => {
                           value={formData.companyName}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.companyName ? "focus:ring-red-500" : "focus:ring-gray-700"}`}
+                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                            errors.companyName
+                              ? "focus:ring-red-500"
+                              : "focus:ring-gray-700"
+                          }`}
                         />
                       </div>
-                      {errors.companyName && <p className="text-red-400 text-xs mt-1">{errors.companyName}</p>}
+                      {errors.companyName && (
+                        <p className="text-red-400 text-xs mt-1">
+                          {errors.companyName}
+                        </p>
+                      )}
                     </div>
 
                     {/* VAT Number */}
@@ -469,10 +543,18 @@ const ClientRegistration = () => {
                           value={formData.companyPhone}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${errors.companyPhone ? "focus:ring-red-500" : "focus:ring-gray-700"}`}
+                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                            errors.companyPhone
+                              ? "focus:ring-red-500"
+                              : "focus:ring-gray-700"
+                          }`}
                         />
                       </div>
-                      {errors.companyPhone && <p className="text-red-400 text-xs mt-1">{errors.companyPhone}</p>}
+                      {errors.companyPhone && (
+                        <p className="text-red-400 text-xs mt-1">
+                          {errors.companyPhone}
+                        </p>
+                      )}
                     </div>
 
                     {/* Country */}
@@ -554,7 +636,9 @@ const ClientRegistration = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 {loading ? "Registering..." : "REGISTER"}
               </button>
@@ -564,7 +648,10 @@ const ClientRegistration = () => {
           {/* Login Link */}
           <p className="text-center text-sm text-gray-400 mt-4">
             Already have an account?{" "}
-            <Link to="/client/login" className="text-white hover:underline font-medium">
+            <Link
+              to="/client/login"
+              className="text-white hover:underline font-medium"
+            >
               LOG IN
             </Link>
           </p>

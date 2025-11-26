@@ -1,14 +1,26 @@
 import { useState, useEffect, useRef } from "react";
-import { 
-  FaPlus, FaFilter, FaSearch, FaSyncAlt, FaChevronRight, 
-  FaTimes, FaEdit, FaTrash, FaChevronDown, FaFileImport,
-  FaTasks, FaCalendarCheck, FaPauseCircle, FaBan, FaCheckCircle
+import {
+  FaPlus,
+  FaFilter,
+  FaSearch,
+  FaSyncAlt,
+  FaChevronRight,
+  FaTimes,
+  FaEdit,
+  FaTrash,
+  FaChevronDown,
+  FaFileImport,
+  FaTasks,
+  FaCalendarCheck,
+  FaPauseCircle,
+  FaBan,
+  FaCheckCircle,
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Custom hook for detecting outside clicks
 const useOutsideClick = (callback) => {
@@ -21,10 +33,10 @@ const useOutsideClick = (callback) => {
       }
     };
 
-    document.addEventListener('click', handleClick, true);
+    document.addEventListener("click", handleClick, true);
 
     return () => {
-      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener("click", handleClick, true);
     };
   }, [ref, callback]);
 
@@ -32,6 +44,7 @@ const useOutsideClick = (callback) => {
 };
 
 const ProjectPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [selectedProjects, setSelectedProjects] = useState([]);
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(25);
@@ -46,7 +59,7 @@ const ProjectPage = () => {
     progressProjects: 0,
     onHoldProjects: 0,
     cancelledProjects: 0,
-    finishedProjects: 0
+    finishedProjects: 0,
   });
   const [newProject, setNewProject] = useState({
     name: "",
@@ -57,7 +70,7 @@ const ProjectPage = () => {
     startDate: "",
     deadline: "",
     members: "",
-    status: "Progress"
+    status: "Progress",
   });
   const [editingProject, setEditingProject] = useState(null);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
@@ -74,22 +87,22 @@ const ProjectPage = () => {
     "Last Started",
     "On Hold",
     "Cancelled",
-    "Finished"
+    "Finished",
   ];
 
   // Use the custom hook for detecting outside clicks
   const exportRef = useOutsideClick(() => {
     setShowExportMenu(false);
   });
-  
+
   const filterRef = useOutsideClick(() => {
     setShowFilterMenu(false);
   });
-  
+
   const customerRef = useOutsideClick(() => {
     setShowCustomerDropdown(false);
   });
-  
+
   const staffRef = useOutsideClick(() => {
     setShowStaffDropdown(false);
   });
@@ -98,7 +111,7 @@ const ProjectPage = () => {
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('crm_token');
+    return localStorage.getItem("crm_token");
   };
 
   // Create axios instance with auth headers
@@ -107,8 +120,8 @@ const ProjectPage = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -117,22 +130,30 @@ const ProjectPage = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/projects", config);
+      const { data } = await axios.get(`${API_BASE_URL}/projects`, config);
       setProjects(data.projects || []);
-      
+
       // Calculate stats
       const totalProjects = data.projects.length;
-      const progressProjects = data.projects.filter(p => p.status === "Progress").length;
-      const onHoldProjects = data.projects.filter(p => p.status === "On Hold").length;
-      const cancelledProjects = data.projects.filter(p => p.status === "Cancelled").length;
-      const finishedProjects = data.projects.filter(p => p.status === "Finished").length;
-      
+      const progressProjects = data.projects.filter(
+        (p) => p.status === "Progress"
+      ).length;
+      const onHoldProjects = data.projects.filter(
+        (p) => p.status === "On Hold"
+      ).length;
+      const cancelledProjects = data.projects.filter(
+        (p) => p.status === "Cancelled"
+      ).length;
+      const finishedProjects = data.projects.filter(
+        (p) => p.status === "Finished"
+      ).length;
+
       setStats({
         totalProjects,
         progressProjects,
         onHoldProjects,
         cancelledProjects,
-        finishedProjects
+        finishedProjects,
       });
     } catch (error) {
       console.error("Error fetching projects:", error);
@@ -146,7 +167,7 @@ const ProjectPage = () => {
         progressProjects: 0,
         onHoldProjects: 0,
         cancelledProjects: 0,
-        finishedProjects: 0
+        finishedProjects: 0,
       });
     }
     setLoading(false);
@@ -162,10 +183,13 @@ const ProjectPage = () => {
       setCustomerSearchResults([]);
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/projects/customers/search?q=${searchTerm}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/projects/customers/search?q=${searchTerm}`,
+        config
+      );
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -178,24 +202,27 @@ const ProjectPage = () => {
     if (!customerCode || customerCode.length < 4) {
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/projects/customers/by-code/${customerCode}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/projects/customers/by-code/${customerCode}`,
+        config
+      );
       if (data.customer) {
-        setNewProject(prev => ({
+        setNewProject((prev) => ({
           ...prev,
           customerId: data.customer._id,
-          customerName: data.customer.company
+          customerName: data.customer.company,
         }));
       }
     } catch (error) {
       console.error("Error searching customer by code:", error);
       // Clear customer info if code is not found
-      setNewProject(prev => ({
+      setNewProject((prev) => ({
         ...prev,
         customerId: "",
-        customerName: ""
+        customerName: "",
       }));
     }
   };
@@ -206,10 +233,13 @@ const ProjectPage = () => {
       setStaffSearchResults([]);
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/staffs?search=${searchTerm}`,
+        config
+      );
       setStaffSearchResults(data.staffs || []);
     } catch (error) {
       console.error("Error searching staff:", error);
@@ -249,16 +279,21 @@ const ProjectPage = () => {
   }, [newProject.customerCode]);
 
   // Search filter
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = 
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch =
       project._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (project.customer && project.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (project.tags && project.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (project.customer &&
+        project.customer.company
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
+      (project.tags &&
+        project.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
       project.status.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "All" || project.status === statusFilter;
-    
+
+    const matchesStatus =
+      statusFilter === "All" || project.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
@@ -271,17 +306,17 @@ const ProjectPage = () => {
   );
 
   const toggleProjectSelection = (id) => {
-    setSelectedProjects(prev =>
+    setSelectedProjects((prev) =>
       prev.includes(id)
-        ? prev.filter(projectId => projectId !== id)
+        ? prev.filter((projectId) => projectId !== id)
         : [...prev, id]
     );
   };
 
   const handleNewProjectChange = (e) => {
     const { name, value } = e.target;
-    setNewProject(prev => ({ ...prev, [name]: value }));
-    
+    setNewProject((prev) => ({ ...prev, [name]: value }));
+
     if (name === "customerName") {
       setCustomerSearchTerm(value);
       setShowCustomerDropdown(true);
@@ -292,20 +327,20 @@ const ProjectPage = () => {
   };
 
   const handleSelectCustomer = (customer) => {
-    setNewProject(prev => ({
+    setNewProject((prev) => ({
       ...prev,
       customerId: customer._id,
       customerName: customer.company,
-      customerCode: customer.customerCode
+      customerCode: customer.customerCode,
     }));
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
   };
 
   const handleSelectStaff = (staff) => {
-    setNewProject(prev => ({
+    setNewProject((prev) => ({
       ...prev,
-      members: prev.members ? `${prev.members}, ${staff.name}` : staff.name
+      members: prev.members ? `${prev.members}, ${staff.name}` : staff.name,
     }));
     setShowStaffDropdown(false);
     setStaffSearchTerm("");
@@ -313,32 +348,36 @@ const ProjectPage = () => {
 
   const handleSaveProject = async () => {
     if (isSaving) return;
-    
+
     if (!newProject.name || !newProject.customerId) {
       alert("Please fill in all required fields (Name, Customer)");
       return;
     }
 
     setIsSaving(true);
-    
+
     try {
       const config = createAxiosConfig();
-      
+
       if (editingProject) {
         // Update existing project
-        await axios.put(`http://localhost:5000/api/projects/${editingProject._id}`, newProject, config);
+        await axios.put(
+          `${API_BASE_URL}/projects/${editingProject._id}`,
+          newProject,
+          config
+        );
         setShowNewProjectForm(false);
         setEditingProject(null);
         fetchProjects();
         alert("Project updated successfully!");
       } else {
         // Create new project
-        await axios.post("http://localhost:5000/api/projects", newProject, config);
+        await axios.post(`${API_BASE_URL}/projects`, newProject, config);
         setShowNewProjectForm(false);
         fetchProjects();
         alert("Project created successfully!");
       }
-      
+
       // Reset form
       setNewProject({
         name: "",
@@ -349,11 +388,15 @@ const ProjectPage = () => {
         startDate: "",
         deadline: "",
         members: "",
-        status: "Progress"
+        status: "Progress",
       });
     } catch (error) {
       console.error("Error saving project:", error);
-      alert(`Error saving project: ${error.response?.data?.message || error.message}`);
+      alert(
+        `Error saving project: ${
+          error.response?.data?.message || error.message
+        }`
+      );
     } finally {
       setIsSaving(false);
     }
@@ -367,10 +410,14 @@ const ProjectPage = () => {
       customerName: project.customer ? project.customer.company : "",
       customerCode: project.customer ? project.customer.customerCode : "",
       tags: project.tags || "",
-      startDate: project.startDate ? new Date(project.startDate).toISOString().split('T')[0] : "",
-      deadline: project.deadline ? new Date(project.deadline).toISOString().split('T')[0] : "",
+      startDate: project.startDate
+        ? new Date(project.startDate).toISOString().split("T")[0]
+        : "",
+      deadline: project.deadline
+        ? new Date(project.deadline).toISOString().split("T")[0]
+        : "",
       members: project.members || "",
-      status: project.status
+      status: project.status,
     });
     setShowNewProjectForm(true);
   };
@@ -379,24 +426,32 @@ const ProjectPage = () => {
     if (window.confirm("Are you sure you want to delete this project?")) {
       try {
         const config = createAxiosConfig();
-        await axios.delete(`http://localhost:5000/api/projects/${id}`, config);
+        await axios.delete(`${API_BASE_URL}/projects/${id}`, config);
         fetchProjects();
         alert("Project deleted successfully!");
       } catch (error) {
         console.error("Error deleting project:", error);
-        alert(`Error deleting project: ${error.response?.data?.message || error.message}`);
+        alert(
+          `Error deleting project: ${
+            error.response?.data?.message || error.message
+          }`
+        );
       }
     }
   };
 
   // Delete selected projects
   const handleDeleteSelected = async () => {
-    if (window.confirm(`Delete ${selectedProjects.length} selected projects?`)) {
+    if (
+      window.confirm(`Delete ${selectedProjects.length} selected projects?`)
+    ) {
       try {
         const config = createAxiosConfig();
-        await Promise.all(selectedProjects.map(id =>
-          axios.delete(`http://localhost:5000/api/projects/${id}`, config)
-        ));
+        await Promise.all(
+          selectedProjects.map((id) =>
+            axios.delete(`${API_BASE_URL}/projects/${id}`, config)
+          )
+        );
         setSelectedProjects([]);
         fetchProjects();
         alert("Selected projects deleted!");
@@ -409,15 +464,19 @@ const ProjectPage = () => {
 
   // Export functions
   const exportToExcel = () => {
-    const dataToExport = filteredProjects.map(project => ({
+    const dataToExport = filteredProjects.map((project) => ({
       ID: project._id,
       Name: project.name,
       Customer: project.customer ? project.customer.company : "N/A",
       Tags: project.tags,
-      'Start Date': project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A",
-      Deadline: project.deadline ? new Date(project.deadline).toLocaleDateString() : "N/A",
+      "Start Date": project.startDate
+        ? new Date(project.startDate).toLocaleDateString()
+        : "N/A",
+      Deadline: project.deadline
+        ? new Date(project.deadline).toLocaleDateString()
+        : "N/A",
       Members: project.members,
-      Status: project.status
+      Status: project.status,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -428,25 +487,29 @@ const ProjectPage = () => {
   };
 
   const exportToCSV = () => {
-    const dataToExport = filteredProjects.map(project => ({
+    const dataToExport = filteredProjects.map((project) => ({
       ID: project._id,
       Name: project.name,
       Customer: project.customer ? project.customer.company : "N/A",
       Tags: project.tags,
-      'Start Date': project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A",
-      Deadline: project.deadline ? new Date(project.deadline).toLocaleDateString() : "N/A",
+      "Start Date": project.startDate
+        ? new Date(project.startDate).toLocaleDateString()
+        : "N/A",
+      Deadline: project.deadline
+        ? new Date(project.deadline).toLocaleDateString()
+        : "N/A",
       Members: project.members,
-      Status: project.status
+      Status: project.status,
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'Projects.csv');
-    link.style.visibility = 'hidden';
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Projects.csv");
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -464,21 +527,25 @@ const ProjectPage = () => {
       "Start Date",
       "Deadline",
       "Members",
-      "Status"
+      "Status",
     ];
-    
-    const tableRows = filteredProjects.map(project => [
+
+    const tableRows = filteredProjects.map((project) => [
       project._id,
       project.name,
       project.customer ? project.customer.company : "N/A",
       project.tags,
-      project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A",
-      project.deadline ? new Date(project.deadline).toLocaleDateString() : "N/A",
+      project.startDate
+        ? new Date(project.startDate).toLocaleDateString()
+        : "N/A",
+      project.deadline
+        ? new Date(project.deadline).toLocaleDateString()
+        : "N/A",
       project.members,
-      project.status
+      project.status,
     ]);
 
-    autoTable(doc,{
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       margin: { top: 20 },
@@ -490,9 +557,9 @@ const ProjectPage = () => {
   };
 
   const printTable = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<html><head><title>Projects</title>');
-    printWindow.document.write('<style>');
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Projects</title>");
+    printWindow.document.write("<style>");
     printWindow.document.write(`
       body { font-family: Arial, sans-serif; }
       table { border-collapse: collapse; width: 100%; }
@@ -504,43 +571,58 @@ const ProjectPage = () => {
         .no-print { display: none; }
       }
     `);
-    printWindow.document.write('</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<h1>Projects</h1>');
-    printWindow.document.write('<table>');
-    
+    printWindow.document.write("</style>");
+    printWindow.document.write("</head><body>");
+    printWindow.document.write("<h1>Projects</h1>");
+    printWindow.document.write("<table>");
+
     // Table header
-    printWindow.document.write('<thead><tr>');
-    ['ID', 'Project Name', 'Customer', 'Tags', 'Start Date', 'Deadline', 'Members', 'Status'].forEach(header => {
+    printWindow.document.write("<thead><tr>");
+    [
+      "ID",
+      "Project Name",
+      "Customer",
+      "Tags",
+      "Start Date",
+      "Deadline",
+      "Members",
+      "Status",
+    ].forEach((header) => {
       printWindow.document.write(`<th>${header}</th>`);
     });
-    printWindow.document.write('</tr></thead>');
-    
+    printWindow.document.write("</tr></thead>");
+
     // Table body
-    printWindow.document.write('<tbody>');
-    filteredProjects.forEach(project => {
-      printWindow.document.write('<tr>');
+    printWindow.document.write("<tbody>");
+    filteredProjects.forEach((project) => {
+      printWindow.document.write("<tr>");
       [
         project._id,
         project.name,
         project.customer ? project.customer.company : "N/A",
         project.tags,
-        project.startDate ? new Date(project.startDate).toLocaleDateString() : "N/A",
-        project.deadline ? new Date(project.deadline).toLocaleDateString() : "N/A",
+        project.startDate
+          ? new Date(project.startDate).toLocaleDateString()
+          : "N/A",
+        project.deadline
+          ? new Date(project.deadline).toLocaleDateString()
+          : "N/A",
         project.members,
-        project.status
-      ].forEach(value => {
+        project.status,
+      ].forEach((value) => {
         printWindow.document.write(`<td>${value}</td>`);
       });
-      printWindow.document.write('</tr>');
+      printWindow.document.write("</tr>");
     });
-    printWindow.document.write('</tbody>');
-    
-    printWindow.document.write('</table>');
-    printWindow.document.write('<p class="no-print">Printed on: ' + new Date().toLocaleString() + '</p>');
-    printWindow.document.write('</body></html>');
+    printWindow.document.write("</tbody>");
+
+    printWindow.document.write("</table>");
+    printWindow.document.write(
+      '<p class="no-print">Printed on: ' + new Date().toLocaleString() + "</p>"
+    );
+    printWindow.document.write("</body></html>");
     printWindow.document.close();
-    
+
     setTimeout(() => {
       printWindow.print();
       printWindow.close();
@@ -549,29 +631,44 @@ const ProjectPage = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case "Progress": return "bg-blue-100 text-blue-800";
-      case "Last Started": return "bg-green-100 text-green-800";
-      case "On Hold": return "bg-yellow-100 text-yellow-800";
-      case "Cancelled": return "bg-red-100 text-red-800";
-      case "Finished": return "bg-purple-100 text-purple-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (status) {
+      case "Progress":
+        return "bg-blue-100 text-blue-800";
+      case "Last Started":
+        return "bg-green-100 text-green-800";
+      case "On Hold":
+        return "bg-yellow-100 text-yellow-800";
+      case "Cancelled":
+        return "bg-red-100 text-red-800";
+      case "Finished":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB'); // DD/MM/YYYY format
+    return date.toLocaleDateString("en-GB"); // DD/MM/YYYY format
   };
 
-  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading projects...</div>;
+  if (loading)
+    return (
+      <div className="bg-gray-100 min-h-screen p-4">Loading projects...</div>
+    );
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">{showNewProjectForm ? (editingProject ? "Edit Project" : "Add New Project") : "Projects"}</h1>
+        <h1 className="text-2xl font-bold">
+          {showNewProjectForm
+            ? editingProject
+              ? "Edit Project"
+              : "Add New Project"
+            : "Projects"}
+        </h1>
         <div className="flex items-center text-gray-600">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
@@ -583,7 +680,7 @@ const ProjectPage = () => {
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Project Details</h2>
-            <button 
+            <button
               onClick={() => {
                 setShowNewProjectForm(false);
                 setEditingProject(null);
@@ -598,7 +695,9 @@ const ProjectPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Project Name *
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -610,7 +709,9 @@ const ProjectPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Code</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer Code
+                </label>
                 <input
                   type="text"
                   name="customerCode"
@@ -625,7 +726,9 @@ const ProjectPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer *
+                </label>
                 <div className="relative" ref={customerRef}>
                   <input
                     type="text"
@@ -645,22 +748,32 @@ const ProjectPage = () => {
                           onClick={() => handleSelectCustomer(customer)}
                         >
                           <div className="font-medium">{customer.company}</div>
-                          <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
-                          <div className="text-xs text-blue-600">{customer.customerCode}</div>
+                          <div className="text-sm text-gray-600">
+                            {customer.contact} - {customer.email}
+                          </div>
+                          <div className="text-xs text-blue-600">
+                            {customer.customerCode}
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                      <div className="px-3 py-2 text-gray-500">No customers found</div>
-                    </div>
-                  )}
+                  {showCustomerDropdown &&
+                    customerSearchResults.length === 0 &&
+                    customerSearchTerm.length >= 2 && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                        <div className="px-3 py-2 text-gray-500">
+                          No customers found
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tags
+                </label>
                 <input
                   type="text"
                   name="tags"
@@ -674,21 +787,27 @@ const ProjectPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
                 <select
                   name="status"
                   value={newProject.status}
                   onChange={handleNewProjectChange}
                   className="w-full border rounded px-3 py-2"
                 >
-                  {statusOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {statusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
                 <input
                   type="date"
                   name="startDate"
@@ -699,7 +818,9 @@ const ProjectPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Deadline
+                </label>
                 <input
                   type="date"
                   name="deadline"
@@ -710,7 +831,9 @@ const ProjectPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Members</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Members
+                </label>
                 <div className="relative" ref={staffRef}>
                   <input
                     type="text"
@@ -729,16 +852,22 @@ const ProjectPage = () => {
                           onClick={() => handleSelectStaff(staff)}
                         >
                           <div className="font-medium">{staff.name}</div>
-                          <div className="text-sm text-gray-600">{staff.position} - {staff.department}</div>
+                          <div className="text-sm text-gray-600">
+                            {staff.position} - {staff.department}
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  {showStaffDropdown && staffSearchResults.length === 0 && staffSearchTerm.length >= 2 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                      <div className="px-3 py-2 text-gray-500">No staff found</div>
-                    </div>
-                  )}
+                  {showStaffDropdown &&
+                    staffSearchResults.length === 0 &&
+                    staffSearchTerm.length >= 2 && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                        <div className="px-3 py-2 text-gray-500">
+                          No staff found
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
@@ -813,7 +942,9 @@ const ProjectPage = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Cancelled</p>
-                  <p className="text-2xl font-bold">{stats.cancelledProjects}</p>
+                  <p className="text-2xl font-bold">
+                    {stats.cancelledProjects}
+                  </p>
                 </div>
                 <div className="bg-red-100 p-3 rounded-full">
                   <FaBan className="text-red-600" />
@@ -838,14 +969,13 @@ const ProjectPage = () => {
           {/* Top action buttons */}
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
-              <button 
-                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+              <button
+                className="px-3 py-1 text-sm rounded flex items-center gap-2"
+                style={{ backgroundColor: "#333333", color: "white" }}
                 onClick={() => setShowNewProjectForm(true)}
               >
                 <FaPlus /> New Project
               </button>
-
-              
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -858,19 +988,23 @@ const ProjectPage = () => {
           </div>
 
           {/* White box for table */}
-          <div className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+          <div
+            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+              compactView ? "w-1/2" : "w-full"
+            }`}
+          >
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 {/* Delete Selected button */}
-              {selectedProjects.length > 0 && (
-                <button
-                  className="bg-red-600 text-white px-3 py-1 rounded"
-                  onClick={handleDeleteSelected}
-                >
-                  Delete Selected ({selectedProjects.length})
-                </button>
-              )}
+                {selectedProjects.length > 0 && (
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    onClick={handleDeleteSelected}
+                  >
+                    Delete Selected ({selectedProjects.length})
+                  </button>
+                )}
                 {/* Entries per page */}
                 <select
                   className="border rounded px-2 py-1 text-sm"
@@ -885,10 +1019,10 @@ const ProjectPage = () => {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-                
+
                 {/* Filter button */}
                 <div className="relative" ref={filterRef}>
-                  <button 
+                  <button
                     className="border px-3 py-1 text-sm rounded flex items-center gap-2"
                     onClick={() => setShowFilterMenu(!showFilterMenu)}
                   >
@@ -898,9 +1032,13 @@ const ProjectPage = () => {
                   {/* Filter dropdown menu */}
                   {showFilterMenu && (
                     <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
-                      <div className="px-3 py-2 text-sm font-medium border-b">Status</div>
+                      <div className="px-3 py-2 text-sm font-medium border-b">
+                        Status
+                      </div>
                       <button
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${statusFilter === "All" ? "bg-gray-100" : ""}`}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                          statusFilter === "All" ? "bg-gray-100" : ""
+                        }`}
                         onClick={() => {
                           setStatusFilter("All");
                           setShowFilterMenu(false);
@@ -908,10 +1046,12 @@ const ProjectPage = () => {
                       >
                         All
                       </button>
-                      {statusOptions.map(option => (
+                      {statusOptions.map((option) => (
                         <button
                           key={option}
-                          className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${statusFilter === option ? "bg-gray-100" : ""}`}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                            statusFilter === option ? "bg-gray-100" : ""
+                          }`}
                           onClick={() => {
                             setStatusFilter(option);
                             setShowFilterMenu(false);
@@ -923,7 +1063,7 @@ const ProjectPage = () => {
                     </div>
                   )}
                 </div>
-                
+
                 {/* Export button */}
                 <div className="relative" ref={exportRef}>
                   <button
@@ -994,35 +1134,98 @@ const ProjectPage = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                    <th
+                      className="p-3 rounded-l-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
                       <input
                         type="checkbox"
-                        checked={selectedProjects.length === currentData.length && currentData.length > 0}
+                        checked={
+                          selectedProjects.length === currentData.length &&
+                          currentData.length > 0
+                        }
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedProjects(currentData.map((project) => project._id));
+                            setSelectedProjects(
+                              currentData.map((project) => project._id)
+                            );
                           } else {
                             setSelectedProjects([]);
                           }
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project Name</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Project Name
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Customer
+                    </th>
                     {compactView ? (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Deadline
+                        </th>
+                        <th
+                          className="p-3 rounded-r-lg"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Actions
+                        </th>
                       </>
                     ) : (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Members</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Tags
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Start Date
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Deadline
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Members
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="p-3 rounded-r-lg"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Actions
+                        </th>
                       </>
                     )}
                   </tr>
@@ -1033,28 +1236,37 @@ const ProjectPage = () => {
                       <tr
                         key={project._id}
                         className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                        style={{ color: 'black' }}
+                        style={{ color: "black" }}
                       >
                         <td className="p-3 rounded-l-lg border-0">
                           <div className="flex items-center">
                             <input
                               type="checkbox"
                               checked={selectedProjects.includes(project._id)}
-                              onChange={() => toggleProjectSelection(project._id)}
+                              onChange={() =>
+                                toggleProjectSelection(project._id)
+                              }
                               className="h-4 w-4"
                             />
                           </div>
                         </td>
-                        <td className="p-3 border-0 font-medium">{project.name}</td>
+                        <td className="p-3 border-0 font-medium">
+                          {project.name}
+                        </td>
                         <td className="p-3 border-0">
                           {project.customer ? (
                             <div>
-                              <div className="font-medium">{project.customer.company}</div>
+                              <div className="font-medium">
+                                {project.customer.company}
+                              </div>
                               <div className="text-xs text-gray-500">
-                                {project.customer.contact} • {project.customer.email}
+                                {project.customer.contact} •{" "}
+                                {project.customer.email}
                               </div>
                               {project.customer.customerCode && (
-                                <div className="text-xs text-blue-600">{project.customer.customerCode}</div>
+                                <div className="text-xs text-blue-600">
+                                  {project.customer.customerCode}
+                                </div>
                               )}
                             </div>
                           ) : (
@@ -1064,11 +1276,17 @@ const ProjectPage = () => {
                         {compactView ? (
                           <>
                             <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(project.status)}`}>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                  project.status
+                                )}`}
+                              >
                                 {project.status}
                               </span>
                             </td>
-                            <td className="p-3 border-0">{formatDate(project.deadline)}</td>
+                            <td className="p-3 border-0">
+                              {formatDate(project.deadline)}
+                            </td>
                             <td className="p-3 border-0 rounded-r-lg">
                               <div className="flex items-center space-x-2">
                                 <button
@@ -1078,7 +1296,9 @@ const ProjectPage = () => {
                                   <FaEdit />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteProject(project._id)}
+                                  onClick={() =>
+                                    handleDeleteProject(project._id)
+                                  }
                                   className="text-red-600 hover:text-red-800"
                                 >
                                   <FaTrash />
@@ -1088,12 +1308,24 @@ const ProjectPage = () => {
                           </>
                         ) : (
                           <>
-                            <td className="p-3 border-0">{project.tags || "N/A"}</td>
-                            <td className="p-3 border-0">{formatDate(project.startDate)}</td>
-                            <td className="p-3 border-0">{formatDate(project.deadline)}</td>
-                            <td className="p-3 border-0">{project.members || "N/A"}</td>
                             <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(project.status)}`}>
+                              {project.tags || "N/A"}
+                            </td>
+                            <td className="p-3 border-0">
+                              {formatDate(project.startDate)}
+                            </td>
+                            <td className="p-3 border-0">
+                              {formatDate(project.deadline)}
+                            </td>
+                            <td className="p-3 border-0">
+                              {project.members || "N/A"}
+                            </td>
+                            <td className="p-3 border-0">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                  project.status
+                                )}`}
+                              >
                                 {project.status}
                               </span>
                             </td>
@@ -1106,7 +1338,9 @@ const ProjectPage = () => {
                                   <FaEdit />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteProject(project._id)}
+                                  onClick={() =>
+                                    handleDeleteProject(project._id)
+                                  }
                                   className="text-red-600 hover:text-red-800"
                                 >
                                   <FaTrash />
@@ -1119,7 +1353,10 @@ const ProjectPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={compactView ? 6 : 9} className="p-4 text-center">
+                      <td
+                        colSpan={compactView ? 6 : 9}
+                        className="p-4 text-center"
+                      >
                         No projects found
                       </td>
                     </tr>
@@ -1131,12 +1368,16 @@ const ProjectPage = () => {
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
               <div className="text-sm text-gray-600">
-                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredProjects.length)} of {filteredProjects.length} entries
+                Showing {startIndex + 1} to{" "}
+                {Math.min(startIndex + entriesPerPage, filteredProjects.length)}{" "}
+                of {filteredProjects.length} entries
               </div>
               <div className="flex items-center space-x-1">
                 <button
                   className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -1152,11 +1393,13 @@ const ProjectPage = () => {
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
-                  
+
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? "bg-gray-200" : ""}`}
+                      className={`px-3 py-1 border rounded text-sm ${
+                        currentPage === pageNum ? "bg-gray-200" : ""
+                      }`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
                       {pageNum}
@@ -1165,7 +1408,9 @@ const ProjectPage = () => {
                 })}
                 <button
                   className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   Next

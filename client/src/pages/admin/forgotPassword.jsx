@@ -4,6 +4,7 @@ import { toast } from "react-hot-toast";
 import backgroundImage from "../../assets/login-background.jpg";
 
 export default function ForgotPassword() {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState(["", "", "", ""]);
@@ -46,7 +47,7 @@ export default function ForgotPassword() {
     }
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/admin/forgot-password", {
+      const res = await fetch(`${API_BASE_URL}/admin/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -71,7 +72,7 @@ export default function ForgotPassword() {
     const codeString = code.join("");
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/admin/verify-reset-code", {
+      const res = await fetch(`${API_BASE_URL}/admin/verify-reset-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code: codeString }),
@@ -89,38 +90,37 @@ export default function ForgotPassword() {
 
   // 3. Reset Password
   const resetPassword = async () => {
-  if (newPassword.length < 6) {
-    toast.error("Password must be at least 6 characters");
-    return;
-  }
-  if (newPassword !== confirmPassword) {
-    toast.error("Passwords do not match");
-    return;
-  }
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
 
-  setLoading(true);
-  try {
-    const res = await fetch("http://localhost:5000/api/admin/reset-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, newPassword }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || "Failed to reset password");
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, newPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to reset password");
 
-    toast.success("Password reset successful! Redirecting to login...");
-    
-    // Redirect to login after a short delay
-    setTimeout(() => {
-      window.location.href = "/admin/login";
-    }, 1500);
+      toast.success("Password reset successful! Redirecting to login...");
 
-  } catch (err) {
-    toast.error(err.message);
-  } finally {
-    setLoading(false);
-  }
-};
+      // Redirect to login after a short delay
+      setTimeout(() => {
+        window.location.href = "/admin/login";
+      }, 1500);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div
@@ -136,7 +136,9 @@ export default function ForgotPassword() {
       <div className="text-center mb-6">
         {step === 1 && (
           <>
-            <h2 className="text-lg font-semibold text-white">Forgot Password</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Forgot Password
+            </h2>
             <p className="text-xs text-gray-300">
               Enter your email to receive reset instructions
             </p>
@@ -145,13 +147,19 @@ export default function ForgotPassword() {
         {step === 2 && (
           <>
             <h2 className="text-lg font-semibold text-white">Password Reset</h2>
-            <p className="text-xs text-gray-300">We sent a code to {email || "your email"}</p>
+            <p className="text-xs text-gray-300">
+              We sent a code to {email || "your email"}
+            </p>
           </>
         )}
         {step === 3 && (
           <>
-            <h2 className="text-lg font-semibold text-white">Set New Password</h2>
-            <p className="text-xs text-gray-300">Must be at least 6 characters</p>
+            <h2 className="text-lg font-semibold text-white">
+              Set New Password
+            </h2>
+            <p className="text-xs text-gray-300">
+              Must be at least 6 characters
+            </p>
           </>
         )}
       </div>
@@ -274,7 +282,10 @@ export default function ForgotPassword() {
 
         {/* Back to login link */}
         <p className="text-center text-sm mt-4">
-          <a href="/admin/login" className="text-white hover:underline transition">
+          <a
+            href="/admin/login"
+            className="text-white hover:underline transition"
+          >
             ← Back to log in
           </a>
         </p>

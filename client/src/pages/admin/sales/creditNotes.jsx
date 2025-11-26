@@ -1,5 +1,18 @@
 import { useState, useEffect, useRef } from "react";
-import { FaPlus, FaChevronRight, FaTimes, FaUser, FaUserCheck, FaUserTimes, FaUserClock, FaEdit, FaTrash, FaSyncAlt, FaSearch, FaEye } from "react-icons/fa";
+import {
+  FaPlus,
+  FaChevronRight,
+  FaTimes,
+  FaUser,
+  FaUserCheck,
+  FaUserTimes,
+  FaUserClock,
+  FaEdit,
+  FaTrash,
+  FaSyncAlt,
+  FaSearch,
+  FaEye,
+} from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -8,6 +21,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const CreditNotes = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -19,9 +33,9 @@ const CreditNotes = () => {
   const [selectedCreditNotes, setSelectedCreditNotes] = useState([]);
   const [viewCreditNote, setViewCreditNote] = useState(null);
   const [editCreditNote, setEditCreditNote] = useState(null);
-  const [formData, setFormData] = useState({ 
-    customer: "", 
-    status: "Draft" 
+  const [formData, setFormData] = useState({
+    customer: "",
+    status: "Draft",
   });
 
   // Add a ref for the export menu
@@ -38,15 +52,18 @@ const CreditNotes = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
   // Close export menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+      if (
+        exportMenuRef.current &&
+        !exportMenuRef.current.contains(event.target)
+      ) {
         setShowExportMenu(false);
       }
     };
@@ -62,8 +79,11 @@ const CreditNotes = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/admin/credit-notes", config);
-      
+      const { data } = await axios.get(
+        `${API_BASE_URL}/admin/credit-notes`,
+        config
+      );
+
       // Ensure we're getting the data in the correct format
       if (data.data) {
         setCreditNotes(data.data); // If response has data property
@@ -92,7 +112,9 @@ const CreditNotes = () => {
   // Toggle credit note selection
   const toggleCreditNoteSelection = (id) => {
     if (selectedCreditNotes.includes(id)) {
-      setSelectedCreditNotes(selectedCreditNotes.filter(creditNoteId => creditNoteId !== id));
+      setSelectedCreditNotes(
+        selectedCreditNotes.filter((creditNoteId) => creditNoteId !== id)
+      );
     } else {
       setSelectedCreditNotes([...selectedCreditNotes, id]);
     }
@@ -103,10 +125,13 @@ const CreditNotes = () => {
     if (!creditNotes.length) return;
 
     const exportData = creditNotes.map((cn) => ({
-      CreditNoteNumber: cn.creditNoteNumber || "CN-" + cn._id.slice(-6).toUpperCase(),
+      CreditNoteNumber:
+        cn.creditNoteNumber || "CN-" + cn._id.slice(-6).toUpperCase(),
       Customer: cn.customer,
       Amount: cn.total,
-      CreditNoteDate: cn.creditNoteDate ? new Date(cn.creditNoteDate).toLocaleDateString() : "-",
+      CreditNoteDate: cn.creditNoteDate
+        ? new Date(cn.creditNoteDate).toLocaleDateString()
+        : "-",
       Status: cn.status,
       Reference: cn.reference || "-",
       Project: cn.project || "-",
@@ -116,10 +141,16 @@ const CreditNotes = () => {
       case "CSV": {
         const headers = Object.keys(exportData[0]).join(",");
         const rows = exportData
-          .map((row) => Object.values(row).map((val) => `"${val}"`).join(","))
+          .map((row) =>
+            Object.values(row)
+              .map((val) => `"${val}"`)
+              .join(",")
+          )
           .join("\n");
         const csvContent = headers + "\n" + rows;
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.setAttribute("download", "credit_notes.csv");
@@ -140,7 +171,9 @@ const CreditNotes = () => {
       case "PDF": {
         const doc = new jsPDF();
         const columns = Object.keys(exportData[0]);
-        const tableRows = exportData.map((row) => columns.map((col) => row[col]));
+        const tableRows = exportData.map((row) =>
+          columns.map((col) => row[col])
+        );
         autoTable(doc, { head: [columns], body: tableRows });
         doc.save("credit_notes.pdf");
         break;
@@ -148,8 +181,12 @@ const CreditNotes = () => {
 
       case "Print": {
         const printWindow = window.open("", "", "height=500,width=800");
-        printWindow.document.write("<html><head><title>Credit Notes</title></head><body>");
-        printWindow.document.write("<table border='1' style='border-collapse: collapse; width: 100%;'>");
+        printWindow.document.write(
+          "<html><head><title>Credit Notes</title></head><body>"
+        );
+        printWindow.document.write(
+          "<table border='1' style='border-collapse: collapse; width: 100%;'>"
+        );
         printWindow.document.write("<thead><tr>");
         Object.keys(exportData[0]).forEach((col) => {
           printWindow.document.write(`<th>${col}</th>`);
@@ -177,13 +214,16 @@ const CreditNotes = () => {
 
   // Delete credit note
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this credit note?")) return;
+    if (!window.confirm("Are you sure you want to delete this credit note?"))
+      return;
     try {
       const config = createAxiosConfig();
-      await axios.delete(`http://localhost:5000/api/admin/credit-notes/${id}`, config);
+      await axios.delete(`${API_BASE_URL}/admin/credit-notes/${id}`, config);
       setCreditNotes(creditNotes.filter((cn) => cn._id !== id));
       // Remove from selected if it was selected
-      setSelectedCreditNotes(selectedCreditNotes.filter(creditNoteId => creditNoteId !== id));
+      setSelectedCreditNotes(
+        selectedCreditNotes.filter((creditNoteId) => creditNoteId !== id)
+      );
     } catch (err) {
       console.error("Error deleting credit note", err);
       if (err.response?.status === 401) {
@@ -195,15 +235,22 @@ const CreditNotes = () => {
 
   // Bulk delete credit notes
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete ${selectedCreditNotes.length} credit notes?`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedCreditNotes.length} credit notes?`
+      )
+    )
+      return;
     try {
       const config = createAxiosConfig();
       await Promise.all(
-        selectedCreditNotes.map(id => 
-          axios.delete(`http://localhost:5000/api/admin/credit-notes/${id}`, config)
+        selectedCreditNotes.map((id) =>
+          axios.delete(`${API_BASE_URL}/admin/credit-notes/${id}`, config)
         )
       );
-      setCreditNotes(creditNotes.filter(cn => !selectedCreditNotes.includes(cn._id)));
+      setCreditNotes(
+        creditNotes.filter((cn) => !selectedCreditNotes.includes(cn._id))
+      );
       setSelectedCreditNotes([]);
       alert("Selected credit notes deleted successfully!");
     } catch (err) {
@@ -220,7 +267,11 @@ const CreditNotes = () => {
   const handleUpdate = async () => {
     try {
       const config = createAxiosConfig();
-      await axios.put(`http://localhost:5000/api/admin/credit-notes/${editCreditNote._id}`, formData, config);
+      await axios.put(
+        `${API_BASE_URL}/admin/credit-notes/${editCreditNote._id}`,
+        formData,
+        config
+      );
       setEditCreditNote(null);
       fetchCreditNotes();
     } catch (err) {
@@ -236,28 +287,46 @@ const CreditNotes = () => {
   const filteredCreditNotes = creditNotes.filter(
     (creditNote) =>
       creditNote.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (creditNote.creditNoteNumber || "CN-" + creditNote._id.slice(-6).toUpperCase()).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (
+        creditNote.creditNoteNumber ||
+        "CN-" + creditNote._id.slice(-6).toUpperCase()
+      )
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       creditNote.reference?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Pagination
   const indexOfLastCreditNote = currentPage * entriesPerPage;
   const indexOfFirstCreditNote = indexOfLastCreditNote - entriesPerPage;
-  const currentCreditNotes = filteredCreditNotes.slice(indexOfFirstCreditNote, indexOfLastCreditNote);
+  const currentCreditNotes = filteredCreditNotes.slice(
+    indexOfFirstCreditNote,
+    indexOfLastCreditNote
+  );
   const totalPages = Math.ceil(filteredCreditNotes.length / entriesPerPage);
 
   // Get status color
   const getStatusColor = (status) => {
     switch (status) {
-      case "Draft": return "bg-gray-100 text-gray-800";
-      case "Pending": return "bg-blue-100 text-blue-800";
-      case "Issued": return "bg-green-100 text-green-800";
-      case "Cancelled": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "Draft":
+        return "bg-gray-100 text-gray-800";
+      case "Pending":
+        return "bg-blue-100 text-blue-800";
+      case "Issued":
+        return "bg-green-100 text-green-800";
+      case "Cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading credit notes...</div>;
+  if (loading)
+    return (
+      <div className="bg-gray-100 min-h-screen p-4">
+        Loading credit notes...
+      </div>
+    );
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
@@ -291,7 +360,9 @@ const CreditNotes = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Draft</p>
-              <p className="text-2xl font-bold">{creditNotes.filter(cn => cn.status === "Draft").length}</p>
+              <p className="text-2xl font-bold">
+                {creditNotes.filter((cn) => cn.status === "Draft").length}
+              </p>
             </div>
             <div className="bg-gray-100 p-3 rounded-full">
               <FaEdit className="text-gray-600" />
@@ -304,7 +375,9 @@ const CreditNotes = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Pending</p>
-              <p className="text-2xl font-bold">{creditNotes.filter(cn => cn.status === "Pending").length}</p>
+              <p className="text-2xl font-bold">
+                {creditNotes.filter((cn) => cn.status === "Pending").length}
+              </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
               <FaEye className="text-blue-600" />
@@ -317,7 +390,9 @@ const CreditNotes = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Issued</p>
-              <p className="text-2xl font-bold">{creditNotes.filter(cn => cn.status === "Issued").length}</p>
+              <p className="text-2xl font-bold">
+                {creditNotes.filter((cn) => cn.status === "Issued").length}
+              </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
               <FaEye className="text-green-600" />
@@ -330,7 +405,9 @@ const CreditNotes = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Cancelled</p>
-              <p className="text-2xl font-bold">{creditNotes.filter(cn => cn.status === "Cancelled").length}</p>
+              <p className="text-2xl font-bold">
+                {creditNotes.filter((cn) => cn.status === "Cancelled").length}
+              </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
               <FaTimes className="text-red-600" />
@@ -342,14 +419,14 @@ const CreditNotes = () => {
       {/* Top action buttons */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <div className="flex items-center gap-2">
-          <button 
-            className="px-3 py-1 text-sm rounded flex items-center gap-2" 
-            style={{ backgroundColor: '#333333', color: 'white' }}
+          <button
+            className="px-3 py-1 text-sm rounded flex items-center gap-2"
+            style={{ backgroundColor: "#333333", color: "white" }}
             onClick={() => navigate("../credit-notes/new")}
           >
             <FaPlus /> New Credit Note
           </button>
-          
+
           {/* Bulk delete button */}
           {selectedCreditNotes.length > 0 && (
             <button
@@ -360,7 +437,7 @@ const CreditNotes = () => {
             </button>
           )}
         </div>
-        
+
         <div className="flex items-center gap-2">
           <button
             className="border px-3 py-1 text-sm rounded flex items-center gap-2"
@@ -372,7 +449,11 @@ const CreditNotes = () => {
       </div>
 
       {/* White box */}
-      <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+      <div
+        className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+          compactView ? "w-1/2" : "w-full"
+        }`}
+      >
         {/* Table controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
@@ -391,7 +472,7 @@ const CreditNotes = () => {
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-            
+
             {/* Export button */}
             <div className="relative">
               <button
@@ -403,7 +484,10 @@ const CreditNotes = () => {
 
               {/* Dropdown menu */}
               {showExportMenu && (
-                <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                <div
+                  ref={exportMenuRef}
+                  className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                >
                   <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                     onClick={() => handleExport("Excel")}
@@ -462,36 +546,105 @@ const CreditNotes = () => {
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th
+                  className="p-3 rounded-l-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
                   <input
                     type="checkbox"
-                    checked={selectedCreditNotes.length === currentCreditNotes.length && currentCreditNotes.length > 0}
+                    checked={
+                      selectedCreditNotes.length ===
+                        currentCreditNotes.length &&
+                      currentCreditNotes.length > 0
+                    }
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedCreditNotes(currentCreditNotes.map(c => c._id));
+                        setSelectedCreditNotes(
+                          currentCreditNotes.map((c) => c._id)
+                        );
                       } else {
                         setSelectedCreditNotes([]);
                       }
                     }}
                   />
                 </th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Credit Note#</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Credit Note#
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Customer
+                </th>
                 {compactView ? (
                   <>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Amount
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Date
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Actions
+                    </th>
                   </>
                 ) : (
                   <>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Reference</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Project
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Reference
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Amount
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Date
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Actions
+                    </th>
                   </>
                 )}
               </tr>
@@ -499,7 +652,9 @@ const CreditNotes = () => {
             <tbody>
               {currentCreditNotes.length > 0 ? (
                 currentCreditNotes.map((creditNote) => {
-                  const displayCreditNoteNumber = creditNote.creditNoteNumber || "CN-" + creditNote._id.slice(-6).toUpperCase();
+                  const displayCreditNoteNumber =
+                    creditNote.creditNoteNumber ||
+                    "CN-" + creditNote._id.slice(-6).toUpperCase();
 
                   const displayAmount = new Intl.NumberFormat("en-US", {
                     style: "currency",
@@ -510,33 +665,49 @@ const CreditNotes = () => {
                   const formatDate = (dateString) => {
                     if (!dateString) return "-";
                     const date = new Date(dateString);
-                    return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+                    return isNaN(date.getTime())
+                      ? "-"
+                      : date.toLocaleDateString();
                   };
 
                   return (
                     <tr
                       key={creditNote._id}
                       className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                      style={{ color: 'black' }}
+                      style={{ color: "black" }}
                     >
                       <td className="p-3 rounded-l-lg border-0">
                         <div className="flex items-center">
                           <input
                             type="checkbox"
-                            checked={selectedCreditNotes.includes(creditNote._id)}
-                            onChange={() => toggleCreditNoteSelection(creditNote._id)}
+                            checked={selectedCreditNotes.includes(
+                              creditNote._id
+                            )}
+                            onChange={() =>
+                              toggleCreditNoteSelection(creditNote._id)
+                            }
                             className="h-4 w-4"
                           />
                         </div>
                       </td>
-                      <td className="p-3 border-0 ">{displayCreditNoteNumber}</td>
-                      <td className="p-3 border-0">{creditNote.customer || "-"}</td>
+                      <td className="p-3 border-0 ">
+                        {displayCreditNoteNumber}
+                      </td>
+                      <td className="p-3 border-0">
+                        {creditNote.customer || "-"}
+                      </td>
                       {compactView ? (
                         <>
                           <td className="p-3 border-0">{displayAmount}</td>
-                          <td className="p-3 border-0">{formatDate(creditNote.creditNoteDate)}</td>
                           <td className="p-3 border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(creditNote.status)}`}>
+                            {formatDate(creditNote.creditNoteDate)}
+                          </td>
+                          <td className="p-3 border-0">
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                creditNote.status
+                              )}`}
+                            >
                               {creditNote.status || "Draft"}
                             </span>
                           </td>
@@ -574,12 +745,22 @@ const CreditNotes = () => {
                         </>
                       ) : (
                         <>
-                          <td className="p-3 border-0">{creditNote.project || "-"}</td>
-                          <td className="p-3 border-0">{creditNote.reference || "-"}</td>
-                          <td className="p-3 border-0">{displayAmount}</td>
-                          <td className="p-3 border-0">{formatDate(creditNote.creditNoteDate)}</td>
                           <td className="p-3 border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(creditNote.status)}`}>
+                            {creditNote.project || "-"}
+                          </td>
+                          <td className="p-3 border-0">
+                            {creditNote.reference || "-"}
+                          </td>
+                          <td className="p-3 border-0">{displayAmount}</td>
+                          <td className="p-3 border-0">
+                            {formatDate(creditNote.creditNoteDate)}
+                          </td>
+                          <td className="p-3 border-0">
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                creditNote.status
+                              )}`}
+                            >
                               {creditNote.status || "Draft"}
                             </span>
                           </td>
@@ -621,11 +802,13 @@ const CreditNotes = () => {
                 })
               ) : (
                 <tr>
-                  <td 
-                    colSpan={compactView ? 7 : 9} 
+                  <td
+                    colSpan={compactView ? 7 : 9}
                     className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
                   >
-                    {creditNotes.length === 0 ? "No credit notes found. Create your first credit note!" : "No credit notes match your search."}
+                    {creditNotes.length === 0
+                      ? "No credit notes found. Create your first credit note!"
+                      : "No credit notes match your search."}
                   </td>
                 </tr>
               )}
@@ -637,7 +820,8 @@ const CreditNotes = () => {
         {filteredCreditNotes.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm">
             <span>
-              Showing {indexOfFirstCreditNote + 1} to {Math.min(indexOfLastCreditNote, filteredCreditNotes.length)} of{" "}
+              Showing {indexOfFirstCreditNote + 1} to{" "}
+              {Math.min(indexOfLastCreditNote, filteredCreditNotes.length)} of{" "}
               {filteredCreditNotes.length} entries
             </span>
             <div className="flex items-center gap-2">
@@ -677,7 +861,7 @@ const CreditNotes = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Credit Note Details</h2>
-              <button 
+              <button
                 onClick={() => setViewCreditNote(null)}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -685,22 +869,45 @@ const CreditNotes = () => {
               </button>
             </div>
             <div className="space-y-3">
-              <p><b>Credit Note #:</b> {viewCreditNote.creditNoteNumber || "CN-" + viewCreditNote._id.slice(-6).toUpperCase()}</p>
-              <p><b>Customer:</b> {viewCreditNote.customer || "-"}</p>
-              <p><b>Reference:</b> {viewCreditNote.reference || "-"}</p>
-              <p><b>Amount:</b> {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: viewCreditNote.currency || "USD",
-                minimumFractionDigits: 2,
-              }).format(viewCreditNote.total || 0)}</p>
-              <p><b>Status:</b> <span className={`px-2 py-1 rounded text-xs ${getStatusColor(viewCreditNote.status)}`}>
-                {viewCreditNote.status || "Draft"}
-              </span></p>
-              {viewCreditNote.creditNoteDate && <p><b>Date:</b> {new Date(viewCreditNote.creditNoteDate).toLocaleDateString()}</p>}
+              <p>
+                <b>Credit Note #:</b>{" "}
+                {viewCreditNote.creditNoteNumber ||
+                  "CN-" + viewCreditNote._id.slice(-6).toUpperCase()}
+              </p>
+              <p>
+                <b>Customer:</b> {viewCreditNote.customer || "-"}
+              </p>
+              <p>
+                <b>Reference:</b> {viewCreditNote.reference || "-"}
+              </p>
+              <p>
+                <b>Amount:</b>{" "}
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: viewCreditNote.currency || "USD",
+                  minimumFractionDigits: 2,
+                }).format(viewCreditNote.total || 0)}
+              </p>
+              <p>
+                <b>Status:</b>{" "}
+                <span
+                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                    viewCreditNote.status
+                  )}`}
+                >
+                  {viewCreditNote.status || "Draft"}
+                </span>
+              </p>
+              {viewCreditNote.creditNoteDate && (
+                <p>
+                  <b>Date:</b>{" "}
+                  {new Date(viewCreditNote.creditNoteDate).toLocaleDateString()}
+                </p>
+              )}
             </div>
             <div className="mt-6 flex justify-end">
-              <button 
-                onClick={() => setViewCreditNote(null)} 
+              <button
+                onClick={() => setViewCreditNote(null)}
                 className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
               >
                 Close
@@ -715,7 +922,7 @@ const CreditNotes = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Update Credit Note</h2>
-              <button 
+              <button
                 onClick={() => setEditCreditNote(null)}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -724,20 +931,28 @@ const CreditNotes = () => {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer
+                </label>
                 <input
                   type="text"
                   value={formData.customer}
-                  onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customer: e.target.value })
+                  }
                   className="w-full border rounded px-3 py-2"
                   placeholder="Customer Name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="Draft">Draft</option>
@@ -748,14 +963,14 @@ const CreditNotes = () => {
               </div>
             </div>
             <div className="mt-6 flex justify-end space-x-3">
-              <button 
-                onClick={() => setEditCreditNote(null)} 
+              <button
+                onClick={() => setEditCreditNote(null)}
                 className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
               >
                 Cancel
               </button>
-              <button 
-                onClick={handleUpdate} 
+              <button
+                onClick={handleUpdate}
                 className="px-4 py-2 bg-black text-white rounded text-sm"
               >
                 Update Credit Note

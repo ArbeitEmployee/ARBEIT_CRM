@@ -1,11 +1,20 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
-import { 
-  FaSearch, FaSyncAlt, FaChevronRight, FaTasks, 
-  FaCalendarCheck, FaPauseCircle, FaBan, FaCheckCircle, FaEye 
+import {
+  FaSearch,
+  FaSyncAlt,
+  FaChevronRight,
+  FaTasks,
+  FaCalendarCheck,
+  FaPauseCircle,
+  FaBan,
+  FaCheckCircle,
+  FaEye,
 } from "react-icons/fa";
 import axios from "axios";
 
 const ClientProjectPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
@@ -16,7 +25,7 @@ const ClientProjectPage = () => {
     progressProjects: 0,
     onHoldProjects: 0,
     cancelledProjects: 0,
-    finishedProjects: 0
+    finishedProjects: 0,
   });
   const [clientInfo, setClientInfo] = useState({});
   const [statusFilter, setStatusFilter] = useState("All");
@@ -25,7 +34,7 @@ const ClientProjectPage = () => {
 
   // Get client token from localStorage
   const getClientToken = () => {
-    return localStorage.getItem('crm_client_token');
+    return localStorage.getItem("crm_client_token");
   };
 
   // Create axios instance with client auth headers
@@ -37,8 +46,8 @@ const ClientProjectPage = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -46,55 +55,56 @@ const ClientProjectPage = () => {
   const fetchClientProjects = async () => {
     setLoading(true);
     setError("");
-    
+
     try {
       const config = createAxiosConfig();
       const params = {};
-      
+
       if (searchTerm) {
         params.search = searchTerm;
       }
-      
+
       if (statusFilter !== "All") {
         params.status = statusFilter;
       }
-      
+
       console.log("Making API request with params:", params);
-      
-      const { data } = await axios.get("http://localhost:5000/api/client/projects", {
+
+      const { data } = await axios.get(`${API_BASE_URL}/client/projects`, {
         ...config,
-        params: params
+        params: params,
       });
-      
+
       console.log("API Response:", data);
-      
+
       setProjects(data.projects || []);
-      setStats(data.stats || {
-        totalProjects: 0,
-        progressProjects: 0,
-        onHoldProjects: 0,
-        cancelledProjects: 0,
-        finishedProjects: 0
-      });
+      setStats(
+        data.stats || {
+          totalProjects: 0,
+          progressProjects: 0,
+          onHoldProjects: 0,
+          cancelledProjects: 0,
+          finishedProjects: 0,
+        }
+      );
       setClientInfo(data.clientInfo || {});
-      
     } catch (error) {
       console.error("Error fetching client projects:", error);
       setError(error.response?.data?.message || error.message);
-      
+
       if (error.response?.status === 401) {
         alert("Session expired. Please login again.");
-        localStorage.removeItem('crm_client_token');
+        localStorage.removeItem("crm_client_token");
         window.location.href = "/client/login";
       }
-      
+
       setProjects([]);
       setStats({
         totalProjects: 0,
         progressProjects: 0,
         onHoldProjects: 0,
         cancelledProjects: 0,
-        finishedProjects: 0
+        finishedProjects: 0,
       });
       setClientInfo({});
     }
@@ -109,14 +119,15 @@ const ClientProjectPage = () => {
       window.location.href = "/client/login";
       return;
     }
-    
+
     fetchClientProjects();
   }, [statusFilter]); // Remove searchTerm from dependencies to avoid too many requests
 
   // Handle search with debounce
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      if (searchTerm !== undefined) { // Only fetch if searchTerm has been set
+      if (searchTerm !== undefined) {
+        // Only fetch if searchTerm has been set
         fetchClientProjects();
       }
     }, 500);
@@ -125,37 +136,48 @@ const ClientProjectPage = () => {
   }, [searchTerm]);
 
   // Filter projects (client-side filtering as backup)
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = 
+  const filteredProjects = projects.filter((project) => {
+    const matchesSearch =
       project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (project.tags && project.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (project.tags &&
+        project.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
       project.status.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "All" || project.status === statusFilter;
-    
+
+    const matchesStatus =
+      statusFilter === "All" || project.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
   // Pagination
   const totalPages = Math.ceil(filteredProjects.length / entriesPerPage);
   const startIndex = (currentPage - 1) * entriesPerPage;
-  const currentData = filteredProjects.slice(startIndex, startIndex + entriesPerPage);
+  const currentData = filteredProjects.slice(
+    startIndex,
+    startIndex + entriesPerPage
+  );
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case "Progress": return "bg-blue-100 text-blue-800";
-      case "Last Started": return "bg-green-100 text-green-800";
-      case "On Hold": return "bg-yellow-100 text-yellow-800";
-      case "Cancelled": return "bg-red-100 text-red-800";
-      case "Finished": return "bg-purple-100 text-purple-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (status) {
+      case "Progress":
+        return "bg-blue-100 text-blue-800";
+      case "Last Started":
+        return "bg-green-100 text-green-800";
+      case "On Hold":
+        return "bg-yellow-100 text-yellow-800";
+      case "Cancelled":
+        return "bg-red-100 text-red-800";
+      case "Finished":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB');
+    return date.toLocaleDateString("en-GB");
   };
 
   const handleViewProject = (projectId) => {
@@ -181,7 +203,7 @@ const ClientProjectPage = () => {
           <div className="text-red-600 text-center">
             <h2 className="text-xl font-bold mb-4">Error Loading Projects</h2>
             <p className="mb-4">{error}</p>
-            <button 
+            <button
               onClick={fetchClientProjects}
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
@@ -203,21 +225,39 @@ const ClientProjectPage = () => {
           <FaChevronRight className="mx-1 text-xs" />
           <span>Projects</span>
         </div>
-        
+
         {/* Client Info */}
         {clientInfo.company && (
           <div className="mt-4 p-4 bg-white rounded-lg shadow">
             <h3 className="text-lg font-semibold mb-2">Company Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-600">Company: <span className="font-medium">{clientInfo.company}</span></p>
-                <p className="text-sm text-gray-600">Contact: <span className="font-medium">{clientInfo.contact}</span></p>
+                <p className="text-sm text-gray-600">
+                  Company:{" "}
+                  <span className="font-medium">{clientInfo.company}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Contact:{" "}
+                  <span className="font-medium">{clientInfo.contact}</span>
+                </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Email: <span className="font-medium">{clientInfo.email}</span></p>
-                <p className="text-sm text-gray-600">Phone: <span className="font-medium">{clientInfo.phone || 'N/A'}</span></p>
+                <p className="text-sm text-gray-600">
+                  Email: <span className="font-medium">{clientInfo.email}</span>
+                </p>
+                <p className="text-sm text-gray-600">
+                  Phone:{" "}
+                  <span className="font-medium">
+                    {clientInfo.phone || "N/A"}
+                  </span>
+                </p>
                 {clientInfo.customerCode && (
-                  <p className="text-sm text-blue-600">Customer Code: <span className="font-medium">{clientInfo.customerCode}</span></p>
+                  <p className="text-sm text-blue-600">
+                    Customer Code:{" "}
+                    <span className="font-medium">
+                      {clientInfo.customerCode}
+                    </span>
+                  </p>
                 )}
               </div>
             </div>
@@ -304,7 +344,11 @@ const ClientProjectPage = () => {
       </div>
 
       {/* White box for table */}
-      <div className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${compactView ? "w-full" : "w-full"}`}>
+      <div
+        className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+          compactView ? "w-full" : "w-full"
+        }`}
+      >
         {/* Controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
@@ -366,28 +410,64 @@ const ClientProjectPage = () => {
           </div>
         </div>
 
-        
-
         {/* Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th
+                  className="p-3 rounded-l-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
                   Project Name
                 </th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Tags
+                </th>
                 {compactView ? (
                   <>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Deadline
+                    </th>
                   </>
                 ) : (
                   <>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Members</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Start Date
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Deadline
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Members
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
                   </>
                 )}
               </tr>
@@ -398,7 +478,7 @@ const ClientProjectPage = () => {
                   <tr
                     key={project._id}
                     className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                    style={{ color: 'black' }}
+                    style={{ color: "black" }}
                   >
                     <td className="p-3 rounded-l-lg border-0">
                       <div className="font-medium">{project.name}</div>
@@ -410,19 +490,35 @@ const ClientProjectPage = () => {
                     {compactView ? (
                       <>
                         <td className="p-3 border-0">
-                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(project.status)}`}>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                              project.status
+                            )}`}
+                          >
                             {project.status}
                           </span>
                         </td>
-                        <td className="p-3 border-0">{formatDate(project.deadline)}</td>
+                        <td className="p-3 border-0">
+                          {formatDate(project.deadline)}
+                        </td>
                       </>
                     ) : (
                       <>
-                        <td className="p-3 border-0">{formatDate(project.startDate)}</td>
-                        <td className="p-3 border-0">{formatDate(project.deadline)}</td>
-                        <td className="p-3 border-0">{project.members || "N/A"}</td>
                         <td className="p-3 border-0">
-                          <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(project.status)}`}>
+                          {formatDate(project.startDate)}
+                        </td>
+                        <td className="p-3 border-0">
+                          {formatDate(project.deadline)}
+                        </td>
+                        <td className="p-3 border-0">
+                          {project.members || "N/A"}
+                        </td>
+                        <td className="p-3 border-0">
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                              project.status
+                            )}`}
+                          >
                             {project.status}
                           </span>
                         </td>
@@ -435,12 +531,13 @@ const ClientProjectPage = () => {
                   <td colSpan={compactView ? 4 : 6} className="p-8 text-center">
                     <div className="text-gray-500">
                       <FaTasks className="mx-auto mb-4 text-4xl text-gray-300" />
-                      <h3 className="text-lg font-medium mb-2">No Projects Found</h3>
+                      <h3 className="text-lg font-medium mb-2">
+                        No Projects Found
+                      </h3>
                       <p className="text-sm">
-                        {searchTerm || statusFilter !== "All" 
+                        {searchTerm || statusFilter !== "All"
                           ? "No projects match your current filters. Try adjusting your search or filter criteria."
-                          : "You don't have any projects yet. Projects will appear here once they are assigned to you."
-                        }
+                          : "You don't have any projects yet. Projects will appear here once they are assigned to you."}
                       </p>
                       {(searchTerm || statusFilter !== "All") && (
                         <button
@@ -465,23 +562,28 @@ const ClientProjectPage = () => {
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
             <div className="text-sm text-gray-600">
-              Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredProjects.length)} of {filteredProjects.length} entries
+              Showing {startIndex + 1} to{" "}
+              {Math.min(startIndex + entriesPerPage, filteredProjects.length)}{" "}
+              of {filteredProjects.length} entries
             </div>
             <div className="flex items-center gap-1">
               <button
                 className="border px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
               >
                 Previous
               </button>
               {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNum = Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i;
+                const pageNum =
+                  Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i;
                 return pageNum <= totalPages ? (
                   <button
                     key={pageNum}
                     className={`border px-3 py-1 rounded text-sm hover:bg-gray-50 ${
-                      currentPage === pageNum ? "bg-gray-800 text-white hover:bg-gray-700" : ""
+                      currentPage === pageNum
+                        ? "bg-gray-800 text-white hover:bg-gray-700"
+                        : ""
                     }`}
                     onClick={() => setCurrentPage(pageNum)}
                   >
@@ -491,7 +593,9 @@ const ClientProjectPage = () => {
               })}
               <button
                 className="border px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
                 disabled={currentPage === totalPages}
               >
                 Next

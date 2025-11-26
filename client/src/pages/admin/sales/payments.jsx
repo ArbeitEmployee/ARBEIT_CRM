@@ -1,5 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { FaSearch, FaSyncAlt, FaEye, FaChevronRight, FaTimes, FaPlus } from "react-icons/fa";
+import {
+  FaSearch,
+  FaSyncAlt,
+  FaEye,
+  FaChevronRight,
+  FaTimes,
+  FaPlus,
+} from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -8,6 +15,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const Payments = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
   const [entriesPerPage, setEntriesPerPage] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
@@ -23,7 +31,7 @@ const Payments = () => {
     pendingPayments: 0,
     failedPayments: 0,
     refundedPayments: 0,
-    totalAmount: 0
+    totalAmount: 0,
   });
 
   // Add a ref for the export menu
@@ -40,15 +48,18 @@ const Payments = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
   // Close export menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+      if (
+        exportMenuRef.current &&
+        !exportMenuRef.current.contains(event.target)
+      ) {
         setShowExportMenu(false);
       }
     };
@@ -58,32 +69,46 @@ const Payments = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
-  
+
   // Fetch payments data from API
   const fetchPayments = async () => {
     try {
       setLoading(true);
       const config = createAxiosConfig();
-      const response = await axios.get("http://localhost:5000/api/admin/payments", config);
-      
+      const response = await axios.get(
+        `${API_BASE_URL}/admin/payments`,
+        config
+      );
+
       if (response.data.success) {
         setPayments(response.data.data);
-        
+
         // Calculate stats
         const total = response.data.data.length;
-        const completed = response.data.data.filter(p => p.status === "Completed").length;
-        const pending = response.data.data.filter(p => p.status === "Pending").length;
-        const failed = response.data.data.filter(p => p.status === "Failed").length;
-        const refunded = response.data.data.filter(p => p.status === "Refunded").length;
-        const totalAmount = response.data.data.reduce((sum, payment) => sum + payment.amount, 0);
-        
+        const completed = response.data.data.filter(
+          (p) => p.status === "Completed"
+        ).length;
+        const pending = response.data.data.filter(
+          (p) => p.status === "Pending"
+        ).length;
+        const failed = response.data.data.filter(
+          (p) => p.status === "Failed"
+        ).length;
+        const refunded = response.data.data.filter(
+          (p) => p.status === "Refunded"
+        ).length;
+        const totalAmount = response.data.data.reduce(
+          (sum, payment) => sum + payment.amount,
+          0
+        );
+
         setStats({
           totalPayments: total,
           completedPayments: completed,
           pendingPayments: pending,
           failedPayments: failed,
           refundedPayments: refunded,
-          totalAmount: totalAmount
+          totalAmount: totalAmount,
         });
       }
     } catch (err) {
@@ -121,10 +146,16 @@ const Payments = () => {
       case "CSV": {
         const headers = Object.keys(exportData[0]).join(",");
         const rows = exportData
-          .map((row) => Object.values(row).map((val) => `"${val}"`).join(","))
+          .map((row) =>
+            Object.values(row)
+              .map((val) => `"${val}"`)
+              .join(",")
+          )
           .join("\n");
         const csvContent = headers + "\n" + rows;
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.setAttribute("download", "payments.csv");
@@ -145,7 +176,9 @@ const Payments = () => {
       case "PDF": {
         const doc = new jsPDF();
         const columns = Object.keys(exportData[0]);
-        const tableRows = exportData.map((row) => columns.map((col) => row[col]));
+        const tableRows = exportData.map((row) =>
+          columns.map((col) => row[col])
+        );
         autoTable(doc, { head: [columns], body: tableRows });
         doc.save("payments.pdf");
         break;
@@ -153,8 +186,12 @@ const Payments = () => {
 
       case "Print": {
         const printWindow = window.open("", "", "height=500,width=800");
-        printWindow.document.write("<html><head><title>Payments</title></head><body>");
-        printWindow.document.write("<table border='1' style='border-collapse: collapse; width: 100%;'>");
+        printWindow.document.write(
+          "<html><head><title>Payments</title></head><body>"
+        );
+        printWindow.document.write(
+          "<table border='1' style='border-collapse: collapse; width: 100%;'>"
+        );
         printWindow.document.write("<thead><tr>");
         Object.keys(exportData[0]).forEach((col) => {
           printWindow.document.write(`<th>${col}</th>`);
@@ -190,25 +227,33 @@ const Payments = () => {
   // Pagination
   const indexOfLastPayment = currentPage * entriesPerPage;
   const indexOfFirstPayment = indexOfLastPayment - entriesPerPage;
-  const currentPayments = filteredPayments.slice(indexOfFirstPayment, indexOfLastPayment);
+  const currentPayments = filteredPayments.slice(
+    indexOfFirstPayment,
+    indexOfLastPayment
+  );
   const totalPages = Math.ceil(filteredPayments.length / entriesPerPage);
 
   // Format currency
   const formatCurrency = (amount, currency = "USD") => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: currency,
     }).format(amount);
   };
 
   // Get status color
   const getStatusColor = (status) => {
     switch (status) {
-      case "Completed": return "bg-green-100 text-green-800";
-      case "Pending": return "bg-yellow-100 text-yellow-800";
-      case "Failed": return "bg-red-100 text-red-800";
-      case "Refunded": return "bg-orange-100 text-orange-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "Completed":
+        return "bg-green-100 text-green-800";
+      case "Pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "Failed":
+        return "bg-red-100 text-red-800";
+      case "Refunded":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -227,8 +272,8 @@ const Payments = () => {
       <div className="bg-gray-100 min-h-screen p-4 pt-28 flex items-center justify-center">
         <div className="bg-white shadow-md rounded p-8 text-red-500">
           <p>Error: {error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
           >
             Try Again
@@ -251,7 +296,7 @@ const Payments = () => {
       </div>
 
       {/* Stats Cards */}
-        
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {/* Total Payments */}
         <div className="bg-white p-4 rounded-lg shadow border">
@@ -284,7 +329,9 @@ const Payments = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Amount</p>
-              <p className="text-2xl font-bold">{formatCurrency(stats.totalAmount)}</p>
+              <p className="text-2xl font-bold">
+                {formatCurrency(stats.totalAmount)}
+              </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-full">
               <FaPlus className="text-purple-600" />
@@ -325,7 +372,10 @@ const Payments = () => {
 
               {/* Dropdown menu */}
               {showExportMenu && (
-                <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                <div
+                  ref={exportMenuRef}
+                  className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                >
                   <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                     onClick={() => handleExport("Excel")}
@@ -384,17 +434,60 @@ const Payments = () => {
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th
+                  className="p-3 rounded-l-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
                   Payment #
                 </th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Invoice #</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Payment Mode</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Transaction ID</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Payment Date</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Invoice #
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Payment Mode
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Transaction ID
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Customer
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Amount
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Payment Date
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Status
+                </th>
+                <th
+                  className="p-3 rounded-r-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -403,17 +496,27 @@ const Payments = () => {
                   <tr
                     key={payment._id}
                     className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                    style={{ color: 'black' }}
+                    style={{ color: "black" }}
                   >
-                    <td className="p-3 rounded-l-lg border-0">{payment.paymentNumber}</td>
+                    <td className="p-3 rounded-l-lg border-0">
+                      {payment.paymentNumber}
+                    </td>
                     <td className="p-3 border-0 ">{payment.invoiceNumber}</td>
                     <td className="p-3 border-0">{payment.paymentMode}</td>
                     <td className="p-3 border-0 ">{payment.transactionId}</td>
                     <td className="p-3 border-0">{payment.customer}</td>
-                    <td className="p-3 border-0 ">{formatCurrency(payment.amount, payment.currency)}</td>
-                    <td className="p-3 border-0">{new Date(payment.paymentDate).toLocaleDateString()}</td>
+                    <td className="p-3 border-0 ">
+                      {formatCurrency(payment.amount, payment.currency)}
+                    </td>
                     <td className="p-3 border-0">
-                      <span className={`px-2 py-1 rounded text-xs ${getStatusColor(payment.status)}`}>
+                      {new Date(payment.paymentDate).toLocaleDateString()}
+                    </td>
+                    <td className="p-3 border-0">
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                          payment.status
+                        )}`}
+                      >
                         {payment.status}
                       </span>
                     </td>
@@ -432,12 +535,12 @@ const Payments = () => {
                 ))
               ) : (
                 <tr>
-                  <td 
-                    colSpan={9} 
+                  <td
+                    colSpan={9}
                     className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
                   >
-                    {payments.length === 0 
-                      ? "No payment records found" 
+                    {payments.length === 0
+                      ? "No payment records found"
                       : "No payments match your search criteria"}
                   </td>
                 </tr>
@@ -450,7 +553,8 @@ const Payments = () => {
         {filteredPayments.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm">
             <span>
-              Showing {indexOfFirstPayment + 1} to {Math.min(indexOfLastPayment, filteredPayments.length)} of{" "}
+              Showing {indexOfFirstPayment + 1} to{" "}
+              {Math.min(indexOfLastPayment, filteredPayments.length)} of{" "}
               {filteredPayments.length} entries
             </span>
             <div className="flex items-center gap-2">
@@ -490,7 +594,7 @@ const Payments = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Payment Details</h2>
-              <button 
+              <button
                 onClick={() => setViewPayment(null)}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -498,21 +602,48 @@ const Payments = () => {
               </button>
             </div>
             <div className="space-y-3">
-              <p><b>Payment #:</b> {viewPayment.paymentNumber}</p>
-              <p><b>Invoice #:</b> {viewPayment.invoiceNumber}</p>
-              <p><b>Customer:</b> {viewPayment.customer}</p>
-              <p><b>Payment Mode:</b> {viewPayment.paymentMode}</p>
-              <p><b>Transaction ID:</b> {viewPayment.transactionId}</p>
-              <p><b>Amount:</b> {formatCurrency(viewPayment.amount, viewPayment.currency)}</p>
-              <p><b>Payment Date:</b> {new Date(viewPayment.paymentDate).toLocaleDateString()}</p>
-              <p><b>Status:</b> <span className={`px-2 py-1 rounded text-xs ${getStatusColor(viewPayment.status)}`}>
-                {viewPayment.status}
-              </span></p>
-              {viewPayment.notes && <p><b>Notes:</b> {viewPayment.notes}</p>}
+              <p>
+                <b>Payment #:</b> {viewPayment.paymentNumber}
+              </p>
+              <p>
+                <b>Invoice #:</b> {viewPayment.invoiceNumber}
+              </p>
+              <p>
+                <b>Customer:</b> {viewPayment.customer}
+              </p>
+              <p>
+                <b>Payment Mode:</b> {viewPayment.paymentMode}
+              </p>
+              <p>
+                <b>Transaction ID:</b> {viewPayment.transactionId}
+              </p>
+              <p>
+                <b>Amount:</b>{" "}
+                {formatCurrency(viewPayment.amount, viewPayment.currency)}
+              </p>
+              <p>
+                <b>Payment Date:</b>{" "}
+                {new Date(viewPayment.paymentDate).toLocaleDateString()}
+              </p>
+              <p>
+                <b>Status:</b>{" "}
+                <span
+                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                    viewPayment.status
+                  )}`}
+                >
+                  {viewPayment.status}
+                </span>
+              </p>
+              {viewPayment.notes && (
+                <p>
+                  <b>Notes:</b> {viewPayment.notes}
+                </p>
+              )}
             </div>
             <div className="mt-6 flex justify-end">
-              <button 
-                onClick={() => setViewPayment(null)} 
+              <button
+                onClick={() => setViewPayment(null)}
                 className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
               >
                 Close

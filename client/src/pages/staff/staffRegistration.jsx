@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // staff-registration.jsx
 import { useState } from "react";
 import { FiMail, FiLock, FiUser, FiKey } from "react-icons/fi";
@@ -6,6 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import backgroundImage from "../../assets/login-background.jpg";
 
 const StaffRegistration = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -33,7 +35,7 @@ const StaffRegistration = () => {
     setCodeError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/staff/validate-code", {
+      const res = await fetch(`${API_BASE_URL}/staff/validate-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ staffCode }),
@@ -158,7 +160,7 @@ const StaffRegistration = () => {
         staffCode,
       };
 
-      const res = await fetch("http://localhost:5000/api/staff/register", {
+      const res = await fetch(`${API_BASE_URL}/staff/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(registrationData),

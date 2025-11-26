@@ -12,6 +12,7 @@ import {
 import axios from "axios";
 
 const ClientKnowledgeBasePage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [articles, setArticles] = useState([]);
   const [filteredArticles, setFilteredArticles] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -54,7 +55,7 @@ const ClientKnowledgeBasePage = () => {
       setLoading(true);
       const config = createAxiosConfig();
       const { data } = await axios.get(
-        "http://localhost:5000/api/client/knowledge-base",
+        `${API_BASE_URL}/client/knowledge-base`,
         {
           params: {
             group: selectedGroup !== "All" ? selectedGroup : null,
@@ -102,7 +103,7 @@ const ClientKnowledgeBasePage = () => {
     try {
       const config = createAxiosConfig();
       const { data } = await axios.post(
-        "http://localhost:5000/api/client/knowledge-base/user-votes",
+        `${API_BASE_URL}/client/knowledge-base/user-votes`,
         {
           articleIds,
         },
@@ -169,7 +170,7 @@ const ClientKnowledgeBasePage = () => {
     try {
       const config = createAxiosConfig();
       const { data } = await axios.post(
-        `http://localhost:5000/api/client/knowledge-base/${articleId}/vote`,
+        `${API_BASE_URL}/client/knowledge-base/${articleId}/vote`,
         { voteType },
         config
       );

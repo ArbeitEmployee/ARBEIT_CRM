@@ -1,14 +1,24 @@
 // FileName: EstimateRequest.jsx
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
-  FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
-  FaTimes, FaEdit, FaTrash, FaEye, FaBan, FaCheckCircle, FaClock, FaFileInvoiceDollar
+  FaPlus,
+  FaSearch,
+  FaSyncAlt,
+  FaChevronRight,
+  FaTimes,
+  FaEdit,
+  FaTrash,
+  FaEye,
+  FaBan,
+  FaCheckCircle,
+  FaClock,
+  FaFileInvoiceDollar,
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Custom hook for detecting outside clicks
 const useOutsideClick = (callback) => {
@@ -21,10 +31,10 @@ const useOutsideClick = (callback) => {
       }
     };
 
-    document.addEventListener('click', handleClick, true);
+    document.addEventListener("click", handleClick, true);
 
     return () => {
-      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener("click", handleClick, true);
     };
   }, [ref, callback]);
 
@@ -32,6 +42,7 @@ const useOutsideClick = (callback) => {
 };
 
 const EstimateRequestPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [selectedEstimates, setSelectedEstimates] = useState([]);
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(25);
@@ -47,7 +58,7 @@ const EstimateRequestPage = () => {
     sent: 0,
     accepted: 0,
     rejected: 0,
-    expired: 0
+    expired: 0,
   });
   const [newEstimate, setNewEstimate] = useState({
     customerId: "",
@@ -57,9 +68,9 @@ const EstimateRequestPage = () => {
     customerPhone: "",
     projectName: "",
     amount: "",
-    createdDate: new Date().toISOString().split('T')[0],
+    createdDate: new Date().toISOString().split("T")[0],
     status: "Draft",
-    notes: ""
+    notes: "",
   });
   const [editingEstimate, setEditingEstimate] = useState(null);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
@@ -67,13 +78,7 @@ const EstimateRequestPage = () => {
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [viewingEstimate, setViewingEstimate] = useState(null);
 
-  const statusOptions = [
-    "Draft",
-    "Sent",
-    "Accepted",
-    "Rejected",
-    "Expired"
-  ];
+  const statusOptions = ["Draft", "Sent", "Accepted", "Rejected", "Expired"];
 
   // Use the custom hook for detecting outside clicks
   const exportRef = useOutsideClick(() => {
@@ -86,7 +91,7 @@ const EstimateRequestPage = () => {
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('crm_token');
+    return localStorage.getItem("crm_token");
   };
 
   // Create axios instance with auth headers
@@ -95,8 +100,8 @@ const EstimateRequestPage = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -104,8 +109,8 @@ const EstimateRequestPage = () => {
   const formatDateForBackend = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     return `${year}-${month}-${day}`;
   };
@@ -114,7 +119,7 @@ const EstimateRequestPage = () => {
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   };
 
   const [loading, setLoading] = useState(true);
@@ -124,21 +129,23 @@ const EstimateRequestPage = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/estimate-requests", {
+      const { data } = await axios.get(`${API_BASE_URL}/estimate-requests`, {
         ...config,
         params: {
           search: searchTerm,
-        }
+        },
       });
       setEstimates(data.estimates || []);
-      setStats(data.stats || {
-        totalEstimates: 0,
-        draft: 0,
-        sent: 0,
-        accepted: 0,
-        rejected: 0,
-        expired: 0
-      });
+      setStats(
+        data.stats || {
+          totalEstimates: 0,
+          draft: 0,
+          sent: 0,
+          accepted: 0,
+          rejected: 0,
+          expired: 0,
+        }
+      );
     } catch (error) {
       console.error("Error fetching estimates:", error);
       if (error.response?.status === 401) {
@@ -152,7 +159,7 @@ const EstimateRequestPage = () => {
         sent: 0,
         accepted: 0,
         rejected: 0,
-        expired: 0
+        expired: 0,
       });
     }
     setLoading(false);
@@ -170,7 +177,10 @@ const EstimateRequestPage = () => {
     }
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/estimate-requests/customers/search?q=${searchTerm}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/estimate-requests/customers/search?q=${searchTerm}`,
+        config
+      );
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -183,28 +193,31 @@ const EstimateRequestPage = () => {
     if (!customerCode || customerCode.length < 4) {
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/estimate-requests/customers/by-code/${customerCode}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/estimate-requests/customers/by-code/${customerCode}`,
+        config
+      );
       if (data.customer) {
-        setNewEstimate(prev => ({
+        setNewEstimate((prev) => ({
           ...prev,
           customerId: data.customer._id,
           customerName: data.customer.company,
           customerEmail: data.customer.email,
-          customerPhone: data.customer.phone
+          customerPhone: data.customer.phone,
         }));
       }
     } catch (error) {
       console.error("Error searching customer by code:", error);
       // Clear customer info if code is not found
-      setNewEstimate(prev => ({
+      setNewEstimate((prev) => ({
         ...prev,
         customerId: "",
         customerName: "",
         customerEmail: "",
-        customerPhone: ""
+        customerPhone: "",
       }));
     }
   }, []);
@@ -231,11 +244,15 @@ const EstimateRequestPage = () => {
   }, [newEstimate.customerCode, searchCustomerByCode]);
 
   // Search filter (client-side for now, can be moved to backend)
-  const filteredEstimates = estimates.filter(estimate =>
-    estimate.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (estimate.customer && estimate.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    estimate.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    estimate.amount.toString().includes(searchTerm)
+  const filteredEstimates = estimates.filter(
+    (estimate) =>
+      estimate.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (estimate.customer &&
+        estimate.customer.company
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
+      estimate.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      estimate.amount.toString().includes(searchTerm)
   );
 
   // Pagination
@@ -247,16 +264,16 @@ const EstimateRequestPage = () => {
   );
 
   const toggleEstimateSelection = (id) => {
-    setSelectedEstimates(prev =>
+    setSelectedEstimates((prev) =>
       prev.includes(id)
-        ? prev.filter(estimateId => estimateId !== id)
+        ? prev.filter((estimateId) => estimateId !== id)
         : [...prev, id]
     );
   };
 
   const handleNewEstimateChange = (e) => {
     const { name, value } = e.target;
-    setNewEstimate(prev => ({ ...prev, [name]: value }));
+    setNewEstimate((prev) => ({ ...prev, [name]: value }));
 
     if (name === "customerName") {
       setCustomerSearchTerm(value);
@@ -265,13 +282,13 @@ const EstimateRequestPage = () => {
   };
 
   const handleSelectCustomer = (customer) => {
-    setNewEstimate(prev => ({
+    setNewEstimate((prev) => ({
       ...prev,
       customerId: customer._id,
       customerName: customer.company,
       customerEmail: customer.email,
       customerPhone: customer.phone,
-      customerCode: customer.customerCode
+      customerCode: customer.customerCode,
     }));
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
@@ -280,8 +297,15 @@ const EstimateRequestPage = () => {
   const handleSaveEstimate = async () => {
     if (isSaving) return;
 
-    if (!newEstimate.projectName || !newEstimate.customerId || !newEstimate.amount || !newEstimate.createdDate) {
-      alert("Please fill in all required fields (Project Name, Customer, Amount, Created Date)");
+    if (
+      !newEstimate.projectName ||
+      !newEstimate.customerId ||
+      !newEstimate.amount ||
+      !newEstimate.createdDate
+    ) {
+      alert(
+        "Please fill in all required fields (Project Name, Customer, Amount, Created Date)"
+      );
       return;
     }
 
@@ -294,12 +318,20 @@ const EstimateRequestPage = () => {
 
     try {
       const config = createAxiosConfig();
-      
+
       if (editingEstimate) {
-        await axios.put(`http://localhost:5000/api/estimate-requests/${editingEstimate._id}`, estimateData, config);
+        await axios.put(
+          `${API_BASE_URL}/estimate-requests/${editingEstimate._id}`,
+          estimateData,
+          config
+        );
         alert("Estimate updated successfully!");
       } else {
-        await axios.post("http://localhost:5000/api/estimate-requests", estimateData, config);
+        await axios.post(
+          "${API_BASE_URL}/estimate-requests",
+          estimateData,
+          config
+        );
         alert("Estimate created successfully!");
       }
 
@@ -316,9 +348,9 @@ const EstimateRequestPage = () => {
         customerPhone: "",
         projectName: "",
         amount: "",
-        createdDate: new Date().toISOString().split('T')[0],
+        createdDate: new Date().toISOString().split("T")[0],
         status: "Draft",
-        notes: ""
+        notes: "",
       });
     } catch (error) {
       console.error("Error saving estimate:", error);
@@ -326,7 +358,11 @@ const EstimateRequestPage = () => {
         alert("Session expired. Please login again.");
         window.location.href = "/admin/login";
       }
-      alert(`Error saving estimate: ${error.response?.data?.message || error.message}`);
+      alert(
+        `Error saving estimate: ${
+          error.response?.data?.message || error.message
+        }`
+      );
     } finally {
       setIsSaving(false);
     }
@@ -344,7 +380,7 @@ const EstimateRequestPage = () => {
       amount: estimate.amount,
       createdDate: formatDateForInput(estimate.createdDate),
       status: estimate.status,
-      notes: estimate.notes || ""
+      notes: estimate.notes || "",
     });
     setShowNewEstimateForm(true);
   };
@@ -353,7 +389,7 @@ const EstimateRequestPage = () => {
     if (window.confirm("Are you sure you want to delete this estimate?")) {
       try {
         const config = createAxiosConfig();
-        await axios.delete(`http://localhost:5000/api/estimate-requests/${id}`, config);
+        await axios.delete(`${API_BASE_URL}/estimate-requests/${id}`, config);
         fetchEstimates();
         alert("Estimate deleted successfully!");
       } catch (error) {
@@ -362,18 +398,30 @@ const EstimateRequestPage = () => {
           alert("Session expired. Please login again.");
           window.location.href = "/admin/login";
         }
-        alert(`Error deleting estimate: ${error.response?.data?.message || error.message}`);
+        alert(
+          `Error deleting estimate: ${
+            error.response?.data?.message || error.message
+          }`
+        );
       }
     }
   };
 
   const handleBulkDeleteEstimates = async () => {
-    if (window.confirm(`Are you sure you want to delete ${selectedEstimates.length} selected estimates?`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete ${selectedEstimates.length} selected estimates?`
+      )
+    ) {
       try {
         const config = createAxiosConfig();
-        await axios.post("http://localhost:5000/api/estimate-requests/bulk-delete", {
-          estimateIds: selectedEstimates
-        }, config);
+        await axios.post(
+          "${API_BASE_URL}/estimate-requests/bulk-delete",
+          {
+            estimateIds: selectedEstimates,
+          },
+          config
+        );
         setSelectedEstimates([]);
         fetchEstimates();
         alert("Selected estimates deleted successfully!");
@@ -383,23 +431,29 @@ const EstimateRequestPage = () => {
           alert("Session expired. Please login again.");
           window.location.href = "/admin/login";
         }
-        alert(`Error deleting selected estimates: ${error.response?.data?.message || error.message}`);
+        alert(
+          `Error deleting selected estimates: ${
+            error.response?.data?.message || error.message
+          }`
+        );
       }
     }
   };
 
   // Export functions
   const exportToExcel = () => {
-    const dataToExport = filteredEstimates.map(estimate => ({
+    const dataToExport = filteredEstimates.map((estimate) => ({
       "Project Name": estimate.projectName,
       Customer: estimate.customer ? estimate.customer.company : "N/A",
-      "Customer Code": estimate.customer ? estimate.customer.customerCode : "N/A",
+      "Customer Code": estimate.customer
+        ? estimate.customer.customerCode
+        : "N/A",
       "Customer Email": estimate.customer ? estimate.customer.email : "N/A",
       "Customer Phone": estimate.customer ? estimate.customer.phone : "N/A",
       Amount: estimate.amount,
       "Created Date": new Date(estimate.createdDate).toLocaleDateString(),
       Status: estimate.status,
-      Notes: estimate.notes
+      Notes: estimate.notes,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -410,26 +464,28 @@ const EstimateRequestPage = () => {
   };
 
   const exportToCSV = () => {
-    const dataToExport = filteredEstimates.map(estimate => ({
+    const dataToExport = filteredEstimates.map((estimate) => ({
       "Project Name": estimate.projectName,
       Customer: estimate.customer ? estimate.customer.company : "N/A",
-      "Customer Code": estimate.customer ? estimate.customer.customerCode : "N/A",
+      "Customer Code": estimate.customer
+        ? estimate.customer.customerCode
+        : "N/A",
       "Customer Email": estimate.customer ? estimate.customer.email : "N/A",
       "Customer Phone": estimate.customer ? estimate.customer.phone : "N/A",
       Amount: estimate.amount,
       "Created Date": new Date(estimate.createdDate).toLocaleDateString(),
       Status: estimate.status,
-      Notes: estimate.notes
+      Notes: estimate.notes,
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
 
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'Estimates.csv');
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Estimates.csv");
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -444,15 +500,15 @@ const EstimateRequestPage = () => {
       "Customer",
       "Amount",
       "Created Date",
-      "Status"
+      "Status",
     ];
 
-    const tableRows = filteredEstimates.map(estimate => [
+    const tableRows = filteredEstimates.map((estimate) => [
       estimate.projectName,
       estimate.customer ? estimate.customer.company : "N/A",
       `$${estimate.amount}`,
       new Date(estimate.createdDate).toLocaleDateString(),
-      estimate.status
+      estimate.status,
     ]);
 
     autoTable(doc, {
@@ -467,9 +523,9 @@ const EstimateRequestPage = () => {
   };
 
   const printTable = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<html><head><title>Estimate Requests</title>');
-    printWindow.document.write('<style>');
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Estimate Requests</title>");
+    printWindow.document.write("<style>");
     printWindow.document.write(`
       body { font-family: Arial, sans-serif; }
       table { border-collapse: collapse; width: 100%; }
@@ -481,38 +537,42 @@ const EstimateRequestPage = () => {
         .no-print { display: none; }
       }
     `);
-    printWindow.document.write('</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<h1>Estimate Requests</h1>');
-    printWindow.document.write('<table>');
+    printWindow.document.write("</style>");
+    printWindow.document.write("</head><body>");
+    printWindow.document.write("<h1>Estimate Requests</h1>");
+    printWindow.document.write("<table>");
 
     // Table header
-    printWindow.document.write('<thead><tr>');
-    ['Project Name', 'Customer', 'Amount', 'Created Date', 'Status'].forEach(header => {
-      printWindow.document.write(`<th>${header}</th>`);
-    });
-    printWindow.document.write('</tr></thead>');
+    printWindow.document.write("<thead><tr>");
+    ["Project Name", "Customer", "Amount", "Created Date", "Status"].forEach(
+      (header) => {
+        printWindow.document.write(`<th>${header}</th>`);
+      }
+    );
+    printWindow.document.write("</tr></thead>");
 
     // Table body
-    printWindow.document.write('<tbody>');
-    filteredEstimates.forEach(estimate => {
-      printWindow.document.write('<tr>');
+    printWindow.document.write("<tbody>");
+    filteredEstimates.forEach((estimate) => {
+      printWindow.document.write("<tr>");
       [
         estimate.projectName,
         estimate.customer ? estimate.customer.company : "N/A",
         `$${estimate.amount}`,
         new Date(estimate.createdDate).toLocaleDateString(),
-        estimate.status
-      ].forEach(value => {
+        estimate.status,
+      ].forEach((value) => {
         printWindow.document.write(`<td>${value}</td>`);
       });
-      printWindow.document.write('</tr>');
+      printWindow.document.write("</tr>");
     });
-    printWindow.document.write('</tbody>');
+    printWindow.document.write("</tbody>");
 
-    printWindow.document.write('</table>');
-    printWindow.document.write('<p class="no-print">Printed on: ' + new Date().toLocaleString() + '</p>');
-    printWindow.document.write('</body></html>');
+    printWindow.document.write("</table>");
+    printWindow.document.write(
+      '<p class="no-print">Printed on: ' + new Date().toLocaleString() + "</p>"
+    );
+    printWindow.document.write("</body></html>");
     printWindow.document.close();
 
     setTimeout(() => {
@@ -523,35 +583,52 @@ const EstimateRequestPage = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case "Draft": return "bg-gray-100 text-gray-800";
-      case "Sent": return "bg-blue-100 text-blue-800";
-      case "Accepted": return "bg-green-100 text-green-800";
-      case "Rejected": return "bg-red-100 text-red-800";
-      case "Expired": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (status) {
+      case "Draft":
+        return "bg-gray-100 text-gray-800";
+      case "Sent":
+        return "bg-blue-100 text-blue-800";
+      case "Accepted":
+        return "bg-green-100 text-green-800";
+      case "Rejected":
+        return "bg-red-100 text-red-800";
+      case "Expired":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const displayDate = (dateString) => {
     if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString('en-GB');
+    return new Date(dateString).toLocaleDateString("en-GB");
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
     }).format(amount);
   };
 
-  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading estimateRequests...</div>;
+  if (loading)
+    return (
+      <div className="bg-gray-100 min-h-screen p-4">
+        Loading estimateRequests...
+      </div>
+    );
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">{showNewEstimateForm ? (editingEstimate ? "Edit Estimate" : "Add New Estimate") : "Estimate Requests"}</h1>
+        <h1 className="text-2xl font-bold">
+          {showNewEstimateForm
+            ? editingEstimate
+              ? "Edit Estimate"
+              : "Add New Estimate"
+            : "Estimate Requests"}
+        </h1>
         <div className="flex items-center text-gray-600">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
@@ -575,9 +652,9 @@ const EstimateRequestPage = () => {
                   customerPhone: "",
                   projectName: "",
                   amount: "",
-                  createdDate: new Date().toISOString().split('T')[0],
+                  createdDate: new Date().toISOString().split("T")[0],
                   status: "Draft",
-                  notes: ""
+                  notes: "",
                 });
               }}
               className="text-gray-500 hover:text-gray-700"
@@ -590,7 +667,9 @@ const EstimateRequestPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Project Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Project Name *
+                </label>
                 <input
                   type="text"
                   name="projectName"
@@ -602,7 +681,9 @@ const EstimateRequestPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Code</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer Code
+                </label>
                 <input
                   type="text"
                   name="customerCode"
@@ -617,7 +698,9 @@ const EstimateRequestPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer *
+                </label>
                 <div className="relative" ref={customerRef}>
                   <input
                     type="text"
@@ -637,22 +720,32 @@ const EstimateRequestPage = () => {
                           onClick={() => handleSelectCustomer(customer)}
                         >
                           <div className="font-medium">{customer.company}</div>
-                          <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
-                          <div className="text-xs text-blue-600">{customer.customerCode}</div>
+                          <div className="text-sm text-gray-600">
+                            {customer.contact} - {customer.email}
+                          </div>
+                          <div className="text-xs text-blue-600">
+                            {customer.customerCode}
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                      <div className="px-3 py-2 text-gray-500">No customers found</div>
-                    </div>
-                  )}
+                  {showCustomerDropdown &&
+                    customerSearchResults.length === 0 &&
+                    customerSearchTerm.length >= 2 && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                        <div className="px-3 py-2 text-gray-500">
+                          No customers found
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer Email
+                </label>
                 <input
                   type="email"
                   name="customerEmail"
@@ -664,7 +757,9 @@ const EstimateRequestPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Phone</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer Phone
+                </label>
                 <input
                   type="tel"
                   name="customerPhone"
@@ -679,7 +774,9 @@ const EstimateRequestPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Amount *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Amount *
+                </label>
                 <input
                   type="number"
                   name="amount"
@@ -693,7 +790,9 @@ const EstimateRequestPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Created Date *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Created Date *
+                </label>
                 <input
                   type="date"
                   name="createdDate"
@@ -705,15 +804,19 @@ const EstimateRequestPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
                 <select
                   name="status"
                   value={newEstimate.status}
                   onChange={handleNewEstimateChange}
                   className="w-full border rounded px-3 py-2"
                 >
-                  {statusOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {statusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -722,7 +825,9 @@ const EstimateRequestPage = () => {
 
           {/* Notes/Content Field */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Notes/Content</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Notes/Content
+            </label>
             <textarea
               name="notes"
               value={newEstimate.notes}
@@ -746,9 +851,9 @@ const EstimateRequestPage = () => {
                   customerPhone: "",
                   projectName: "",
                   amount: "",
-                  createdDate: new Date().toISOString().split('T')[0],
+                  createdDate: new Date().toISOString().split("T")[0],
                   status: "Draft",
-                  notes: ""
+                  notes: "",
                 });
               }}
               className="px-4 py-2 border rounded text-sm"
@@ -759,7 +864,13 @@ const EstimateRequestPage = () => {
               type="button"
               onClick={handleSaveEstimate}
               className="px-4 py-2 bg-black text-white rounded text-sm"
-              disabled={!newEstimate.projectName || !newEstimate.customerId || !newEstimate.amount || !newEstimate.createdDate || isSaving}
+              disabled={
+                !newEstimate.projectName ||
+                !newEstimate.customerId ||
+                !newEstimate.amount ||
+                !newEstimate.createdDate ||
+                isSaving
+              }
             >
               {isSaving ? "Saving..." : "Save"}
             </button>
@@ -852,7 +963,8 @@ const EstimateRequestPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+                className="px-3 py-1 text-sm rounded flex items-center gap-2"
+                style={{ backgroundColor: "#333333", color: "white" }}
                 onClick={() => setShowNewEstimateForm(true)}
               >
                 <FaPlus /> New Estimate
@@ -869,19 +981,23 @@ const EstimateRequestPage = () => {
           </div>
 
           {/* White box for table */}
-          <div className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+          <div
+            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+              compactView ? "w-1/2" : "w-full"
+            }`}
+          >
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 {/* Delete Selected button */}
-              {selectedEstimates.length > 0 && (
-                <button
-                  className="bg-red-600 text-white px-3 py-1 rounded"
-                  onClick={handleBulkDeleteEstimates}
-                >
-                  Delete Selected ({selectedEstimates.length})
-                </button>
-              )}
+                {selectedEstimates.length > 0 && (
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    onClick={handleBulkDeleteEstimates}
+                  >
+                    Delete Selected ({selectedEstimates.length})
+                  </button>
+                )}
                 {/* Entries per page */}
                 <select
                   className="border rounded px-2 py-1 text-sm"
@@ -967,35 +1083,98 @@ const EstimateRequestPage = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                    <th
+                      className="p-3 rounded-l-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
                       <input
                         type="checkbox"
-                        checked={selectedEstimates.length === currentData.length && currentData.length > 0}
+                        checked={
+                          selectedEstimates.length === currentData.length &&
+                          currentData.length > 0
+                        }
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedEstimates(currentData.map((estimate) => estimate._id));
+                            setSelectedEstimates(
+                              currentData.map((estimate) => estimate._id)
+                            );
                           } else {
                             setSelectedEstimates([]);
                           }
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project Name</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Project Name
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Customer
+                    </th>
                     {compactView ? (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Amount
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="p-3 rounded-r-lg"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Actions
+                        </th>
                       </>
                     ) : (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer Email</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer Phone</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created Date</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Customer Email
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Customer Phone
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Amount
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Created Date
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="p-3 rounded-r-lg"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Actions
+                        </th>
                       </>
                     )}
                   </tr>
@@ -1003,8 +1182,13 @@ const EstimateRequestPage = () => {
                 <tbody>
                   {currentData.length === 0 ? (
                     <tr>
-                      <td colSpan={compactView ? 6 : 10} className="text-center py-4">
-                        {searchTerm ? "No matching estimates found." : "No estimates available."}
+                      <td
+                        colSpan={compactView ? 6 : 10}
+                        className="text-center py-4"
+                      >
+                        {searchTerm
+                          ? "No matching estimates found."
+                          : "No estimates available."}
                       </td>
                     </tr>
                   ) : (
@@ -1014,23 +1198,34 @@ const EstimateRequestPage = () => {
                           <input
                             type="checkbox"
                             checked={selectedEstimates.includes(estimate._id)}
-                            onChange={() => toggleEstimateSelection(estimate._id)}
+                            onChange={() =>
+                              toggleEstimateSelection(estimate._id)
+                            }
                           />
                         </td>
                         <td className="p-3 bg-white">{estimate.projectName}</td>
                         <td className="p-3 bg-white">
-                          {estimate.customer ? estimate.customer.company : "N/A"}
-                          {estimate.customer && estimate.customer.customerCode && (
-                            <div className="text-xs text-blue-600 mt-1">
-                              {estimate.customer.customerCode}
-                            </div>
-                          )}
+                          {estimate.customer
+                            ? estimate.customer.company
+                            : "N/A"}
+                          {estimate.customer &&
+                            estimate.customer.customerCode && (
+                              <div className="text-xs text-blue-600 mt-1">
+                                {estimate.customer.customerCode}
+                              </div>
+                            )}
                         </td>
                         {compactView ? (
                           <>
-                            <td className="p-3 bg-white">{formatCurrency(estimate.amount)}</td>
                             <td className="p-3 bg-white">
-                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(estimate.status)}`}>
+                              {formatCurrency(estimate.amount)}
+                            </td>
+                            <td className="p-3 bg-white">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                  estimate.status
+                                )}`}
+                              >
                                 {estimate.status}
                               </span>
                             </td>
@@ -1051,7 +1246,9 @@ const EstimateRequestPage = () => {
                                   <FaEdit />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteEstimate(estimate._id)}
+                                  onClick={() =>
+                                    handleDeleteEstimate(estimate._id)
+                                  }
                                   className="text-red-600 hover:text-red-800"
                                   title="Delete"
                                 >
@@ -1063,15 +1260,27 @@ const EstimateRequestPage = () => {
                         ) : (
                           <>
                             <td className="p-3 bg-white">
-                              {estimate.customer ? estimate.customer.email : "N/A"}
+                              {estimate.customer
+                                ? estimate.customer.email
+                                : "N/A"}
                             </td>
                             <td className="p-3 bg-white">
-                              {estimate.customer ? estimate.customer.phone : "N/A"}
+                              {estimate.customer
+                                ? estimate.customer.phone
+                                : "N/A"}
                             </td>
-                            <td className="p-3 bg-white">{formatCurrency(estimate.amount)}</td>
-                            <td className="p-3 bg-white">{displayDate(estimate.createdDate)}</td>
                             <td className="p-3 bg-white">
-                              <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(estimate.status)}`}>
+                              {formatCurrency(estimate.amount)}
+                            </td>
+                            <td className="p-3 bg-white">
+                              {displayDate(estimate.createdDate)}
+                            </td>
+                            <td className="p-3 bg-white">
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                  estimate.status
+                                )}`}
+                              >
                                 {estimate.status}
                               </span>
                             </td>
@@ -1092,7 +1301,9 @@ const EstimateRequestPage = () => {
                                   <FaEdit />
                                 </button>
                                 <button
-                                  onClick={() => handleDeleteEstimate(estimate._id)}
+                                  onClick={() =>
+                                    handleDeleteEstimate(estimate._id)
+                                  }
                                   className="text-red-600 hover:text-red-800"
                                   title="Delete"
                                 >
@@ -1112,7 +1323,12 @@ const EstimateRequestPage = () => {
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
               <div className="text-sm text-gray-700">
-                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredEstimates.length)} of {filteredEstimates.length} entries
+                Showing {startIndex + 1} to{" "}
+                {Math.min(
+                  startIndex + entriesPerPage,
+                  filteredEstimates.length
+                )}{" "}
+                of {filteredEstimates.length} entries
               </div>
               <div className="flex gap-1">
                 <button
@@ -1124,7 +1340,9 @@ const EstimateRequestPage = () => {
                 </button>
                 <button
                   className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                 >
                   Previous
@@ -1143,7 +1361,9 @@ const EstimateRequestPage = () => {
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded text-sm ${currentPage === pageNum ? 'bg-gray-200' : ''}`}
+                      className={`px-3 py-1 border rounded text-sm ${
+                        currentPage === pageNum ? "bg-gray-200" : ""
+                      }`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
                       {pageNum}
@@ -1152,7 +1372,9 @@ const EstimateRequestPage = () => {
                 })}
                 <button
                   className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   Next
@@ -1191,38 +1413,53 @@ const EstimateRequestPage = () => {
               <div>
                 <p className="text-sm text-gray-500">Customer</p>
                 <p className="font-medium">
-                  {viewingEstimate.customer ? viewingEstimate.customer.company : "N/A"}
+                  {viewingEstimate.customer
+                    ? viewingEstimate.customer.company
+                    : "N/A"}
                 </p>
-                {viewingEstimate.customer && viewingEstimate.customer.customerCode && (
-                  <p className="text-sm text-blue-600 mt-1">
-                    {viewingEstimate.customer.customerCode}
-                  </p>
-                )}
+                {viewingEstimate.customer &&
+                  viewingEstimate.customer.customerCode && (
+                    <p className="text-sm text-blue-600 mt-1">
+                      {viewingEstimate.customer.customerCode}
+                    </p>
+                  )}
               </div>
               <div>
                 <p className="text-sm text-gray-500">Customer Email</p>
                 <p className="font-medium">
-                  {viewingEstimate.customer ? viewingEstimate.customer.email : "N/A"}
+                  {viewingEstimate.customer
+                    ? viewingEstimate.customer.email
+                    : "N/A"}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Customer Phone</p>
                 <p className="font-medium">
-                  {viewingEstimate.customer ? viewingEstimate.customer.phone : "N/A"}
+                  {viewingEstimate.customer
+                    ? viewingEstimate.customer.phone
+                    : "N/A"}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Amount</p>
-                <p className="font-medium">{formatCurrency(viewingEstimate.amount)}</p>
+                <p className="font-medium">
+                  {formatCurrency(viewingEstimate.amount)}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Created Date</p>
-                <p className="font-medium">{displayDate(viewingEstimate.createdDate)}</p>
+                <p className="font-medium">
+                  {displayDate(viewingEstimate.createdDate)}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Status</p>
                 <p className="font-medium">
-                  <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(viewingEstimate.status)}`}>
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                      viewingEstimate.status
+                    )}`}
+                  >
                     {viewingEstimate.status}
                   </span>
                 </p>
@@ -1231,7 +1468,9 @@ const EstimateRequestPage = () => {
             {viewingEstimate.notes && (
               <div className="mb-4">
                 <p className="text-sm text-gray-500">Notes/Content</p>
-                <p className="font-medium mt-1 p-3 bg-gray-100 rounded">{viewingEstimate.notes}</p>
+                <p className="font-medium mt-1 p-3 bg-gray-100 rounded">
+                  {viewingEstimate.notes}
+                </p>
               </div>
             )}
             <div className="flex justify-end">

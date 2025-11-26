@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // staff-forgotPassword.jsx
 import React, { useState, useRef } from "react";
 import { FiLock } from "react-icons/fi";
@@ -6,6 +7,7 @@ import { toast } from "react-hot-toast";
 import backgroundImage from "../../assets/login-background.jpg";
 
 export default function StaffForgotPassword() {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState(["", "", "", ""]);
@@ -48,14 +50,11 @@ export default function StaffForgotPassword() {
 
     setLoading(true);
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/staff/forgot-password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/staff/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
       const data = await res.json();
 
@@ -83,14 +82,11 @@ export default function StaffForgotPassword() {
 
     setLoading(true);
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/staff/verify-reset-code",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, code: verificationCode }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/staff/verify-reset-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: verificationCode }),
+      });
 
       const data = await res.json();
 
@@ -136,18 +132,15 @@ export default function StaffForgotPassword() {
 
     setLoading(true);
     try {
-      const res = await fetch(
-        "http://localhost:5000/api/staff/reset-password",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email,
-            code: verificationCode,
-            newPassword,
-          }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/staff/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          code: verificationCode,
+          newPassword,
+        }),
+      });
 
       const data = await res.json();
 

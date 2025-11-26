@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FaPlus, FaTimes } from "react-icons/fa";
@@ -14,10 +15,10 @@ const useOutsideClick = (callback) => {
       }
     };
 
-    document.addEventListener('click', handleClick, true);
+    document.addEventListener("click", handleClick, true);
 
     return () => {
-      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener("click", handleClick, true);
     };
   }, [ref, callback]);
 
@@ -25,8 +26,9 @@ const useOutsideClick = (callback) => {
 };
 
 const ProposalForm = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
-  
+
   // Form state
   const [formData, setFormData] = useState({
     title: "",
@@ -49,7 +51,7 @@ const ProposalForm = () => {
     zip: "",
     phone: "",
     assigned: "",
-    assignedId: ""
+    assignedId: "",
   });
 
   // Items state
@@ -64,7 +66,7 @@ const ProposalForm = () => {
     tax1: "",
     tax2: "",
     unit: "",
-    groupName: ""
+    groupName: "",
   });
 
   // Search states
@@ -79,7 +81,7 @@ const ProposalForm = () => {
   const clientRef = useOutsideClick(() => {
     setShowClientDropdown(false);
   });
-  
+
   const staffRef = useOutsideClick(() => {
     setShowStaffDropdown(false);
   });
@@ -99,8 +101,8 @@ const ProposalForm = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -117,7 +119,7 @@ const ProposalForm = () => {
     const fetchItems = async () => {
       try {
         const config = createAxiosConfig();
-        const { data } = await axios.get("http://localhost:5000/api/admin/items", config);
+        const { data } = await axios.get(`${API_BASE_URL}/admin/items`, config);
         setDatabaseItems(data);
       } catch (err) {
         console.error("Error fetching items", err);
@@ -137,10 +139,13 @@ const ProposalForm = () => {
       setClientSearchResults([]);
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/projects/customers/search?q=${searchTerm}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/projects/customers/search?q=${searchTerm}`,
+        config
+      );
       setClientSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -154,10 +159,13 @@ const ProposalForm = () => {
       setStaffSearchResults([]);
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/staffs?search=${searchTerm}`,
+        config
+      );
       setStaffSearchResults(data.staffs || []);
     } catch (error) {
       console.error("Error searching staff:", error);
@@ -200,7 +208,7 @@ const ProposalForm = () => {
       ...formData,
       clientName: value,
       clientId: "",
-      clientEmail: ""
+      clientEmail: "",
     });
     setClientSearchTerm(value);
     setShowClientDropdown(true);
@@ -211,7 +219,7 @@ const ProposalForm = () => {
     setFormData({
       ...formData,
       assigned: value,
-      assignedId: ""
+      assignedId: "",
     });
     setStaffSearchTerm(value);
     setShowStaffDropdown(true);
@@ -222,7 +230,7 @@ const ProposalForm = () => {
       ...formData,
       clientId: client._id,
       clientName: client.company,
-      clientEmail: client.email || ""
+      clientEmail: client.email || "",
     });
     setShowClientDropdown(false);
     setClientSearchTerm("");
@@ -232,7 +240,7 @@ const ProposalForm = () => {
     setFormData({
       ...formData,
       assignedId: staff._id,
-      assigned: staff.name
+      assigned: staff.name,
     });
     setShowStaffDropdown(false);
     setStaffSearchTerm("");
@@ -242,7 +250,7 @@ const ProposalForm = () => {
     const { name, value } = e.target;
     setNewItem({
       ...newItem,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -251,9 +259,9 @@ const ProposalForm = () => {
     const newProposalItem = {
       description: item.description,
       quantity: 1,
-      rate: parseFloat(item.rate.replace('$', '')),
+      rate: parseFloat(item.rate.replace("$", "")),
       tax1: parseFloat(item.tax1) || 0,
-      tax2: parseFloat(item.tax2) || 0
+      tax2: parseFloat(item.tax2) || 0,
     };
     setProposalItems([...proposalItems, newProposalItem]);
   };
@@ -261,12 +269,12 @@ const ProposalForm = () => {
   const handleItemChange = (index, field, value) => {
     const newItems = [...proposalItems];
     newItems[index][field] = value;
-    
+
     // Recalculate amount if quantity or rate changes
-    if (field === 'quantity' || field === 'rate') {
+    if (field === "quantity" || field === "rate") {
       newItems[index].amount = newItems[index].quantity * newItems[index].rate;
     }
-    
+
     setProposalItems(newItems);
   };
 
@@ -281,17 +289,23 @@ const ProposalForm = () => {
     e.preventDefault();
     try {
       const config = createAxiosConfig();
-      const response = await axios.post("http://localhost:5000/api/admin/items", {
-        ...newItem,
-        rate: newItem.rate.startsWith('$') ? newItem.rate : `$${newItem.rate}`
-      }, config);
-      
+      const response = await axios.post(
+        `${API_BASE_URL}/admin/items`,
+        {
+          ...newItem,
+          rate: newItem.rate.startsWith("$")
+            ? newItem.rate
+            : `$${newItem.rate}`,
+        },
+        config
+      );
+
       // Add to database items
       setDatabaseItems([response.data, ...databaseItems]);
-      
+
       // Add to proposal items
       addItemFromDatabase(response.data);
-      
+
       // Reset form
       setNewItem({
         description: "",
@@ -300,7 +314,7 @@ const ProposalForm = () => {
         tax1: "",
         tax2: "",
         unit: "",
-        groupName: ""
+        groupName: "",
       });
       setShowItemForm(false);
     } catch (err) {
@@ -313,20 +327,26 @@ const ProposalForm = () => {
   };
 
   // Calculations
-  const subtotal = proposalItems.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
-  const discount = formData.discountType === "percent" 
-    ? subtotal * (formData.discountValue / 100) 
-    : formData.discountValue;
+  const subtotal = proposalItems.reduce(
+    (sum, item) => sum + item.quantity * item.rate,
+    0
+  );
+  const discount =
+    formData.discountType === "percent"
+      ? subtotal * (formData.discountValue / 100)
+      : formData.discountValue;
   const total = subtotal - discount;
 
   // Form validation and submission
   const validate = () => {
     let newErrors = {};
     if (!formData.title) newErrors.title = "Title is required";
-    if (!formData.clientName || !formData.clientId) newErrors.clientName = "Client is required";
+    if (!formData.clientName || !formData.clientId)
+      newErrors.clientName = "Client is required";
     if (!formData.clientEmail) newErrors.clientEmail = "Email is required";
-    if (proposalItems.length === 0) newErrors.items = "At least one item is required";
-    
+    if (proposalItems.length === 0)
+      newErrors.items = "At least one item is required";
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -346,12 +366,12 @@ const ProposalForm = () => {
       }
 
       // Prepare items in the correct format for backend
-      const items = proposalItems.map(item => ({
+      const items = proposalItems.map((item) => ({
         description: item.description,
         quantity: Number(item.quantity),
         rate: Number(item.rate),
         tax1: Number(item.tax1 || 0),
-        tax2: Number(item.tax2 || 0)
+        tax2: Number(item.tax2 || 0),
       }));
 
       const proposalData = {
@@ -361,7 +381,7 @@ const ProposalForm = () => {
         clientEmail: formData.clientEmail,
         status: formData.status,
         items: items,
-        date: formData.date || new Date().toISOString().split('T')[0],
+        date: formData.date || new Date().toISOString().split("T")[0],
         openTill: formData.openTill || null,
         currency: formData.currency,
         discountType: formData.discountType,
@@ -374,16 +394,16 @@ const ProposalForm = () => {
         zip: formData.zip,
         phone: formData.phone,
         assigned: formData.assigned,
-        assignedId: formData.assignedId
+        assignedId: formData.assignedId,
       };
 
       const config = createAxiosConfig();
       const response = await axios.post(
-        'http://localhost:5000/api/admin/proposals', 
+        `${API_BASE_URL}/admin/proposals`,
         proposalData,
         config
       );
-      
+
       if (response.data.success) {
         alert(`Proposal saved successfully!`);
         navigate("../sales/proposals");
@@ -392,18 +412,20 @@ const ProposalForm = () => {
       }
     } catch (error) {
       console.error("Submission error:", error.response?.data || error.message);
-      
+
       let errorMessage = "Failed to save proposal";
       if (error.response?.status === 401) {
         errorMessage = "Authentication failed. Please login again.";
         localStorage.removeItem("crm_token");
         navigate("/login");
       } else if (error.response?.data?.errors) {
-        errorMessage = error.response.data.errors.map(e => e.message).join("\n");
+        errorMessage = error.response.data.errors
+          .map((e) => e.message)
+          .join("\n");
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       }
-      
+
       alert(errorMessage);
     }
   };
@@ -411,7 +433,7 @@ const ProposalForm = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">New Proposal</h2>
-      
+
       {/* Main Form Container */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
         {/* Two-column form layout */}
@@ -420,7 +442,9 @@ const ProposalForm = () => {
           <div>
             {/* Title */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title*</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Title*
+              </label>
               <input
                 type="text"
                 name="title"
@@ -430,12 +454,16 @@ const ProposalForm = () => {
                   errors.title ? "border-red-500" : "border-gray-300"
                 }`}
               />
-              {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
+              {errors.title && (
+                <p className="text-red-500 text-xs mt-1">{errors.title}</p>
+              )}
             </div>
 
             {/* Client Name */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Client Name*</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Client Name*
+              </label>
               <div className="relative" ref={clientRef}>
                 <input
                   type="text"
@@ -456,24 +484,34 @@ const ProposalForm = () => {
                         onClick={() => handleSelectClient(client)}
                       >
                         <div className="font-medium">{client.company}</div>
-                        <div className="text-sm text-gray-600">{client.contact} - {client.email}</div>
+                        <div className="text-sm text-gray-600">
+                          {client.contact} - {client.email}
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
-                {showClientDropdown && clientSearchResults.length === 0 && clientSearchTerm.length >= 2 && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                    <div className="px-3 py-2 text-gray-500">No clients found</div>
-                  </div>
-                )}
+                {showClientDropdown &&
+                  clientSearchResults.length === 0 &&
+                  clientSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">
+                        No clients found
+                      </div>
+                    </div>
+                  )}
               </div>
-              {errors.clientName && <p className="text-red-500 text-xs mt-1">{errors.clientName}</p>}
+              {errors.clientName && (
+                <p className="text-red-500 text-xs mt-1">{errors.clientName}</p>
+              )}
             </div>
 
             {/* Date fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Date
+                </label>
                 <input
                   type="date"
                   name="date"
@@ -483,7 +521,9 @@ const ProposalForm = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Open Till</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Open Till
+                </label>
                 <input
                   type="date"
                   name="openTill"
@@ -497,7 +537,9 @@ const ProposalForm = () => {
             {/* Currency and Discount */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Currency
+                </label>
                 <select
                   name="currency"
                   value={formData.currency}
@@ -510,7 +552,9 @@ const ProposalForm = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Discount Type
+                </label>
                 <select
                   name="discountType"
                   value={formData.discountType}
@@ -525,7 +569,9 @@ const ProposalForm = () => {
 
             {/* Tags */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tags
+              </label>
               <select
                 name="tags"
                 value={formData.tags}
@@ -534,7 +580,9 @@ const ProposalForm = () => {
               >
                 <option value="">Select Tag</option>
                 {tagOptions.map((tag, i) => (
-                  <option key={i} value={tag}>{tag}</option>
+                  <option key={i} value={tag}>
+                    {tag}
+                  </option>
                 ))}
               </select>
             </div>
@@ -544,22 +592,26 @@ const ProposalForm = () => {
           <div>
             {/* Status and Assigned */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
-              >
-                <option value="Draft">Draft</option>
-                <option value="Sent">Sent</option>
-                <option value="Accepted">Accepted</option>
-                <option value="Rejected">Rejected</option>
-              </select>
-            </div>
-            <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Assigned</label>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  name="status"
+                  value={formData.status}
+                  onChange={handleChange}
+                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                >
+                  <option value="Draft">Draft</option>
+                  <option value="Sent">Sent</option>
+                  <option value="Accepted">Accepted</option>
+                  <option value="Rejected">Rejected</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Assigned
+                </label>
                 <div className="relative" ref={staffRef}>
                   <input
                     type="text"
@@ -578,23 +630,31 @@ const ProposalForm = () => {
                           onClick={() => handleSelectStaff(staff)}
                         >
                           <div className="font-medium">{staff.name}</div>
-                          <div className="text-sm text-gray-600">{staff.position} - {staff.department}</div>
+                          <div className="text-sm text-gray-600">
+                            {staff.position} - {staff.department}
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  {showStaffDropdown && staffSearchResults.length === 0 && staffSearchTerm.length >= 2 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                      <div className="px-3 py-2 text-gray-500">No staff found</div>
-                    </div>
-                  )}
+                  {showStaffDropdown &&
+                    staffSearchResults.length === 0 &&
+                    staffSearchTerm.length >= 2 && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                        <div className="px-3 py-2 text-gray-500">
+                          No staff found
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
 
             {/* Client Email */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Client Email*</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Client Email*
+              </label>
               <input
                 type="email"
                 name="clientEmail"
@@ -604,12 +664,18 @@ const ProposalForm = () => {
                   errors.clientEmail ? "border-red-500" : "border-gray-300"
                 }`}
               />
-              {errors.clientEmail && <p className="text-red-500 text-xs mt-1">{errors.clientEmail}</p>}
+              {errors.clientEmail && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.clientEmail}
+                </p>
+              )}
             </div>
 
             {/* Address */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Address
+              </label>
               <textarea
                 name="address"
                 value={formData.address}
@@ -622,7 +688,9 @@ const ProposalForm = () => {
             {/* Location fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  City
+                </label>
                 <input
                   type="text"
                   name="city"
@@ -632,7 +700,9 @@ const ProposalForm = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">State</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  State
+                </label>
                 <input
                   type="text"
                   name="state"
@@ -642,7 +712,9 @@ const ProposalForm = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Country
+                </label>
                 <input
                   type="text"
                   name="country"
@@ -652,7 +724,9 @@ const ProposalForm = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Zip Code</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Zip Code
+                </label>
                 <input
                   type="text"
                   name="zip"
@@ -665,7 +739,9 @@ const ProposalForm = () => {
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone
+              </label>
               <input
                 type="text"
                 name="phone"
@@ -685,7 +761,7 @@ const ProposalForm = () => {
           <button
             onClick={() => setShowItemForm(true)}
             className="px-3 py-2 text-sm rounded flex items-center gap-2 text-white"
-            style={{ backgroundColor: '#333333' }}
+            style={{ backgroundColor: "#333333" }}
           >
             <FaPlus /> Add New Item
           </button>
@@ -695,7 +771,10 @@ const ProposalForm = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left" style={{ backgroundColor: '#333333', color: 'white' }}>
+              <tr
+                className="text-left"
+                style={{ backgroundColor: "#333333", color: "white" }}
+              >
                 <th className="p-3 rounded-l-lg">Description</th>
                 <th className="p-3">Rate</th>
                 <th className="p-3">Unit</th>
@@ -707,7 +786,10 @@ const ProposalForm = () => {
             </thead>
             <tbody>
               {databaseItems.map((item) => (
-                <tr key={item._id} className="bg-white shadow rounded-lg hover:bg-gray-50">
+                <tr
+                  key={item._id}
+                  className="bg-white shadow rounded-lg hover:bg-gray-50"
+                >
                   <td className="p-3 border-0">{item.description}</td>
                   <td className="p-3 border-0">{item.rate}</td>
                   <td className="p-3 border-0">{item.unit}</td>
@@ -715,7 +797,7 @@ const ProposalForm = () => {
                   <td className="p-3 border-0">{item.tax2}</td>
                   <td className="p-3 border-0">{item.groupName}</td>
                   <td className="p-3 border-0">
-                    <button 
+                    <button
                       onClick={() => addItemFromDatabase(item)}
                       className="text-black-600 hover:text-blue-800"
                     >
@@ -742,24 +824,29 @@ const ProposalForm = () => {
                   quantity: 1,
                   rate: 0,
                   tax1: 0,
-                  tax2: 0
-                }
+                  tax2: 0,
+                },
               ]);
             }}
             className="px-3 py-2 text-sm rounded flex items-center gap-2 text-white"
-            style={{ backgroundColor: '#333333' }}
+            style={{ backgroundColor: "#333333" }}
           >
             <FaPlus /> Add Custom Item
           </button>
         </div>
 
-        {errors.items && <p className="text-red-500 text-sm mb-3">{errors.items}</p>}
+        {errors.items && (
+          <p className="text-red-500 text-sm mb-3">{errors.items}</p>
+        )}
 
         {/* Proposal Items Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left" style={{ backgroundColor: '#333333', color: 'white' }}>
+              <tr
+                className="text-left"
+                style={{ backgroundColor: "#333333", color: "white" }}
+              >
                 <th className="p-3 rounded-l-lg">#</th>
                 <th className="p-3">Item Description</th>
                 <th className="p-3">Qty</th>
@@ -772,13 +859,18 @@ const ProposalForm = () => {
             </thead>
             <tbody>
               {proposalItems.map((item, i) => (
-                <tr key={i} className="bg-white shadow rounded-lg hover:bg-gray-50">
+                <tr
+                  key={i}
+                  className="bg-white shadow rounded-lg hover:bg-gray-50"
+                >
                   <td className="p-3 border-0">{i + 1}</td>
                   <td className="p-3 border-0">
                     <input
                       type="text"
                       value={item.description}
-                      onChange={(e) => handleItemChange(i, "description", e.target.value)}
+                      onChange={(e) =>
+                        handleItemChange(i, "description", e.target.value)
+                      }
                       className="w-full border px-2 py-1 rounded"
                       placeholder="Item description"
                     />
@@ -788,7 +880,10 @@ const ProposalForm = () => {
                       type="number"
                       value={item.quantity}
                       onChange={(e) => {
-                        const quantity = Math.max(1, parseInt(e.target.value) || 1);
+                        const quantity = Math.max(
+                          1,
+                          parseInt(e.target.value) || 1
+                        );
                         handleItemChange(i, "quantity", quantity);
                       }}
                       className="w-full border px-2 py-1 rounded"
@@ -812,7 +907,13 @@ const ProposalForm = () => {
                     <input
                       type="number"
                       value={item.tax1}
-                      onChange={(e) => handleItemChange(i, "tax1", parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        handleItemChange(
+                          i,
+                          "tax1",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
                       className="w-full border px-2 py-1 rounded"
                       min="0"
                       step="0.01"
@@ -822,13 +923,21 @@ const ProposalForm = () => {
                     <input
                       type="number"
                       value={item.tax2}
-                      onChange={(e) => handleItemChange(i, "tax2", parseFloat(e.target.value) || 0)}
+                      onChange={(e) =>
+                        handleItemChange(
+                          i,
+                          "tax2",
+                          parseFloat(e.target.value) || 0
+                        )
+                      }
                       className="w-full border px-2 py-1 rounded"
                       min="0"
                       step="0.01"
                     />
                   </td>
-                  <td className="p-3 border-0 text-right">${(item.quantity * item.rate).toFixed(2)}</td>
+                  <td className="p-3 border-0 text-right">
+                    ${(item.quantity * item.rate).toFixed(2)}
+                  </td>
                   <td className="p-3 border-0 text-center">
                     <button
                       onClick={() => deleteItem(i)}
@@ -875,7 +984,7 @@ const ProposalForm = () => {
                 onChange={(e) => {
                   setFormData({
                     ...formData,
-                    discountValue: Math.max(0, parseFloat(e.target.value) || 0)
+                    discountValue: Math.max(0, parseFloat(e.target.value) || 0),
                   });
                 }}
                 className="w-20 border px-2 py-1 rounded text-sm text-right"
@@ -908,11 +1017,13 @@ const ProposalForm = () => {
                 <FaTimes />
               </button>
             </div>
-            
+
             <form onSubmit={saveNewItemToDatabase} className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
                   <input
                     type="text"
                     name="description"
@@ -923,7 +1034,9 @@ const ProposalForm = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Long Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Long Description
+                  </label>
                   <textarea
                     name="longDescription"
                     value={newItem.longDescription}
@@ -933,7 +1046,9 @@ const ProposalForm = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rate - USD (Base Currency)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Rate - USD (Base Currency)
+                  </label>
                   <div className="relative">
                     <span className="absolute left-3 top-2">$</span>
                     <input
@@ -950,7 +1065,9 @@ const ProposalForm = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tax 1</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tax 1
+                    </label>
                     <select
                       name="tax1"
                       value={newItem.tax1}
@@ -958,12 +1075,16 @@ const ProposalForm = () => {
                       className="w-full border px-3 py-2 rounded text-sm"
                     >
                       {taxOptions.map((option, i) => (
-                        <option key={i} value={option}>{option}</option>
+                        <option key={i} value={option}>
+                          {option}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tax 2</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tax 2
+                    </label>
                     <select
                       name="tax2"
                       value={newItem.tax2}
@@ -971,13 +1092,17 @@ const ProposalForm = () => {
                       className="w-full border px-3 py-2 rounded text-sm"
                     >
                       {taxOptions.map((option, i) => (
-                        <option key={i} value={option}>{option}</option>
+                        <option key={i} value={option}>
+                          {option}
+                        </option>
                       ))}
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Unit
+                  </label>
                   <input
                     type="text"
                     name="unit"
@@ -987,7 +1112,9 @@ const ProposalForm = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Item Group</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Item Group
+                  </label>
                   <input
                     type="text"
                     name="groupName"
@@ -999,17 +1126,17 @@ const ProposalForm = () => {
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
-                <button 
-                  type="button" 
-                  onClick={() => setShowItemForm(false)} 
+                <button
+                  type="button"
+                  onClick={() => setShowItemForm(false)}
                   className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
                 >
                   Close
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="px-4 py-2 text-white rounded text-sm"
-                  style={{ backgroundColor: '#333333' }}
+                  style={{ backgroundColor: "#333333" }}
                 >
                   Save Item
                 </button>

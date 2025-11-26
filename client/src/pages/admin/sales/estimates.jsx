@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef } from "react";
-import { FaPlus, FaFilter, FaSyncAlt, FaEye, FaEdit, FaTrash, FaSearch, FaChevronRight, FaTimes } from "react-icons/fa";
+import {
+  FaPlus,
+  FaFilter,
+  FaSyncAlt,
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaSearch,
+  FaChevronRight,
+  FaTimes,
+} from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -8,6 +18,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const Estimates = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -19,9 +30,9 @@ const Estimates = () => {
   const [selectedEstimates, setSelectedEstimates] = useState([]);
   const [viewEstimate, setViewEstimate] = useState(null);
   const [editEstimate, setEditEstimate] = useState(null);
-  const [formData, setFormData] = useState({ 
-    customer: "", 
-    status: "Draft" 
+  const [formData, setFormData] = useState({
+    customer: "",
+    status: "Draft",
   });
 
   // Add a ref for the export menu
@@ -38,15 +49,18 @@ const Estimates = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
   // Close export menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+      if (
+        exportMenuRef.current &&
+        !exportMenuRef.current.contains(event.target)
+      ) {
         setShowExportMenu(false);
       }
     };
@@ -62,8 +76,11 @@ const Estimates = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/admin/estimates", config);
-      
+      const { data } = await axios.get(
+        `${API_BASE_URL}/admin/estimates`,
+        config
+      );
+
       // Ensure we're getting the data in the correct format
       if (data.data) {
         setEstimates(data.data); // If response has data property
@@ -92,7 +109,9 @@ const Estimates = () => {
   // Toggle estimate selection
   const toggleEstimateSelection = (id) => {
     if (selectedEstimates.includes(id)) {
-      setSelectedEstimates(selectedEstimates.filter(estimateId => estimateId !== id));
+      setSelectedEstimates(
+        selectedEstimates.filter((estimateId) => estimateId !== id)
+      );
     } else {
       setSelectedEstimates([...selectedEstimates, id]);
     }
@@ -103,14 +122,24 @@ const Estimates = () => {
     if (!estimates.length) return;
 
     const exportData = estimates.map((e) => ({
-      EstimateNumber: e.estimateNumber || "EST-" + e._id.slice(-6).toUpperCase(),
+      EstimateNumber:
+        e.estimateNumber || "EST-" + e._id.slice(-6).toUpperCase(),
       Customer: e.customer,
       Amount: e.total,
-      TotalTax: e.items ? e.items.reduce((sum, item) => sum + (item.tax1 || 0) + (item.tax2 || 0), 0) : 0,
+      TotalTax: e.items
+        ? e.items.reduce(
+            (sum, item) => sum + (item.tax1 || 0) + (item.tax2 || 0),
+            0
+          )
+        : 0,
       Project: e.reference || "-",
       Tags: e.tags || "-",
-      Date: e.estimateDate ? new Date(e.estimateDate).toLocaleDateString() : "-",
-      ExpiryDate: e.expiryDate ? new Date(e.expiryDate).toLocaleDateString() : "-",
+      Date: e.estimateDate
+        ? new Date(e.estimateDate).toLocaleDateString()
+        : "-",
+      ExpiryDate: e.expiryDate
+        ? new Date(e.expiryDate).toLocaleDateString()
+        : "-",
       Reference: e.reference || "-",
       Status: e.status,
     }));
@@ -119,10 +148,16 @@ const Estimates = () => {
       case "CSV": {
         const headers = Object.keys(exportData[0]).join(",");
         const rows = exportData
-          .map((row) => Object.values(row).map((val) => `"${val}"`).join(","))
+          .map((row) =>
+            Object.values(row)
+              .map((val) => `"${val}"`)
+              .join(",")
+          )
           .join("\n");
         const csvContent = headers + "\n" + rows;
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.setAttribute("download", "estimates.csv");
@@ -143,7 +178,9 @@ const Estimates = () => {
       case "PDF": {
         const doc = new jsPDF();
         const columns = Object.keys(exportData[0]);
-        const tableRows = exportData.map((row) => columns.map((col) => row[col]));
+        const tableRows = exportData.map((row) =>
+          columns.map((col) => row[col])
+        );
         autoTable(doc, { head: [columns], body: tableRows });
         doc.save("estimates.pdf");
         break;
@@ -151,8 +188,12 @@ const Estimates = () => {
 
       case "Print": {
         const printWindow = window.open("", "", "height=500,width=800");
-        printWindow.document.write("<html><head><title>Estimates</title></head><body>");
-        printWindow.document.write("<table border='1' style='border-collapse: collapse; width: 100%;'>");
+        printWindow.document.write(
+          "<html><head><title>Estimates</title></head><body>"
+        );
+        printWindow.document.write(
+          "<table border='1' style='border-collapse: collapse; width: 100%;'>"
+        );
         printWindow.document.write("<thead><tr>");
         Object.keys(exportData[0]).forEach((col) => {
           printWindow.document.write(`<th>${col}</th>`);
@@ -180,13 +221,16 @@ const Estimates = () => {
 
   // Delete estimate
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this estimate?")) return;
+    if (!window.confirm("Are you sure you want to delete this estimate?"))
+      return;
     try {
       const config = createAxiosConfig();
-      await axios.delete(`http://localhost:5000/api/admin/estimates/${id}`, config);
+      await axios.delete(`${API_BASE_URL}/admin/estimates/${id}`, config);
       setEstimates(estimates.filter((e) => e._id !== id));
       // Remove from selected if it was selected
-      setSelectedEstimates(selectedEstimates.filter(estimateId => estimateId !== id));
+      setSelectedEstimates(
+        selectedEstimates.filter((estimateId) => estimateId !== id)
+      );
     } catch (err) {
       console.error("Error deleting estimate", err);
       if (err.response?.status === 401) {
@@ -198,15 +242,20 @@ const Estimates = () => {
 
   // Bulk delete estimates
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete ${selectedEstimates.length} estimates?`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedEstimates.length} estimates?`
+      )
+    )
+      return;
     try {
       const config = createAxiosConfig();
       await Promise.all(
-        selectedEstimates.map(id => 
-          axios.delete(`http://localhost:5000/api/admin/estimates/${id}`, config)
+        selectedEstimates.map((id) =>
+          axios.delete(`${API_BASE_URL}/admin/estimates/${id}`, config)
         )
       );
-      setEstimates(estimates.filter(e => !selectedEstimates.includes(e._id)));
+      setEstimates(estimates.filter((e) => !selectedEstimates.includes(e._id)));
       setSelectedEstimates([]);
       alert("Selected estimates deleted successfully!");
     } catch (err) {
@@ -223,7 +272,11 @@ const Estimates = () => {
   const handleUpdate = async () => {
     try {
       const config = createAxiosConfig();
-      await axios.put(`http://localhost:5000/api/admin/estimates/${editEstimate._id}`, formData, config);
+      await axios.put(
+        `${API_BASE_URL}/admin/estimates/${editEstimate._id}`,
+        formData,
+        config
+      );
       setEditEstimate(null);
       fetchEstimates();
     } catch (err) {
@@ -239,29 +292,43 @@ const Estimates = () => {
   const filteredEstimates = estimates.filter(
     (estimate) =>
       estimate.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (estimate.estimateNumber || "EST-" + estimate._id.slice(-6).toUpperCase()).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (estimate.estimateNumber || "EST-" + estimate._id.slice(-6).toUpperCase())
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       estimate.reference?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Pagination
   const indexOfLastEstimate = currentPage * entriesPerPage;
   const indexOfFirstEstimate = indexOfLastEstimate - entriesPerPage;
-  const currentEstimates = filteredEstimates.slice(indexOfFirstEstimate, indexOfLastEstimate);
+  const currentEstimates = filteredEstimates.slice(
+    indexOfFirstEstimate,
+    indexOfLastEstimate
+  );
   const totalPages = Math.ceil(filteredEstimates.length / entriesPerPage);
 
   // Get status color
   const getStatusColor = (status) => {
     switch (status) {
-      case "Draft": return "bg-gray-100 text-gray-800";
-      case "Pending": return "bg-blue-100 text-blue-800";
-      case "Approved": return "bg-green-100 text-green-800";
-      case "Rejected": return "bg-red-100 text-red-800";
-      case "Expired": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "Draft":
+        return "bg-gray-100 text-gray-800";
+      case "Pending":
+        return "bg-blue-100 text-blue-800";
+      case "Approved":
+        return "bg-green-100 text-green-800";
+      case "Rejected":
+        return "bg-red-100 text-red-800";
+      case "Expired":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading estimates...</div>;
+  if (loading)
+    return (
+      <div className="bg-gray-100 min-h-screen p-4">Loading estimates...</div>
+    );
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
@@ -295,7 +362,9 @@ const Estimates = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Draft</p>
-              <p className="text-2xl font-bold">{estimates.filter(e => e.status === "Draft").length}</p>
+              <p className="text-2xl font-bold">
+                {estimates.filter((e) => e.status === "Draft").length}
+              </p>
             </div>
             <div className="bg-gray-100 p-3 rounded-full">
               <FaEdit className="text-gray-600" />
@@ -308,7 +377,9 @@ const Estimates = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Pending</p>
-              <p className="text-2xl font-bold">{estimates.filter(e => e.status === "Pending").length}</p>
+              <p className="text-2xl font-bold">
+                {estimates.filter((e) => e.status === "Pending").length}
+              </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
               <FaEye className="text-blue-600" />
@@ -321,7 +392,9 @@ const Estimates = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Approved</p>
-              <p className="text-2xl font-bold">{estimates.filter(e => e.status === "Approved").length}</p>
+              <p className="text-2xl font-bold">
+                {estimates.filter((e) => e.status === "Approved").length}
+              </p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
               <FaEye className="text-green-600" />
@@ -334,7 +407,9 @@ const Estimates = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Rejected</p>
-              <p className="text-2xl font-bold">{estimates.filter(e => e.status === "Rejected").length}</p>
+              <p className="text-2xl font-bold">
+                {estimates.filter((e) => e.status === "Rejected").length}
+              </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
               <FaTimes className="text-red-600" />
@@ -346,14 +421,14 @@ const Estimates = () => {
       {/* Top action buttons */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <div className="flex items-center gap-2">
-          <button 
-            className="px-3 py-1 text-sm rounded flex items-center gap-2" 
-            style={{ backgroundColor: '#333333', color: 'white' }}
+          <button
+            className="px-3 py-1 text-sm rounded flex items-center gap-2"
+            style={{ backgroundColor: "#333333", color: "white" }}
             onClick={() => navigate("../estimates/new")}
           >
             <FaPlus /> New Estimate
           </button>
-          
+
           {/* Bulk delete button */}
           {selectedEstimates.length > 0 && (
             <button
@@ -375,7 +450,11 @@ const Estimates = () => {
       </div>
 
       {/* White box for table */}
-      <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+      <div
+        className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+          compactView ? "w-1/2" : "w-full"
+        }`}
+      >
         {/* Controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
@@ -394,7 +473,7 @@ const Estimates = () => {
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-            
+
             {/* Export button */}
             <div className="relative">
               <button
@@ -406,7 +485,10 @@ const Estimates = () => {
 
               {/* Dropdown menu */}
               {showExportMenu && (
-                <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                <div
+                  ref={exportMenuRef}
+                  className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                >
                   <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                     onClick={() => handleExport("Excel")}
@@ -465,38 +547,116 @@ const Estimates = () => {
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th
+                  className="p-3 rounded-l-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
                   <input
                     type="checkbox"
-                    checked={selectedEstimates.length === currentEstimates.length && currentEstimates.length > 0}
+                    checked={
+                      selectedEstimates.length === currentEstimates.length &&
+                      currentEstimates.length > 0
+                    }
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedEstimates(currentEstimates.map(e => e._id));
+                        setSelectedEstimates(
+                          currentEstimates.map((e) => e._id)
+                        );
                       } else {
                         setSelectedEstimates([]);
                       }
                     }}
                   />
                 </th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Estimate#</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Estimate#
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Customer
+                </th>
                 {compactView ? (
                   <>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Amount
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Date
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Actions
+                    </th>
                   </>
                 ) : (
                   <>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Total Tax</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Expiry Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Amount
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Total Tax
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Project
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Tags
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Date
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Expiry Date
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Actions
+                    </th>
                   </>
                 )}
               </tr>
@@ -504,7 +664,9 @@ const Estimates = () => {
             <tbody>
               {currentEstimates.length > 0 ? (
                 currentEstimates.map((estimate) => {
-                  const displayEstimateNumber = estimate.estimateNumber || "EST-" + estimate._id.slice(-6).toUpperCase();
+                  const displayEstimateNumber =
+                    estimate.estimateNumber ||
+                    "EST-" + estimate._id.slice(-6).toUpperCase();
 
                   const displayAmount = new Intl.NumberFormat("en-US", {
                     style: "currency",
@@ -512,39 +674,56 @@ const Estimates = () => {
                     minimumFractionDigits: 2,
                   }).format(estimate.total || 0);
 
-                  const totalTax = estimate.items ? 
-                    estimate.items.reduce((sum, item) => sum + (item.tax1 || 0) + (item.tax2 || 0), 0) : 0;
+                  const totalTax = estimate.items
+                    ? estimate.items.reduce(
+                        (sum, item) =>
+                          sum + (item.tax1 || 0) + (item.tax2 || 0),
+                        0
+                      )
+                    : 0;
 
                   const formatDate = (dateString) => {
                     if (!dateString) return "-";
                     const date = new Date(dateString);
-                    return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+                    return isNaN(date.getTime())
+                      ? "-"
+                      : date.toLocaleDateString();
                   };
 
                   return (
                     <tr
                       key={estimate._id}
                       className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                      style={{ color: 'black' }}
+                      style={{ color: "black" }}
                     >
                       <td className="p-3 rounded-l-lg border-0">
                         <div className="flex items-center">
                           <input
                             type="checkbox"
                             checked={selectedEstimates.includes(estimate._id)}
-                            onChange={() => toggleEstimateSelection(estimate._id)}
+                            onChange={() =>
+                              toggleEstimateSelection(estimate._id)
+                            }
                             className="h-4 w-4"
                           />
                         </div>
                       </td>
                       <td className="p-3 border-0 ">{displayEstimateNumber}</td>
-                      <td className="p-3 border-0">{estimate.customer || "-"}</td>
+                      <td className="p-3 border-0">
+                        {estimate.customer || "-"}
+                      </td>
                       {compactView ? (
                         <>
                           <td className="p-3 border-0 ">{displayAmount}</td>
-                          <td className="p-3 border-0">{formatDate(estimate.estimateDate)}</td>
                           <td className="p-3 border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(estimate.status)}`}>
+                            {formatDate(estimate.estimateDate)}
+                          </td>
+                          <td className="p-3 border-0">
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                estimate.status
+                              )}`}
+                            >
                               {estimate.status || "Draft"}
                             </span>
                           </td>
@@ -590,12 +769,24 @@ const Estimates = () => {
                               minimumFractionDigits: 2,
                             }).format(totalTax)}
                           </td>
-                          <td className="p-3 border-0">{estimate.reference || "-"}</td>
-                          <td className="p-3 border-0">{estimate.tags || "-"}</td>
-                          <td className="p-3 border-0">{formatDate(estimate.estimateDate)}</td>
-                          <td className="p-3 border-0">{formatDate(estimate.expiryDate)}</td>
                           <td className="p-3 border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(estimate.status)}`}>
+                            {estimate.reference || "-"}
+                          </td>
+                          <td className="p-3 border-0">
+                            {estimate.tags || "-"}
+                          </td>
+                          <td className="p-3 border-0">
+                            {formatDate(estimate.estimateDate)}
+                          </td>
+                          <td className="p-3 border-0">
+                            {formatDate(estimate.expiryDate)}
+                          </td>
+                          <td className="p-3 border-0">
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                estimate.status
+                              )}`}
+                            >
                               {estimate.status || "Draft"}
                             </span>
                           </td>
@@ -637,11 +828,13 @@ const Estimates = () => {
                 })
               ) : (
                 <tr>
-                  <td 
-                    colSpan={compactView ? 7 : 11} 
+                  <td
+                    colSpan={compactView ? 7 : 11}
                     className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
                   >
-                    {estimates.length === 0 ? "No estimates found. Create your first estimate!" : "No estimates match your search."}
+                    {estimates.length === 0
+                      ? "No estimates found. Create your first estimate!"
+                      : "No estimates match your search."}
                   </td>
                 </tr>
               )}
@@ -653,7 +846,8 @@ const Estimates = () => {
         {filteredEstimates.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm">
             <span>
-              Showing {indexOfFirstEstimate + 1} to {Math.min(indexOfLastEstimate, filteredEstimates.length)} of{" "}
+              Showing {indexOfFirstEstimate + 1} to{" "}
+              {Math.min(indexOfLastEstimate, filteredEstimates.length)} of{" "}
               {filteredEstimates.length} entries
             </span>
             <div className="flex items-center gap-2">
@@ -693,7 +887,7 @@ const Estimates = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Estimate Details</h2>
-              <button 
+              <button
                 onClick={() => setViewEstimate(null)}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -701,23 +895,51 @@ const Estimates = () => {
               </button>
             </div>
             <div className="space-y-3">
-              <p><b>Estimate #:</b> {viewEstimate.estimateNumber || "EST-" + viewEstimate._id.slice(-6).toUpperCase()}</p>
-              <p><b>Customer:</b> {viewEstimate.customer || "-"}</p>
-              <p><b>Reference:</b> {viewEstimate.reference || "-"}</p>
-              <p><b>Amount:</b> {new Intl.NumberFormat("en-US", {
-                style: "currency",
-                currency: viewEstimate.currency || "USD",
-                minimumFractionDigits: 2,
-              }).format(viewEstimate.total || 0)}</p>
-              <p><b>Status:</b> <span className={`px-2 py-1 rounded text-xs ${getStatusColor(viewEstimate.status)}`}>
-                {viewEstimate.status || "Draft"}
-              </span></p>
-              {viewEstimate.estimateDate && <p><b>Date:</b> {new Date(viewEstimate.estimateDate).toLocaleDateString()}</p>}
-              {viewEstimate.expiryDate && <p><b>Expiry Date:</b> {new Date(viewEstimate.expiryDate).toLocaleDateString()}</p>}
+              <p>
+                <b>Estimate #:</b>{" "}
+                {viewEstimate.estimateNumber ||
+                  "EST-" + viewEstimate._id.slice(-6).toUpperCase()}
+              </p>
+              <p>
+                <b>Customer:</b> {viewEstimate.customer || "-"}
+              </p>
+              <p>
+                <b>Reference:</b> {viewEstimate.reference || "-"}
+              </p>
+              <p>
+                <b>Amount:</b>{" "}
+                {new Intl.NumberFormat("en-US", {
+                  style: "currency",
+                  currency: viewEstimate.currency || "USD",
+                  minimumFractionDigits: 2,
+                }).format(viewEstimate.total || 0)}
+              </p>
+              <p>
+                <b>Status:</b>{" "}
+                <span
+                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                    viewEstimate.status
+                  )}`}
+                >
+                  {viewEstimate.status || "Draft"}
+                </span>
+              </p>
+              {viewEstimate.estimateDate && (
+                <p>
+                  <b>Date:</b>{" "}
+                  {new Date(viewEstimate.estimateDate).toLocaleDateString()}
+                </p>
+              )}
+              {viewEstimate.expiryDate && (
+                <p>
+                  <b>Expiry Date:</b>{" "}
+                  {new Date(viewEstimate.expiryDate).toLocaleDateString()}
+                </p>
+              )}
             </div>
             <div className="mt-6 flex justify-end">
-              <button 
-                onClick={() => setViewEstimate(null)} 
+              <button
+                onClick={() => setViewEstimate(null)}
                 className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
               >
                 Close
@@ -732,7 +954,7 @@ const Estimates = () => {
           <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Update Estimate</h2>
-              <button 
+              <button
                 onClick={() => setEditEstimate(null)}
                 className="text-gray-500 hover:text-gray-700"
               >
@@ -741,20 +963,28 @@ const Estimates = () => {
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer
+                </label>
                 <input
                   type="text"
                   value={formData.customer}
-                  onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, customer: e.target.value })
+                  }
                   className="w-full border rounded px-3 py-2"
                   placeholder="Customer Name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
                 <select
                   value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, status: e.target.value })
+                  }
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="Draft">Draft</option>
@@ -765,20 +995,20 @@ const Estimates = () => {
               </div>
             </div>
             <div className="mt-6 flex justify-end space-x-3">
-              <button 
-                onClick={() => setEditEstimate(null)} 
+              <button
+                onClick={() => setEditEstimate(null)}
                 className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
               >
                 Cancel
               </button>
-              <button 
-                onClick={handleUpdate} 
+              <button
+                onClick={handleUpdate}
                 className="px-4 py-2 bg-black text-white rounded text-sm"
               >
                 Update Estimate
               </button>
             </div>
-            </div>
+          </div>
         </div>
       )}
     </div>

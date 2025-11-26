@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import backgroundImage from "../../assets/login-background.jpg";
 
 export default function ForgotPassword() {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [code, setCode] = useState(["", "", "", ""]);
@@ -15,7 +16,7 @@ export default function ForgotPassword() {
     email: "",
     code: "",
     newPassword: "",
-    confirmPassword: ""
+    confirmPassword: "",
   });
 
   const codeRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
@@ -25,7 +26,7 @@ export default function ForgotPassword() {
     const newCode = [...code];
     newCode[index] = value.replace(/[^0-9]/g, "");
     setCode(newCode);
-    setErrors({...errors, code: ""});
+    setErrors({ ...errors, code: "" });
 
     if (value && index < code.length - 1) {
       codeRefs[index + 1].current.focus();
@@ -46,17 +47,17 @@ export default function ForgotPassword() {
   // 1. Send Reset Code to Email
   const sendResetCode = async () => {
     if (!email) {
-      setErrors({...errors, email: "Email is required"});
+      setErrors({ ...errors, email: "Email is required" });
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setErrors({...errors, email: "Please enter a valid email"});
+      setErrors({ ...errors, email: "Please enter a valid email" });
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/client/forgot-password", {
+      const res = await fetch(`${API_BASE_URL}/client/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -75,13 +76,13 @@ export default function ForgotPassword() {
   // 2. Verify Reset Code
   const verifyCode = async () => {
     if (code.some((digit) => digit === "")) {
-      setErrors({...errors, code: "Please enter complete code"});
+      setErrors({ ...errors, code: "Please enter complete code" });
       return;
     }
     const codeString = code.join("");
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/client/verify-reset-code", {
+      const res = await fetch(`${API_BASE_URL}/client/verify-reset-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, code: codeString }),
@@ -100,17 +101,20 @@ export default function ForgotPassword() {
   // 3. Reset Password
   const resetPassword = async () => {
     if (newPassword.length < 6) {
-      setErrors({...errors, newPassword: "Password must be at least 6 characters"});
+      setErrors({
+        ...errors,
+        newPassword: "Password must be at least 6 characters",
+      });
       return;
     }
     if (newPassword !== confirmPassword) {
-      setErrors({...errors, confirmPassword: "Passwords do not match"});
+      setErrors({ ...errors, confirmPassword: "Passwords do not match" });
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/client/reset-password", {
+      const res = await fetch(`${API_BASE_URL}/client/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, newPassword }),
@@ -119,11 +123,10 @@ export default function ForgotPassword() {
       if (!res.ok) throw new Error(data.message || "Failed to reset password");
 
       toast.success("Password reset successful! Redirecting to login...");
-      
+
       setTimeout(() => {
         window.location.href = "/client/login";
       }, 1500);
-
     } catch (err) {
       toast.error(err.message);
     } finally {
@@ -145,7 +148,9 @@ export default function ForgotPassword() {
       <div className="text-center mb-6">
         {step === 1 && (
           <>
-            <h2 className="text-lg font-semibold text-white">Forgot Password</h2>
+            <h2 className="text-lg font-semibold text-white">
+              Forgot Password
+            </h2>
             <p className="text-xs text-gray-300">
               Enter your email to receive reset instructions
             </p>
@@ -154,13 +159,19 @@ export default function ForgotPassword() {
         {step === 2 && (
           <>
             <h2 className="text-lg font-semibold text-white">Password Reset</h2>
-            <p className="text-xs text-gray-300">We sent a code to {email || "your email"}</p>
+            <p className="text-xs text-gray-300">
+              We sent a code to {email || "your email"}
+            </p>
           </>
         )}
         {step === 3 && (
           <>
-            <h2 className="text-lg font-semibold text-white">Set New Password</h2>
-            <p className="text-xs text-gray-300">Must be at least 6 characters</p>
+            <h2 className="text-lg font-semibold text-white">
+              Set New Password
+            </h2>
+            <p className="text-xs text-gray-300">
+              Must be at least 6 characters
+            </p>
           </>
         )}
       </div>
@@ -183,13 +194,15 @@ export default function ForgotPassword() {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  setErrors({...errors, email: ""});
+                  setErrors({ ...errors, email: "" });
                 }}
                 className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
                   errors.email ? "focus:ring-red-500" : "focus:ring-gray-700"
                 }`}
               />
-              {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-red-400 text-xs mt-1">{errors.email}</p>
+              )}
             </div>
             <button
               type="submit"
@@ -225,7 +238,9 @@ export default function ForgotPassword() {
                 />
               ))}
             </div>
-            {errors.code && <p className="text-red-400 text-xs -mt-6 mb-2">{errors.code}</p>}
+            {errors.code && (
+              <p className="text-red-400 text-xs -mt-6 mb-2">{errors.code}</p>
+            )}
             <button
               type="submit"
               disabled={loading}
@@ -263,14 +278,20 @@ export default function ForgotPassword() {
                 value={newPassword}
                 onChange={(e) => {
                   setNewPassword(e.target.value);
-                  setErrors({...errors, newPassword: ""});
+                  setErrors({ ...errors, newPassword: "" });
                 }}
                 className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                  errors.newPassword ? "focus:ring-red-500" : "focus:ring-blue-400"
+                  errors.newPassword
+                    ? "focus:ring-red-500"
+                    : "focus:ring-blue-400"
                 }`}
                 required
               />
-              {errors.newPassword && <p className="text-red-400 text-xs mt-1">{errors.newPassword}</p>}
+              {errors.newPassword && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors.newPassword}
+                </p>
+              )}
             </div>
 
             <div>
@@ -281,14 +302,20 @@ export default function ForgotPassword() {
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
-                  setErrors({...errors, confirmPassword: ""});
+                  setErrors({ ...errors, confirmPassword: "" });
                 }}
                 className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                  errors.confirmPassword ? "focus:ring-red-500" : "focus:ring-blue-400"
+                  errors.confirmPassword
+                    ? "focus:ring-red-500"
+                    : "focus:ring-blue-400"
                 }`}
                 required
               />
-              {errors.confirmPassword && <p className="text-red-400 text-xs mt-1">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && (
+                <p className="text-red-400 text-xs mt-1">
+                  {errors.confirmPassword}
+                </p>
+              )}
             </div>
 
             <button
@@ -303,7 +330,10 @@ export default function ForgotPassword() {
 
         {/* Back to login link */}
         <p className="text-center text-sm mt-4">
-          <Link to="/client/login" className="text-white hover:underline transition">
+          <Link
+            to="/client/login"
+            className="text-white hover:underline transition"
+          >
             ← Back to log in
           </Link>
         </p>

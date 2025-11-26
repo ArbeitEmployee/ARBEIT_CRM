@@ -1,6 +1,13 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { FaPlus, FaTimes, FaSearch, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import {
+  FaPlus,
+  FaTimes,
+  FaSearch,
+  FaChevronDown,
+  FaChevronUp,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 // Custom hook for detecting outside clicks
@@ -14,10 +21,10 @@ const useOutsideClick = (callback) => {
       }
     };
 
-    document.addEventListener('click', handleClick, true);
+    document.addEventListener("click", handleClick, true);
 
     return () => {
-      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener("click", handleClick, true);
     };
   }, [ref, callback]);
 
@@ -26,14 +33,15 @@ const useOutsideClick = (callback) => {
 
 const InvoiceForm = () => {
   const navigate = useNavigate();
-  
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
   // Form state matching your schema exactly
   const [formData, setFormData] = useState({
     customer: "",
     customerId: "",
     billTo: "",
     shipTo: "",
-    invoiceDate: new Date().toISOString().split('T')[0],
+    invoiceDate: new Date().toISOString().split("T")[0],
     dueDate: "",
     tags: "",
     paymentMode: "Bank",
@@ -45,7 +53,7 @@ const InvoiceForm = () => {
     discountValue: 0,
     adminNote: "",
     status: "Draft",
-    paidAmount: 0
+    paidAmount: 0,
   });
 
   // Items state
@@ -58,7 +66,7 @@ const InvoiceForm = () => {
     quantity: 1,
     rate: "",
     tax1: 0,
-    tax2: 0
+    tax2: 0,
   });
   const [loading, setLoading] = useState(false);
   const [showItemsDropdown, setShowItemsDropdown] = useState(false);
@@ -77,7 +85,7 @@ const InvoiceForm = () => {
   const customerRef = useOutsideClick(() => {
     setShowCustomerDropdown(false);
   });
-  
+
   const staffRef = useOutsideClick(() => {
     setShowStaffDropdown(false);
   });
@@ -100,8 +108,8 @@ const InvoiceForm = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -118,7 +126,7 @@ const InvoiceForm = () => {
     const fetchItems = async () => {
       try {
         const config = createAxiosConfig();
-        const { data } = await axios.get("http://localhost:5000/api/admin/items", config);
+        const { data } = await axios.get(`${API_BASE_URL}/admin/items`, config);
         setDatabaseItems(data.data || data);
       } catch (err) {
         console.error("Error fetching items", err);
@@ -137,10 +145,13 @@ const InvoiceForm = () => {
       setCustomerSearchResults([]);
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/subscriptions/customers/search?q=${searchTerm}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/subscriptions/customers/search?q=${searchTerm}`,
+        config
+      );
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -158,10 +169,13 @@ const InvoiceForm = () => {
       setStaffSearchResults([]);
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/staffs?search=${searchTerm}`,
+        config
+      );
       setStaffSearchResults(data.staffs || []);
     } catch (error) {
       console.error("Error searching staff:", error);
@@ -192,13 +206,13 @@ const InvoiceForm = () => {
   // Form handlers
   const handleChange = (e) => {
     const { name, value } = e.target;
-    
+
     // If status changes to "Partiallypaid", validate paid amount
     if (name === "status" && value === "Partiallypaid") {
       setFormData({
         ...formData,
         [name]: value,
-        paidAmount: formData.paidAmount > total ? total : formData.paidAmount
+        paidAmount: formData.paidAmount > total ? total : formData.paidAmount,
       });
     } else {
       setFormData({
@@ -212,12 +226,12 @@ const InvoiceForm = () => {
     const value = e.target.value;
     setCustomerSearchTerm(value);
     setShowCustomerDropdown(true);
-    
+
     // Update form data
     setFormData({
       ...formData,
       customer: value,
-      customerId: "" // Reset customer ID when typing
+      customerId: "", // Reset customer ID when typing
     });
   };
 
@@ -226,7 +240,7 @@ const InvoiceForm = () => {
     setFormData({
       ...formData,
       salesAgent: value,
-      salesAgentId: ""
+      salesAgentId: "",
     });
     setStaffSearchTerm(value);
     setShowStaffDropdown(true);
@@ -238,7 +252,7 @@ const InvoiceForm = () => {
       customer: customer.company,
       customerId: customer._id,
       billTo: customer.billingAddress || "",
-      shipTo: customer.shippingAddress || ""
+      shipTo: customer.shippingAddress || "",
     });
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
@@ -248,7 +262,7 @@ const InvoiceForm = () => {
     setFormData({
       ...formData,
       salesAgentId: staff._id,
-      salesAgent: staff.name
+      salesAgent: staff.name,
     });
     setShowStaffDropdown(false);
     setStaffSearchTerm("");
@@ -258,7 +272,7 @@ const InvoiceForm = () => {
     const { name, value } = e.target;
     setNewItem({
       ...newItem,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -267,28 +281,32 @@ const InvoiceForm = () => {
     const newInvoiceItem = {
       description: item.description,
       quantity: 1,
-      rate: parseFloat(item.rate?.replace('$', '') || 0),
+      rate: parseFloat(item.rate?.replace("$", "") || 0),
       tax1: parseFloat(item.tax1) || 0,
-      tax2: parseFloat(item.tax2) || 0
+      tax2: parseFloat(item.tax2) || 0,
     };
     // Calculate amount
     newInvoiceItem.amount = newInvoiceItem.quantity * newInvoiceItem.rate;
-    
+
     setInvoiceItems([...invoiceItems, newInvoiceItem]);
     setShowItemsDropdown(false);
   };
 
   const handleItemChange = (index, field, value) => {
     const newItems = [...invoiceItems];
-    newItems[index][field] = field === 'quantity' || field === 'rate' || field === 'tax1' || field === 'tax2' 
-      ? Number(value) 
-      : value;
-    
+    newItems[index][field] =
+      field === "quantity" ||
+      field === "rate" ||
+      field === "tax1" ||
+      field === "tax2"
+        ? Number(value)
+        : value;
+
     // Recalculate amount if qty or rate changes
-    if (field === 'quantity' || field === 'rate') {
+    if (field === "quantity" || field === "rate") {
       newItems[index].amount = newItems[index].quantity * newItems[index].rate;
     }
-    
+
     setInvoiceItems(newItems);
   };
 
@@ -301,24 +319,30 @@ const InvoiceForm = () => {
     e.preventDefault();
     try {
       const config = createAxiosConfig();
-      const response = await axios.post("http://localhost:5000/api/admin/items", {
-        ...newItem,
-        rate: newItem.rate.startsWith('$') ? newItem.rate : `$${newItem.rate}`
-      }, config);
-      
+      const response = await axios.post(
+        `${API_BASE_URL}/admin/items`,
+        {
+          ...newItem,
+          rate: newItem.rate.startsWith("$")
+            ? newItem.rate
+            : `$${newItem.rate}`,
+        },
+        config
+      );
+
       // Add to database items
       setDatabaseItems([response.data, ...databaseItems]);
-      
+
       // Add to invoice items
       addItemFromDatabase(response.data);
-      
+
       // Reset form
       setNewItem({
         description: "",
         quantity: 1,
         rate: "",
         tax1: 0,
-        tax2: 0
+        tax2: 0,
       });
       setShowItemForm(false);
     } catch (err) {
@@ -327,15 +351,21 @@ const InvoiceForm = () => {
         localStorage.removeItem("crm_token");
         navigate("/login");
       }
-      alert("Failed to save item: " + (err.response?.data?.message || err.message));
+      alert(
+        "Failed to save item: " + (err.response?.data?.message || err.message)
+      );
     }
   };
 
   // Calculations
-  const subtotal = invoiceItems.reduce((sum, item) => sum + (item.amount || 0), 0);
-  const discount = formData.discountType === "percent" 
-    ? subtotal * (formData.discountValue / 100) 
-    : parseFloat(formData.discountValue);
+  const subtotal = invoiceItems.reduce(
+    (sum, item) => sum + (item.amount || 0),
+    0
+  );
+  const discount =
+    formData.discountType === "percent"
+      ? subtotal * (formData.discountValue / 100)
+      : parseFloat(formData.discountValue);
   const total = subtotal - discount;
 
   // Handle paid amount change
@@ -343,7 +373,7 @@ const InvoiceForm = () => {
     const value = Math.max(0, Math.min(total, parseFloat(e.target.value) || 0));
     setFormData({
       ...formData,
-      paidAmount: value
+      paidAmount: value,
     });
   };
 
@@ -351,18 +381,22 @@ const InvoiceForm = () => {
   const validate = () => {
     let newErrors = {};
     if (!formData.customer.trim()) newErrors.customer = "Customer is required";
-    if (!formData.customerId) newErrors.customer = "Please select a valid customer from the dropdown";
-    if (invoiceItems.length === 0) newErrors.items = "At least one item is required";
-    
+    if (!formData.customerId)
+      newErrors.customer = "Please select a valid customer from the dropdown";
+    if (invoiceItems.length === 0)
+      newErrors.items = "At least one item is required";
+
     // Validate Partiallypaid amount
     if (formData.status === "Partiallypaid" && formData.paidAmount <= 0) {
-      newErrors.paidAmount = "Paid amount must be greater than 0 for Partiallypaid invoices";
+      newErrors.paidAmount =
+        "Paid amount must be greater than 0 for Partiallypaid invoices";
     }
-    
+
     if (formData.status === "Partiallypaid" && formData.paidAmount >= total) {
-      newErrors.paidAmount = "Paid amount must be less than total for Partiallypaid invoices";
+      newErrors.paidAmount =
+        "Paid amount must be less than total for Partiallypaid invoices";
     }
-    
+
     // Validate each item
     invoiceItems.forEach((item, index) => {
       if (!item.description.trim()) {
@@ -375,7 +409,7 @@ const InvoiceForm = () => {
         newErrors[`item-${index}-rate`] = "Rate must be greater than 0";
       }
     });
-    
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -383,20 +417,20 @@ const InvoiceForm = () => {
   // Form submission
   const handleSubmit = async (send = false) => {
     if (!validate()) return;
-    
+
     setLoading(true);
-    
+
     try {
       const config = createAxiosConfig();
-      
+
       // Prepare items with proper structure
-      const items = invoiceItems.map(item => ({
+      const items = invoiceItems.map((item) => ({
         description: item.description,
         quantity: Number(item.quantity),
         rate: Number(item.rate),
         tax1: Number(item.tax1 || 0),
         tax2: Number(item.tax2 || 0),
-        amount: Number(item.amount || 0)
+        amount: Number(item.amount || 0),
       }));
 
       // Prepare invoice data matching your schema
@@ -420,7 +454,7 @@ const InvoiceForm = () => {
         items: items,
         subtotal: subtotal,
         discount: discount,
-        total: total
+        total: total,
       };
 
       // Add paidAmount if status is Partiallypaid
@@ -428,8 +462,12 @@ const InvoiceForm = () => {
         invoiceData.paidAmount = formData.paidAmount;
       }
 
-      const response = await axios.post('http://localhost:5000/api/admin/invoices', invoiceData, config);
-      
+      const response = await axios.post(
+        `${API_BASE_URL}/admin/invoices`,
+        invoiceData,
+        config
+      );
+
       if (response.data.success) {
         alert("Invoice saved successfully!");
         navigate("../sales/invoices");
@@ -438,21 +476,24 @@ const InvoiceForm = () => {
       }
     } catch (error) {
       console.error("Submission error:", error);
-      
-      let errorMessage = "Failed to save invoice. Please check your data and try again.";
-      
+
+      let errorMessage =
+        "Failed to save invoice. Please check your data and try again.";
+
       if (error.response?.status === 401) {
         errorMessage = "Authentication failed. Please login again.";
         localStorage.removeItem("crm_token");
         navigate("/login");
       } else if (error.response?.data?.errors) {
-        errorMessage = error.response.data.errors.map(err => err.msg || err).join("\n");
+        errorMessage = error.response.data.errors
+          .map((err) => err.msg || err)
+          .join("\n");
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       alert(errorMessage);
     } finally {
       setLoading(false);
@@ -462,7 +503,7 @@ const InvoiceForm = () => {
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <h2 className="text-2xl font-bold text-gray-800 mb-2">New Invoice</h2>
-      
+
       {/* Main Form Container */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
         {/* Two-column form layout */}
@@ -471,7 +512,9 @@ const InvoiceForm = () => {
           <div>
             {/* Customer */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Customer*</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Customer*
+              </label>
               <div className="relative" ref={customerRef}>
                 <input
                   type="text"
@@ -492,23 +535,33 @@ const InvoiceForm = () => {
                         onClick={() => handleSelectCustomer(customer)}
                       >
                         <div className="font-medium">{customer.company}</div>
-                        <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
+                        <div className="text-sm text-gray-600">
+                          {customer.contact} - {customer.email}
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
-                {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                    <div className="px-3 py-2 text-gray-500">No customers found</div>
-                  </div>
-                )}
+                {showCustomerDropdown &&
+                  customerSearchResults.length === 0 &&
+                  customerSearchTerm.length >= 2 && (
+                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="px-3 py-2 text-gray-500">
+                        No customers found
+                      </div>
+                    </div>
+                  )}
               </div>
-              {errors.customer && <p className="text-red-500 text-xs mt-1">{errors.customer}</p>}
+              {errors.customer && (
+                <p className="text-red-500 text-xs mt-1">{errors.customer}</p>
+              )}
             </div>
 
             {/* Bill To */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Bill To</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Bill To
+              </label>
               <textarea
                 name="billTo"
                 value={formData.billTo}
@@ -521,7 +574,9 @@ const InvoiceForm = () => {
 
             {/* Ship To */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Ship To</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Ship To
+              </label>
               <textarea
                 name="shipTo"
                 value={formData.shipTo}
@@ -535,7 +590,9 @@ const InvoiceForm = () => {
             {/* Date fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Invoice Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Invoice Date
+                </label>
                 <input
                   type="date"
                   name="invoiceDate"
@@ -545,7 +602,9 @@ const InvoiceForm = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Due Date
+                </label>
                 <input
                   type="date"
                   name="dueDate"
@@ -558,7 +617,9 @@ const InvoiceForm = () => {
 
             {/* Payment Mode */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Payment Mode</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Payment Mode
+              </label>
               <select
                 name="paymentMode"
                 value={formData.paymentMode}
@@ -566,7 +627,9 @@ const InvoiceForm = () => {
                 className="w-full border px-3 py-2 rounded text-sm border-gray-300"
               >
                 {paymentModes.map((mode, i) => (
-                  <option key={i} value={mode}>{mode}</option>
+                  <option key={i} value={mode}>
+                    {mode}
+                  </option>
                 ))}
               </select>
             </div>
@@ -576,7 +639,9 @@ const InvoiceForm = () => {
           <div>
             {/* Status Field */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Status
+              </label>
               <select
                 name="status"
                 value={formData.status}
@@ -584,7 +649,9 @@ const InvoiceForm = () => {
                 className="w-full border px-3 py-2 rounded text-sm border-gray-300"
               >
                 {statusOptions.map((option, i) => (
-                  <option key={i} value={option}>{option}</option>
+                  <option key={i} value={option}>
+                    {option}
+                  </option>
                 ))}
               </select>
             </div>
@@ -607,13 +674,19 @@ const InvoiceForm = () => {
                   max={total}
                   step="0.01"
                 />
-                {errors.paidAmount && <p className="text-red-500 text-xs mt-1">{errors.paidAmount}</p>}
+                {errors.paidAmount && (
+                  <p className="text-red-500 text-xs mt-1">
+                    {errors.paidAmount}
+                  </p>
+                )}
               </div>
             )}
 
             {/* Recurring Invoice */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Recurring Invoice</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Recurring Invoice
+              </label>
               <select
                 name="recurringInvoice"
                 value={formData.recurringInvoice}
@@ -621,7 +694,9 @@ const InvoiceForm = () => {
                 className="w-full border px-3 py-2 rounded text-sm border-gray-300"
               >
                 {recurringOptions.map((option, i) => (
-                  <option key={i} value={option}>{option}</option>
+                  <option key={i} value={option}>
+                    {option}
+                  </option>
                 ))}
               </select>
             </div>
@@ -629,7 +704,9 @@ const InvoiceForm = () => {
             {/* Currency and Sales Agent */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Currency
+                </label>
                 <select
                   name="currency"
                   value={formData.currency}
@@ -642,7 +719,9 @@ const InvoiceForm = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sales Agent</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sales Agent
+                </label>
                 <div className="relative" ref={staffRef}>
                   <input
                     type="text"
@@ -661,16 +740,22 @@ const InvoiceForm = () => {
                           onClick={() => handleSelectStaff(staff)}
                         >
                           <div className="font-medium">{staff.name}</div>
-                          <div className="text-sm text-gray-600">{staff.position} - {staff.department}</div>
+                          <div className="text-sm text-gray-600">
+                            {staff.position} - {staff.department}
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  {showStaffDropdown && staffSearchResults.length === 0 && staffSearchTerm.length >= 2 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                      <div className="px-3 py-2 text-gray-500">No staff found</div>
-                    </div>
-                  )}
+                  {showStaffDropdown &&
+                    staffSearchResults.length === 0 &&
+                    staffSearchTerm.length >= 2 && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                        <div className="px-3 py-2 text-gray-500">
+                          No staff found
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
@@ -678,7 +763,9 @@ const InvoiceForm = () => {
             {/* Discount */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Type</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Discount Type
+                </label>
                 <select
                   name="discountType"
                   value={formData.discountType}
@@ -690,7 +777,9 @@ const InvoiceForm = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Discount Value</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Discount Value
+                </label>
                 <input
                   type="number"
                   name="discountValue"
@@ -705,23 +794,29 @@ const InvoiceForm = () => {
 
             {/* Tags */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tags
+              </label>
               <select
                 name="tags"
                 value={formData.tags}
                 onChange={handleChange}
                 className="w-full border px-3 py-2 rounded text-sm border-gray-300"
-                >
+              >
                 <option value="">Select Tag</option>
                 {tagOptions.map((tag, i) => (
-                  <option key={i} value={tag}>{tag}</option>
+                  <option key={i} value={tag}>
+                    {tag}
+                  </option>
                 ))}
               </select>
             </div>
 
             {/* Admin Note */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Admin Note</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Admin Note
+              </label>
               <textarea
                 name="adminNote"
                 value={formData.adminNote}
@@ -742,7 +837,7 @@ const InvoiceForm = () => {
           <button
             onClick={() => setShowItemForm(true)}
             className="px-3 py-2 text-sm rounded flex items-center gap-2 text-white"
-            style={{ backgroundColor: '#333333' }}
+            style={{ backgroundColor: "#333333" }}
           >
             <FaPlus /> Add New Item
           </button>
@@ -758,7 +853,7 @@ const InvoiceForm = () => {
               <span>Select Items to Add</span>
               {showItemsDropdown ? <FaChevronUp /> : <FaChevronDown />}
             </button>
-            
+
             {showItemsDropdown && (
               <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
                 {databaseItems.length > 0 ? (
@@ -771,11 +866,14 @@ const InvoiceForm = () => {
                       <div>
                         <div className="font-medium">{item.description}</div>
                         <div className="text-sm text-gray-600">
-                          ${parseFloat(item.rate?.replace('$', '') || 0).toFixed(2)} | 
-                          Tax1: {item.tax1}% | Tax2: {item.tax2}%
+                          $
+                          {parseFloat(item.rate?.replace("$", "") || 0).toFixed(
+                            2
+                          )}{" "}
+                          | Tax1: {item.tax1}% | Tax2: {item.tax2}%
                         </div>
                       </div>
-                      <button 
+                      <button
                         className="text-blue-500 hover:text-blue-700 px-2 py-1"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -787,7 +885,9 @@ const InvoiceForm = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="px-3 py-2 text-gray-500">No items available</div>
+                  <div className="px-3 py-2 text-gray-500">
+                    No items available
+                  </div>
                 )}
               </div>
             )}
@@ -800,8 +900,14 @@ const InvoiceForm = () => {
             onClick={() => setShowItemsDropdown(!showItemsDropdown)}
             className="text-blue-500 hover:text-blue-700 text-sm flex items-center"
           >
-            {showItemsDropdown ? "Hide Item Database" : "Show Full Item Database"} 
-            {showItemsDropdown ? <FaChevronUp className="ml-1" /> : <FaChevronDown className="ml-1" />}
+            {showItemsDropdown
+              ? "Hide Item Database"
+              : "Show Full Item Database"}
+            {showItemsDropdown ? (
+              <FaChevronUp className="ml-1" />
+            ) : (
+              <FaChevronDown className="ml-1" />
+            )}
           </button>
         </div>
 
@@ -809,7 +915,10 @@ const InvoiceForm = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <tr
+                  className="text-left"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
                   <th className="p-3 rounded-l-lg">Description</th>
                   <th className="p-3">Rate</th>
                   <th className="p-3">Tax 1</th>
@@ -819,13 +928,16 @@ const InvoiceForm = () => {
               </thead>
               <tbody>
                 {databaseItems.map((item) => (
-                  <tr key={item._id} className="bg-white shadow rounded-lg hover:bg-gray-50">
+                  <tr
+                    key={item._id}
+                    className="bg-white shadow rounded-lg hover:bg-gray-50"
+                  >
                     <td className="p-3 border-0">{item.description}</td>
                     <td className="p-3 border-0">{item.rate}</td>
                     <td className="p-3 border-0">{item.tax1}%</td>
                     <td className="p-3 border-0">{item.tax2}%</td>
                     <td className="p-3 border-0">
-                      <button 
+                      <button
                         onClick={() => addItemFromDatabase(item)}
                         className="text-black-600 hover:text-blue-800"
                       >
@@ -854,24 +966,29 @@ const InvoiceForm = () => {
                   rate: 0,
                   tax1: 0,
                   tax2: 0,
-                  amount: 0
-                }
+                  amount: 0,
+                },
               ]);
             }}
             className="px-3 py-2 text-sm rounded flex items-center gap-2 text-white"
-            style={{ backgroundColor: '#333333' }}
+            style={{ backgroundColor: "#333333" }}
           >
             <FaPlus /> Add Custom Item
           </button>
         </div>
 
-        {errors.items && <p className="text-red-500 text-xs mb-2">{errors.items}</p>}
+        {errors.items && (
+          <p className="text-red-500 text-xs mb-2">{errors.items}</p>
+        )}
 
         {/* Invoice Items Table */}
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left" style={{ backgroundColor: '#333333', color: 'white' }}>
+              <tr
+                className="text-left"
+                style={{ backgroundColor: "#333333", color: "white" }}
+              >
                 <th className="p-3 rounded-l-lg">#</th>
                 <th className="p-3">Item Description</th>
                 <th className="p-3">Qty</th>
@@ -884,78 +1001,109 @@ const InvoiceForm = () => {
             </thead>
             <tbody>
               {invoiceItems.map((item, i) => (
-                <tr key={i} className="bg-white shadow rounded-lg hover:bg-gray-50">
+                <tr
+                  key={i}
+                  className="bg-white shadow rounded-lg hover:bg-gray-50"
+                >
                   <td className="p-3 border-0">{i + 1}</td>
                   <td className="p-3 border-0">
                     <input
                       type="text"
                       value={item.description}
-                      onChange={(e) => handleItemChange(i, "description", e.target.value)}
+                      onChange={(e) =>
+                        handleItemChange(i, "description", e.target.value)
+                      }
                       className={`w-full border px-2 py-1 rounded ${
-                        errors[`item-${i}-description`] ? "border-red-500" : "border-gray-300"
+                        errors[`item-${i}-description`]
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                       placeholder="Item description"
                       required
                     />
                     {errors[`item-${i}-description`] && (
-                      <p className="text-red-500 text-xs mt-1">{errors[`item-${i}-description`]}</p>
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors[`item-${i}-description`]}
+                      </p>
                     )}
                   </td>
                   <td className="p-3 border-0">
                     <input
                       type="number"
                       value={item.quantity}
-                      onChange={(e) => handleItemChange(i, "quantity", e.target.value)}
+                      onChange={(e) =>
+                        handleItemChange(i, "quantity", e.target.value)
+                      }
                       className={`w-full border px-2 py-1 rounded ${
-                        errors[`item-${i}-quantity`] ? "border-red-500" : "border-gray-300"
+                        errors[`item-${i}-quantity`]
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                       min="1"
                       step="1"
                       required
                     />
                     {errors[`item-${i}-quantity`] && (
-                      <p className="text-red-500 text-xs mt-1">{errors[`item-${i}-quantity`]}</p>
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors[`item-${i}-quantity`]}
+                      </p>
                     )}
                   </td>
                   <td className="p-3 border-0">
                     <input
                       type="number"
                       value={item.rate}
-                      onChange={(e) => handleItemChange(i, "rate", e.target.value)}
+                      onChange={(e) =>
+                        handleItemChange(i, "rate", e.target.value)
+                      }
                       className={`w-full border px-2 py-1 rounded ${
-                        errors[`item-${i}-rate`] ? "border-red-500" : "border-gray-300"
+                        errors[`item-${i}-rate`]
+                          ? "border-red-500"
+                          : "border-gray-300"
                       }`}
                       min="0"
                       step="0.01"
                       required
                     />
                     {errors[`item-${i}-rate`] && (
-                      <p className="text-red-500 text-xs mt-1">{errors[`item-${i}-rate`]}</p>
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors[`item-${i}-rate`]}
+                      </p>
                     )}
                   </td>
                   <td className="p-3 border-0">
                     <select
                       value={item.tax1}
-                      onChange={(e) => handleItemChange(i, "tax1", e.target.value)}
+                      onChange={(e) =>
+                        handleItemChange(i, "tax1", e.target.value)
+                      }
                       className="w-full border px-2 py-1 rounded"
                     >
                       {taxOptions.map((option, i) => (
-                        <option key={i} value={option}>{option}%</option>
+                        <option key={i} value={option}>
+                          {option}%
+                        </option>
                       ))}
                     </select>
                   </td>
                   <td className="p-3 border-0">
                     <select
                       value={item.tax2}
-                      onChange={(e) => handleItemChange(i, "tax2", e.target.value)}
+                      onChange={(e) =>
+                        handleItemChange(i, "tax2", e.target.value)
+                      }
                       className="w-full border px-2 py-1 rounded"
                     >
                       {taxOptions.map((option, i) => (
-                        <option key={i} value={option}>{option}%</option>
+                        <option key={i} value={option}>
+                          {option}%
+                        </option>
                       ))}
                     </select>
                   </td>
-                  <td className="p-3 border-0 text-right">${item.amount.toFixed(2)}</td>
+                  <td className="p-3 border-0 text-right">
+                    ${item.amount.toFixed(2)}
+                  </td>
                   <td className="p-3 border-0 text-center">
                     <button
                       onClick={() => deleteItem(i)}
@@ -985,7 +1133,11 @@ const InvoiceForm = () => {
             <div className="flex items-center">
               <span className="font-medium mr-2">Discount:</span>
               <span className="text-sm">
-                              ({formData.discountType === "percent" ? `${formData.discountValue}%` : `$${formData.discountValue}`})
+                (
+                {formData.discountType === "percent"
+                  ? `${formData.discountValue}%`
+                  : `$${formData.discountValue}`}
+                )
               </span>
             </div>
             <div className="flex items-center">
@@ -1004,7 +1156,9 @@ const InvoiceForm = () => {
             <>
               <div className="flex justify-between py-2 border-t mt-2">
                 <span className="font-medium">Paid Amount:</span>
-                <span className="text-green-600">${formData.paidAmount.toFixed(2)}</span>
+                <span className="text-green-600">
+                  ${formData.paidAmount.toFixed(2)}
+                </span>
               </div>
               <div className="flex justify-between py-2 font-bold text-lg border-t">
                 <span>Balance Due:</span>
@@ -1029,11 +1183,13 @@ const InvoiceForm = () => {
                 <FaTimes />
               </button>
             </div>
-            
+
             <form onSubmit={saveNewItemToDatabase} className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
                   <input
                     type="text"
                     name="description"
@@ -1045,7 +1201,9 @@ const InvoiceForm = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Rate - USD</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Rate - USD
+                    </label>
                     <div className="relative">
                       <span className="absolute left-3 top-2">$</span>
                       <input
@@ -1061,7 +1219,9 @@ const InvoiceForm = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tax 1</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tax 1
+                    </label>
                     <select
                       name="tax1"
                       value={newItem.tax1}
@@ -1069,12 +1229,16 @@ const InvoiceForm = () => {
                       className="w-full border px-3 py-2 rounded text-sm"
                     >
                       {taxOptions.map((option, i) => (
-                        <option key={i} value={option}>{option}%</option>
+                        <option key={i} value={option}>
+                          {option}%
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tax 2</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tax 2
+                    </label>
                     <select
                       name="tax2"
                       value={newItem.tax2}
@@ -1082,7 +1246,9 @@ const InvoiceForm = () => {
                       className="w-full border px-3 py-2 rounded text-sm"
                     >
                       {taxOptions.map((option, i) => (
-                        <option key={i} value={option}>{option}%</option>
+                        <option key={i} value={option}>
+                          {option}%
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -1090,17 +1256,17 @@ const InvoiceForm = () => {
               </div>
 
               <div className="flex justify-end space-x-3 mt-6">
-                <button 
-                  type="button" 
-                  onClick={() => setShowItemForm(false)} 
+                <button
+                  type="button"
+                  onClick={() => setShowItemForm(false)}
                   className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
                 >
                   Close
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   className="px-4 py-2 text-white rounded text-sm"
-                  style={{ backgroundColor: '#333333' }}
+                  style={{ backgroundColor: "#333333" }}
                 >
                   Save Item
                 </button>
@@ -1124,7 +1290,7 @@ const InvoiceForm = () => {
           onClick={() => handleSubmit(true)}
           disabled={loading}
           className="px-6 py-2 text-white rounded hover:bg-gray-800 disabled:opacity-50"
-          style={{ backgroundColor: '#000000' }}
+          style={{ backgroundColor: "#000000" }}
           type="button"
         >
           {loading ? "Saving..." : "Save & Send"}

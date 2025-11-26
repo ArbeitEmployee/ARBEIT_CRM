@@ -1,14 +1,22 @@
 // ClientPayments.jsx
 import { useState, useEffect } from "react";
-import { 
-  FaEye, FaSearch, FaFilter, FaSyncAlt, 
-  FaChevronRight, FaMoneyBillWave, FaFileInvoiceDollar,
-  FaCheckCircle, FaTimesCircle, FaClock
+import {
+  FaEye,
+  FaSearch,
+  FaFilter,
+  FaSyncAlt,
+  FaChevronRight,
+  FaMoneyBillWave,
+  FaFileInvoiceDollar,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaClock,
 } from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 const ClientPayments = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,12 +32,12 @@ const ClientPayments = () => {
     completed: 0,
     pending: 0,
     failed: 0,
-    refunded: 0
+    refunded: 0,
   });
 
   // Get client token from localStorage
   const getClientToken = () => {
-    return localStorage.getItem('crm_client_token');
+    return localStorage.getItem("crm_client_token");
   };
 
   // Create axios instance with client auth headers
@@ -38,8 +46,8 @@ const ClientPayments = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -48,8 +56,11 @@ const ClientPayments = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/client/payments", config);
-      
+      const { data } = await axios.get(
+        `${API_BASE_URL}/client/payments`,
+        config
+      );
+
       if (data.success) {
         setPayments(data.data || []);
       } else {
@@ -59,7 +70,7 @@ const ClientPayments = () => {
       console.error("Error fetching client payments:", error);
       if (error.response?.status === 401) {
         alert("Session expired. Please login again.");
-        localStorage.removeItem('crm_client_token');
+        localStorage.removeItem("crm_client_token");
         navigate("/client/login");
       }
       setPayments([]);
@@ -71,8 +82,11 @@ const ClientPayments = () => {
   const fetchPaymentStats = async () => {
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/client/payments/stats", config);
-      
+      const { data } = await axios.get(
+        `${API_BASE_URL}/client/payments/stats`,
+        config
+      );
+
       if (data.success) {
         const statsData = {
           total: data.data.total.count || 0,
@@ -80,12 +94,12 @@ const ClientPayments = () => {
           completed: 0,
           pending: 0,
           failed: 0,
-          refunded: 0
+          refunded: 0,
         };
-        
+
         // Process status-based stats
-        data.data.byStatus.forEach(stat => {
-          switch(stat._id) {
+        data.data.byStatus.forEach((stat) => {
+          switch (stat._id) {
             case "Completed":
               statsData.completed = stat.count;
               break;
@@ -100,7 +114,7 @@ const ClientPayments = () => {
               break;
           }
         });
-        
+
         setStats(statsData);
       }
     } catch (error) {
@@ -114,27 +128,33 @@ const ClientPayments = () => {
   }, []);
 
   // Filter payments
-  const filteredPayments = payments.filter(payment => {
-    const matchesSearch = 
+  const filteredPayments = payments.filter((payment) => {
+    const matchesSearch =
       payment.transactionId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      payment.invoice?.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "All" || payment.status === statusFilter;
-    
+      payment.invoice?.invoiceNumber
+        ?.toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "All" || payment.status === statusFilter;
+
     return matchesSearch && matchesStatus;
   });
 
   // Pagination
   const totalPages = Math.ceil(filteredPayments.length / entriesPerPage);
   const startIndex = (currentPage - 1) * entriesPerPage;
-  const currentData = filteredPayments.slice(startIndex, startIndex + entriesPerPage);
+  const currentData = filteredPayments.slice(
+    startIndex,
+    startIndex + entriesPerPage
+  );
 
   // Format currency
   const formatCurrency = (amount, currency = "USD") => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency: currency,
-      minimumFractionDigits: 2
+      minimumFractionDigits: 2,
     }).format(amount || 0);
   };
 
@@ -142,32 +162,45 @@ const ClientPayments = () => {
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-GB');
+    return date.toLocaleDateString("en-GB");
   };
 
   // Status colors
   const getStatusColor = (status) => {
-    switch(status) {
-      case "Completed": return "bg-green-100 text-green-800";
-      case "Pending": return "bg-yellow-100 text-yellow-800";
-      case "Failed": return "bg-red-100 text-red-800";
-      case "Refunded": return "bg-purple-100 text-purple-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (status) {
+      case "Completed":
+        return "bg-green-100 text-green-800";
+      case "Pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "Failed":
+        return "bg-red-100 text-red-800";
+      case "Refunded":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   // Status icons
   const getStatusIcon = (status) => {
-    switch(status) {
-      case "Completed": return <FaCheckCircle className="text-green-600" />;
-      case "Pending": return <FaClock className="text-yellow-600" />;
-      case "Failed": return <FaTimesCircle className="text-red-600" />;
-      case "Refunded": return <FaMoneyBillWave className="text-purple-600" />;
-      default: return <FaFileInvoiceDollar className="text-gray-600" />;
+    switch (status) {
+      case "Completed":
+        return <FaCheckCircle className="text-green-600" />;
+      case "Pending":
+        return <FaClock className="text-yellow-600" />;
+      case "Failed":
+        return <FaTimesCircle className="text-red-600" />;
+      case "Refunded":
+        return <FaMoneyBillWave className="text-purple-600" />;
+      default:
+        return <FaFileInvoiceDollar className="text-gray-600" />;
     }
   };
 
-  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading payments...</div>;
+  if (loading)
+    return (
+      <div className="bg-gray-100 min-h-screen p-4">Loading payments...</div>
+    );
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
@@ -189,7 +222,9 @@ const ClientPayments = () => {
             <div>
               <p className="text-gray-500 text-sm">Total Payments</p>
               <p className="text-2xl font-bold">{stats.total}</p>
-              <p className="text-sm text-gray-600">{formatCurrency(stats.totalAmount)}</p>
+              <p className="text-sm text-gray-600">
+                {formatCurrency(stats.totalAmount)}
+              </p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
               <FaFileInvoiceDollar className="text-blue-600" />
@@ -228,7 +263,9 @@ const ClientPayments = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Failed/Refunded</p>
-              <p className="text-2xl font-bold">{stats.failed + stats.refunded}</p>
+              <p className="text-2xl font-bold">
+                {stats.failed + stats.refunded}
+              </p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
               <FaTimesCircle className="text-red-600" />
@@ -303,15 +340,48 @@ const ClientPayments = () => {
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th
+                  className="p-3 rounded-l-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
                   Payment #
                 </th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Invoice #</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Payment Mode</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Invoice #
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Date
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Amount
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Payment Mode
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Status
+                </th>
+                <th
+                  className="p-3 rounded-r-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -320,7 +390,7 @@ const ClientPayments = () => {
                   <tr
                     key={payment._id}
                     className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                    style={{ color: 'black' }}
+                    style={{ color: "black" }}
                   >
                     <td className="p-3 rounded-l-lg border-0 font-medium">
                       {payment.paymentNumber}
@@ -328,11 +398,19 @@ const ClientPayments = () => {
                     <td className="p-3 border-0">
                       {payment.invoice?.invoiceNumber || "N/A"}
                     </td>
-                    <td className="p-3 border-0">{formatDate(payment.paymentDate)}</td>
-                    <td className="p-3 border-0">{formatCurrency(payment.amount, payment.currency)}</td>
+                    <td className="p-3 border-0">
+                      {formatDate(payment.paymentDate)}
+                    </td>
+                    <td className="p-3 border-0">
+                      {formatCurrency(payment.amount, payment.currency)}
+                    </td>
                     <td className="p-3 border-0">{payment.paymentMode}</td>
                     <td className="p-3 border-0">
-                      <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(payment.status)} flex items-center gap-1`}>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                          payment.status
+                        )} flex items-center gap-1`}
+                      >
                         {getStatusIcon(payment.status)}
                         {payment.status}
                       </span>
@@ -365,18 +443,21 @@ const ClientPayments = () => {
         {/* Pagination */}
         <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
           <div className="text-sm text-gray-600">
-            Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredPayments.length)} of {filteredPayments.length} entries
+            Showing {startIndex + 1} to{" "}
+            {Math.min(startIndex + entriesPerPage, filteredPayments.length)} of{" "}
+            {filteredPayments.length} entries
           </div>
           <div className="flex items-center gap-1">
             <button
               className="border px-3 py-1 rounded text-sm disabled:opacity-50"
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
               Previous
             </button>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const pageNum = Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i;
+              const pageNum =
+                Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i;
               return pageNum <= totalPages ? (
                 <button
                   key={pageNum}
@@ -391,7 +472,9 @@ const ClientPayments = () => {
             })}
             <button
               className="border px-3 py-1 rounded text-sm disabled:opacity-50"
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
             >
               Next
@@ -413,35 +496,51 @@ const ClientPayments = () => {
                 <FaTimesCircle className="text-xl" />
               </button>
             </div>
-            
+
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Payment #{selectedPayment.paymentNumber}</h3>
+                  <h3 className="text-lg font-semibold mb-2">
+                    Payment #{selectedPayment.paymentNumber}
+                  </h3>
                   <p className="text-sm text-gray-600">
-                    <strong>Invoice:</strong> {selectedPayment.invoice?.invoiceNumber || "N/A"}
+                    <strong>Invoice:</strong>{" "}
+                    {selectedPayment.invoice?.invoiceNumber || "N/A"}
                   </p>
                   <p className="text-sm text-gray-600">
-                    <strong>Date:</strong> {formatDate(selectedPayment.paymentDate)}
+                    <strong>Date:</strong>{" "}
+                    {formatDate(selectedPayment.paymentDate)}
                   </p>
                   <p className="text-sm text-gray-600">
                     <strong>Payment Mode:</strong> {selectedPayment.paymentMode}
                   </p>
                   <p className="text-sm text-gray-600">
-                    <strong>Transaction ID:</strong> {selectedPayment.transactionId}
+                    <strong>Transaction ID:</strong>{" "}
+                    {selectedPayment.transactionId}
                   </p>
                 </div>
                 <div className="text-right">
-                  <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedPayment.status)} inline-flex items-center gap-1`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm ${getStatusColor(
+                      selectedPayment.status
+                    )} inline-flex items-center gap-1`}
+                  >
                     {getStatusIcon(selectedPayment.status)}
                     {selectedPayment.status}
                   </span>
                   <p className="text-2xl font-bold mt-2">
-                    {formatCurrency(selectedPayment.amount, selectedPayment.currency)}
+                    {formatCurrency(
+                      selectedPayment.amount,
+                      selectedPayment.currency
+                    )}
                   </p>
                   {selectedPayment.invoice && (
                     <p className="text-sm text-gray-600 mt-1">
-                      For invoice total: {formatCurrency(selectedPayment.invoice.total, selectedPayment.invoice.currency)}
+                      For invoice total:{" "}
+                      {formatCurrency(
+                        selectedPayment.invoice.total,
+                        selectedPayment.invoice.currency
+                      )}
                     </p>
                   )}
                 </div>
@@ -460,10 +559,18 @@ const ClientPayments = () => {
                 <div>
                   <h4 className="font-semibold mb-2">Invoice Details</h4>
                   <div className="bg-gray-50 p-3 rounded text-sm">
-                    <p><strong>Status:</strong> {selectedPayment.invoice.status}</p>
-                    <p><strong>Due Date:</strong> {formatDate(selectedPayment.invoice.dueDate)}</p>
+                    <p>
+                      <strong>Status:</strong> {selectedPayment.invoice.status}
+                    </p>
+                    <p>
+                      <strong>Due Date:</strong>{" "}
+                      {formatDate(selectedPayment.invoice.dueDate)}
+                    </p>
                     {selectedPayment.invoice.items && (
-                      <p><strong>Items:</strong> {selectedPayment.invoice.items.length} item(s)</p>
+                      <p>
+                        <strong>Items:</strong>{" "}
+                        {selectedPayment.invoice.items.length} item(s)
+                      </p>
                     )}
                   </div>
                 </div>

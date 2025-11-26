@@ -1,15 +1,26 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  FaPlus, FaSearch, FaSyncAlt, FaChevronRight,
-  FaTimes, FaEdit, FaTrash, FaEye,
-  FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare,
-  FaExclamationTriangle, FaExclamationCircle
+  FaPlus,
+  FaSearch,
+  FaSyncAlt,
+  FaChevronRight,
+  FaTimes,
+  FaEdit,
+  FaTrash,
+  FaEye,
+  FaCheckCircle,
+  FaClock,
+  FaPauseCircle,
+  FaBan,
+  FaCheckSquare,
+  FaExclamationTriangle,
+  FaExclamationCircle,
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Custom hook for detecting outside clicks
 const useOutsideClick = (callback) => {
@@ -22,10 +33,10 @@ const useOutsideClick = (callback) => {
       }
     };
 
-    document.addEventListener('click', handleClick, true);
+    document.addEventListener("click", handleClick, true);
 
     return () => {
-      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener("click", handleClick, true);
     };
   }, [ref, callback]);
 
@@ -33,6 +44,7 @@ const useOutsideClick = (callback) => {
 };
 
 const SupportPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [selectedTickets, setSelectedTickets] = useState([]);
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -48,7 +60,7 @@ const SupportPage = () => {
     answered: 0,
     onHold: 0,
     closed: 0,
-    inProgress: 0
+    inProgress: 0,
   });
   const [newTicket, setNewTicket] = useState({
     subject: "",
@@ -60,7 +72,7 @@ const SupportPage = () => {
     customerName: "",
     customerCode: "",
     priority: "Medium",
-    status: "Open"
+    status: "Open",
   });
   const [editingTicket, setEditingTicket] = useState(null);
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
@@ -70,15 +82,33 @@ const SupportPage = () => {
   const [currentDescription, setCurrentDescription] = useState("");
 
   const priorityOptions = ["Low", "Medium", "High", "Urgent"];
-  const statusOptions = ["Open", "Answered", "On Hold", "Closed", "In Progress"];
-  const serviceOptions = ["FIELD", "STRATEGY", "TECHNICAL", "BILLING", "GENERAL"];
-  const departmentOptions = ["Marketing", "Sales", "Support", "Development", "Operations"];
+  const statusOptions = [
+    "Open",
+    "Answered",
+    "On Hold",
+    "Closed",
+    "In Progress",
+  ];
+  const serviceOptions = [
+    "FIELD",
+    "STRATEGY",
+    "TECHNICAL",
+    "BILLING",
+    "GENERAL",
+  ];
+  const departmentOptions = [
+    "Marketing",
+    "Sales",
+    "Support",
+    "Development",
+    "Operations",
+  ];
 
   // Use the custom hook for detecting outside clicks
   const exportRef = useOutsideClick(() => {
     setShowExportMenu(false);
   });
-  
+
   const customerRef = useOutsideClick(() => {
     setShowCustomerDropdown(false);
   });
@@ -87,7 +117,7 @@ const SupportPage = () => {
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('crm_token');
+    return localStorage.getItem("crm_token");
   };
 
   // Create axios instance with auth headers
@@ -96,8 +126,8 @@ const SupportPage = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -106,16 +136,18 @@ const SupportPage = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/support", config);
+      const { data } = await axios.get(`${API_BASE_URL}/support`, config);
       setTickets(data.tickets || []);
-      setStats(data.stats || {
-        totalTickets: 0,
-        open: 0,
-        answered: 0,
-        onHold: 0,
-        closed: 0,
-        inProgress: 0
-      });
+      setStats(
+        data.stats || {
+          totalTickets: 0,
+          open: 0,
+          answered: 0,
+          onHold: 0,
+          closed: 0,
+          inProgress: 0,
+        }
+      );
     } catch (error) {
       console.error("Error fetching support tickets:", error);
       if (error.response?.status === 401) {
@@ -129,7 +161,7 @@ const SupportPage = () => {
         answered: 0,
         onHold: 0,
         closed: 0,
-        inProgress: 0
+        inProgress: 0,
       });
     }
     setLoading(false);
@@ -145,10 +177,13 @@ const SupportPage = () => {
       setCustomerSearchResults([]);
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/support/customers/search?q=${searchTerm}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/support/customers/search?q=${searchTerm}`,
+        config
+      );
       setCustomerSearchResults(data);
     } catch (error) {
       console.error("Error searching customers:", error);
@@ -161,25 +196,28 @@ const SupportPage = () => {
     if (!customerCode || customerCode.length < 4) {
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/support/customers/by-code/${customerCode}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/support/customers/by-code/${customerCode}`,
+        config
+      );
       if (data.customer) {
-        setNewTicket(prev => ({
+        setNewTicket((prev) => ({
           ...prev,
           customerId: data.customer._id,
           customerName: data.customer.company,
-          customerCode: data.customer.customerCode
+          customerCode: data.customer.customerCode,
         }));
       }
     } catch (error) {
       console.error("Error searching customer by code:", error);
       // Clear customer info if code is not found
-      setNewTicket(prev => ({
+      setNewTicket((prev) => ({
         ...prev,
         customerId: "",
-        customerName: ""
+        customerName: "",
       }));
     }
   };
@@ -206,15 +244,21 @@ const SupportPage = () => {
   }, [newTicket.customerCode]);
 
   // Search filter
-  const filteredTickets = tickets.filter(ticket =>
-    ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (ticket.description && ticket.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    (ticket.tags && ticket.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    ticket.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ticket.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (ticket.customer && ticket.customer.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    ticket.priority.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    ticket.status.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTickets = tickets.filter(
+    (ticket) =>
+      ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ticket.description &&
+        ticket.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (ticket.tags &&
+        ticket.tags.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      ticket.service.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ticket.customer &&
+        ticket.customer.company
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())) ||
+      ticket.priority.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      ticket.status.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Pagination
@@ -226,17 +270,17 @@ const SupportPage = () => {
   );
 
   const toggleTicketSelection = (id) => {
-    setSelectedTickets(prev =>
+    setSelectedTickets((prev) =>
       prev.includes(id)
-        ? prev.filter(ticketId => ticketId !== id)
+        ? prev.filter((ticketId) => ticketId !== id)
         : [...prev, id]
     );
   };
 
   const handleNewTicketChange = (e) => {
     const { name, value } = e.target;
-    setNewTicket(prev => ({ ...prev, [name]: value }));
-    
+    setNewTicket((prev) => ({ ...prev, [name]: value }));
+
     if (name === "customerName") {
       setCustomerSearchTerm(value);
       setShowCustomerDropdown(true);
@@ -244,11 +288,11 @@ const SupportPage = () => {
   };
 
   const handleSelectCustomer = (customer) => {
-    setNewTicket(prev => ({
+    setNewTicket((prev) => ({
       ...prev,
       customerId: customer._id,
       customerName: customer.company,
-      customerCode: customer.customerCode
+      customerCode: customer.customerCode,
     }));
     setShowCustomerDropdown(false);
     setCustomerSearchTerm("");
@@ -256,32 +300,38 @@ const SupportPage = () => {
 
   const handleSaveTicket = async () => {
     if (isSaving) return;
-    
+
     if (!newTicket.subject || !newTicket.description || !newTicket.customerId) {
-      alert("Please fill in all required fields (Subject, Description, Customer)");
+      alert(
+        "Please fill in all required fields (Subject, Description, Customer)"
+      );
       return;
     }
 
     setIsSaving(true);
-    
+
     try {
       const config = createAxiosConfig();
-      
+
       if (editingTicket) {
         // Update existing ticket
-        await axios.put(`http://localhost:5000/api/support/${editingTicket._id}`, newTicket, config);
+        await axios.put(
+          `${API_BASE_URL}/support/${editingTicket._id}`,
+          newTicket,
+          config
+        );
         setShowNewTicketForm(false);
         setEditingTicket(null);
         fetchTickets();
         alert("Ticket updated successfully!");
       } else {
         // Create new ticket
-        await axios.post("http://localhost:5000/api/support", newTicket, config);
+        await axios.post(`${API_BASE_URL}/support`, newTicket, config);
         setShowNewTicketForm(false);
         fetchTickets();
         alert("Ticket created successfully!");
       }
-      
+
       // Reset form
       setNewTicket({
         subject: "",
@@ -293,11 +343,13 @@ const SupportPage = () => {
         customerName: "",
         customerCode: "",
         priority: "Medium",
-        status: "Open"
+        status: "Open",
       });
     } catch (error) {
       console.error("Error saving ticket:", error);
-      alert(`Error saving ticket: ${error.response?.data?.message || error.message}`);
+      alert(
+        `Error saving ticket: ${error.response?.data?.message || error.message}`
+      );
     } finally {
       setIsSaving(false);
     }
@@ -315,7 +367,7 @@ const SupportPage = () => {
       customerName: ticket.customer ? ticket.customer.company : "",
       customerCode: ticket.customer ? ticket.customer.customerCode : "",
       priority: ticket.priority,
-      status: ticket.status
+      status: ticket.status,
     });
     setShowNewTicketForm(true);
   };
@@ -324,12 +376,16 @@ const SupportPage = () => {
     if (window.confirm("Are you sure you want to delete this ticket?")) {
       try {
         const config = createAxiosConfig();
-        await axios.delete(`http://localhost:5000/api/support/${id}`, config);
+        await axios.delete(`${API_BASE_URL}/support/${id}`, config);
         fetchTickets();
         alert("Ticket deleted successfully!");
       } catch (error) {
         console.error("Error deleting ticket:", error);
-        alert(`Error deleting ticket: ${error.response?.data?.message || error.message}`);
+        alert(
+          `Error deleting ticket: ${
+            error.response?.data?.message || error.message
+          }`
+        );
       }
     }
   };
@@ -341,13 +397,20 @@ const SupportPage = () => {
 
   // Helper function to format date and time
   const formatDateTime = (dateString) => {
-    const options = { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' };
-    return new Date(dateString).toLocaleDateString('en-GB', options);
+    const options = {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    };
+    return new Date(dateString).toLocaleDateString("en-GB", options);
   };
 
   // Export functions
   const exportToExcel = () => {
-    const dataToExport = filteredTickets.map(ticket => ({
+    const dataToExport = filteredTickets.map((ticket) => ({
       Subject: ticket.subject,
       Description: ticket.description,
       Tags: ticket.tags,
@@ -357,7 +420,7 @@ const SupportPage = () => {
       Priority: ticket.priority,
       Status: ticket.status,
       Created: formatDateTime(ticket.created),
-      "Last Reply": ticket.lastReply
+      "Last Reply": ticket.lastReply,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -368,7 +431,7 @@ const SupportPage = () => {
   };
 
   const exportToCSV = () => {
-    const dataToExport = filteredTickets.map(ticket => ({
+    const dataToExport = filteredTickets.map((ticket) => ({
       Subject: ticket.subject,
       Description: ticket.description,
       Tags: ticket.tags,
@@ -378,17 +441,17 @@ const SupportPage = () => {
       Priority: ticket.priority,
       Status: ticket.status,
       Created: formatDateTime(ticket.created),
-      "Last Reply": ticket.lastReply
+      "Last Reply": ticket.lastReply,
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'Support_Tickets.csv');
-    link.style.visibility = 'hidden';
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Support_Tickets.csv");
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -407,11 +470,13 @@ const SupportPage = () => {
       "Priority",
       "Status",
       "Created",
-      "Last Reply"
+      "Last Reply",
     ];
-    
-    const tableRows = filteredTickets.map(ticket => [
-      ticket.subject.length > 20 ? ticket.subject.substring(0, 20) + '...' : ticket.subject,
+
+    const tableRows = filteredTickets.map((ticket) => [
+      ticket.subject.length > 20
+        ? ticket.subject.substring(0, 20) + "..."
+        : ticket.subject,
       ticket.tags,
       ticket.service,
       ticket.department,
@@ -419,10 +484,10 @@ const SupportPage = () => {
       ticket.priority,
       ticket.status,
       formatDateTime(ticket.created),
-      ticket.lastReply
+      ticket.lastReply,
     ]);
 
-    autoTable(doc,{
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       margin: { top: 20 },
@@ -434,9 +499,9 @@ const SupportPage = () => {
   };
 
   const printTable = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<html><head><title>Support Tickets</title>');
-    printWindow.document.write('<style>');
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Support Tickets</title>");
+    printWindow.document.write("<style>");
     printWindow.document.write(`
       body { font-family: Arial, sans-serif; }
       table { border-collapse: collapse; width: 100%; }
@@ -448,22 +513,32 @@ const SupportPage = () => {
         .no-print { display: none; }
       }
     `);
-    printWindow.document.write('</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<h1>Support Tickets</h1>');
-    printWindow.document.write('<table>');
-    
+    printWindow.document.write("</style>");
+    printWindow.document.write("</head><body>");
+    printWindow.document.write("<h1>Support Tickets</h1>");
+    printWindow.document.write("<table>");
+
     // Table header
-    printWindow.document.write('<thead><tr>');
-    ['Subject', 'Tags', 'Service', 'Department', 'Customer', 'Priority', 'Status', 'Created', 'Last Reply'].forEach(header => {
+    printWindow.document.write("<thead><tr>");
+    [
+      "Subject",
+      "Tags",
+      "Service",
+      "Department",
+      "Customer",
+      "Priority",
+      "Status",
+      "Created",
+      "Last Reply",
+    ].forEach((header) => {
       printWindow.document.write(`<th>${header}</th>`);
     });
-    printWindow.document.write('</tr></thead>');
-    
+    printWindow.document.write("</tr></thead>");
+
     // Table body
-    printWindow.document.write('<tbody>');
-    filteredTickets.forEach(ticket => {
-      printWindow.document.write('<tr>');
+    printWindow.document.write("<tbody>");
+    filteredTickets.forEach((ticket) => {
+      printWindow.document.write("<tr>");
       [
         ticket.subject,
         ticket.tags,
@@ -473,19 +548,21 @@ const SupportPage = () => {
         ticket.priority,
         ticket.status,
         formatDateTime(ticket.created),
-        ticket.lastReply
-      ].forEach(value => {
+        ticket.lastReply,
+      ].forEach((value) => {
         printWindow.document.write(`<td>${value}</td>`);
       });
-      printWindow.document.write('</tr>');
+      printWindow.document.write("</tr>");
     });
-    printWindow.document.write('</tbody>');
-    
-    printWindow.document.write('</table>');
-    printWindow.document.write('<p class="no-print">Printed on: ' + new Date().toLocaleString() + '</p>');
-    printWindow.document.write('</body></html>');
+    printWindow.document.write("</tbody>");
+
+    printWindow.document.write("</table>");
+    printWindow.document.write(
+      '<p class="no-print">Printed on: ' + new Date().toLocaleString() + "</p>"
+    );
+    printWindow.document.write("</body></html>");
     printWindow.document.close();
-    
+
     setTimeout(() => {
       printWindow.print();
       printWindow.close();
@@ -494,33 +571,53 @@ const SupportPage = () => {
   };
 
   const getPriorityColor = (priority) => {
-    switch(priority) {
-      case "Low": return "bg-green-100 text-green-800";
-      case "Medium": return "bg-yellow-100 text-yellow-800";
-      case "High": return "bg-orange-100 text-orange-800";
-      case "Urgent": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (priority) {
+      case "Low":
+        return "bg-green-100 text-green-800";
+      case "Medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "High":
+        return "bg-orange-100 text-orange-800";
+      case "Urgent":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case "Open": return "bg-gray-100 text-gray-800";
-      case "Answered": return "bg-blue-100 text-blue-800";
-      case "On Hold": return "bg-yellow-100 text-yellow-800";
-      case "Closed": return "bg-green-100 text-green-800";
-      case "In Progress": return "bg-purple-100 text-purple-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (status) {
+      case "Open":
+        return "bg-gray-100 text-gray-800";
+      case "Answered":
+        return "bg-blue-100 text-blue-800";
+      case "On Hold":
+        return "bg-yellow-100 text-yellow-800";
+      case "Closed":
+        return "bg-green-100 text-green-800";
+      case "In Progress":
+        return "bg-purple-100 text-purple-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading supports...</div>;
+  if (loading)
+    return (
+      <div className="bg-gray-100 min-h-screen p-4">Loading supports...</div>
+    );
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">{showNewTicketForm ? (editingTicket ? "Edit Ticket" : "Add New Ticket") : "Support Tickets"}</h1>
+        <h1 className="text-2xl font-bold">
+          {showNewTicketForm
+            ? editingTicket
+              ? "Edit Ticket"
+              : "Add New Ticket"
+            : "Support Tickets"}
+        </h1>
         <div className="flex items-center text-gray-600">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
@@ -532,7 +629,7 @@ const SupportPage = () => {
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Ticket Details</h2>
-            <button 
+            <button
               onClick={() => {
                 setShowNewTicketForm(false);
                 setEditingTicket(null);
@@ -547,7 +644,9 @@ const SupportPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Subject *
+                </label>
                 <input
                   type="text"
                   name="subject"
@@ -559,7 +658,9 @@ const SupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Description *
+                </label>
                 <textarea
                   name="description"
                   value={newTicket.description}
@@ -570,7 +671,9 @@ const SupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer Code</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer Code
+                </label>
                 <input
                   type="text"
                   name="customerCode"
@@ -585,7 +688,9 @@ const SupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Customer *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Customer *
+                </label>
                 <div className="relative" ref={customerRef}>
                   <input
                     type="text"
@@ -605,22 +710,32 @@ const SupportPage = () => {
                           onClick={() => handleSelectCustomer(customer)}
                         >
                           <div className="font-medium">{customer.company}</div>
-                          <div className="text-sm text-gray-600">{customer.contact} - {customer.email}</div>
-                          <div className="text-xs text-blue-600">{customer.customerCode}</div>
+                          <div className="text-sm text-gray-600">
+                            {customer.contact} - {customer.email}
+                          </div>
+                          <div className="text-xs text-blue-600">
+                            {customer.customerCode}
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  {showCustomerDropdown && customerSearchResults.length === 0 && customerSearchTerm.length >= 2 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                      <div className="px-3 py-2 text-gray-500">No customers found</div>
-                    </div>
-                  )}
+                  {showCustomerDropdown &&
+                    customerSearchResults.length === 0 &&
+                    customerSearchTerm.length >= 2 && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                        <div className="px-3 py-2 text-gray-500">
+                          No customers found
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tags
+                </label>
                 <input
                   type="text"
                   name="tags"
@@ -635,7 +750,9 @@ const SupportPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Service</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Service
+                </label>
                 <select
                   name="service"
                   value={newTicket.service}
@@ -643,14 +760,18 @@ const SupportPage = () => {
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">Select Service</option>
-                  {serviceOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {serviceOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Department
+                </label>
                 <select
                   name="department"
                   value={newTicket.department}
@@ -658,36 +779,46 @@ const SupportPage = () => {
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">Select Department</option>
-                  {departmentOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {departmentOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Priority
+                </label>
                 <select
                   name="priority"
                   value={newTicket.priority}
                   onChange={handleNewTicketChange}
                   className="w-full border rounded px-3 py-2"
                 >
-                  {priorityOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {priorityOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
                 <select
                   name="status"
                   value={newTicket.status}
                   onChange={handleNewTicketChange}
                   className="w-full border rounded px-3 py-2"
                 >
-                  {statusOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {statusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -709,7 +840,12 @@ const SupportPage = () => {
               type="button"
               onClick={handleSaveTicket}
               className="px-4 py-2 bg-black text-white rounded text-sm"
-              disabled={!newTicket.subject || !newTicket.description || !newTicket.customerId || isSaving}
+              disabled={
+                !newTicket.subject ||
+                !newTicket.description ||
+                !newTicket.customerId ||
+                isSaving
+              }
             >
               {isSaving ? "Saving..." : "Save"}
             </button>
@@ -801,8 +937,9 @@ const SupportPage = () => {
           {/* Top action buttons */}
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
-              <button 
-                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+              <button
+                className="px-3 py-1 text-sm rounded flex items-center gap-2"
+                style={{ backgroundColor: "#333333", color: "white" }}
                 onClick={() => setShowNewTicketForm(true)}
               >
                 <FaPlus /> New Ticket
@@ -819,33 +956,45 @@ const SupportPage = () => {
           </div>
 
           {/* White box for table */}
-          <div className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+          <div
+            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+              compactView ? "w-1/2" : "w-full"
+            }`}
+          >
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 {/* Delete Selected button */}
-              {selectedTickets.length > 0 && (
-                <button
-                  className="bg-red-600 text-white px-3 py-1 rounded"
-                  onClick={async () => {
-                    if (window.confirm(`Delete ${selectedTickets.length} selected tickets?`)) {
-                      try {
-                        const config = createAxiosConfig();
-                        await axios.post("http://localhost:5000/api/support/bulk-delete", {
-                          ticketIds: selectedTickets
-                        }, config);
-                        setSelectedTickets([]);
-                        fetchTickets();
-                        alert("Selected tickets deleted!");
-                      } catch {
-                        alert("Error deleting selected tickets.");
+                {selectedTickets.length > 0 && (
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    onClick={async () => {
+                      if (
+                        window.confirm(
+                          `Delete ${selectedTickets.length} selected tickets?`
+                        )
+                      ) {
+                        try {
+                          const config = createAxiosConfig();
+                          await axios.post(
+                            `${API_BASE_URL}/support/bulk-delete`,
+                            {
+                              ticketIds: selectedTickets,
+                            },
+                            config
+                          );
+                          setSelectedTickets([]);
+                          fetchTickets();
+                          alert("Selected tickets deleted!");
+                        } catch {
+                          alert("Error deleting selected tickets.");
+                        }
                       }
-                    }
-                  }}
-                >
-                  Delete Selected ({selectedTickets.length})
-                </button>
-              )}
+                    }}
+                  >
+                    Delete Selected ({selectedTickets.length})
+                  </button>
+                )}
                 {/* Entries per page */}
                 <select
                   className="border rounded px-2 py-1 text-sm"
@@ -861,7 +1010,7 @@ const SupportPage = () => {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-                
+
                 {/* Export button */}
                 <div className="relative" ref={exportRef}>
                   <button
@@ -910,7 +1059,7 @@ const SupportPage = () => {
                   <FaSyncAlt />
                 </button>
               </div>
-              
+
               <div className="flex items-center gap-2">
                 {/* Search input */}
                 <div className="relative">
@@ -923,8 +1072,6 @@ const SupportPage = () => {
                   />
                   <FaSearch className="absolute left-2 top-2.5 transform text-gray-400 text-sm" />
                 </div>
-                
-                
               </div>
             </div>
 
@@ -933,35 +1080,97 @@ const SupportPage = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                    <th
+                      className="p-3 rounded-l-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
                       <input
                         type="checkbox"
-                        checked={selectedTickets.length === currentData.length && currentData.length > 0}
+                        checked={
+                          selectedTickets.length === currentData.length &&
+                          currentData.length > 0
+                        }
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedTickets(currentData.map(ticket => ticket._id));
+                            setSelectedTickets(
+                              currentData.map((ticket) => ticket._id)
+                            );
                           } else {
                             setSelectedTickets([]);
                           }
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Subject</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Service</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Department</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Priority</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Created</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Last Reply</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Subject
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Tags
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Service
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Department
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Customer
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Priority
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Created
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Last Reply
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {currentData.length > 0 ? (
                     currentData.map((ticket) => (
-                      <tr key={ticket._id} className="bg-white shadow rounded-lg hover:bg-gray-50 relative" style={{ color: 'black' }}>
+                      <tr
+                        key={ticket._id}
+                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                        style={{ color: "black" }}
+                      >
                         <td className="p-3 rounded-l-lg border-0">
                           <input
                             type="checkbox"
@@ -970,17 +1179,29 @@ const SupportPage = () => {
                             className="h-4 w-4"
                           />
                         </td>
-                        <td className="p-3 border-0 text-sm">{ticket.subject}</td>
+                        <td className="p-3 border-0 text-sm">
+                          {ticket.subject}
+                        </td>
                         <td className="p-3 border-0 text-sm">{ticket.tags}</td>
-                        <td className="p-3 border-0 text-sm">{ticket.service}</td>
-                        <td className="p-3 border-0 text-sm">{ticket.department}</td>
+                        <td className="p-3 border-0 text-sm">
+                          {ticket.service}
+                        </td>
+                        <td className="p-3 border-0 text-sm">
+                          {ticket.department}
+                        </td>
                         <td className="p-3 border-0 text-sm">
                           {ticket.customer ? (
                             <div>
-                              <div className="font-medium">{ticket.customer.company}</div>
-                              <div className="text-xs text-gray-500">{ticket.customer.contact}</div>
+                              <div className="font-medium">
+                                {ticket.customer.company}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                {ticket.customer.contact}
+                              </div>
                               {ticket.customer.customerCode && (
-                                <div className="text-xs text-blue-600">{ticket.customer.customerCode}</div>
+                                <div className="text-xs text-blue-600">
+                                  {ticket.customer.customerCode}
+                                </div>
                               )}
                             </div>
                           ) : (
@@ -988,22 +1209,36 @@ const SupportPage = () => {
                           )}
                         </td>
                         <td className="p-3 border-0">
-                          <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(ticket.priority)}`}>
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${getPriorityColor(
+                              ticket.priority
+                            )}`}
+                          >
                             {ticket.priority}
                           </span>
                         </td>
                         <td className="p-3 border-0">
-                          <span className={`px-2 py-1 rounded text-xs ${getStatusColor(ticket.status)}`}>
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                              ticket.status
+                            )}`}
+                          >
                             {ticket.status}
                           </span>
                         </td>
-                        <td className="p-3 border-0 text-sm">{formatDateTime(ticket.created)}</td>
-                        <td className="p-3 border-0 text-sm">{ticket.lastReply}</td>
+                        <td className="p-3 border-0 text-sm">
+                          {formatDateTime(ticket.created)}
+                        </td>
+                        <td className="p-3 border-0 text-sm">
+                          {ticket.lastReply}
+                        </td>
                         <td className="p-3 rounded-r-lg border-0">
                           <div className="flex items-center space-x-2">
                             <button
                               className="text-blue-600 hover:text-blue-800"
-                              onClick={() => handleViewDescription(ticket.description)}
+                              onClick={() =>
+                                handleViewDescription(ticket.description)
+                              }
                               title="View Description"
                             >
                               <FaEye />
@@ -1028,7 +1263,10 @@ const SupportPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="11" className="p-4 text-center text-gray-500">
+                      <td
+                        colSpan="11"
+                        className="p-4 text-center text-gray-500"
+                      >
                         No tickets found
                       </td>
                     </tr>
@@ -1040,28 +1278,38 @@ const SupportPage = () => {
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
               <div className="text-sm text-gray-700">
-                Showing {startIndex + 1} to {Math.min(startIndex + entriesPerPage, filteredTickets.length)} of {filteredTickets.length} entries
+                Showing {startIndex + 1} to{" "}
+                {Math.min(startIndex + entriesPerPage, filteredTickets.length)}{" "}
+                of {filteredTickets.length} entries
               </div>
               <div className="flex items-center gap-1">
                 <button
                   className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
                   disabled={currentPage === 1}
                 >
                   Previous
                 </button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                  <button
-                    key={page}
-                    className={`px-3 py-1 border rounded text-sm ${currentPage === page ? 'bg-black text-white' : ''}`}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <button
+                      key={page}
+                      className={`px-3 py-1 border rounded text-sm ${
+                        currentPage === page ? "bg-black text-white" : ""
+                      }`}
+                      onClick={() => setCurrentPage(page)}
+                    >
+                      {page}
+                    </button>
+                  )
+                )}
                 <button
                   className="px-3 py-1 border rounded text-sm"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                 >
                   Next

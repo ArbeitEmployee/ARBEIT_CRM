@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import backgroundImage from "../../assets/login-background.jpg";
 
 export default function AdminSignup() {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +22,9 @@ export default function AdminSignup() {
 
   const getInputClasses = (hasError) =>
     `w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-      hasError ? "border border-red-500 focus:ring-red-400" : "focus:ring-blue-400"
+      hasError
+        ? "border border-red-500 focus:ring-red-400"
+        : "focus:ring-blue-400"
     }`;
 
   const handleSubmit = async (e) => {
@@ -29,45 +32,43 @@ export default function AdminSignup() {
 
     // validate
     // validate
-const nameErr = name.trim() === "";
-const emailErr = !emailRegex.test(email);
-const passErr = password.length < 6;
-const confirmErr = confirmPassword !== password || confirmPassword === "";
+    const nameErr = name.trim() === "";
+    const emailErr = !emailRegex.test(email);
+    const passErr = password.length < 6;
+    const confirmErr = confirmPassword !== password || confirmPassword === "";
 
-if (nameErr || emailErr || passErr || confirmErr) {
-  setTouched({
-    name: true,
-    email: true,
-    password: true,
-    confirmPassword: true,
-  });
+    if (nameErr || emailErr || passErr || confirmErr) {
+      setTouched({
+        name: true,
+        email: true,
+        password: true,
+        confirmPassword: true,
+      });
 
-  if (nameErr) {
-    toast.error("Please fill up the name field.");
-    return;  // 🔥 exit early
-  }
-  if (emailErr) {
-    toast.error("Please enter a valid email.");
-    return;
-  }
-  if (passErr) {
-    toast.error("Password must be at least 6 characters.");
-    return;
-  }
-  if (confirmErr) {
-    toast.error("Passwords do not match.");
-    return;
-  }
-}
-
+      if (nameErr) {
+        toast.error("Please fill up the name field.");
+        return; // 🔥 exit early
+      }
+      if (emailErr) {
+        toast.error("Please enter a valid email.");
+        return;
+      }
+      if (passErr) {
+        toast.error("Password must be at least 6 characters.");
+        return;
+      }
+      if (confirmErr) {
+        toast.error("Passwords do not match.");
+        return;
+      }
+    }
 
     try {
-        const res = await fetch("http://localhost:5000/api/admin/register", {
+      const res = await fetch(`${API_BASE_URL}/admin/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password, confirmPassword }), // ✅ add confirmPassword
       });
-
 
       const text = await res.text();
       let data = {};
@@ -88,7 +89,9 @@ if (nameErr || emailErr || passErr || confirmErr) {
       if (data.role === "superAdmin") {
         toast.success("Super Admin registered successfully 🎉");
       } else if (data.status === "pending") {
-        toast.success("Registration successful! Awaiting super admin approval.");
+        toast.success(
+          "Registration successful! Awaiting super admin approval."
+        );
       } else {
         toast.success("Registration successful!");
       }
@@ -112,7 +115,9 @@ if (nameErr || emailErr || passErr || confirmErr) {
     >
       <div className="text-center mb-6">
         <h2 className="text-3xl font-bold text-white">Admin Registration</h2>
-        <p className="text-sm text-gray-300">Create your secure admin account</p>
+        <p className="text-sm text-gray-300">
+          Create your secure admin account
+        </p>
       </div>
 
       <div className="w-full max-w-sm bg-[#0c123d] bg-opacity-90 p-6 rounded-xl shadow-2xl text-white">
@@ -134,7 +139,9 @@ if (nameErr || emailErr || passErr || confirmErr) {
               />
             </div>
             {touched.name && name.trim() === "" && (
-              <p className="text-red-400 text-xs mt-1">Please fill up the name field.</p>
+              <p className="text-red-400 text-xs mt-1">
+                Please fill up the name field.
+              </p>
             )}
           </div>
 
@@ -151,14 +158,20 @@ if (nameErr || emailErr || passErr || confirmErr) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onBlur={() => setTouched((t) => ({ ...t, email: true }))}
-                className={getInputClasses(touched.email && (!email || !emailRegex.test(email)))}
+                className={getInputClasses(
+                  touched.email && (!email || !emailRegex.test(email))
+                )}
               />
             </div>
             {touched.email && !email && (
-              <p className="text-red-400 text-xs mt-1">Please fill up the email field.</p>
+              <p className="text-red-400 text-xs mt-1">
+                Please fill up the email field.
+              </p>
             )}
             {touched.email && email && !emailRegex.test(email) && (
-              <p className="text-red-400 text-xs mt-1">Please enter a valid email.</p>
+              <p className="text-red-400 text-xs mt-1">
+                Please enter a valid email.
+              </p>
             )}
           </div>
 
@@ -175,14 +188,20 @@ if (nameErr || emailErr || passErr || confirmErr) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onBlur={() => setTouched((t) => ({ ...t, password: true }))}
-                className={getInputClasses(touched.password && password.length < 6)}
+                className={getInputClasses(
+                  touched.password && password.length < 6
+                )}
               />
             </div>
             {touched.password && password.length === 0 && (
-              <p className="text-red-400 text-xs mt-1">Please fill up the password field.</p>
+              <p className="text-red-400 text-xs mt-1">
+                Please fill up the password field.
+              </p>
             )}
             {touched.password && password.length > 0 && password.length < 6 && (
-              <p className="text-red-400 text-xs mt-1">Password must be at least 6 characters.</p>
+              <p className="text-red-400 text-xs mt-1">
+                Password must be at least 6 characters.
+              </p>
             )}
           </div>
 
@@ -198,18 +217,27 @@ if (nameErr || emailErr || passErr || confirmErr) {
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                onBlur={() => setTouched((t) => ({ ...t, confirmPassword: true }))}
+                onBlur={() =>
+                  setTouched((t) => ({ ...t, confirmPassword: true }))
+                }
                 className={getInputClasses(
-                  touched.confirmPassword && (confirmPassword === "" || confirmPassword !== password)
+                  touched.confirmPassword &&
+                    (confirmPassword === "" || confirmPassword !== password)
                 )}
               />
             </div>
             {touched.confirmPassword && confirmPassword === "" && (
-              <p className="text-red-400 text-xs mt-1">Please confirm your password.</p>
+              <p className="text-red-400 text-xs mt-1">
+                Please confirm your password.
+              </p>
             )}
-            {touched.confirmPassword && confirmPassword !== "" && confirmPassword !== password && (
-              <p className="text-red-400 text-xs mt-1">Passwords do not match.</p>
-            )}
+            {touched.confirmPassword &&
+              confirmPassword !== "" &&
+              confirmPassword !== password && (
+                <p className="text-red-400 text-xs mt-1">
+                  Passwords do not match.
+                </p>
+              )}
           </div>
 
           {/* Submit Button */}

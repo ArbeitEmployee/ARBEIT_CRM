@@ -1,5 +1,22 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
-import { FaPlus, FaFilter, FaSyncAlt, FaEye, FaEdit, FaTrash, FaChevronRight, FaTimes, FaSearch, FaFileInvoiceDollar, FaMoneyCheckAlt, FaClock, FaExclamationTriangle, FaFileAlt, FaMoneyBillWave } from "react-icons/fa";
+import {
+  FaPlus,
+  FaFilter,
+  FaSyncAlt,
+  FaEye,
+  FaEdit,
+  FaTrash,
+  FaChevronRight,
+  FaTimes,
+  FaSearch,
+  FaFileInvoiceDollar,
+  FaMoneyCheckAlt,
+  FaClock,
+  FaExclamationTriangle,
+  FaFileAlt,
+  FaMoneyBillWave,
+} from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -8,6 +25,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const Invoices = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -20,21 +38,21 @@ const Invoices = () => {
   const [viewInvoice, setViewInvoice] = useState(null);
   const [editInvoice, setEditInvoice] = useState(null);
   const [searchInput, setSearchInput] = useState("");
-  const [formData, setFormData] = useState({ 
-    customer: "", 
-    status: "Draft" 
+  const [formData, setFormData] = useState({
+    customer: "",
+    status: "Draft",
   });
   const [showBatchPayment, setShowBatchPayment] = useState(false);
   const [batchPaymentData, setBatchPaymentData] = useState({
-    paymentDate: new Date().toISOString().split('T')[0],
+    paymentDate: new Date().toISOString().split("T")[0],
     paymentMode: "",
     transactionId: "",
-    sendEmail: false
+    sendEmail: false,
   });
   const [paymentAmounts, setPaymentAmounts] = useState({});
   const [batchPaymentError, setBatchPaymentError] = useState("");
   const [batchPaymentLoading, setBatchPaymentLoading] = useState(false);
-  
+
   // Stats state
   const [stats, setStats] = useState({
     totalInvoices: 0,
@@ -43,7 +61,7 @@ const Invoices = () => {
     draftInvoices: 0,
     pendingInvoices: 0,
     partiallypaidInvoices: 0,
-    unpaidInvoices: 0
+    unpaidInvoices: 0,
   });
 
   // Add a ref for the export menu
@@ -60,15 +78,18 @@ const Invoices = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
   // Close export menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+      if (
+        exportMenuRef.current &&
+        !exportMenuRef.current.contains(event.target)
+      ) {
         setShowExportMenu(false);
       }
     };
@@ -84,8 +105,11 @@ const Invoices = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/admin/invoices", config);
-      
+      const { data } = await axios.get(
+        `${API_BASE_URL}/admin/invoices`,
+        config
+      );
+
       // Ensure we're getting the data in the correct format
       if (data.data) {
         setInvoices(data.data); // If response has data property
@@ -95,22 +119,32 @@ const Invoices = () => {
         console.error("Unexpected API response format:", data);
         setInvoices([]);
       }
-      
+
       // Calculate stats
       const total = data.data?.length || data.length || 0;
-      const paid = (data.data || data).filter(i => i.status === "Paid").length;
-      const unpaid = (data.data || data).filter(i => i.status === "Unpaid").length;
-      const overdue = (data.data || data).filter(i => i.status === "Overdue").length;
-      const draft = (data.data || data).filter(i => i.status === "Draft").length;
-      const partiallypaid = (data.data || data).filter(i => i.status === "Partiallypaid").length;
-      
+      const paid = (data.data || data).filter(
+        (i) => i.status === "Paid"
+      ).length;
+      const unpaid = (data.data || data).filter(
+        (i) => i.status === "Unpaid"
+      ).length;
+      const overdue = (data.data || data).filter(
+        (i) => i.status === "Overdue"
+      ).length;
+      const draft = (data.data || data).filter(
+        (i) => i.status === "Draft"
+      ).length;
+      const partiallypaid = (data.data || data).filter(
+        (i) => i.status === "Partiallypaid"
+      ).length;
+
       setStats({
         totalInvoices: total,
         paidInvoices: paid,
         unpaidInvoices: unpaid,
         overdueInvoices: overdue,
         draftInvoices: draft,
-        partiallypaidInvoices: partiallypaid
+        partiallypaidInvoices: partiallypaid,
       });
     } catch (err) {
       console.error("Error fetching invoices", err);
@@ -131,7 +165,9 @@ const Invoices = () => {
   // Toggle invoice selection
   const toggleInvoiceSelection = (id) => {
     if (selectedInvoices.includes(id)) {
-      setSelectedInvoices(selectedInvoices.filter(invoiceId => invoiceId !== id));
+      setSelectedInvoices(
+        selectedInvoices.filter((invoiceId) => invoiceId !== id)
+      );
     } else {
       setSelectedInvoices([...selectedInvoices, id]);
     }
@@ -139,116 +175,131 @@ const Invoices = () => {
 
   // Get status color
   const getStatusColor = (status) => {
-    switch(status) {
-      case "Paid": return "bg-green-100 text-green-800";
-      case "Overdue": return "bg-red-100 text-red-800";
-      case "Draft": return "bg-gray-100 text-gray-800";
-      case "Unpaid": return "bg-blue-100 text-blue-800";
-      case "Partiallypaid": return "bg-yellow-100 text-yellow-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (status) {
+      case "Paid":
+        return "bg-green-100 text-green-800";
+      case "Overdue":
+        return "bg-red-100 text-red-800";
+      case "Draft":
+        return "bg-gray-100 text-gray-800";
+      case "Unpaid":
+        return "bg-blue-100 text-blue-800";
+      case "Partiallypaid":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   // Get unpaid and Partiallypaid invoices for batch payment
   const getPayableInvoices = () => {
-    return invoices.filter(invoice => 
-      invoice.status === "Unpaid" || invoice.status === "Partiallypaid" || invoice.status === "Overdue"
+    return invoices.filter(
+      (invoice) =>
+        invoice.status === "Unpaid" ||
+        invoice.status === "Partiallypaid" ||
+        invoice.status === "Overdue"
     );
   };
 
   // Handle batch payment amount change
   const handlePaymentAmountChange = (invoiceId, amount) => {
     const numAmount = parseFloat(amount) || 0;
-    
+
     // Get the invoice to validate amount
-    const invoice = invoices.find(inv => inv._id === invoiceId);
+    const invoice = invoices.find((inv) => inv._id === invoiceId);
     if (invoice) {
       const balanceDue = invoice.total - (invoice.paidAmount || 0);
-      
+
       // Ensure payment doesn't exceed balance due
       if (numAmount > balanceDue) {
-        setPaymentAmounts(prev => ({
+        setPaymentAmounts((prev) => ({
           ...prev,
-          [invoiceId]: balanceDue
+          [invoiceId]: balanceDue,
         }));
         return;
       }
     }
-    
-    setPaymentAmounts(prev => ({
+
+    setPaymentAmounts((prev) => ({
       ...prev,
-      [invoiceId]: numAmount
+      [invoiceId]: numAmount,
     }));
   };
 
- // Process batch payments
-// Process batch payments - UPDATED FOR NEW PAYMENT API
-const processBatchPayments = async () => {
-  setBatchPaymentLoading(true);
-  setBatchPaymentError("");
-  
-  try {
-    const config = createAxiosConfig();
-    const payableInvoices = getPayableInvoices();
-    let hasValidPayment = false;
-    
-    // Check if at least one payment is being made
-    for (const invoice of payableInvoices) {
-      if (paymentAmounts[invoice._id] > 0) {
-        hasValidPayment = true;
-        break;
+  // Process batch payments
+  // Process batch payments - UPDATED FOR NEW PAYMENT API
+  const processBatchPayments = async () => {
+    setBatchPaymentLoading(true);
+    setBatchPaymentError("");
+
+    try {
+      const config = createAxiosConfig();
+      const payableInvoices = getPayableInvoices();
+      let hasValidPayment = false;
+
+      // Check if at least one payment is being made
+      for (const invoice of payableInvoices) {
+        if (paymentAmounts[invoice._id] > 0) {
+          hasValidPayment = true;
+          break;
+        }
       }
-    }
-    
-    if (!hasValidPayment) {
-      setBatchPaymentError("Please enter at least one payment amount.");
-      setBatchPaymentLoading(false);
-      return;
-    }
-    
-    // Validate payment mode
-    if (!batchPaymentData.paymentMode.trim()) {
-      setBatchPaymentError("Payment mode is required.");
-      setBatchPaymentLoading(false);
-      return;
-    }
-    
-    // Process each payment through the new payment API
-    for (const invoice of payableInvoices) {
-      const paymentAmount = paymentAmounts[invoice._id] || 0;
-      
-      if (paymentAmount > 0) {
-        // Create payment data for the new payment API
-        const paymentData = {
-          invoice: invoice._id,
-          paymentDate: batchPaymentData.paymentDate,
-          paymentMode: batchPaymentData.paymentMode,
-          transactionId: batchPaymentData.transactionId ,
-          amount: paymentAmount,
-          notes: `Batch payment processed on ${new Date().toLocaleDateString()}`
-        };
-        
-        // Create payment using the new payment API
-        await axios.post("http://localhost:5000/api/admin/payments", paymentData, config);
+
+      if (!hasValidPayment) {
+        setBatchPaymentError("Please enter at least one payment amount.");
+        setBatchPaymentLoading(false);
+        return;
       }
+
+      // Validate payment mode
+      if (!batchPaymentData.paymentMode.trim()) {
+        setBatchPaymentError("Payment mode is required.");
+        setBatchPaymentLoading(false);
+        return;
+      }
+
+      // Process each payment through the new payment API
+      for (const invoice of payableInvoices) {
+        const paymentAmount = paymentAmounts[invoice._id] || 0;
+
+        if (paymentAmount > 0) {
+          // Create payment data for the new payment API
+          const paymentData = {
+            invoice: invoice._id,
+            paymentDate: batchPaymentData.paymentDate,
+            paymentMode: batchPaymentData.paymentMode,
+            transactionId: batchPaymentData.transactionId,
+            amount: paymentAmount,
+            notes: `Batch payment processed on ${new Date().toLocaleDateString()}`,
+          };
+
+          // Create payment using the new payment API
+          await axios.post(
+            `${API_BASE_URL}/admin/payments`,
+            paymentData,
+            config
+          );
+        }
+      }
+
+      // Refresh data
+      fetchInvoices();
+      setShowBatchPayment(false);
+      setPaymentAmounts({});
+      alert("Payments processed successfully!");
+    } catch (err) {
+      console.error("Error processing batch payments", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("crm_token");
+        navigate("/login");
+      }
+      setBatchPaymentError(
+        err.response?.data?.message ||
+          "Error processing payments. Please try again."
+      );
     }
-    
-    // Refresh data
-    fetchInvoices();
-    setShowBatchPayment(false);
-    setPaymentAmounts({});
-    alert("Payments processed successfully!");
-    
-  } catch (err) {
-    console.error("Error processing batch payments", err);
-    if (err.response?.status === 401) {
-      localStorage.removeItem("crm_token");
-      navigate("/login");
-    }
-    setBatchPaymentError(err.response?.data?.message || "Error processing payments. Please try again.");
-  }
-  setBatchPaymentLoading(false);
-};
+    setBatchPaymentLoading(false);
+  };
 
   // Export handler
   const handleExport = (type) => {
@@ -258,7 +309,12 @@ const processBatchPayments = async () => {
       InvoiceNumber: i.invoiceNumber || "INV-" + i._id.slice(-6).toUpperCase(),
       Customer: i.customer,
       Amount: i.total,
-      TotalTax: i.items ? i.items.reduce((sum, item) => sum + (item.tax1 || 0) + (item.tax2 || 0), 0) : 0,
+      TotalTax: i.items
+        ? i.items.reduce(
+            (sum, item) => sum + (item.tax1 || 0) + (item.tax2 || 0),
+            0
+          )
+        : 0,
       Project: i.reference || "-",
       Tags: i.tags || "-",
       Date: i.invoiceDate ? new Date(i.invoiceDate).toLocaleDateString() : "-",
@@ -271,10 +327,16 @@ const processBatchPayments = async () => {
       case "CSV": {
         const headers = Object.keys(exportData[0]).join(",");
         const rows = exportData
-          .map((row) => Object.values(row).map((val) => `"${val}"`).join(","))
+          .map((row) =>
+            Object.values(row)
+              .map((val) => `"${val}"`)
+              .join(",")
+          )
           .join("\n");
         const csvContent = headers + "\n" + rows;
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.setAttribute("download", "invoices.csv");
@@ -295,7 +357,9 @@ const processBatchPayments = async () => {
       case "PDF": {
         const doc = new jsPDF();
         const columns = Object.keys(exportData[0]);
-        const tableRows = exportData.map((row) => columns.map((col) => row[col]));
+        const tableRows = exportData.map((row) =>
+          columns.map((col) => row[col])
+        );
         autoTable(doc, { head: [columns], body: tableRows });
         doc.save("invoices.pdf");
         break;
@@ -303,8 +367,12 @@ const processBatchPayments = async () => {
 
       case "Print": {
         const printWindow = window.open("", "", "height=500,width=800");
-        printWindow.document.write("<html><head><title>Invoices</title></head><body>");
-        printWindow.document.write("<table border='1' style='border-collapse: collapse; width: 100%;'>");
+        printWindow.document.write(
+          "<html><head><title>Invoices</title></head><body>"
+        );
+        printWindow.document.write(
+          "<table border='1' style='border-collapse: collapse; width: 100%;'>"
+        );
         printWindow.document.write("<thead><tr>");
         Object.keys(exportData[0]).forEach((col) => {
           printWindow.document.write(`<th>${col}</th>`);
@@ -332,13 +400,16 @@ const processBatchPayments = async () => {
 
   // Delete invoice
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this invoice?")) return;
+    if (!window.confirm("Are you sure you want to delete this invoice?"))
+      return;
     try {
       const config = createAxiosConfig();
-      await axios.delete(`http://localhost:5000/api/admin/invoices/${id}`, config);
+      await axios.delete(`${API_BASE_URL}/admin/invoices/${id}`, config);
       setInvoices(invoices.filter((i) => i._id !== id));
       // Remove from selected if it was selected
-      setSelectedInvoices(selectedInvoices.filter(invoiceId => invoiceId !== id));
+      setSelectedInvoices(
+        selectedInvoices.filter((invoiceId) => invoiceId !== id)
+      );
       fetchInvoices(); // Refresh stats
     } catch (err) {
       console.error("Error deleting invoice", err);
@@ -351,15 +422,20 @@ const processBatchPayments = async () => {
 
   // Bulk delete invoices
   const handleBulkDelete = async () => {
-    if (!window.confirm(`Are you sure you want to delete ${selectedInvoices.length} invoices?`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedInvoices.length} invoices?`
+      )
+    )
+      return;
     try {
       const config = createAxiosConfig();
       await Promise.all(
-        selectedInvoices.map(id => 
-          axios.delete(`http://localhost:5000/api/admin/invoices/${id}`, config)
+        selectedInvoices.map((id) =>
+          axios.delete(`${API_BASE_URL}/admin/invoices/${id}`, config)
         )
       );
-      setInvoices(invoices.filter(i => !selectedInvoices.includes(i._id)));
+      setInvoices(invoices.filter((i) => !selectedInvoices.includes(i._id)));
       setSelectedInvoices([]);
       alert("Selected invoices deleted successfully!");
     } catch (err) {
@@ -376,7 +452,11 @@ const processBatchPayments = async () => {
   const handleUpdate = async () => {
     try {
       const config = createAxiosConfig();
-      await axios.put(`http://localhost:5000/api/admin/invoices/${editInvoice._id}`, formData, config);
+      await axios.put(
+        `${API_BASE_URL}/admin/invoices/${editInvoice._id}`,
+        formData,
+        config
+      );
       setEditInvoice(null);
       fetchInvoices();
     } catch (err) {
@@ -392,17 +472,25 @@ const processBatchPayments = async () => {
   const filteredInvoices = invoices.filter(
     (invoice) =>
       invoice.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (invoice.invoiceNumber || "INV-" + invoice._id.slice(-6).toUpperCase()).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (invoice.invoiceNumber || "INV-" + invoice._id.slice(-6).toUpperCase())
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
       invoice.reference?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Pagination
   const indexOfLastInvoice = currentPage * entriesPerPage;
   const indexOfFirstInvoice = indexOfLastInvoice - entriesPerPage;
-  const currentInvoices = filteredInvoices.slice(indexOfFirstInvoice, indexOfLastInvoice);
+  const currentInvoices = filteredInvoices.slice(
+    indexOfFirstInvoice,
+    indexOfLastInvoice
+  );
   const totalPages = Math.ceil(filteredInvoices.length / entriesPerPage);
 
-  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading invoices...</div>;
+  if (loading)
+    return (
+      <div className="bg-gray-100 min-h-screen p-4">Loading invoices...</div>
+    );
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
@@ -462,14 +550,16 @@ const processBatchPayments = async () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Partiallypaid</p>
-              <p className="text-2xl font-bold">{stats.partiallypaidInvoices}</p>
+              <p className="text-2xl font-bold">
+                {stats.partiallypaidInvoices}
+              </p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-full">
               <FaMoneyBillWave className="text-yellow-600" />
             </div>
           </div>
         </div>
-     
+
         {/* Overdue Invoices */}
         <div className="bg-white p-4 rounded-lg shadow border">
           <div className="flex items-center justify-between">
@@ -496,19 +586,20 @@ const processBatchPayments = async () => {
           </div>
         </div>
       </div>
-      
+
       {/* Top action buttons */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <div className="flex items-center gap-2">
-          <button 
+          <button
             onClick={() => navigate("../invoices/new")}
-            className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+            className="px-3 py-1 text-sm rounded flex items-center gap-2"
+            style={{ backgroundColor: "#333333", color: "white" }}
           >
             <FaPlus /> New Invoice
           </button>
-          
+
           {/* Batch Payment Button */}
-          <button 
+          <button
             onClick={() => {
               setShowBatchPayment(true);
               setBatchPaymentError("");
@@ -518,7 +609,7 @@ const processBatchPayments = async () => {
           >
             <FaMoneyCheckAlt /> Batch Payment
           </button>
-          
+
           {/* Bulk delete button */}
           {selectedInvoices.length > 0 && (
             <button
@@ -540,7 +631,11 @@ const processBatchPayments = async () => {
       </div>
 
       {/* White box */}
-      <div className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+      <div
+        className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+          compactView ? "w-1/2" : "w-full"
+        }`}
+      >
         {/* Table controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
@@ -567,7 +662,10 @@ const processBatchPayments = async () => {
                 <HiOutlineDownload /> Export
               </button>
               {showExportMenu && (
-                <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                <div
+                  ref={exportMenuRef}
+                  className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                >
                   {["Excel", "CSV", "PDF", "Print"].map((item) => (
                     <button
                       key={item}
@@ -611,39 +709,120 @@ const processBatchPayments = async () => {
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th
+                  className="p-3 rounded-l-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
                   <input
                     type="checkbox"
-                    checked={selectedInvoices.length === currentInvoices.length && currentInvoices.length > 0}
+                    checked={
+                      selectedInvoices.length === currentInvoices.length &&
+                      currentInvoices.length > 0
+                    }
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedInvoices(currentInvoices.map(i => i._id));
+                        setSelectedInvoices(currentInvoices.map((i) => i._id));
                       } else {
                         setSelectedInvoices([]);
                       }
                     }}
                   />
                 </th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Invoice#</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Amount</th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Invoice#
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Amount
+                </th>
                 {compactView ? (
                   <>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Customer
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Date
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Actions
+                    </th>
                   </>
                 ) : (
                   <>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Total Tax</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Customer</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Project</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tags</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Due Date</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Reference</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                    <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Total Tax
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Customer
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Project
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Tags
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Date
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Due Date
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Reference
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Actions
+                    </th>
                   </>
                 )}
               </tr>
@@ -651,7 +830,9 @@ const processBatchPayments = async () => {
             <tbody>
               {currentInvoices.length > 0 ? (
                 currentInvoices.map((invoice) => {
-                  const displayInvoiceNumber = invoice.invoiceNumber || "INV-" + invoice._id.slice(-6).toUpperCase();
+                  const displayInvoiceNumber =
+                    invoice.invoiceNumber ||
+                    "INV-" + invoice._id.slice(-6).toUpperCase();
 
                   const displayAmount = new Intl.NumberFormat("en-US", {
                     style: "currency",
@@ -659,20 +840,27 @@ const processBatchPayments = async () => {
                     minimumFractionDigits: 2,
                   }).format(invoice.total || 0);
 
-                  const totalTax = invoice.items ? 
-                    invoice.items.reduce((sum, item) => sum + (item.tax1 || 0) + (item.tax2 || 0), 0) : 0;
+                  const totalTax = invoice.items
+                    ? invoice.items.reduce(
+                        (sum, item) =>
+                          sum + (item.tax1 || 0) + (item.tax2 || 0),
+                        0
+                      )
+                    : 0;
 
                   const formatDate = (dateString) => {
                     if (!dateString) return "-";
                     const date = new Date(dateString);
-                    return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+                    return isNaN(date.getTime())
+                      ? "-"
+                      : date.toLocaleDateString();
                   };
 
                   return (
                     <tr
                       key={invoice._id}
                       className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                      style={{ color: 'black' }}
+                      style={{ color: "black" }}
                     >
                       <td className="p-3 rounded-l-lg border-0">
                         <div className="flex items-center">
@@ -684,16 +872,22 @@ const processBatchPayments = async () => {
                           />
                         </div>
                       </td>
-                      <td className="p-3 border-0 ">
-                        {displayInvoiceNumber}
-                      </td>
+                      <td className="p-3 border-0 ">{displayInvoiceNumber}</td>
                       <td className="p-3 border-0 ">{displayAmount}</td>
                       {compactView ? (
                         <>
-                          <td className="p-3 border-0">{invoice.customer || "-"}</td>
-                          <td className="p-3 border-0">{formatDate(invoice.invoiceDate)}</td>
                           <td className="p-3 border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(invoice.status)}`}>
+                            {invoice.customer || "-"}
+                          </td>
+                          <td className="p-3 border-0">
+                            {formatDate(invoice.invoiceDate)}
+                          </td>
+                          <td className="p-3 border-0">
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                invoice.status
+                              )}`}
+                            >
                               {invoice.status || "Draft"}
                             </span>
                           </td>
@@ -738,14 +932,30 @@ const processBatchPayments = async () => {
                               minimumFractionDigits: 2,
                             }).format(totalTax)}
                           </td>
-                          <td className="p-3 border-0">{invoice.customer || "-"}</td>
-                          <td className="p-3 border-0">{invoice.reference || "-"}</td>
-                          <td className="p-3 border-0">{invoice.tags || "-"}</td>
-                          <td className="p-3 border-0">{formatDate(invoice.invoiceDate)}</td>
-                          <td className="p-3 border-0">{formatDate(invoice.dueDate)}</td>
-                          <td className="p-3 border-0">{invoice.reference || "-"}</td>
                           <td className="p-3 border-0">
-                            <span className={`px-2 py-1 rounded text-xs ${getStatusColor(invoice.status)}`}>
+                            {invoice.customer || "-"}
+                          </td>
+                          <td className="p-3 border-0">
+                            {invoice.reference || "-"}
+                          </td>
+                          <td className="p-3 border-0">
+                            {invoice.tags || "-"}
+                          </td>
+                          <td className="p-3 border-0">
+                            {formatDate(invoice.invoiceDate)}
+                          </td>
+                          <td className="p-3 border-0">
+                            {formatDate(invoice.dueDate)}
+                          </td>
+                          <td className="p-3 border-0">
+                            {invoice.reference || "-"}
+                          </td>
+                          <td className="p-3 border-0">
+                            <span
+                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                invoice.status
+                              )}`}
+                            >
                               {invoice.status || "Draft"}
                             </span>
                           </td>
@@ -787,8 +997,13 @@ const processBatchPayments = async () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={compactView ? 7 : 12} className="p-4 text-center text-gray-500 bg-white shadow rounded-lg">
-                    {invoices.length === 0 ? "No invoices found. Create your first invoice!" : "No invoices match your search."}
+                  <td
+                    colSpan={compactView ? 7 : 12}
+                    className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
+                  >
+                    {invoices.length === 0
+                      ? "No invoices found. Create your first invoice!"
+                      : "No invoices match your search."}
                   </td>
                 </tr>
               )}
@@ -800,7 +1015,8 @@ const processBatchPayments = async () => {
         {filteredInvoices.length > 0 && (
           <div className="flex justify-between items-center mt-4 text-sm">
             <span>
-              Showing {indexOfFirstInvoice + 1} to {Math.min(indexOfLastInvoice, filteredInvoices.length)} of{" "}
+              Showing {indexOfFirstInvoice + 1} to{" "}
+              {Math.min(indexOfLastInvoice, filteredInvoices.length)} of{" "}
               {filteredInvoices.length} entries
             </span>
             <div className="flex items-center gap-2">
@@ -840,14 +1056,20 @@ const processBatchPayments = async () => {
           <div className="bg-white rounded p-6 w-11/12 max-w-2xl shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Invoice Details</h2>
-              <button onClick={() => setViewInvoice(null)} className="text-gray-500 hover:text-gray-700">
+              <button
+                onClick={() => setViewInvoice(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
                 <FaTimes size={20} />
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="font-semibold">Invoice #:</p>
-                <p>{viewInvoice.invoiceNumber || "INV-" + viewInvoice._id.slice(-6).toUpperCase()}</p>
+                <p>
+                  {viewInvoice.invoiceNumber ||
+                    "INV-" + viewInvoice._id.slice(-6).toUpperCase()}
+                </p>
               </div>
               <div>
                 <p className="font-semibold">Customer:</p>
@@ -859,39 +1081,56 @@ const processBatchPayments = async () => {
               </div>
               <div>
                 <p className="font-semibold">Amount:</p>
-                <p>{new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: viewInvoice.currency || "USD",
-                }).format(viewInvoice.total)}</p>
+                <p>
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: viewInvoice.currency || "USD",
+                  }).format(viewInvoice.total)}
+                </p>
               </div>
               <div>
                 <p className="font-semibold">Status:</p>
-                <p><span className={`px-2 py-1 rounded text-xs ${getStatusColor(viewInvoice.status)}`}>
-                  {viewInvoice.status}
-                </span></p>
+                <p>
+                  <span
+                    className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                      viewInvoice.status
+                    )}`}
+                  >
+                    {viewInvoice.status}
+                  </span>
+                </p>
               </div>
               <div>
                 <p className="font-semibold">Paid Amount:</p>
-                <p>{new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: viewInvoice.currency || "USD",
-                }).format(viewInvoice.paidAmount || 0)}</p>
+                <p>
+                  {new Intl.NumberFormat("en-US", {
+                    style: "currency",
+                    currency: viewInvoice.currency || "USD",
+                  }).format(viewInvoice.paidAmount || 0)}
+                </p>
               </div>
               {viewInvoice.items && viewInvoice.items.length > 0 && (
                 <div className="col-span-2">
                   <p className="font-semibold mb-2">Items:</p>
                   <div className="border rounded p-2">
                     {viewInvoice.items.map((item, index) => (
-                      <div key={index} className="flex justify-between py-1 border-b last:border-b-0">
+                      <div
+                        key={index}
+                        className="flex justify-between py-1 border-b last:border-b-0"
+                      >
                         <div>
                           <p className="font-medium">{item.description}</p>
-                          <p className="text-sm text-gray-600">{item.quantity} x {item.rate}</p>
+                          <p className="text-sm text-gray-600">
+                            {item.quantity} x {item.rate}
+                          </p>
                         </div>
                         <div>
-                          <p>{new Intl.NumberFormat("en-US", {
-                            style: "currency",
-                            currency: viewInvoice.currency || "USD",
-                          }).format(item.amount)}</p>
+                          <p>
+                            {new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: viewInvoice.currency || "USD",
+                            }).format(item.amount)}
+                          </p>
                         </div>
                       </div>
                     ))}
@@ -900,7 +1139,10 @@ const processBatchPayments = async () => {
               )}
             </div>
             <div className="mt-6 flex justify-end">
-              <button onClick={() => setViewInvoice(null)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+              <button
+                onClick={() => setViewInvoice(null)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
                 Close
               </button>
             </div>
@@ -913,7 +1155,10 @@ const processBatchPayments = async () => {
           <div className="bg-white rounded p-6 w-11/12 max-w-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Update Invoice</h2>
-              <button onClick={() => setEditInvoice(null)} className="text-gray-500 hover:text-gray-700">
+              <button
+                onClick={() => setEditInvoice(null)}
+                className="text-gray-500 hover:text-gray-700"
+              >
                 <FaTimes size={20} />
               </button>
             </div>
@@ -922,7 +1167,9 @@ const processBatchPayments = async () => {
               <input
                 type="text"
                 value={formData.customer}
-                onChange={(e) => setFormData({ ...formData, customer: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, customer: e.target.value })
+                }
                 className="border w-full p-2 rounded"
                 placeholder="Customer Name"
               />
@@ -931,7 +1178,9 @@ const processBatchPayments = async () => {
               <label className="block text-sm font-medium mb-1">Status</label>
               <select
                 value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value })
+                }
                 className="border w-full p-2 rounded"
               >
                 <option value="Draft">Draft</option>
@@ -942,10 +1191,16 @@ const processBatchPayments = async () => {
               </select>
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setEditInvoice(null)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+              <button
+                onClick={() => setEditInvoice(null)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
                 Cancel
               </button>
-              <button onClick={handleUpdate} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+              <button
+                onClick={handleUpdate}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
                 Save Changes
               </button>
             </div>
@@ -959,59 +1214,87 @@ const processBatchPayments = async () => {
           <div className="bg-white rounded p-6 w-11/12 max-w-5xl max-h-screen overflow-y-auto shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-bold">Batch Payment</h2>
-              <button onClick={() => setShowBatchPayment(false)} className="text-gray-500 hover:text-gray-700">
+              <button
+                onClick={() => setShowBatchPayment(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
                 <FaTimes size={20} />
               </button>
             </div>
-            
+
             {batchPaymentError && (
               <div className="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-200">
                 {batchPaymentError}
               </div>
             )}
-            
+
             <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Payment Date *</label>
+                <label className="block text-sm font-medium mb-1">
+                  Payment Date *
+                </label>
                 <input
                   type="date"
                   value={batchPaymentData.paymentDate}
-                  onChange={(e) => setBatchPaymentData({...batchPaymentData, paymentDate: e.target.value})}
+                  onChange={(e) =>
+                    setBatchPaymentData({
+                      ...batchPaymentData,
+                      paymentDate: e.target.value,
+                    })
+                  }
                   className="border rounded w-full p-2"
                   required
                 />
               </div>
-             <div>
-            <label className="block text-sm font-medium mb-1">Payment Mode *</label>
-              <select
-                value={batchPaymentData.paymentMode}
-                onChange={(e) => setBatchPaymentData({...batchPaymentData, paymentMode: e.target.value})}
-                className="border rounded w-full p-2"
-                required
-              >
-                <option value="">Select Payment Mode</option>
-                <option value="Bank">Bank Transfer</option>
-                <option value="Stripe Checkout">Stripe Checkout</option>
-              </select>
-             
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Payment Mode *
+                </label>
+                <select
+                  value={batchPaymentData.paymentMode}
+                  onChange={(e) =>
+                    setBatchPaymentData({
+                      ...batchPaymentData,
+                      paymentMode: e.target.value,
+                    })
+                  }
+                  className="border rounded w-full p-2"
+                  required
+                >
+                  <option value="">Select Payment Mode</option>
+                  <option value="Bank">Bank Transfer</option>
+                  <option value="Stripe Checkout">Stripe Checkout</option>
+                </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Transaction ID</label>
+                <label className="block text-sm font-medium mb-1">
+                  Transaction ID
+                </label>
                 <input
                   type="text"
                   value={batchPaymentData.transactionId}
-                  onChange={(e) => setBatchPaymentData({...batchPaymentData, transactionId: e.target.value})}
+                  onChange={(e) =>
+                    setBatchPaymentData({
+                      ...batchPaymentData,
+                      transactionId: e.target.value,
+                    })
+                  }
                   className="border rounded w-full p-2"
                   placeholder="Transaction reference"
                 />
               </div>
             </div>
-            
+
             <div className="mb-4 flex items-center">
               <input
                 type="checkbox"
                 checked={batchPaymentData.sendEmail}
-                onChange={(e) => setBatchPaymentData({...batchPaymentData, sendEmail: e.target.checked})}
+                onChange={(e) =>
+                  setBatchPaymentData({
+                    ...batchPaymentData,
+                    sendEmail: e.target.checked,
+                  })
+                }
                 className="mr-2"
                 id="sendEmail"
               />
@@ -1019,10 +1302,12 @@ const processBatchPayments = async () => {
                 Send invoice payment recorded email to customer contacts
               </label>
             </div>
-            
+
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3">Invoices for Payment</h3>
-              
+              <h3 className="text-lg font-semibold mb-3">
+                Invoices for Payment
+              </h3>
+
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border-collapse">
                   <thead>
@@ -1039,10 +1324,13 @@ const processBatchPayments = async () => {
                     {getPayableInvoices().map((invoice) => {
                       const paidAmount = invoice.paidAmount || 0;
                       const balanceDue = invoice.total - paidAmount;
-                      
+
                       return (
                         <tr key={invoice._id}>
-                          <td className="p-2 border">{invoice.invoiceNumber || "INV-" + invoice._id.slice(-6).toUpperCase()}</td>
+                          <td className="p-2 border">
+                            {invoice.invoiceNumber ||
+                              "INV-" + invoice._id.slice(-6).toUpperCase()}
+                          </td>
                           <td className="p-2 border">{invoice.customer}</td>
                           <td className="p-2 border text-right">
                             {new Intl.NumberFormat("en-US", {
@@ -1069,7 +1357,12 @@ const processBatchPayments = async () => {
                               max={balanceDue}
                               step="0.01"
                               value={paymentAmounts[invoice._id] || ""}
-                              onChange={(e) => handlePaymentAmountChange(invoice._id, e.target.value)}
+                              onChange={(e) =>
+                                handlePaymentAmountChange(
+                                  invoice._id,
+                                  e.target.value
+                                )
+                              }
                               className="border rounded p-1 w-full"
                               placeholder="0.00"
                             />
@@ -1081,15 +1374,15 @@ const processBatchPayments = async () => {
                 </table>
               </div>
             </div>
-            
+
             <div className="flex justify-end gap-3">
-              <button 
-                onClick={() => setShowBatchPayment(false)} 
+              <button
+                onClick={() => setShowBatchPayment(false)}
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={processBatchPayments}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >

@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const AdminHeader = ({ onToggleSidebar, userType = "admin" }) => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [user, setUser] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
@@ -82,19 +83,19 @@ const AdminHeader = ({ onToggleSidebar, userType = "admin" }) => {
 
       // Fetch today's announcements
       const { data: announcements } = await axios.get(
-        `http://localhost:5000/api/admin/announcements?date=${todayISO}`,
+        `${API_BASE_URL}/admin/announcements?date=${todayISO}`,
         config
       );
 
       // Fetch today's goals (ending today)
       const { data: goals } = await axios.get(
-        `http://localhost:5000/api/admin/goals?endDate=${todayISO}`,
+        `${API_BASE_URL}/admin/goals?endDate=${todayISO}`,
         config
       );
 
       // Fetch today's events
       const { data: events } = await axios.get(
-        `http://localhost:5000/api/admin/events/range?startDate=${startOfDay}&endDate=${endOfDay}`,
+        `${API_BASE_URL}/admin/events/range?startDate=${startOfDay}&endDate=${endOfDay}`,
         config
       );
 

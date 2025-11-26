@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import {
   FaSearch,
@@ -14,6 +15,7 @@ import {
 import axios from "axios";
 
 const ClientEstimateRequest = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
@@ -73,7 +75,7 @@ const ClientEstimateRequest = () => {
       }
 
       const { data } = await axios.get(
-        "http://localhost:5000/api/client/estimate-requests",
+        `${API_BASE_URL}/client/estimate-requests`,
         {
           ...config,
           params: params,
@@ -147,7 +149,7 @@ const ClientEstimateRequest = () => {
     try {
       const config = createAxiosConfig();
       const { data } = await axios.put(
-        `http://localhost:5000/api/client/estimate-requests/${respondingEstimate._id}/respond`,
+        `${API_BASE_URL}/client/estimate-requests/${respondingEstimate._id}/respond`,
         { status, responseNotes },
         config
       );

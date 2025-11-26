@@ -4,8 +4,16 @@ import axios from "axios";
 import styled from "styled-components"; // Import styled-components
 
 const colors = [
-  "#1BC5BD", "#8950FC", "#F64E60", "#E4E6EF", "#A1A5B7",
-  "#F1416C", "#FFC700", "#50CD89", "#7239EA", "#FFA800"
+  "#1BC5BD",
+  "#8950FC",
+  "#F64E60",
+  "#E4E6EF",
+  "#A1A5B7",
+  "#F1416C",
+  "#FFC700",
+  "#50CD89",
+  "#7239EA",
+  "#FFA800",
 ];
 
 const daysInWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -14,18 +22,18 @@ function generateMonthDays(year, month) {
   const firstDay = new Date(year, month, 1);
   const lastDate = new Date(year, month + 1, 0).getDate();
   const startDayOfWeek = firstDay.getDay();
-  
+
   const dates = [];
-  
+
   // Padding empty days for previous month
-  for(let i=0; i<startDayOfWeek; i++) {
+  for (let i = 0; i < startDayOfWeek; i++) {
     dates.push(null);
   }
-  
-  for(let d=1; d<=lastDate; d++) {
+
+  for (let d = 1; d <= lastDate; d++) {
     dates.push(new Date(year, month, d));
   }
-  
+
   return dates;
 }
 
@@ -125,12 +133,13 @@ const ColorPickerContainer = styled.div`
 `;
 
 const ColorSwatch = styled.div`
-  background-color: ${props => props.color};
+  background-color: ${(props) => props.color};
   width: 30px;
   height: 30px;
   border-radius: 50%;
   cursor: pointer;
-  border: ${props => props.isSelected ? "3px solid #333" : "2px solid #ccc"};
+  border: ${(props) =>
+    props.isSelected ? "3px solid #333" : "2px solid #ccc"};
   transition: border 0.2s ease-in-out, transform 0.2s ease-in-out;
 
   &:hover {
@@ -176,10 +185,19 @@ const ModalButton = styled.button`
   }
 `;
 
-const EventModal = ({ show, onClose, onSave, selectedDate, eventToEdit, onUpdate }) => {
+const EventModal = ({
+  show,
+  onClose,
+  onSave,
+  selectedDate,
+  eventToEdit,
+  onUpdate,
+}) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [startDate, setStartDate] = useState(selectedDate ? selectedDate.toISOString().slice(0,16) : "");
+  const [startDate, setStartDate] = useState(
+    selectedDate ? selectedDate.toISOString().slice(0, 16) : ""
+  );
   const [endDate, setEndDate] = useState("");
   const [color, setColor] = useState(colors[0]);
   const [isEditing, setIsEditing] = useState(false);
@@ -188,12 +206,16 @@ const EventModal = ({ show, onClose, onSave, selectedDate, eventToEdit, onUpdate
     if (eventToEdit) {
       setTitle(eventToEdit.title);
       setDescription(eventToEdit.description || "");
-      setStartDate(new Date(eventToEdit.startDate).toISOString().slice(0,16));
-      setEndDate(eventToEdit.endDate ? new Date(eventToEdit.endDate).toISOString().slice(0,16) : "");
+      setStartDate(new Date(eventToEdit.startDate).toISOString().slice(0, 16));
+      setEndDate(
+        eventToEdit.endDate
+          ? new Date(eventToEdit.endDate).toISOString().slice(0, 16)
+          : ""
+      );
       setColor(eventToEdit.color || colors[0]);
       setIsEditing(true);
     } else if (selectedDate) {
-      setStartDate(selectedDate.toISOString().slice(0,16));
+      setStartDate(selectedDate.toISOString().slice(0, 16));
       setTitle("");
       setDescription("");
       setEndDate("");
@@ -207,7 +229,7 @@ const EventModal = ({ show, onClose, onSave, selectedDate, eventToEdit, onUpdate
       alert("Event title is required");
       return;
     }
-    
+
     const eventData = {
       title: title.trim(),
       description,
@@ -216,7 +238,7 @@ const EventModal = ({ show, onClose, onSave, selectedDate, eventToEdit, onUpdate
       color,
       publicEvent: false,
     };
-    
+
     if (isEditing && eventToEdit) {
       onUpdate(eventToEdit._id, eventData);
     } else {
@@ -233,19 +255,19 @@ const EventModal = ({ show, onClose, onSave, selectedDate, eventToEdit, onUpdate
           <h3>{isEditing ? "Edit Event" : "Add New Event"}</h3>
           <CloseButton onClick={onClose}>×</CloseButton>
         </ModalHeader>
-        
+
         <FormLabel>Event title*</FormLabel>
-        <FormInput 
-          type="text" 
-          value={title} 
-          onChange={e => setTitle(e.target.value)} 
+        <FormInput
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
           placeholder="Enter event title"
         />
 
         <FormLabel>Description</FormLabel>
-        <FormTextarea 
-          value={description} 
-          onChange={e => setDescription(e.target.value)} 
+        <FormTextarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           placeholder="Enter description"
         />
 
@@ -253,30 +275,32 @@ const EventModal = ({ show, onClose, onSave, selectedDate, eventToEdit, onUpdate
         <FormInput
           type="datetime-local"
           value={startDate}
-          onChange={e => setStartDate(e.target.value)}
+          onChange={(e) => setStartDate(e.target.value)}
         />
 
         <FormLabel>End Date</FormLabel>
         <FormInput
           type="datetime-local"
           value={endDate}
-          onChange={e => setEndDate(e.target.value)}
+          onChange={(e) => setEndDate(e.target.value)}
         />
 
         <FormLabel>Event Color</FormLabel>
         <ColorPickerContainer>
-          {colors.map(c => (
-            <ColorSwatch 
-              key={c} 
+          {colors.map((c) => (
+            <ColorSwatch
+              key={c}
               color={c}
               isSelected={color === c}
-              onClick={() => setColor(c)} 
+              onClick={() => setColor(c)}
             />
           ))}
         </ColorPickerContainer>
 
         <ModalFooter>
-          <ModalButton className="secondary" onClick={onClose}>Close</ModalButton>
+          <ModalButton className="secondary" onClick={onClose}>
+            Close
+          </ModalButton>
           <ModalButton className="primary" onClick={handleSubmit}>
             {isEditing ? "Update" : "Save"}
           </ModalButton>
@@ -292,7 +316,7 @@ const CalendarContainer = styled.div`
   min-height: 100vh;
   margin: 0;
   padding: 30px;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   box-sizing: border-box;
   background-color: #f8f9fa;
   color: #343a40;
@@ -373,9 +397,10 @@ const DateCell = styled.div`
   border: 1px solid #e0e0e0;
   min-height: 100px; /* Increased min-height for better spacing */
   padding: 8px;
-  cursor: ${props => props.isClickable ? "pointer" : "default"};
-  background-color: ${props => props.isToday ? "#e6f7ff" : (props.isCurrentMonth ? "white" : "#f8f9fa")};
-  color: ${props => props.isCurrentMonth ? "#333" : "#adb5bd"};
+  cursor: ${(props) => (props.isClickable ? "pointer" : "default")};
+  background-color: ${(props) =>
+    props.isToday ? "#e6f7ff" : props.isCurrentMonth ? "white" : "#f8f9fa"};
+  color: ${(props) => (props.isCurrentMonth ? "#333" : "#adb5bd")};
   border-radius: 8px;
   overflow: hidden;
   font-size: 15px;
@@ -385,7 +410,9 @@ const DateCell = styled.div`
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   &:hover {
-    ${props => props.isClickable && `
+    ${(props) =>
+      props.isClickable &&
+      `
       background-color: ${props.isToday ? "#d0eeff" : "#f0f0f0"};
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -397,7 +424,7 @@ const DateNumber = styled.div`
   font-weight: bold;
   font-size: 1.2em;
   margin-bottom: 5px;
-  color: ${props => props.isToday ? "#007bff" : "inherit"};
+  color: ${(props) => (props.isToday ? "#007bff" : "inherit")};
 `;
 
 const EventList = styled.div`
@@ -411,7 +438,7 @@ const EventList = styled.div`
 `;
 
 const EventItem = styled.div`
-  background-color: ${props => props.color};
+  background-color: ${(props) => props.color};
   color: white;
   border-radius: 5px;
   padding: 4px 8px;
@@ -451,6 +478,7 @@ const DeleteEventButton = styled.span`
 `;
 
 const Calendar = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const today = new Date();
   const [selectedDate, setSelectedDate] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -464,7 +492,7 @@ const Calendar = () => {
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('crm_token');
+    return localStorage.getItem("crm_token");
   };
 
   // Create axios instance with auth headers
@@ -473,8 +501,8 @@ const Calendar = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -486,14 +514,14 @@ const Calendar = () => {
     try {
       const startOfMonth = new Date(currentYear, currentMonth, 1);
       const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
-      
+
       const config = createAxiosConfig();
-      const response = await axios.get(`http://localhost:5000/api/admin/events/range`, {
+      const response = await axios.get(`${API_BASE_URL}/admin/events/range`, {
         ...config,
         params: {
           startDate: startOfMonth.toISOString(),
-          endDate: endOfMonth.toISOString()
-        }
+          endDate: endOfMonth.toISOString(),
+        },
       });
       setEvents(response.data);
     } catch (error) {
@@ -521,7 +549,7 @@ const Calendar = () => {
   const saveEvent = async (eventData) => {
     try {
       const config = createAxiosConfig();
-      await axios.post('http://localhost:5000/api/admin/events', eventData, config);
+      await axios.post(`${API_BASE_URL}/admin/events`, eventData, config);
       fetchEvents();
       setShowModal(false);
     } catch (error) {
@@ -533,7 +561,7 @@ const Calendar = () => {
   const updateEvent = async (id, eventData) => {
     try {
       const config = createAxiosConfig();
-      await axios.put(`http://localhost:5000/api/admin/events/${id}`, eventData, config);
+      await axios.put(`${API_BASE_URL}/admin/events/${id}`, eventData, config);
       fetchEvents();
       setShowModal(false);
       setEventToEdit(null);
@@ -548,7 +576,7 @@ const Calendar = () => {
     if (window.confirm("Are you sure you want to delete this event?")) {
       try {
         const config = createAxiosConfig();
-        await axios.delete(`http://localhost:5000/api/admin/events/${id}`, config);
+        await axios.delete(`${API_BASE_URL}/admin/events/${id}`, config);
         fetchEvents();
       } catch (error) {
         console.error("Error deleting event:", error);
@@ -560,27 +588,30 @@ const Calendar = () => {
   const goPrevMonth = () => {
     if (currentMonth === 0) {
       setCurrentMonth(11);
-      setCurrentYear(y => y - 1);
+      setCurrentYear((y) => y - 1);
     } else {
-      setCurrentMonth(m => m - 1);
+      setCurrentMonth((m) => m - 1);
     }
   };
 
   const goNextMonth = () => {
     if (currentMonth === 11) {
       setCurrentMonth(0);
-      setCurrentYear(y => y + 1);
+      setCurrentYear((y) => y + 1);
     } else {
-      setCurrentMonth(m => m + 1);
+      setCurrentMonth((m) => m + 1);
     }
   };
 
   const eventsForDate = (date) => {
-    return events.filter(ev => {
+    return events.filter((ev) => {
       const evDate = new Date(ev.startDate);
-      return date && evDate.getFullYear() === date.getFullYear() &&
+      return (
+        date &&
+        evDate.getFullYear() === date.getFullYear() &&
         evDate.getMonth() === date.getMonth() &&
-        evDate.getDate() === date.getDate();
+        evDate.getDate() === date.getDate()
+      );
     });
   };
 
@@ -589,46 +620,50 @@ const Calendar = () => {
       <CalendarHeader>
         <NavButton onClick={goPrevMonth}>&lt;</NavButton>
         <MonthYearDisplay>
-          {new Date(currentYear, currentMonth).toLocaleString('default', {month: 'long', year: 'numeric'})}
+          {new Date(currentYear, currentMonth).toLocaleString("default", {
+            month: "long",
+            year: "numeric",
+          })}
         </MonthYearDisplay>
         <NavButton onClick={goNextMonth}>&gt;</NavButton>
       </CalendarHeader>
 
       <DaysOfWeekHeader>
-        {daysInWeek.map(day => (
+        {daysInWeek.map((day) => (
           <DayOfWeek key={day}>{day}</DayOfWeek>
         ))}
       </DaysOfWeekHeader>
 
       <DatesGrid>
         {monthDays.map((date, idx) => {
-          const isToday = date && 
+          const isToday =
+            date &&
             date.getFullYear() === today.getFullYear() &&
             date.getMonth() === today.getMonth() &&
             date.getDate() === today.getDate();
           const isCurrentMonth = date && date.getMonth() === currentMonth;
 
           return (
-            <DateCell 
-              key={idx} 
-              onClick={() => date && openModal(date)} 
+            <DateCell
+              key={idx}
+              onClick={() => date && openModal(date)}
               isClickable={!!date}
               isToday={isToday}
               isCurrentMonth={isCurrentMonth}
             >
-              {date && <DateNumber isToday={isToday}>{date.getDate()}</DateNumber>}
+              {date && (
+                <DateNumber isToday={isToday}>{date.getDate()}</DateNumber>
+              )}
               <EventList>
                 {eventsForDate(date).map((ev, i) => (
-                  <EventItem 
-                    key={i} 
+                  <EventItem
+                    key={i}
                     onClick={(e) => openEditModal(ev, e)}
                     color={ev.color}
                     title={ev.title}
                   >
                     <EventTitle>{ev.title}</EventTitle>
-                    <DeleteEventButton 
-                      onClick={(e) => deleteEvent(ev._id, e)}
-                    >
+                    <DeleteEventButton onClick={(e) => deleteEvent(ev._id, e)}>
                       ×
                     </DeleteEventButton>
                   </EventItem>
@@ -639,12 +674,12 @@ const Calendar = () => {
         })}
       </DatesGrid>
 
-      <EventModal 
-        show={showModal} 
-        onClose={closeModal} 
-        onSave={saveEvent} 
+      <EventModal
+        show={showModal}
+        onClose={closeModal}
+        onSave={saveEvent}
         onUpdate={updateEvent}
-        selectedDate={selectedDate} 
+        selectedDate={selectedDate}
         eventToEdit={eventToEdit}
       />
     </CalendarContainer>

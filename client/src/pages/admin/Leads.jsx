@@ -61,6 +61,7 @@ const useOutsideClick = (callback) => {
 };
 
 const LeadsPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(25);
@@ -147,10 +148,7 @@ const LeadsPage = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(
-        "http://localhost:5000/api/leads",
-        config
-      );
+      const { data } = await axios.get(`${API_BASE_URL}/leads`, config);
       setLeads(data.leads || []);
       setStats(
         data.stats || {
@@ -242,7 +240,7 @@ const LeadsPage = () => {
       if (editingLead) {
         // Update existing lead
         await axios.put(
-          `http://localhost:5000/api/leads/${editingLead._id}`,
+          `${API_BASE_URL}/leads/${editingLead._id}`,
           newLead,
           config
         );
@@ -252,7 +250,7 @@ const LeadsPage = () => {
         alert("Lead updated successfully!");
       } else {
         // Create new lead
-        await axios.post("http://localhost:5000/api/leads", newLead, config);
+        await axios.post(`${API_BASE_URL}/leads`, newLead, config);
         setShowNewLeadForm(false);
         fetchLeads();
         alert("Lead created successfully!");
@@ -304,7 +302,7 @@ const LeadsPage = () => {
     if (window.confirm("Are you sure you want to delete this lead?")) {
       try {
         const config = createAxiosConfig();
-        await axios.delete(`http://localhost:5000/api/leads/${id}`, config);
+        await axios.delete(`${API_BASE_URL}/leads/${id}`, config);
         fetchLeads();
         alert("Lead deleted successfully!");
       } catch (error) {
@@ -329,7 +327,7 @@ const LeadsPage = () => {
       try {
         const config = createAxiosConfig();
         await axios.post(
-          "http://localhost:5000/api/leads/bulk-delete",
+          `${API_BASE_URL}/leads/bulk-delete`,
           { ids: selectedLeads },
           config
         );
@@ -378,7 +376,7 @@ const LeadsPage = () => {
       };
 
       const { data } = await axios.post(
-        "http://localhost:5000/api/leads/import",
+        `${API_BASE_URL}/leads/import`,
         formData,
         config
       );

@@ -19,6 +19,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const StaffsPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [selectedStaffs, setSelectedStaffs] = useState([]);
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(25);
@@ -92,10 +93,7 @@ const StaffsPage = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(
-        "http://localhost:5000/api/staffs",
-        config
-      );
+      const { data } = await axios.get(`${API_BASE_URL}/staffs`, config);
       setStaffs(data.staffs || []);
       setStats({
         totalStaffs: data.stats?.totalStaffs ?? 0,
@@ -128,7 +126,7 @@ const StaffsPage = () => {
     try {
       const config = createAxiosConfig();
       await axios.patch(
-        `http://localhost:5000/api/staffs/${id}/toggle-active`,
+        `${API_BASE_URL}/staffs/${id}/toggle-active`,
         {},
         config
       );
@@ -187,7 +185,7 @@ const StaffsPage = () => {
       if (editingStaff) {
         // Update existing staff
         const response = await axios.put(
-          `http://localhost:5000/api/staffs/${editingStaff._id}`,
+          `${API_BASE_URL}/staffs/${editingStaff._id}`,
           newStaff,
           config
         );
@@ -200,7 +198,7 @@ const StaffsPage = () => {
       } else {
         // Create new staff
         const response = await axios.post(
-          "http://localhost:5000/api/staffs",
+          `${API_BASE_URL}/staffs`,
           newStaff,
           config
         );
@@ -249,7 +247,7 @@ const StaffsPage = () => {
     if (window.confirm("Are you sure you want to delete this staff?")) {
       try {
         const config = createAxiosConfig();
-        await axios.delete(`http://localhost:5000/api/staffs/${id}`, config);
+        await axios.delete(`${API_BASE_URL}/staffs/${id}`, config);
         fetchStaffs();
         alert("Staff deleted successfully!");
       } catch (error) {
@@ -295,7 +293,7 @@ const StaffsPage = () => {
       };
 
       const { data } = await axios.post(
-        "http://localhost:5000/api/staffs/import",
+        `${API_BASE_URL}/staffs/import`,
         formData,
         config
       );
@@ -338,7 +336,7 @@ const StaffsPage = () => {
         const config = createAxiosConfig();
         await Promise.all(
           selectedStaffs.map((id) =>
-            axios.delete(`http://localhost:5000/api/staffs/${id}`, config)
+            axios.delete(`${API_BASE_URL}/staffs/${id}`, config)
           )
         );
         setSelectedStaffs([]);

@@ -8,10 +8,11 @@ const groups = [
   "Sales",
   "Support",
   "HR",
-  "Finance"
+  "Finance",
 ];
 
 export default function KbArticles() {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [selectedGroup, setSelectedGroup] = useState("All");
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +20,7 @@ export default function KbArticles() {
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('crm_token');
+    return localStorage.getItem("crm_token");
   };
 
   // Create axios instance with auth headers
@@ -28,8 +29,8 @@ export default function KbArticles() {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -43,11 +44,11 @@ export default function KbArticles() {
       setLoading(true);
       setError("");
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/knowledge-base", {
+      const { data } = await axios.get(`${API_BASE_URL}/knowledge-base`, {
         params: {
-          group: selectedGroup !== "All" ? selectedGroup : null
+          group: selectedGroup !== "All" ? selectedGroup : null,
         },
-        ...config
+        ...config,
       });
       setArticles(data.articles || []);
     } catch (error) {
@@ -76,8 +77,7 @@ export default function KbArticles() {
   // For UI: striped bars CSS style
   const stripedBarStyle = (color) => ({
     width: "100%",
-    backgroundImage:
-      `repeating-linear-gradient(
+    backgroundImage: `repeating-linear-gradient(
         45deg,
         ${color},
         ${color} 10px,
@@ -91,23 +91,53 @@ export default function KbArticles() {
     fontWeight: "600",
     fontSize: "0.85rem",
     textAlign: "center",
-    lineHeight: "1.5rem"
+    lineHeight: "1.5rem",
   });
 
   if (loading) {
     return (
-      <div style={{ maxWidth: 720, margin: "2rem auto", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", textAlign: "center", padding: "2rem" }}>
+      <div
+        style={{
+          maxWidth: 720,
+          margin: "2rem auto",
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          textAlign: "center",
+          padding: "2rem",
+        }}
+      >
         <div style={{ marginBottom: "1rem" }}>Loading articles...</div>
-        <div style={{ width: "40px", height: "40px", border: "4px solid #f3f3f3", borderTop: "4px solid #007acc", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto" }}></div>
+        <div
+          style={{
+            width: "40px",
+            height: "40px",
+            border: "4px solid #f3f3f3",
+            borderTop: "4px solid #007acc",
+            borderRadius: "50%",
+            animation: "spin 1s linear infinite",
+            margin: "0 auto",
+          }}
+        ></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div style={{ maxWidth: 720, margin: "2rem auto", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", textAlign: "center", padding: "2rem" }}>
-        <div style={{ color: "#cc0000", fontSize: "1.1rem", marginBottom: "1rem" }}>{error}</div>
-        <button 
+      <div
+        style={{
+          maxWidth: 720,
+          margin: "2rem auto",
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          textAlign: "center",
+          padding: "2rem",
+        }}
+      >
+        <div
+          style={{ color: "#cc0000", fontSize: "1.1rem", marginBottom: "1rem" }}
+        >
+          {error}
+        </div>
+        <button
           onClick={fetchArticles}
           style={{
             padding: "0.5rem 1rem",
@@ -115,7 +145,7 @@ export default function KbArticles() {
             color: "white",
             border: "none",
             borderRadius: "4px",
-            cursor: "pointer"
+            cursor: "pointer",
           }}
         >
           Retry
@@ -125,10 +155,23 @@ export default function KbArticles() {
   }
 
   return (
-    <div style={{ maxWidth: 720, margin: "2rem auto", fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif" }}>
+    <div
+      style={{
+        maxWidth: 720,
+        margin: "2rem auto",
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+      }}
+    >
       {/* Header */}
       <div style={{ marginBottom: "2rem", textAlign: "center" }}>
-        <h1 style={{ fontSize: "2rem", fontWeight: "bold", color: "#333", marginBottom: "0.5rem" }}>
+        <h1
+          style={{
+            fontSize: "2rem",
+            fontWeight: "bold",
+            color: "#333",
+            marginBottom: "0.5rem",
+          }}
+        >
           Knowledge Base Analytics
         </h1>
         <p style={{ color: "#666", fontSize: "1rem" }}>
@@ -138,7 +181,15 @@ export default function KbArticles() {
 
       {/* Group Filter */}
       <div style={{ marginBottom: "1.5rem" }}>
-        <label htmlFor="groupSelect" style={{ fontWeight: "600", fontSize: "1.1rem", display: "block", marginBottom: 8 }}>
+        <label
+          htmlFor="groupSelect"
+          style={{
+            fontWeight: "600",
+            fontSize: "1.1rem",
+            display: "block",
+            marginBottom: 8,
+          }}
+        >
           Choose Group
         </label>
         <select
@@ -154,7 +205,7 @@ export default function KbArticles() {
             maxWidth: 320,
             appearance: "none",
             backgroundColor: "#fff",
-            cursor: "pointer"
+            cursor: "pointer",
           }}
         >
           {groups.map((group) => (
@@ -166,7 +217,14 @@ export default function KbArticles() {
       </div>
 
       {/* Articles List with Vote Bars */}
-      <div style={{ backgroundColor: "#f9f9f9", padding: "1rem 1.5rem", borderRadius: 12, boxShadow: "0 1px 5px rgb(0 0 0 / 0.1)" }}>
+      <div
+        style={{
+          backgroundColor: "#f9f9f9",
+          padding: "1rem 1.5rem",
+          borderRadius: 12,
+          boxShadow: "0 1px 5px rgb(0 0 0 / 0.1)",
+        }}
+      >
         {articles.length > 0 ? (
           articles.map((article, idx) => {
             const yes = article.votes?.helpful || 0;
@@ -176,28 +234,46 @@ export default function KbArticles() {
             const noPercent = getPercent(no, total);
 
             return (
-              <div 
-                key={article._id} 
-                style={{ 
-                  marginBottom: 24, 
-                  borderBottom: idx === articles.length - 1 ? "none" : "1px solid #ddd", 
-                  paddingBottom: 12 
+              <div
+                key={article._id}
+                style={{
+                  marginBottom: 24,
+                  borderBottom:
+                    idx === articles.length - 1 ? "none" : "1px solid #ddd",
+                  paddingBottom: 12,
                 }}
               >
                 {/* Article Info */}
                 <div style={{ marginBottom: "1rem" }}>
-                  <h3 style={{ fontSize: "1.1rem", fontWeight: "600", color: "#333", marginBottom: "0.5rem" }}>
+                  <h3
+                    style={{
+                      fontSize: "1.1rem",
+                      fontWeight: "600",
+                      color: "#333",
+                      marginBottom: "0.5rem",
+                    }}
+                  >
                     {article.title}
                   </h3>
                   <div style={{ fontSize: "0.9rem", color: "#666" }}>
-                    <span style={{ marginRight: "1rem" }}>Group: {article.group}</span>
+                    <span style={{ marginRight: "1rem" }}>
+                      Group: {article.group}
+                    </span>
                     <span>Total Votes: {total}</span>
                   </div>
                 </div>
 
                 {/* Yes Votes Bar */}
                 <div style={{ marginBottom: "0.5rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem", marginBottom: 4, color: "#333" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: "0.9rem",
+                      marginBottom: 4,
+                      color: "#333",
+                    }}
+                  >
                     <span>Helpful Votes</span>
                     <span>{yes} votes</span>
                   </div>
@@ -207,7 +283,7 @@ export default function KbArticles() {
                       width: `${Math.max(yesPercent, 2)}%`, // Minimum 2% width for visibility
                       maxWidth: "100%",
                       transition: "width 0.4s ease",
-                      minHeight: "1.5rem"
+                      minHeight: "1.5rem",
                     }}
                     aria-label={`${yesPercent.toFixed(1)}% Yes votes`}
                   >
@@ -217,7 +293,15 @@ export default function KbArticles() {
 
                 {/* No Votes Bar */}
                 <div style={{ marginBottom: "1rem" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.9rem", marginBottom: 4, color: "#333" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: "0.9rem",
+                      marginBottom: 4,
+                      color: "#333",
+                    }}
+                  >
                     <span>Not Helpful Votes</span>
                     <span>{no} votes</span>
                   </div>
@@ -226,8 +310,7 @@ export default function KbArticles() {
                       ...stripedBarStyle("#cc0000"),
                       width: `${Math.max(noPercent, 2)}%`, // Minimum 2% width for visibility
                       maxWidth: "100%",
-                      backgroundImage:
-                        `repeating-linear-gradient(
+                      backgroundImage: `repeating-linear-gradient(
                             45deg,
                             #cc0000,
                             #cc0000 10px,
@@ -236,7 +319,7 @@ export default function KbArticles() {
                           )`,
                       color: "white",
                       transition: "width 0.4s ease",
-                      minHeight: "1.5rem"
+                      minHeight: "1.5rem",
                     }}
                     aria-label={`${noPercent.toFixed(1)}% No votes`}
                   >
@@ -246,20 +329,25 @@ export default function KbArticles() {
 
                 {/* Article Stats Summary */}
                 {total > 0 && (
-                  <div style={{ 
-                    fontSize: "0.85rem", 
-                    color: "#666", 
-                    textAlign: "center",
-                    padding: "0.5rem",
-                    backgroundColor: "#f0f0f0",
-                    borderRadius: "4px"
-                  }}>
-                    {yesPercent > noPercent 
-                      ? `👍 This article is helpful (${yesPercent.toFixed(1)}% positive)`
-                      : noPercent > yesPercent 
-                        ? `👎 This article needs improvement (${noPercent.toFixed(1)}% negative)`
-                        : "📊 Mixed feedback received"
-                    }
+                  <div
+                    style={{
+                      fontSize: "0.85rem",
+                      color: "#666",
+                      textAlign: "center",
+                      padding: "0.5rem",
+                      backgroundColor: "#f0f0f0",
+                      borderRadius: "4px",
+                    }}
+                  >
+                    {yesPercent > noPercent
+                      ? `👍 This article is helpful (${yesPercent.toFixed(
+                          1
+                        )}% positive)`
+                      : noPercent > yesPercent
+                      ? `👎 This article needs improvement (${noPercent.toFixed(
+                          1
+                        )}% negative)`
+                      : "📊 Mixed feedback received"}
                   </div>
                 )}
               </div>
@@ -268,7 +356,13 @@ export default function KbArticles() {
         ) : (
           <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
             <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📊</div>
-            <p style={{ fontSize: "1.1rem", color: "#666", marginBottom: "0.5rem" }}>
+            <p
+              style={{
+                fontSize: "1.1rem",
+                color: "#666",
+                marginBottom: "0.5rem",
+              }}
+            >
               No articles found for this group.
             </p>
             <p style={{ fontSize: "0.9rem", color: "#999" }}>
@@ -280,25 +374,37 @@ export default function KbArticles() {
 
       {/* Footer Info */}
       {articles.length > 0 && (
-        <div style={{ 
-          marginTop: "1.5rem", 
-          padding: "1rem", 
-          backgroundColor: "#e8f4f8", 
-          borderRadius: "8px",
-          fontSize: "0.9rem",
-          color: "#666",
-          textAlign: "center"
-        }}>
-          <p>💡 <strong>Tip:</strong> Articles with low helpful votes may need content updates or clarification.</p>
-          <p>Clients can vote once per day on each article to help improve your knowledge base.</p>
+        <div
+          style={{
+            marginTop: "1.5rem",
+            padding: "1rem",
+            backgroundColor: "#e8f4f8",
+            borderRadius: "8px",
+            fontSize: "0.9rem",
+            color: "#666",
+            textAlign: "center",
+          }}
+        >
+          <p>
+            💡 <strong>Tip:</strong> Articles with low helpful votes may need
+            content updates or clarification.
+          </p>
+          <p>
+            Clients can vote once per day on each article to help improve your
+            knowledge base.
+          </p>
         </div>
       )}
 
       {/* Add CSS for spinner animation */}
       <style jsx>{`
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          0% {
+            transform: rotate(0deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
         }
       `}</style>
     </div>

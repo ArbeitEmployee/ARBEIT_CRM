@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // ClientLogin.jsx - Updated version
 import { useState } from "react";
 import { FiMail, FiLock } from "react-icons/fi";
@@ -6,37 +7,38 @@ import { Link, useNavigate } from "react-router-dom";
 import backgroundImage from "../../assets/login-background.jpg";
 
 const ClientLogin = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({
     email: "",
-    password: ""
+    password: "",
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate fields
     const newErrors = {
       email: !email ? "Email is required" : "",
-      password: !password ? "Password is required" : ""
+      password: !password ? "Password is required" : "",
     };
-    
+
     setErrors(newErrors);
-    
+
     // Check if there are any errors
-    if (Object.values(newErrors).some(error => error !== "")) {
+    if (Object.values(newErrors).some((error) => error !== "")) {
       toast.error("Please fill in all required fields");
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      const res = await fetch("http://localhost:5000/api/client/login", {
+      const res = await fetch(`${API_BASE_URL}/client/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -56,14 +58,17 @@ const ClientLogin = () => {
       }
 
       toast.success("Login successful!");
-      
+
       // Save token and client data in localStorage
       localStorage.setItem("crm_client_token", data.token);
       localStorage.setItem("crm_client", JSON.stringify(data.client));
-      
+
       // Also save the customer code for data filtering
       if (data.client.customerCode) {
-        localStorage.setItem("crm_client_customer_code", data.client.customerCode);
+        localStorage.setItem(
+          "crm_client_customer_code",
+          data.client.customerCode
+        );
       }
 
       // Remember me functionality
@@ -77,7 +82,6 @@ const ClientLogin = () => {
       setTimeout(() => {
         navigate("/client/home");
       }, 1000);
-
     } catch (error) {
       toast.error("Something went wrong. Please try again.");
     } finally {
@@ -117,21 +121,26 @@ const ClientLogin = () => {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  setErrors({...errors, email: ""});
+                  setErrors({ ...errors, email: "" });
                 }}
                 className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
                   errors.email ? "focus:ring-red-500" : "focus:ring-gray-700"
                 }`}
               />
             </div>
-            {errors.email && <p className="text-red-400 text-xs mt-1">{errors.email}</p>}
+            {errors.email && (
+              <p className="text-red-400 text-xs mt-1">{errors.email}</p>
+            )}
           </div>
 
           {/* Password */}
           <div>
             <div className="flex justify-between items-center mb-1">
               <label className="text-sm">Password</label>
-              <Link to="/client/forgot-password" className="text-xs text-gray-100 hover:underline">
+              <Link
+                to="/client/forgot-password"
+                className="text-xs text-gray-100 hover:underline"
+              >
                 Forgot Password?
               </Link>
             </div>
@@ -145,14 +154,16 @@ const ClientLogin = () => {
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
-                  setErrors({...errors, password: ""});
+                  setErrors({ ...errors, password: "" });
                 }}
                 className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
                   errors.password ? "focus:ring-red-500" : "focus:ring-gray-700"
                 }`}
               />
             </div>
-            {errors.password && <p className="text-red-400 text-xs mt-1">{errors.password}</p>}
+            {errors.password && (
+              <p className="text-red-400 text-xs mt-1">{errors.password}</p>
+            )}
           </div>
 
           {/* Remember Me */}
@@ -164,7 +175,9 @@ const ClientLogin = () => {
               checked={rememberMe}
               onChange={() => setRememberMe(!rememberMe)}
             />
-            <label htmlFor="remember" className="text-sm">Remember me</label>
+            <label htmlFor="remember" className="text-sm">
+              Remember me
+            </label>
           </div>
 
           {/* Submit */}
@@ -184,7 +197,10 @@ const ClientLogin = () => {
         {/* Sign up */}
         <p className="text-center text-sm text-gray-400 mt-6">
           Don't have an account?{" "}
-          <Link to="/client/registration" className="text-white hover:underline font-medium">
+          <Link
+            to="/client/registration"
+            className="text-white hover:underline font-medium"
+          >
             Register
           </Link>
         </p>

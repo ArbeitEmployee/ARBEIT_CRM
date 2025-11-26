@@ -1,14 +1,24 @@
 import { useState, useEffect, useRef } from "react";
-import { 
-  FaPlus, FaSearch, FaSyncAlt, FaChevronRight, 
-  FaTimes, FaEdit, FaTrash, FaEye,
-  FaCheckCircle, FaClock, FaPauseCircle, FaBan, FaCheckSquare
+import {
+  FaPlus,
+  FaSearch,
+  FaSyncAlt,
+  FaChevronRight,
+  FaTimes,
+  FaEdit,
+  FaTrash,
+  FaEye,
+  FaCheckCircle,
+  FaClock,
+  FaPauseCircle,
+  FaBan,
+  FaCheckSquare,
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import axios from "axios";
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import * as XLSX from "xlsx";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
 
 // Custom hook for detecting outside clicks
 const useOutsideClick = (callback) => {
@@ -21,10 +31,10 @@ const useOutsideClick = (callback) => {
       }
     };
 
-    document.addEventListener('click', handleClick, true);
+    document.addEventListener("click", handleClick, true);
 
     return () => {
-      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener("click", handleClick, true);
     };
   }, [ref, callback]);
 
@@ -32,6 +42,7 @@ const useOutsideClick = (callback) => {
 };
 
 const TaskPage = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [selectedTasks, setSelectedTasks] = useState([]);
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(25);
@@ -47,7 +58,7 @@ const TaskPage = () => {
     inProgress: 0,
     testing: 0,
     feedback: 0,
-    complete: 0
+    complete: 0,
   });
   const [newTask, setNewTask] = useState({
     projectName: "",
@@ -56,7 +67,7 @@ const TaskPage = () => {
     deadline: "",
     members: "",
     status: "Not Started",
-    description: ""
+    description: "",
   });
   const [editingTask, setEditingTask] = useState(null);
   const [showDescriptionModal, setShowDescriptionModal] = useState(false);
@@ -70,28 +81,23 @@ const TaskPage = () => {
     "In Progress",
     "Testing",
     "Feedback",
-    "Complete"
+    "Complete",
   ];
 
-  const priorityOptions = [
-    "Urgent",
-    "High",
-    "Medium",
-    "Low"
-  ];
+  const priorityOptions = ["Urgent", "High", "Medium", "Low"];
 
   // Use the custom hook for detecting outside clicks
   const exportRef = useOutsideClick(() => {
     setShowExportMenu(false);
   });
-  
+
   const staffRef = useOutsideClick(() => {
     setShowStaffDropdown(false);
   });
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('crm_token');
+    return localStorage.getItem("crm_token");
   };
 
   // Create axios instance with auth headers
@@ -100,15 +106,15 @@ const TaskPage = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
   // Format date from YYYY-MM-DD to DD-MM-YYYY
   const formatDateForBackend = (dateString) => {
     if (!dateString) return "";
-    const parts = dateString.split('-');
+    const parts = dateString.split("-");
     if (parts.length === 3) {
       return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
@@ -118,7 +124,7 @@ const TaskPage = () => {
   // Format date from DD-MM-YYYY to YYYY-MM-DD for input fields
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
-    const parts = dateString.split('-');
+    const parts = dateString.split("-");
     if (parts.length === 3 && parts[2].length === 4) {
       return `${parts[2]}-${parts[1]}-${parts[0]}`;
     }
@@ -132,16 +138,18 @@ const TaskPage = () => {
     setLoading(true);
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/tasks", config);
+      const { data } = await axios.get(`${API_BASE_URL}/tasks`, config);
       setTasks(data.tasks || []);
-      setStats(data.stats || {
-        totalTasks: 0,
-        notStarted: 0,
-        inProgress: 0,
-        testing: 0,
-        feedback: 0,
-        complete: 0
-      });
+      setStats(
+        data.stats || {
+          totalTasks: 0,
+          notStarted: 0,
+          inProgress: 0,
+          testing: 0,
+          feedback: 0,
+          complete: 0,
+        }
+      );
     } catch (error) {
       console.error("Error fetching tasks:", error);
       if (error.response?.status === 401) {
@@ -155,7 +163,7 @@ const TaskPage = () => {
         inProgress: 0,
         testing: 0,
         feedback: 0,
-        complete: 0
+        complete: 0,
       });
     }
     setLoading(false);
@@ -171,10 +179,13 @@ const TaskPage = () => {
       setStaffSearchResults([]);
       return;
     }
-    
+
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get(`http://localhost:5000/api/staffs?search=${searchTerm}`, config);
+      const { data } = await axios.get(
+        `${API_BASE_URL}/staffs?search=${searchTerm}`,
+        config
+      );
       setStaffSearchResults(data.staffs || []);
     } catch (error) {
       console.error("Error searching staff:", error);
@@ -193,11 +204,12 @@ const TaskPage = () => {
   }, [staffSearchTerm]);
 
   // Search filter
-  const filteredTasks = tasks.filter(task => 
-    task._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    task.priority.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTasks = tasks.filter(
+    (task) =>
+      task._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.priority.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Pagination
@@ -209,17 +221,15 @@ const TaskPage = () => {
   );
 
   const toggleTaskSelection = (id) => {
-    setSelectedTasks(prev =>
-      prev.includes(id)
-        ? prev.filter(taskId => taskId !== id)
-        : [...prev, id]
+    setSelectedTasks((prev) =>
+      prev.includes(id) ? prev.filter((taskId) => taskId !== id) : [...prev, id]
     );
   };
 
   const handleNewTaskChange = (e) => {
     const { name, value } = e.target;
-    setNewTask(prev => ({ ...prev, [name]: value }));
-    
+    setNewTask((prev) => ({ ...prev, [name]: value }));
+
     if (name === "members") {
       setStaffSearchTerm(value);
       setShowStaffDropdown(true);
@@ -227,9 +237,9 @@ const TaskPage = () => {
   };
 
   const handleSelectStaff = (staff) => {
-    setNewTask(prev => ({
+    setNewTask((prev) => ({
       ...prev,
-      members: prev.members ? `${prev.members}, ${staff.name}` : staff.name
+      members: prev.members ? `${prev.members}, ${staff.name}` : staff.name,
     }));
     setShowStaffDropdown(false);
     setStaffSearchTerm("");
@@ -237,39 +247,43 @@ const TaskPage = () => {
 
   const handleSaveTask = async () => {
     if (isSaving) return;
-    
+
     if (!newTask.projectName) {
       alert("Please fill in all required fields (Subject)");
       return;
     }
 
     setIsSaving(true);
-    
+
     // Format dates for backend
     const taskData = {
       ...newTask,
       startDate: formatDateForBackend(newTask.startDate),
-      deadline: formatDateForBackend(newTask.deadline)
+      deadline: formatDateForBackend(newTask.deadline),
     };
-    
+
     try {
       const config = createAxiosConfig();
-      
+
       if (editingTask) {
         // Update existing task
-        await axios.put(`http://localhost:5000/api/tasks/${editingTask._id}`, taskData, config);
+        await axios.put(
+          `${API_BASE_URL}/tasks/${editingTask._id}`,
+          taskData,
+          config
+        );
         setShowNewTaskForm(false);
         setEditingTask(null);
         fetchTasks();
         alert("Task updated successfully!");
       } else {
         // Create new task
-        await axios.post("http://localhost:5000/api/tasks", taskData, config);
+        await axios.post(`${API_BASE_URL}/tasks`, taskData, config);
         setShowNewTaskForm(false);
         fetchTasks();
         alert("Task created successfully!");
       }
-      
+
       // Reset form
       setNewTask({
         projectName: "",
@@ -278,11 +292,13 @@ const TaskPage = () => {
         deadline: "",
         members: "",
         status: "Not Started",
-        description: ""
+        description: "",
       });
     } catch (error) {
       console.error("Error saving task:", error);
-      alert(`Error saving task: ${error.response?.data?.message || error.message}`);
+      alert(
+        `Error saving task: ${error.response?.data?.message || error.message}`
+      );
     } finally {
       setIsSaving(false);
     }
@@ -297,7 +313,7 @@ const TaskPage = () => {
       deadline: formatDateForInput(task.deadline),
       members: task.members || "",
       status: task.status,
-      description: task.description || ""
+      description: task.description || "",
     });
     setShowNewTaskForm(true);
   };
@@ -306,12 +322,16 @@ const TaskPage = () => {
     if (window.confirm("Are you sure you want to delete this task?")) {
       try {
         const config = createAxiosConfig();
-        await axios.delete(`http://localhost:5000/api/tasks/${id}`, config);
+        await axios.delete(`${API_BASE_URL}/tasks/${id}`, config);
         fetchTasks();
         alert("Task deleted successfully!");
       } catch (error) {
         console.error("Error deleting task:", error);
-        alert(`Error deleting task: ${error.response?.data?.message || error.message}`);
+        alert(
+          `Error deleting task: ${
+            error.response?.data?.message || error.message
+          }`
+        );
       }
     }
   };
@@ -323,15 +343,15 @@ const TaskPage = () => {
 
   // Export functions
   const exportToExcel = () => {
-    const dataToExport = filteredTasks.map(task => ({
+    const dataToExport = filteredTasks.map((task) => ({
       ID: task._id,
-      "Subject": task.projectName,
+      Subject: task.projectName,
       Priority: task.priority,
       "Start Date": task.startDate,
       Deadline: task.deadline,
       Members: task.members,
       Status: task.status,
-      Description: task.description
+      Description: task.description,
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
@@ -342,25 +362,25 @@ const TaskPage = () => {
   };
 
   const exportToCSV = () => {
-    const dataToExport = filteredTasks.map(task => ({
+    const dataToExport = filteredTasks.map((task) => ({
       ID: task._id,
-      "Subject": task.projectName,
+      Subject: task.projectName,
       Priority: task.priority,
       "Start Date": task.startDate,
       Deadline: task.deadline,
       Members: task.members,
       Status: task.status,
-      Description: task.description
+      Description: task.description,
     }));
 
     const csv = XLSX.utils.sheet_to_csv(XLSX.utils.json_to_sheet(dataToExport));
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
-    
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'Tasks.csv');
-    link.style.visibility = 'hidden';
+
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Tasks.csv");
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -378,10 +398,10 @@ const TaskPage = () => {
       "Deadline",
       "Members",
       "Status",
-      "Description"
+      "Description",
     ];
-    
-    const tableRows = filteredTasks.map(task => [
+
+    const tableRows = filteredTasks.map((task) => [
       task._id,
       task.projectName,
       task.priority,
@@ -389,10 +409,10 @@ const TaskPage = () => {
       task.deadline,
       task.members,
       task.status,
-      task.description
+      task.description,
     ]);
 
-    autoTable(doc,{
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       margin: { top: 20 },
@@ -404,9 +424,9 @@ const TaskPage = () => {
   };
 
   const printTable = () => {
-    const printWindow = window.open('', '', 'height=600,width=800');
-    printWindow.document.write('<html><head><title>Tasks</title>');
-    printWindow.document.write('<style>');
+    const printWindow = window.open("", "", "height=600,width=800");
+    printWindow.document.write("<html><head><title>Tasks</title>");
+    printWindow.document.write("<style>");
     printWindow.document.write(`
       body { font-family: Arial, sans-serif; }
       table { border-collapse: collapse; width: 100%; }
@@ -418,22 +438,31 @@ const TaskPage = () => {
         .no-print { display: none; }
       }
     `);
-    printWindow.document.write('</style>');
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<h1>Tasks</h1>');
-    printWindow.document.write('<table>');
-    
+    printWindow.document.write("</style>");
+    printWindow.document.write("</head><body>");
+    printWindow.document.write("<h1>Tasks</h1>");
+    printWindow.document.write("<table>");
+
     // Table header
-    printWindow.document.write('<thead><tr>');
-    ['ID', 'Subject', 'Priority', 'Start Date', 'Deadline', 'Members', 'Status', 'Description'].forEach(header => {
+    printWindow.document.write("<thead><tr>");
+    [
+      "ID",
+      "Subject",
+      "Priority",
+      "Start Date",
+      "Deadline",
+      "Members",
+      "Status",
+      "Description",
+    ].forEach((header) => {
       printWindow.document.write(`<th>${header}</th>`);
     });
-    printWindow.document.write('</tr></thead>');
-    
+    printWindow.document.write("</tr></thead>");
+
     // Table body
-    printWindow.document.write('<tbody>');
-    filteredTasks.forEach(task => {
-      printWindow.document.write('<tr>');
+    printWindow.document.write("<tbody>");
+    filteredTasks.forEach((task) => {
+      printWindow.document.write("<tr>");
       [
         task._id,
         task.projectName,
@@ -442,19 +471,21 @@ const TaskPage = () => {
         task.deadline,
         task.members,
         task.status,
-        task.description
-      ].forEach(value => {
+        task.description,
+      ].forEach((value) => {
         printWindow.document.write(`<td>${value}</td>`);
       });
-      printWindow.document.write('</tr>');
+      printWindow.document.write("</tr>");
     });
-    printWindow.document.write('</tbody>');
-    
-    printWindow.document.write('</table>');
-    printWindow.document.write('<p class="no-print">Printed on: ' + new Date().toLocaleString() + '</p>');
-    printWindow.document.write('</body></html>');
+    printWindow.document.write("</tbody>");
+
+    printWindow.document.write("</table>");
+    printWindow.document.write(
+      '<p class="no-print">Printed on: ' + new Date().toLocaleString() + "</p>"
+    );
+    printWindow.document.write("</body></html>");
     printWindow.document.close();
-    
+
     setTimeout(() => {
       printWindow.print();
       printWindow.close();
@@ -463,42 +494,60 @@ const TaskPage = () => {
   };
 
   const getStatusColor = (status) => {
-    switch(status) {
-      case "Not Started": return "bg-gray-100 text-gray-800";
-      case "In Progress": return "bg-blue-100 text-blue-800";
-      case "Testing": return "bg-yellow-100 text-yellow-800";
-      case "Feedback": return "bg-purple-100 text-purple-800";
-      case "Complete": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (status) {
+      case "Not Started":
+        return "bg-gray-100 text-gray-800";
+      case "In Progress":
+        return "bg-blue-100 text-blue-800";
+      case "Testing":
+        return "bg-yellow-100 text-yellow-800";
+      case "Feedback":
+        return "bg-purple-100 text-purple-800";
+      case "Complete":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getPriorityColor = (priority) => {
-    switch(priority) {
-      case "Urgent": return "bg-red-100 text-red-800";
-      case "High": return "bg-orange-100 text-orange-800";
-      case "Medium": return "bg-yellow-100 text-yellow-800";
-      case "Low": return "bg-green-100 text-green-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (priority) {
+      case "Urgent":
+        return "bg-red-100 text-red-800";
+      case "High":
+        return "bg-orange-100 text-orange-800";
+      case "Medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "Low":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    const parts = dateString.split('-');
+    const parts = dateString.split("-");
     if (parts.length === 3) {
       return `${parts[0]}/${parts[1]}/${parts[2]}`;
     }
     return dateString;
   };
 
-  if (loading) return <div className="bg-gray-100 min-h-screen p-4">Loading tasks...</div>;
+  if (loading)
+    return <div className="bg-gray-100 min-h-screen p-4">Loading tasks...</div>;
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">{showNewTaskForm ? (editingTask ? "Edit Task" : "Add New Task") : "Tasks"}</h1>
+        <h1 className="text-2xl font-bold">
+          {showNewTaskForm
+            ? editingTask
+              ? "Edit Task"
+              : "Add New Task"
+            : "Tasks"}
+        </h1>
         <div className="flex items-center text-gray-600">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
@@ -510,7 +559,7 @@ const TaskPage = () => {
         <div className="bg-white shadow-md rounded-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Task Details</h2>
-            <button 
+            <button
               onClick={() => {
                 setShowNewTaskForm(false);
                 setEditingTask(null);
@@ -525,7 +574,9 @@ const TaskPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Subject *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Subject *
+                </label>
                 <input
                   type="text"
                   name="projectName"
@@ -537,15 +588,19 @@ const TaskPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Priority
+                </label>
                 <select
                   name="priority"
                   value={newTask.priority}
                   onChange={handleNewTaskChange}
                   className="w-full border rounded px-3 py-2"
                 >
-                  {priorityOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {priorityOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -554,21 +609,27 @@ const TaskPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
                 <select
                   name="status"
                   value={newTask.status}
                   onChange={handleNewTaskChange}
                   className="w-full border rounded px-3 py-2"
                 >
-                  {statusOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
+                  {statusOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Start Date
+                </label>
                 <input
                   type="date"
                   name="startDate"
@@ -579,7 +640,9 @@ const TaskPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Deadline</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Deadline
+                </label>
                 <input
                   type="date"
                   name="deadline"
@@ -590,7 +653,9 @@ const TaskPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Members</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Members
+                </label>
                 <div className="relative" ref={staffRef}>
                   <input
                     type="text"
@@ -609,23 +674,31 @@ const TaskPage = () => {
                           onClick={() => handleSelectStaff(staff)}
                         >
                           <div className="font-medium">{staff.name}</div>
-                          <div className="text-sm text-gray-600">{staff.position} - {staff.department}</div>
+                          <div className="text-sm text-gray-600">
+                            {staff.position} - {staff.department}
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  {showStaffDropdown && staffSearchResults.length === 0 && staffSearchTerm.length >= 2 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                      <div className="px-3 py-2 text-gray-500">No staff found</div>
-                    </div>
-                  )}
+                  {showStaffDropdown &&
+                    staffSearchResults.length === 0 &&
+                    staffSearchTerm.length >= 2 && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                        <div className="px-3 py-2 text-gray-500">
+                          No staff found
+                        </div>
+                      </div>
+                    )}
                 </div>
               </div>
             </div>
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
             <textarea
               name="description"
               value={newTask.description}
@@ -742,8 +815,9 @@ const TaskPage = () => {
           {/* Top action buttons */}
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
-              <button 
-                className="px-3 py-1 text-sm rounded flex items-center gap-2" style={{ backgroundColor: '#333333', color: 'white' }}
+              <button
+                className="px-3 py-1 text-sm rounded flex items-center gap-2"
+                style={{ backgroundColor: "#333333", color: "white" }}
                 onClick={() => setShowNewTaskForm(true)}
               >
                 <FaPlus /> New Task
@@ -760,33 +834,46 @@ const TaskPage = () => {
           </div>
 
           {/* White box for table */}
-          <div className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${compactView ? "w-1/2" : "w-full"}`}>
+          <div
+            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+              compactView ? "w-1/2" : "w-full"
+            }`}
+          >
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 {/* Delete Selected button */}
-              {selectedTasks.length > 0 && (
-                <button
-                  className="bg-red-600 text-white px-3 py-1 rounded"
-                  onClick={async () => {
-                    if (window.confirm(`Delete ${selectedTasks.length} selected tasks?`)) {
-                      try {
-                        const config = createAxiosConfig();
-                        await Promise.all(selectedTasks.map(id =>
-                          axios.delete(`http://localhost:5000/api/tasks/${id}`, config)
-                        ));
-                        setSelectedTasks([]);
-                        fetchTasks();
-                        alert("Selected tasks deleted!");
-                      } catch {
-                        alert("Error deleting selected tasks.");
+                {selectedTasks.length > 0 && (
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    onClick={async () => {
+                      if (
+                        window.confirm(
+                          `Delete ${selectedTasks.length} selected tasks?`
+                        )
+                      ) {
+                        try {
+                          const config = createAxiosConfig();
+                          await Promise.all(
+                            selectedTasks.map((id) =>
+                              axios.delete(
+                                `${API_BASE_URL}/tasks/${id}`,
+                                config
+                              )
+                            )
+                          );
+                          setSelectedTasks([]);
+                          fetchTasks();
+                          alert("Selected tasks deleted!");
+                        } catch {
+                          alert("Error deleting selected tasks.");
+                        }
                       }
-                    }
-                  }}
-                >
-                  Delete Selected ({selectedTasks.length})
-                </button>
-              )}
+                    }}
+                  >
+                    Delete Selected ({selectedTasks.length})
+                  </button>
+                )}
                 {/* Entries per page */}
                 <select
                   className="border rounded px-2 py-1 text-sm"
@@ -801,7 +888,7 @@ const TaskPage = () => {
                   <option value={50}>50</option>
                   <option value={100}>100</option>
                 </select>
-                
+
                 {/* Export button */}
                 <div className="relative" ref={exportRef}>
                   <button
@@ -872,34 +959,92 @@ const TaskPage = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                    <th
+                      className="p-3 rounded-l-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
                       <input
                         type="checkbox"
-                        checked={selectedTasks.length === currentData.length && currentData.length > 0}
+                        checked={
+                          selectedTasks.length === currentData.length &&
+                          currentData.length > 0
+                        }
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setSelectedTasks(currentData.map((task) => task._id));
+                            setSelectedTasks(
+                              currentData.map((task) => task._id)
+                            );
                           } else {
                             setSelectedTasks([]);
                           }
                         }}
                       />
                     </th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Subject</th>
-                    <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Priority</th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Subject
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Priority
+                    </th>
                     {compactView ? (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Deadline
+                        </th>
+                        <th
+                          className="p-3 rounded-r-lg"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Actions
+                        </th>
                       </>
                     ) : (
                       <>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Start Date</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Deadline</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Members</th>
-                        <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Status</th>
-                        <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Actions</th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Start Date
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Deadline
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Members
+                        </th>
+                        <th
+                          className="p-3"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="p-3 rounded-r-lg"
+                          style={{ backgroundColor: "#333333", color: "white" }}
+                        >
+                          Actions
+                        </th>
                       </>
                     )}
                   </tr>
@@ -910,7 +1055,7 @@ const TaskPage = () => {
                       <tr
                         key={task._id}
                         className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                        style={{ color: 'black' }}
+                        style={{ color: "black" }}
                       >
                         <td className="p-3 rounded-l-lg border-0">
                           <div className="flex items-center">
@@ -922,16 +1067,26 @@ const TaskPage = () => {
                             />
                           </div>
                         </td>
-                        <td className="p-3 border-0 font-medium">{task.projectName}</td>
+                        <td className="p-3 border-0 font-medium">
+                          {task.projectName}
+                        </td>
                         <td className="p-3 border-0">
-                          <span className={`px-2 py-1 rounded text-xs ${getPriorityColor(task.priority)}`}>
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${getPriorityColor(
+                              task.priority
+                            )}`}
+                          >
                             {task.priority}
                           </span>
                         </td>
                         {compactView ? (
                           <>
                             <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs ${getStatusColor(task.status)}`}>
+                              <span
+                                className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                  task.status
+                                )}`}
+                              >
                                 {task.status}
                               </span>
                             </td>
@@ -941,7 +1096,9 @@ const TaskPage = () => {
                             <td className="p-3 rounded-r-lg border-0">
                               <div className="flex space-x-2">
                                 <button
-                                  onClick={() => handleViewDescription(task.description)}
+                                  onClick={() =>
+                                    handleViewDescription(task.description)
+                                  }
                                   className="text-gray-500 hover:text-gray-700"
                                   title="View Description"
                                 >
@@ -966,18 +1123,30 @@ const TaskPage = () => {
                           </>
                         ) : (
                           <>
-                            <td className="p-3 border-0">{formatDate(task.startDate)}</td>
-                            <td className="p-3 border-0">{formatDate(task.deadline)}</td>
-                            <td className="p-3 border-0">{task.members || "-"}</td>
                             <td className="p-3 border-0">
-                              <span className={`px-2 py-1 rounded text-xs ${getStatusColor(task.status)}`}>
+                              {formatDate(task.startDate)}
+                            </td>
+                            <td className="p-3 border-0">
+                              {formatDate(task.deadline)}
+                            </td>
+                            <td className="p-3 border-0">
+                              {task.members || "-"}
+                            </td>
+                            <td className="p-3 border-0">
+                              <span
+                                className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                  task.status
+                                )}`}
+                              >
                                 {task.status}
                               </span>
                             </td>
                             <td className="p-3 rounded-r-lg border-0">
                               <div className="flex space-x-2">
                                 <button
-                                  onClick={() => handleViewDescription(task.description)}
+                                  onClick={() =>
+                                    handleViewDescription(task.description)
+                                  }
                                   className="text-gray-500 hover:text-gray-700"
                                   title="View Description"
                                 >
@@ -1005,8 +1174,13 @@ const TaskPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={compactView ? 6 : 9} className="p-4 text-center text-gray-500">
-                        {tasks.length === 0 ? "No tasks found. Create your first task!" : "No tasks match your search criteria."}
+                      <td
+                        colSpan={compactView ? 6 : 9}
+                        className="p-4 text-center text-gray-500"
+                      >
+                        {tasks.length === 0
+                          ? "No tasks found. Create your first task!"
+                          : "No tasks match your search criteria."}
                       </td>
                     </tr>
                   )}

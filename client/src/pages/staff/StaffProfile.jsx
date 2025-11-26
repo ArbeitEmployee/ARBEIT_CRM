@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const StaffProfile = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [staff, setStaff] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
@@ -21,17 +22,14 @@ const StaffProfile = () => {
   const handleUpdate = async () => {
     try {
       const token = localStorage.getItem("crm_staff_token");
-      const res = await fetch(
-        `http://localhost:5000/api/staff/${staff.id}/profile`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/staff/${staff.id}/profile`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
 
       const data = await res.json();
       if (data.success) {

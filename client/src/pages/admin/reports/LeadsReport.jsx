@@ -2,12 +2,22 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  PieChart, Pie, Cell
-} from 'recharts';
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
 import { FaChevronRight } from "react-icons/fa";
 
 const LeadsReport = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [sourceChartData, setSourceChartData] = useState([]);
   const [weekConversionData, setWeekConversionData] = useState([]);
   const [dailyLeadsData, setDailyLeadsData] = useState([]);
@@ -17,22 +27,30 @@ const LeadsReport = () => {
   const [error, setError] = useState(null);
 
   // Define an array of colors for the Pie Chart segments
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28DFF', '#FF6B6B', '#6BFF6B'];
+  const COLORS = [
+    "#0088FE",
+    "#00C49F",
+    "#FFBB28",
+    "#FF8042",
+    "#A28DFF",
+    "#FF6B6B",
+    "#6BFF6B",
+  ];
 
   // Month options
   const months = [
-    { value: 1, label: 'January' },
-    { value: 2, label: 'February' },
-    { value: 3, label: 'March' },
-    { value: 4, label: 'April' },
-    { value: 5, label: 'May' },
-    { value: 6, label: 'June' },
-    { value: 7, label: 'July' },
-    { value: 8, label: 'August' },
-    { value: 9, label: 'September' },
-    { value: 10, label: 'October' },
-    { value: 11, label: 'November' },
-    { value: 12, label: 'December' }
+    { value: 1, label: "January" },
+    { value: 2, label: "February" },
+    { value: 3, label: "March" },
+    { value: 4, label: "April" },
+    { value: 5, label: "May" },
+    { value: 6, label: "June" },
+    { value: 7, label: "July" },
+    { value: 8, label: "August" },
+    { value: 9, label: "September" },
+    { value: 10, label: "October" },
+    { value: 11, label: "November" },
+    { value: 12, label: "December" },
   ];
 
   // Generate year options (last 5 years and next 5 years)
@@ -41,7 +59,7 @@ const LeadsReport = () => {
 
   // Get auth token from localStorage
   const getAuthToken = () => {
-    return localStorage.getItem('crm_token');
+    return localStorage.getItem("crm_token");
   };
 
   // Create axios instance with auth headers
@@ -50,8 +68,8 @@ const LeadsReport = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -61,7 +79,7 @@ const LeadsReport = () => {
         setLoading(true);
         const config = createAxiosConfig();
         const { data } = await axios.get(
-          `http://localhost:5000/api/reports/leads?month=${selectedMonth}&year=${selectedYear}`,
+          `${API_BASE_URL}/reports/leads?month=${selectedMonth}&year=${selectedYear}`,
           config
         );
         setSourceChartData(data.sourceChartData || []);
@@ -107,7 +125,9 @@ const LeadsReport = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Leads by Source Chart (Pie Chart) */}
         <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Leads by Source (This Week)</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            Leads by Source (This Week)
+          </h2>
           {sourceChartData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -121,24 +141,29 @@ const LeadsReport = () => {
                   dataKey="value"
                   nameKey="name"
                 >
-                  {
-                    sourceChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))
-                  }
+                  {sourceChartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                    />
+                  ))}
                 </Pie>
                 <Tooltip />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-gray-500">No source data available for this week.</p>
+            <p className="text-gray-500">
+              No source data available for this week.
+            </p>
           )}
         </div>
 
         {/* This Week Leads Conversions Chart (Bar Chart) */}
         <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">This Week Leads Conversions</h2>
+          <h2 className="text-xl font-semibold mb-4">
+            This Week Leads Conversions
+          </h2>
           {weekConversionData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
@@ -154,7 +179,9 @@ const LeadsReport = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-gray-500">No conversion data available for this week.</p>
+            <p className="text-gray-500">
+              No conversion data available for this week.
+            </p>
           )}
         </div>
       </div>
@@ -169,7 +196,7 @@ const LeadsReport = () => {
               onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
               className="border rounded px-3 py-1"
             >
-              {months.map(month => (
+              {months.map((month) => (
                 <option key={month.value} value={month.value}>
                   {month.label}
                 </option>
@@ -180,7 +207,7 @@ const LeadsReport = () => {
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
               className="border rounded px-3 py-1"
             >
-              {years.map(year => (
+              {years.map((year) => (
                 <option key={year} value={year}>
                   {year}
                 </option>
@@ -188,7 +215,7 @@ const LeadsReport = () => {
             </select>
           </div>
         </div>
-        
+
         {dailyLeadsData.length > 0 ? (
           <ResponsiveContainer width="100%" height={400}>
             <BarChart
@@ -204,7 +231,9 @@ const LeadsReport = () => {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <p className="text-gray-500">No daily leads data available for the selected period.</p>
+          <p className="text-gray-500">
+            No daily leads data available for the selected period.
+          </p>
         )}
       </div>
     </div>

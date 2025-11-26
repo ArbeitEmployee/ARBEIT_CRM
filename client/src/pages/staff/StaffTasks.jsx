@@ -1,8 +1,10 @@
+/* eslint-disable no-unused-vars */
 // src/pages/staff/StaffTasks.jsx - UPDATED FILE
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const StaffTasks = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updatingTask, setUpdatingTask] = useState(null);
@@ -25,9 +27,7 @@ const StaffTasks = () => {
 
       // ← CHANGED: Using staff name instead of ID for matching
       const res = await fetch(
-        `http://localhost:5000/api/tasks/staff/${encodeURIComponent(
-          staff.name
-        )}/tasks`,
+        `${API_BASE_URL}/tasks/staff/${encodeURIComponent(staff.name)}/tasks`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -56,17 +56,14 @@ const StaffTasks = () => {
       setUpdatingTask(taskId);
       const token = localStorage.getItem("crm_staff_token");
 
-      const res = await fetch(
-        `http://localhost:5000/api/tasks/staff/tasks/${taskId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status: newStatus }),
-        }
-      );
+      const res = await fetch(`${API_BASE_URL}/tasks/staff/tasks/${taskId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ status: newStatus }),
+      });
 
       const data = await res.json();
       if (data.success) {

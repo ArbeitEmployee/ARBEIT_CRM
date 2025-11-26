@@ -1,6 +1,16 @@
+/* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { FaPlus, FaSearch, FaSyncAlt, FaUpload, FaTasks, FaTimes, FaTrash, FaChevronRight } from "react-icons/fa";
+import {
+  FaPlus,
+  FaSearch,
+  FaSyncAlt,
+  FaUpload,
+  FaTasks,
+  FaTimes,
+  FaTrash,
+  FaChevronRight,
+} from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
 import { jsPDF } from "jspdf";
@@ -9,6 +19,7 @@ import Papa from "papaparse";
 import { useNavigate } from "react-router-dom";
 
 const Items = () => {
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
   const [entriesPerPage, setEntriesPerPage] = useState(25);
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,7 +39,7 @@ const Items = () => {
     tax1: "",
     tax2: "",
     unit: "",
-    groupName: ""
+    groupName: "",
   });
 
   const taxOptions = ["", "0%", "5%", "10%", "15%", "20%"];
@@ -44,8 +55,8 @@ const Items = () => {
     return {
       headers: {
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
+        "Content-Type": "application/json",
+      },
     };
   };
 
@@ -60,7 +71,10 @@ const Items = () => {
   // Close export menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+      if (
+        exportMenuRef.current &&
+        !exportMenuRef.current.contains(event.target)
+      ) {
         setShowExportMenu(false);
       }
     };
@@ -74,7 +88,7 @@ const Items = () => {
   const fetchItems = async () => {
     try {
       const config = createAxiosConfig();
-      const { data } = await axios.get("http://localhost:5000/api/admin/items", config);
+      const { data } = await axios.get(`${API_BASE_URL}/admin/items`, config);
       setItems(data);
     } catch (err) {
       console.error("Error fetching items", err);
@@ -104,10 +118,16 @@ const Items = () => {
       case "CSV": {
         const headers = Object.keys(exportData[0]).join(",");
         const rows = exportData
-          .map((row) => Object.values(row).map((val) => `"${val}"`).join(","))
+          .map((row) =>
+            Object.values(row)
+              .map((val) => `"${val}"`)
+              .join(",")
+          )
           .join("\n");
         const csvContent = headers + "\n" + rows;
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const blob = new Blob([csvContent], {
+          type: "text/csv;charset=utf-8;",
+        });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
         link.setAttribute("download", "items.csv");
@@ -128,7 +148,9 @@ const Items = () => {
       case "PDF": {
         const doc = new jsPDF();
         const columns = Object.keys(exportData[0]);
-        const tableRows = exportData.map((row) => columns.map((col) => row[col]));
+        const tableRows = exportData.map((row) =>
+          columns.map((col) => row[col])
+        );
         autoTable(doc, { head: [columns], body: tableRows });
         doc.save("items.pdf");
         break;
@@ -136,8 +158,12 @@ const Items = () => {
 
       case "Print": {
         const printWindow = window.open("", "", "height=500,width=800");
-        printWindow.document.write("<html><head><title>Items</title></head><body>");
-        printWindow.document.write("<table border='1' style='border-collapse: collapse; width: 100%;'>");
+        printWindow.document.write(
+          "<html><head><title>Items</title></head><body>"
+        );
+        printWindow.document.write(
+          "<table border='1' style='border-collapse: collapse; width: 100%;'>"
+        );
         printWindow.document.write("<thead><tr>");
         Object.keys(exportData[0]).forEach((col) => {
           printWindow.document.write(`<th>${col}</th>`);
@@ -170,12 +196,21 @@ const Items = () => {
       return;
     }
 
-    if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} item(s)?`)) return;
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedItems.length} item(s)?`
+      )
+    )
+      return;
 
     try {
       const config = createAxiosConfig();
-      await axios.post("http://localhost:5000/api/admin/items/bulk-delete", { ids: selectedItems }, config);
-      setItems(items.filter(item => !selectedItems.includes(item._id)));
+      await axios.post(
+        `${API_BASE_URL}/admin/items/bulk-delete`,
+        { ids: selectedItems },
+        config
+      );
+      setItems(items.filter((item) => !selectedItems.includes(item._id)));
       setSelectedItems([]);
       setSelectAll(false);
       alert("Items deleted successfully!");
@@ -192,7 +227,7 @@ const Items = () => {
   // Handle individual checkbox change
   const handleCheckboxChange = (id) => {
     if (selectedItems.includes(id)) {
-      setSelectedItems(selectedItems.filter(itemId => itemId !== id));
+      setSelectedItems(selectedItems.filter((itemId) => itemId !== id));
     } else {
       setSelectedItems([...selectedItems, id]);
     }
@@ -203,7 +238,7 @@ const Items = () => {
     if (selectAll) {
       setSelectedItems([]);
     } else {
-      setSelectedItems(filteredItems.map(item => item._id));
+      setSelectedItems(filteredItems.map((item) => item._id));
     }
     setSelectAll(!selectAll);
   };
@@ -212,7 +247,7 @@ const Items = () => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: value
+      [name]: value,
     });
   };
 
@@ -222,9 +257,15 @@ const Items = () => {
       const config = createAxiosConfig();
       const formattedItem = {
         ...formData,
-        rate: formData.rate.startsWith('$') ? formData.rate : `$${formData.rate}`
+        rate: formData.rate.startsWith("$")
+          ? formData.rate
+          : `$${formData.rate}`,
       };
-      const { data } = await axios.post("http://localhost:5000/api/admin/items", formattedItem, config);
+      const { data } = await axios.post(
+        `${API_BASE_URL}/admin/items`,
+        formattedItem,
+        config
+      );
       setItems([data, ...items]);
       setFormData({
         description: "",
@@ -233,7 +274,7 @@ const Items = () => {
         tax1: "",
         tax2: "",
         unit: "",
-        groupName: ""
+        groupName: "",
       });
       setShowForm(false);
     } catch (err) {
@@ -250,18 +291,18 @@ const Items = () => {
     const file = e.target.files[0];
     if (file) {
       setCsvFile(file);
-      
+
       // Parse the CSV file
       Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
-        complete: function(results) {
+        complete: function (results) {
           setCsvData(results.data);
         },
-        error: function(error) {
+        error: function (error) {
           console.error("Error parsing CSV:", error);
           alert("Error parsing CSV file. Please check the format.");
-        }
+        },
       });
     } else {
       alert("Please select a file");
@@ -274,7 +315,7 @@ const Items = () => {
       alert("Please upload a CSV file first");
       return;
     }
-    
+
     // Display the preview in an alert
     alert(JSON.stringify(csvData.slice(0, 5), null, 2)); // Show first 5 rows
   };
@@ -288,30 +329,39 @@ const Items = () => {
 
     try {
       const config = createAxiosConfig();
-      
+
       // Format the data before sending - handle different CSV formats
-      const formattedData = csvData.map(item => {
+      const formattedData = csvData.map((item) => {
         // Handle different column name variations
         const description = item.description || item.Description || "";
-        const longDescription = item.longDescription || item["Long Description"] || item.long_desc || "";
+        const longDescription =
+          item.longDescription ||
+          item["Long Description"] ||
+          item.long_desc ||
+          "";
         const rate = item.rate || item.Rate || "";
         const tax1 = item.tax1 || item.Tax1 || "";
         const tax2 = item.tax2 || item.Tax2 || "";
         const unit = item.unit || item.Unit || "";
-        const groupName = item.groupName || item["Group Name"] || item.group_name || "";
+        const groupName =
+          item.groupName || item["Group Name"] || item.group_name || "";
 
         return {
           description,
           longDescription,
-          rate: rate ? (rate.startsWith('$') ? rate : `$${rate}`) : "$0",
+          rate: rate ? (rate.startsWith("$") ? rate : `$${rate}`) : "$0",
           tax1,
           tax2,
           unit,
-          groupName
+          groupName,
         };
       });
 
-      const { data } = await axios.post("http://localhost:5000/api/admin/items/import", formattedData, config);
+      const { data } = await axios.post(
+        `${API_BASE_URL}/admin/items/import`,
+        formattedData,
+        config
+      );
       setItems([...data, ...items]);
       setShowImportForm(false);
       setCsvFile(null);
@@ -337,7 +387,10 @@ const Items = () => {
   // Pagination
   const totalPages = Math.ceil(filteredItems.length / entriesPerPage);
   const startIndex = (currentPage - 1) * entriesPerPage;
-  const currentData = filteredItems.slice(startIndex, startIndex + entriesPerPage);
+  const currentData = filteredItems.slice(
+    startIndex,
+    startIndex + entriesPerPage
+  );
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
@@ -354,16 +407,16 @@ const Items = () => {
       {/* Top action buttons */}
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <div className="flex items-center gap-2">
-          <button 
-            className="px-3 py-1 text-sm rounded flex items-center gap-2" 
-            style={{ backgroundColor: '#333333', color: 'white' }}
+          <button
+            className="px-3 py-1 text-sm rounded flex items-center gap-2"
+            style={{ backgroundColor: "#333333", color: "white" }}
             onClick={() => setShowForm(true)}
           >
             <FaPlus /> New Item
           </button>
-          <button 
-            className="px-3 py-1 text-sm rounded flex items-center gap-2" 
-            style={{ backgroundColor: '#333333', color: 'white' }}
+          <button
+            className="px-3 py-1 text-sm rounded flex items-center gap-2"
+            style={{ backgroundColor: "#333333", color: "white" }}
             onClick={() => setShowImportForm(true)}
           >
             <FaUpload /> Import Items
@@ -384,12 +437,14 @@ const Items = () => {
                 <FaTimes />
               </button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="p-6">
               <div className="space-y-4">
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
                   <input
                     type="text"
                     name="description"
@@ -401,7 +456,9 @@ const Items = () => {
                 </div>
                 {/* Long Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Long Description</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Long Description
+                  </label>
                   <textarea
                     name="longDescription"
                     value={formData.longDescription}
@@ -412,7 +469,9 @@ const Items = () => {
                 </div>
                 {/* Rate */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Rate - USD (Base Currency)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Rate - USD (Base Currency)
+                  </label>
                   <div className="relative">
                     <span className="absolute left-3 top-2">$</span>
                     <input
@@ -430,7 +489,9 @@ const Items = () => {
                 {/* Tax */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tax 1</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tax 1
+                    </label>
                     <select
                       name="tax1"
                       value={formData.tax1}
@@ -438,12 +499,16 @@ const Items = () => {
                       className="w-full border px-3 py-2 rounded text-sm"
                     >
                       {taxOptions.map((option, i) => (
-                        <option key={i} value={option}>{option}</option>
+                        <option key={i} value={option}>
+                          {option}
+                        </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Tax 2</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Tax 2
+                    </label>
                     <select
                       name="tax2"
                       value={formData.tax2}
@@ -451,14 +516,18 @@ const Items = () => {
                       className="w-full border px-3 py-2 rounded text-sm"
                     >
                       {taxOptions.map((option, i) => (
-                        <option key={i} value={option}>{option}</option>
+                        <option key={i} value={option}>
+                          {option}
+                        </option>
                       ))}
                     </select>
                   </div>
                 </div>
                 {/* Unit */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Unit
+                  </label>
                   <input
                     type="text"
                     name="unit"
@@ -469,7 +538,9 @@ const Items = () => {
                 </div>
                 {/* Group Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Item Group</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Item Group
+                  </label>
                   <input
                     type="text"
                     name="groupName"
@@ -482,8 +553,19 @@ const Items = () => {
 
               {/* Buttons */}
               <div className="flex justify-end space-x-3 mt-6">
-                <button type="button" onClick={() => setShowForm(false)} className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50">Close</button>
-                <button type="submit" className="px-4 py-2 bg-black text-white rounded text-sm">Save Item</button>
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-black text-white rounded text-sm"
+                >
+                  Save Item
+                </button>
               </div>
             </form>
           </div>
@@ -507,7 +589,7 @@ const Items = () => {
                 <FaTimes />
               </button>
             </div>
-            
+
             <div className="p-6">
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -520,19 +602,24 @@ const Items = () => {
                   className="w-full border px-3 py-2 rounded text-sm"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  CSV should contain item data with columns like description, rate, tax1, tax2, unit, groupName
+                  CSV should contain item data with columns like description,
+                  rate, tax1, tax2, unit, groupName
                 </p>
               </div>
 
               {csvData.length > 0 && (
                 <div className="mb-4">
-                  <h3 className="text-md font-medium mb-2">Preview (First 5 rows)</h3>
+                  <h3 className="text-md font-medium mb-2">
+                    Preview (First 5 rows)
+                  </h3>
                   <div className="border rounded p-2 max-h-40 overflow-y-auto">
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="bg-gray-100">
                           {Object.keys(csvData[0]).map((key, i) => (
-                            <th key={i} className="p-1 border text-left">{key}</th>
+                            <th key={i} className="p-1 border text-left">
+                              {key}
+                            </th>
                           ))}
                         </tr>
                       </thead>
@@ -540,7 +627,9 @@ const Items = () => {
                         {csvData.slice(0, 5).map((row, i) => (
                           <tr key={i}>
                             {Object.values(row).map((value, j) => (
-                              <td key={j} className="p-1 border">{value}</td>
+                              <td key={j} className="p-1 border">
+                                {value}
+                              </td>
                             ))}
                           </tr>
                         ))}
@@ -559,22 +648,22 @@ const Items = () => {
                 >
                   Simulate Data
                 </button>
-                
+
                 <div className="space-x-3">
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => {
                       setShowImportForm(false);
                       setCsvFile(null);
                       setCsvData([]);
-                    }} 
+                    }}
                     className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
                   >
                     Cancel
                   </button>
-                  <button 
-                    type="button" 
-                    onClick={handleImport} 
+                  <button
+                    type="button"
+                    onClick={handleImport}
                     className="px-4 py-2 bg-black text-white rounded text-sm"
                     disabled={csvData.length === 0}
                   >
@@ -616,7 +705,7 @@ const Items = () => {
               <option value={50}>50</option>
               <option value={100}>100</option>
             </select>
-            
+
             {/* Export button */}
             <div className="relative">
               <button
@@ -628,7 +717,10 @@ const Items = () => {
 
               {/* Dropdown menu */}
               {showExportMenu && (
-                <div ref={exportMenuRef} className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                <div
+                  ref={exportMenuRef}
+                  className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                >
                   <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
                     onClick={() => handleExport("Excel")}
@@ -687,20 +779,58 @@ const Items = () => {
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th className="p-3 rounded-l-lg" style={{ backgroundColor: '#333333', color: 'white' }}>
+                <th
+                  className="p-3 rounded-l-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
                   <input
                     type="checkbox"
                     checked={selectAll}
                     onChange={handleSelectAll}
                   />
                 </th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Description</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Long Description</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Rate</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tax1</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Tax2</th>
-                <th className="p-3" style={{ backgroundColor: '#333333', color: 'white' }}>Unit</th>
-                <th className="p-3 rounded-r-lg" style={{ backgroundColor: '#333333', color: 'white' }}>Group Name</th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Description
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Long Description
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Rate
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Tax1
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Tax2
+                </th>
+                <th
+                  className="p-3"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Unit
+                </th>
+                <th
+                  className="p-3 rounded-r-lg"
+                  style={{ backgroundColor: "#333333", color: "white" }}
+                >
+                  Group Name
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -708,7 +838,7 @@ const Items = () => {
                 <tr
                   key={item._id}
                   className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                  style={{ color: 'black' }}
+                  style={{ color: "black" }}
                 >
                   <td className="p-3 rounded-l-lg border-0">
                     <div className="flex items-center">
@@ -726,7 +856,9 @@ const Items = () => {
                   <td className="p-3 border-0">{item.tax1}</td>
                   <td className="p-3 border-0">{item.tax2}</td>
                   <td className="p-3 border-0">{item.unit}</td>
-                  <td className="p-3 rounded-r-lg border-0">{item.groupName}</td>
+                  <td className="p-3 rounded-r-lg border-0">
+                    {item.groupName}
+                  </td>
                 </tr>
               ))}
             </tbody>
