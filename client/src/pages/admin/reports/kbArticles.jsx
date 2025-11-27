@@ -398,7 +398,7 @@ export default function KbArticles() {
       )}
 
       {/* Add CSS for spinner animation */}
-      <style jsx>{`
+      <style>{`
         @keyframes spin {
           0% {
             transform: rotate(0deg);

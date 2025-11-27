@@ -147,8 +147,8 @@ const Dashboard = () => {
         axios.get(`${API_BASE_URL}/admin/invoices`, config),
         axios.get(`${API_BASE_URL}/admin/proposals`, config),
         axios.get(`${API_BASE_URL}/admin/estimates`, config),
-        axios.get(`${API_BASE_URL}/admin/leads`, config),
-        axios.get(`${API_BASE_URL}/admin/projects`, config),
+        axios.get(`${API_BASE_URL}/leads`, config),
+        axios.get(`${API_BASE_URL}/projects`, config),
       ];
 
       const responses = await Promise.allSettled(requests);

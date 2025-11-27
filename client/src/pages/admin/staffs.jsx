@@ -899,7 +899,7 @@ const StaffsPage = () => {
                       style={{ backgroundColor: "#333333", color: "white" }}
                     >
                       Staff Code
-                    </th>{" "}
+                    </th>
                     {/* ADDED: Staff Code column */}
                     <th
                       className="p-3"
