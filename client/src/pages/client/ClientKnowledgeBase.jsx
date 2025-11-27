@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useCallback } from "react";
 import {
   FaSearch,
@@ -260,8 +261,8 @@ const ClientKnowledgeBasePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 flex flex-col items-center">
-      <div className="w-full max-w-6xl">
+    <div className=" flex flex-col items-center p-2">
+      <div className="w-full">
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center mb-4">

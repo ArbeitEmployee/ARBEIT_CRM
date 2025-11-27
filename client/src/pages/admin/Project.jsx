@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
 import {
   FaPlus,
@@ -897,9 +898,9 @@ const ProjectPage = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Total Projects */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Total Projects</p>
@@ -912,7 +913,7 @@ const ProjectPage = () => {
             </div>
 
             {/* Progress Projects */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">In Progress</p>
@@ -925,7 +926,7 @@ const ProjectPage = () => {
             </div>
 
             {/* On Hold Projects */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">On Hold</p>
@@ -938,7 +939,7 @@ const ProjectPage = () => {
             </div>
 
             {/* Cancelled Projects */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Cancelled</p>
@@ -953,7 +954,7 @@ const ProjectPage = () => {
             </div>
 
             {/* Finished Projects */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Finished</p>

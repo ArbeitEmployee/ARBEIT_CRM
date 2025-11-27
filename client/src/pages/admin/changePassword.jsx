@@ -91,10 +91,10 @@ const ChangePassword = () => {
     <div className="flex items-center justify-center py-8 px-4">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl">
         <div className="text-center">
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-indigo-100">
+          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-gray-100">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              className="h-10 w-10 text-indigo-600"
+              className="h-10 w-10 text-gray-600"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -131,7 +131,7 @@ const ChangePassword = () => {
                   name="oldPassword"
                   type={showPasswords.oldPassword ? "text" : "password"}
                   required
-                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300"
+                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400  focus:border-gray-500 transition duration-300"
                   placeholder="Enter your current password"
                   value={formData.oldPassword}
                   onChange={handleChange}
@@ -196,7 +196,7 @@ const ChangePassword = () => {
                   name="newPassword"
                   type={showPasswords.newPassword ? "text" : "password"}
                   required
-                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300"
+                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400  focus:border-gray-500 transition duration-300"
                   placeholder="Enter new password (min. 6 characters)"
                   value={formData.newPassword}
                   onChange={handleChange}
@@ -261,7 +261,7 @@ const ChangePassword = () => {
                   name="confirmNewPassword"
                   type={showPasswords.confirmNewPassword ? "text" : "password"}
                   required
-                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition duration-300"
+                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400  focus:border-gray-500 transition duration-300"
                   placeholder="Confirm your new password"
                   value={formData.confirmNewPassword}
                   onChange={handleChange}

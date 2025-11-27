@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-undef */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
@@ -2854,12 +2855,12 @@ const SalesReports = () => {
   };
 
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
+    <div className="min-h-screen">
       <div className="bg-white p-6 rounded-lg shadow-md">
         <h1 className="text-2xl font-bold mb-6">Sales Reports</h1>
 
         {/* Report Type Selection */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 mb-6">
           <button
             className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all ${
               activeReport === "invoices"

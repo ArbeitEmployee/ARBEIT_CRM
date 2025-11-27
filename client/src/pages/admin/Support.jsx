@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
 import {
   FaPlus,
@@ -854,9 +855,9 @@ const SupportPage = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Total Tickets */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Total Tickets</p>
@@ -869,7 +870,7 @@ const SupportPage = () => {
             </div>
 
             {/* Open */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Open</p>
@@ -882,7 +883,7 @@ const SupportPage = () => {
             </div>
 
             {/* Answered */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Answered</p>
@@ -895,7 +896,7 @@ const SupportPage = () => {
             </div>
 
             {/* On Hold */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">On Hold</p>
@@ -908,7 +909,7 @@ const SupportPage = () => {
             </div>
 
             {/* In Progress */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">In Progress</p>
@@ -921,7 +922,7 @@ const SupportPage = () => {
             </div>
 
             {/* Closed */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Closed</p>

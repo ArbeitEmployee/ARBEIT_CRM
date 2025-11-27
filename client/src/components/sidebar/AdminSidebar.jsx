@@ -264,7 +264,7 @@ const AdminSidebar = ({ isOpen, onToggle, userType = "admin" }) => {
                         onClick={() => toggleMenu(item.name)}
                         className={`flex items-center justify-between w-full p-3 rounded-xl transition-all ${
                           isActive
-                            ? "bg-blue-50 text-blue-600 shadow-sm border border-blue-100"
+                            ? "bg-gray-50 text-gray-600 shadow-sm border border-gray-100"
                             : "text-gray-700 hover:bg-gray-100"
                         }`}
                       >
@@ -303,7 +303,7 @@ const AdminSidebar = ({ isOpen, onToggle, userType = "admin" }) => {
                                     to={child.path}
                                     className={`block text-sm py-2.5 px-3 rounded-lg transition-colors ${
                                       isActivePath(child.path)
-                                        ? "bg-blue-500 text-white font-medium shadow-sm"
+                                        ? "bg-[#333333] text-white font-medium shadow-sm"
                                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                                     }`}
                                   >
@@ -321,7 +321,7 @@ const AdminSidebar = ({ isOpen, onToggle, userType = "admin" }) => {
                       to={item.path}
                       className={`flex items-center w-full p-3 rounded-xl transition-all ${
                         isActive
-                          ? "bg-blue-50 text-blue-600 shadow-sm border border-blue-100"
+                          ? "bg-[#333333] text-gray-100 shadow-sm border border-gray-100"
                           : "text-gray-700 hover:bg-gray-100"
                       }`}
                     >

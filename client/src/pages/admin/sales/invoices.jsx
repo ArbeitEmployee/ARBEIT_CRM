@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import {
@@ -505,9 +506,9 @@ const Invoices = () => {
       </div>
 
       {/* Stats Cards - All in one row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Total Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Invoices</p>
@@ -520,7 +521,7 @@ const Invoices = () => {
         </div>
 
         {/* Paid Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Paid</p>
@@ -533,7 +534,7 @@ const Invoices = () => {
         </div>
 
         {/* Unpaid Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Unpaid</p>
@@ -546,7 +547,7 @@ const Invoices = () => {
         </div>
 
         {/* Partiallypaid Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Partiallypaid</p>
@@ -561,7 +562,7 @@ const Invoices = () => {
         </div>
 
         {/* Overdue Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Overdue</p>
@@ -574,7 +575,7 @@ const Invoices = () => {
         </div>
 
         {/* Draft Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Draft</p>

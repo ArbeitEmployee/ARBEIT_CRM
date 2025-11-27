@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { FiLock } from "react-icons/fi";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import backgroundImage from "../../assets/login-background.jpg";
@@ -18,6 +18,8 @@ export default function ForgotPassword() {
     newPassword: "",
     confirmPassword: "",
   });
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   const codeRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
 
@@ -270,23 +272,36 @@ export default function ForgotPassword() {
             }}
             className="space-y-4"
           >
+            {/* NEW PASSWORD */}
             <div>
               <label className="block text-sm mb-1">New Password</label>
-              <input
-                type="password"
-                placeholder="Enter your new password"
-                value={newPassword}
-                onChange={(e) => {
-                  setNewPassword(e.target.value);
-                  setErrors({ ...errors, newPassword: "" });
-                }}
-                className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                  errors.newPassword
-                    ? "focus:ring-red-500"
-                    : "focus:ring-blue-400"
-                }`}
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showNewPass ? "text" : "password"}
+                  placeholder="Enter your new password"
+                  value={newPassword}
+                  onChange={(e) => {
+                    setNewPassword(e.target.value);
+                    setErrors({ ...errors, newPassword: "" });
+                  }}
+                  className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                    errors.newPassword
+                      ? "focus:ring-red-500"
+                      : "focus:ring-blue-400"
+                  }`}
+                  required
+                />
+
+                {/* Eye Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowNewPass(!showNewPass)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-300 hover:text-white"
+                >
+                  {showNewPass ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                </button>
+              </div>
+
               {errors.newPassword && (
                 <p className="text-red-400 text-xs mt-1">
                   {errors.newPassword}
@@ -294,23 +309,40 @@ export default function ForgotPassword() {
               )}
             </div>
 
+            {/* CONFIRM PASSWORD */}
             <div>
               <label className="block text-sm mb-1">Confirm Password</label>
-              <input
-                type="password"
-                placeholder="Enter your confirm password"
-                value={confirmPassword}
-                onChange={(e) => {
-                  setConfirmPassword(e.target.value);
-                  setErrors({ ...errors, confirmPassword: "" });
-                }}
-                className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                  errors.confirmPassword
-                    ? "focus:ring-red-500"
-                    : "focus:ring-blue-400"
-                }`}
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPass ? "text" : "password"}
+                  placeholder="Enter your confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    setErrors({ ...errors, confirmPassword: "" });
+                  }}
+                  className={`w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                    errors.confirmPassword
+                      ? "focus:ring-red-500"
+                      : "focus:ring-blue-400"
+                  }`}
+                  required
+                />
+
+                {/* Eye Toggle Button */}
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPass(!showConfirmPass)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-300 hover:text-white"
+                >
+                  {showConfirmPass ? (
+                    <FiEyeOff size={18} />
+                  ) : (
+                    <FiEye size={18} />
+                  )}
+                </button>
+              </div>
+
               {errors.confirmPassword && (
                 <p className="text-red-400 text-xs mt-1">
                   {errors.confirmPassword}

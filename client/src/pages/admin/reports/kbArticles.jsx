@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
@@ -157,7 +158,7 @@ export default function KbArticles() {
   return (
     <div
       style={{
-        maxWidth: 720,
+        paddingLeft: "2rem",
         margin: "2rem auto",
         fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       }}

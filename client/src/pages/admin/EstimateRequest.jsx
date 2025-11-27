@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // FileName: EstimateRequest.jsx
 import { useState, useEffect, useCallback, useRef } from "react";
 import {
@@ -879,9 +880,9 @@ const EstimateRequestPage = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Total Estimates */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Total Estimates</p>
@@ -894,7 +895,7 @@ const EstimateRequestPage = () => {
             </div>
 
             {/* Draft */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Draft</p>
@@ -907,7 +908,7 @@ const EstimateRequestPage = () => {
             </div>
 
             {/* Sent */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Sent</p>
@@ -920,7 +921,7 @@ const EstimateRequestPage = () => {
             </div>
 
             {/* Accepted */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Accepted</p>
@@ -933,7 +934,7 @@ const EstimateRequestPage = () => {
             </div>
 
             {/* Rejected */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Rejected</p>
@@ -946,7 +947,7 @@ const EstimateRequestPage = () => {
             </div>
 
             {/* Expired */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Expired</p>

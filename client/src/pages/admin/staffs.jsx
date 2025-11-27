@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
 import {
   FaPlus,
@@ -511,7 +512,7 @@ const StaffsPage = () => {
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className=" min-h-screen p-4">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">
@@ -701,7 +702,7 @@ const StaffsPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             {/* Total Staffs */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Total Staffs</p>
@@ -714,7 +715,7 @@ const StaffsPage = () => {
             </div>
 
             {/* Active Staffs */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Active Staffs</p>
@@ -727,7 +728,7 @@ const StaffsPage = () => {
             </div>
 
             {/* Inactive Staffs */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Inactive Staffs</p>

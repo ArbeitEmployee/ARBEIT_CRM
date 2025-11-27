@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
 import {
   FaSearch,
@@ -299,7 +300,7 @@ const Payments = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {/* Total Payments */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Payments</p>
@@ -312,7 +313,7 @@ const Payments = () => {
         </div>
 
         {/* Completed Payments */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Completed</p>
@@ -325,7 +326,7 @@ const Payments = () => {
         </div>
 
         {/* Total Amount */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Amount</p>

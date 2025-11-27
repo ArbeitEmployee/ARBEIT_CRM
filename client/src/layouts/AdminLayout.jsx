@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect, useRef } from "react";
 import AdminSidebar from "../components/sidebar/AdminSidebar";
 import {
@@ -383,7 +384,7 @@ const AdminLayout = ({ children, userType = "admin" }) => {
                   <input
                     type="text"
                     placeholder={`Search ${userType} menu items...`}
-                    className="w-full px-3 py-2 pl-10 pr-10 rounded-lg bg-gray-100 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white border border-gray-200"
+                    className="w-full px-3 py-2 pl-10 pr-10 rounded-lg bg-gray-100 text-gray-900 placeholder-gray-500 focus:border-gray-400 border border-gray-200"
                     value={searchQuery}
                     onChange={handleSearchChange}
                     onFocus={() =>
@@ -535,7 +536,7 @@ const AdminLayout = ({ children, userType = "admin" }) => {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold text-sm">
+                    <div className="w-8 h-8 rounded-full bg-[#333333] text-white flex items-center justify-center font-bold text-sm">
                       {user?.name?.charAt(0)?.toUpperCase() || "U"}
                     </div>
                     <div className="text-left hidden md:block">

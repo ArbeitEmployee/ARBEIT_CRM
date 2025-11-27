@@ -112,7 +112,7 @@ const CsvExport = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
+      <div className=" mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
         <div className="bg-gray-900 text-white p-6">
           <h1 className="text-3xl font-bold">CSV Export</h1>
           <p className="mt-2 opacity-90">Export your data as CSV files</p>

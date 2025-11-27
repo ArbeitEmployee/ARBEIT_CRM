@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import {
   FaSearch,
@@ -194,7 +195,7 @@ const ClientContactsPage = () => {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen p-4 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p>Loading contracts...</p>
@@ -205,7 +206,7 @@ const ClientContactsPage = () => {
 
   if (error) {
     return (
-      <div className="bg-gray-100 min-h-screen p-4">
+      <div className="min-h-screen">
         <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded-lg shadow-md">
           <div className="text-red-600 text-center">
             <h2 className="text-xl font-bold mb-4">Error Loading Contracts</h2>
@@ -223,7 +224,7 @@ const ClientContactsPage = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className=" min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">My Contracts</h1>
@@ -275,7 +276,7 @@ const ClientContactsPage = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {/* Active Contracts */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Active Contracts</p>
@@ -288,7 +289,7 @@ const ClientContactsPage = () => {
         </div>
 
         {/* Expired Contracts */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Expired Contracts</p>
@@ -301,7 +302,7 @@ const ClientContactsPage = () => {
         </div>
 
         {/* About to Expire */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">About to Expire</p>

@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
 import {
   FaPlus,
@@ -328,9 +329,9 @@ const Proposals = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Total Proposals */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Proposals</p>
@@ -343,7 +344,7 @@ const Proposals = () => {
         </div>
 
         {/* Draft Proposals */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Draft</p>
@@ -358,7 +359,7 @@ const Proposals = () => {
         </div>
 
         {/* Sent Proposals */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Sent</p>
@@ -373,7 +374,7 @@ const Proposals = () => {
         </div>
 
         {/* Accepted Proposals */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Accepted</p>
@@ -388,7 +389,7 @@ const Proposals = () => {
         </div>
 
         {/* Rejected Proposals */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Rejected</p>

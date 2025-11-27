@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import {
@@ -14,7 +15,6 @@ import { useNavigate } from "react-router-dom";
 
 const ClientProposals = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  // eslint-disable-next-line no-unused-vars
   const navigate = useNavigate();
   const [compactView, setCompactView] = useState(false);
   const [entriesPerPage, setEntriesPerPage] = useState(10);
@@ -176,13 +176,10 @@ const ClientProposals = () => {
     }).format(amount);
   };
 
-  if (loading)
-    return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading proposals...</div>
-    );
+  if (loading) return <div className="min-h-screen">Loading proposals...</div>;
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">My Proposals</h1>
@@ -219,9 +216,9 @@ const ClientProposals = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Total Proposals */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Proposals</p>
@@ -234,7 +231,7 @@ const ClientProposals = () => {
         </div>
 
         {/* Sent Proposals */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Sent</p>
@@ -247,7 +244,7 @@ const ClientProposals = () => {
         </div>
 
         {/* Accepted Proposals */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Accepted</p>
@@ -260,7 +257,7 @@ const ClientProposals = () => {
         </div>
 
         {/* Rejected Proposals */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Rejected</p>
@@ -273,7 +270,7 @@ const ClientProposals = () => {
         </div>
 
         {/* Draft Proposals */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Draft</p>

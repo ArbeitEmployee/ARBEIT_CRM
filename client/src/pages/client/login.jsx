@@ -1,7 +1,7 @@
 /* eslint-disable no-unused-vars */
 // ClientLogin.jsx - Updated version
 import { useState } from "react";
-import { FiMail, FiLock } from "react-icons/fi";
+import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
 import backgroundImage from "../../assets/login-background.jpg";
@@ -15,6 +15,12 @@ const ClientLogin = () => {
     email: "",
     password: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+
+  const togglePassword = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -145,22 +151,35 @@ const ClientLogin = () => {
               </Link>
             </div>
             <div className="relative">
+              {/* Lock Icon */}
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <FiLock className="text-gray-400" />
               </div>
+
+              {/* Password Input */}
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
                   setErrors({ ...errors, password: "" });
                 }}
-                className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                className={`w-full pl-10 pr-10 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
                   errors.password ? "focus:ring-red-500" : "focus:ring-gray-700"
                 }`}
               />
+
+              {/* Show / Hide Button */}
+              <button
+                type="button"
+                onClick={togglePassword}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-300 hover:text-white transition"
+              >
+                {showPassword ? "👁️" : "👁️‍🗨️"}
+              </button>
             </div>
+
             {errors.password && (
               <p className="text-red-400 text-xs mt-1">{errors.password}</p>
             )}

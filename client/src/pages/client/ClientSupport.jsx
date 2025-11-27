@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import {
@@ -306,7 +307,7 @@ const ClientSupportPage = () => {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen p-4 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p>Loading support tickets...</p>
@@ -317,7 +318,7 @@ const ClientSupportPage = () => {
 
   if (error) {
     return (
-      <div className="bg-gray-100 min-h-screen p-4">
+      <div className="min-h-screen">
         <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded-lg shadow-md">
           <div className="text-red-600 text-center">
             <h2 className="text-xl font-bold mb-4">
@@ -337,7 +338,7 @@ const ClientSupportPage = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">
@@ -576,9 +577,9 @@ const ClientSupportPage = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Total Tickets */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Total Tickets</p>
@@ -591,7 +592,7 @@ const ClientSupportPage = () => {
             </div>
 
             {/* Open Tickets */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Open</p>
@@ -604,7 +605,7 @@ const ClientSupportPage = () => {
             </div>
 
             {/* Answered Tickets */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Answered</p>
@@ -617,7 +618,7 @@ const ClientSupportPage = () => {
             </div>
 
             {/* On Hold Tickets */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">On Hold</p>
@@ -630,7 +631,7 @@ const ClientSupportPage = () => {
             </div>
 
             {/* In Progress Tickets */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">In Progress</p>
@@ -645,7 +646,7 @@ const ClientSupportPage = () => {
             </div>
 
             {/* Closed Tickets */}
-            <div className="bg-white p-4 rounded-lg shadow border">
+            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-500 text-sm">Closed</p>

@@ -10,6 +10,8 @@ import {
   FiHome,
   FiMapPin,
   FiKey,
+  FiEye,
+  FiEyeOff,
 } from "react-icons/fi";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
@@ -41,6 +43,8 @@ const ClientRegistration = () => {
   const [errors, setErrors] = useState({});
   const [codeError, setCodeError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -233,7 +237,7 @@ const ClientRegistration = () => {
               Step 1: Validate Your Customer Code
             </h3>
 
-            <div className="flex items-end gap-2">
+            <div className="flex items-center gap-3 mt-1">
               <div className="flex-1">
                 <label className="block text-sm mb-1">Customer Code</label>
                 <div className="relative">
@@ -424,20 +428,33 @@ const ClientRegistration = () => {
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <FiLock className="text-gray-400" />
                         </div>
+
                         <input
-                          type="password"
+                          type={showPassword ? "text" : "password"}
                           name="password"
                           placeholder="Enter your password"
                           value={formData.password}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                            errors.password
-                              ? "focus:ring-red-500"
-                              : "focus:ring-gray-700"
-                          }`}
+                          className={`w-full pl-10 pr-10 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 
+      focus:outline-none focus:ring-2 ${
+        errors.password ? "focus:ring-red-500" : "focus:ring-gray-700"
+      }`}
                         />
+
+                        {/* Eye icon */}
+                        <div
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <FiEyeOff className="text-gray-300" />
+                          ) : (
+                            <FiEye className="text-gray-300" />
+                          )}
+                        </div>
                       </div>
+
                       {errors.password && (
                         <p className="text-red-400 text-xs mt-1">
                           {errors.password}
@@ -454,20 +471,35 @@ const ClientRegistration = () => {
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                           <FiLock className="text-gray-400" />
                         </div>
+
                         <input
-                          type="password"
+                          type={showConfirmPassword ? "text" : "password"}
                           name="confirmPassword"
                           placeholder="Enter your confirm password"
                           value={formData.confirmPassword}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                            errors.confirmPassword
-                              ? "focus:ring-red-500"
-                              : "focus:ring-gray-700"
-                          }`}
+                          className={`w-full pl-10 pr-10 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 
+      focus:outline-none focus:ring-2 ${
+        errors.confirmPassword ? "focus:ring-red-500" : "focus:ring-gray-700"
+      }`}
                         />
+
+                        {/* Eye icon */}
+                        <div
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                          onClick={() =>
+                            setShowConfirmPassword(!showConfirmPassword)
+                          }
+                        >
+                          {showConfirmPassword ? (
+                            <FiEyeOff className="text-gray-300" />
+                          ) : (
+                            <FiEye className="text-gray-300" />
+                          )}
+                        </div>
                       </div>
+
                       {errors.confirmPassword && (
                         <p className="text-red-400 text-xs mt-1">
                           {errors.confirmPassword}

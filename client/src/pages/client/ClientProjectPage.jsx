@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import {
@@ -187,7 +188,7 @@ const ClientProjectPage = () => {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen p-4 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p>Loading projects...</p>
@@ -198,7 +199,7 @@ const ClientProjectPage = () => {
 
   if (error) {
     return (
-      <div className="bg-gray-100 min-h-screen p-4">
+      <div className="min-h-screen">
         <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded-lg shadow-md">
           <div className="text-red-600 text-center">
             <h2 className="text-xl font-bold mb-4">Error Loading Projects</h2>
@@ -216,7 +217,7 @@ const ClientProjectPage = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">My Projects</h1>
@@ -266,9 +267,9 @@ const ClientProjectPage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Total Projects */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Projects</p>
@@ -281,7 +282,7 @@ const ClientProjectPage = () => {
         </div>
 
         {/* Progress Projects */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">In Progress</p>
@@ -294,7 +295,7 @@ const ClientProjectPage = () => {
         </div>
 
         {/* On Hold Projects */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">On Hold</p>
@@ -307,7 +308,7 @@ const ClientProjectPage = () => {
         </div>
 
         {/* Cancelled Projects */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Cancelled</p>
@@ -320,7 +321,7 @@ const ClientProjectPage = () => {
         </div>
 
         {/* Finished Projects */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Finished</p>

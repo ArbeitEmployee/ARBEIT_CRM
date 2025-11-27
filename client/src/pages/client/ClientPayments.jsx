@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 // ClientPayments.jsx
 import { useState, useEffect } from "react";
 import {
@@ -197,13 +198,10 @@ const ClientPayments = () => {
     }
   };
 
-  if (loading)
-    return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading payments...</div>
-    );
+  if (loading) return <div className="min-h-screen">Loading payments...</div>;
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">My Payments</h1>
@@ -217,7 +215,7 @@ const ClientPayments = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Total Payments */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Payments</p>
@@ -233,7 +231,7 @@ const ClientPayments = () => {
         </div>
 
         {/* Completed Payments */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Completed</p>
@@ -246,7 +244,7 @@ const ClientPayments = () => {
         </div>
 
         {/* Pending Payments */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Pending</p>
@@ -259,7 +257,7 @@ const ClientPayments = () => {
         </div>
 
         {/* Failed Payments */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Failed/Refunded</p>

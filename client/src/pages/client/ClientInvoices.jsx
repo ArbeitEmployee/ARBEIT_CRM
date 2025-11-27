@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect, useRef } from "react";
 import {
@@ -276,13 +277,10 @@ const ClientInvoices = () => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  if (loading)
-    return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading invoices...</div>
-    );
+  if (loading) return <div className="min-h-screen">Loading invoices...</div>;
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">My Invoices</h1>
@@ -294,9 +292,9 @@ const ClientInvoices = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Total Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Invoices</p>
@@ -309,7 +307,7 @@ const ClientInvoices = () => {
         </div>
 
         {/* Paid Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Paid</p>
@@ -322,7 +320,7 @@ const ClientInvoices = () => {
         </div>
 
         {/* Unpaid Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Unpaid</p>
@@ -335,7 +333,7 @@ const ClientInvoices = () => {
         </div>
 
         {/* Overdue Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Overdue</p>
@@ -348,7 +346,7 @@ const ClientInvoices = () => {
         </div>
 
         {/* Partially Paid Invoices */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Partially Paid</p>

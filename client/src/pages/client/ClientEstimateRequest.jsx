@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-unused-vars */
 import { useState, useEffect } from "react";
 import {
@@ -223,7 +224,7 @@ const ClientEstimateRequest = () => {
 
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen p-4 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
           <p>Loading estimates...</p>
@@ -234,7 +235,7 @@ const ClientEstimateRequest = () => {
 
   if (error) {
     return (
-      <div className="bg-gray-100 min-h-screen p-4">
+      <div className="min-h-screen">
         <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded-lg shadow-md">
           <div className="text-red-600 text-center">
             <h2 className="text-xl font-bold mb-4">Error Loading Estimates</h2>
@@ -252,7 +253,7 @@ const ClientEstimateRequest = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen">
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold">My Estimate Requests</h1>
@@ -302,9 +303,9 @@ const ClientEstimateRequest = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Total Estimates */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Estimates</p>
@@ -317,7 +318,7 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Draft */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Draft</p>
@@ -330,7 +331,7 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Sent */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Sent</p>
@@ -343,7 +344,7 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Accepted */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Accepted</p>
@@ -356,7 +357,7 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Rejected */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Rejected</p>
@@ -369,7 +370,7 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Expired */}
-        <div className="bg-white p-4 rounded-lg shadow border">
+        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Expired</p>
