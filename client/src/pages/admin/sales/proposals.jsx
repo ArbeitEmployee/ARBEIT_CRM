@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
 import {
@@ -10,6 +11,7 @@ import {
   FaChevronRight,
   FaTimes,
   FaSearch,
+  FaDownload,
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
@@ -37,6 +39,8 @@ const Proposals = () => {
     total: 0,
     status: "Draft",
   });
+  const [template, setTemplate] = useState(null);
+  const [loadingTemplate, setLoadingTemplate] = useState(false);
 
   // Status options
   const statusOptions = ["Draft", "Sent", "Accepted", "Rejected"];
@@ -93,6 +97,35 @@ const Proposals = () => {
     };
   }, []);
 
+  // Fetch active document template
+  const fetchTemplate = async () => {
+    setLoadingTemplate(true);
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(
+        `${API_BASE_URL}/admin/document-templates/active`,
+        config
+      );
+      setTemplate(data.data);
+    } catch (err) {
+      console.error("Error fetching template:", err);
+      // If no template exists, create a default one
+      setTemplate({
+        companyName: "Your Company",
+        companyEmail: "info@company.com",
+        companyPhone: "+1 (555) 123-4567",
+        companyAddress: "123 Business Street, City, Country",
+        logoUrl: "",
+        watermarkEnabled: true,
+        watermarkOpacity: 0.1,
+        primaryColor: "#333333",
+        fontFamily: "Arial",
+        footerText: "Thank you for your business!",
+      });
+    }
+    setLoadingTemplate(false);
+  };
+
   // Fetch proposals for the logged-in admin only
   const fetchProposals = async () => {
     setLoading(true);
@@ -126,6 +159,7 @@ const Proposals = () => {
 
   useEffect(() => {
     fetchProposals();
+    fetchTemplate();
   }, []);
 
   // Toggle proposal selection
@@ -136,6 +170,371 @@ const Proposals = () => {
       );
     } else {
       setSelectedProposals([...selectedProposals, id]);
+    }
+  };
+
+  // Generate and download proposal PDF
+  const downloadProposalPDF = async (proposal) => {
+    try {
+      // Create PDF document
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentWidth = pageWidth - margin * 2;
+
+      // Add watermark FIRST (as background)
+      if (template?.watermarkEnabled && template?.logoUrl) {
+        try {
+          // Get logo URL - handle both base64 and server URLs
+          let logoData = template.logoUrl;
+
+          // If it's a relative URL, construct full URL
+          if (template.logoUrl.startsWith("/uploads/")) {
+            logoData = `${API_BASE_URL}${template.logoUrl}`;
+          }
+
+          // Add watermark with reduced opacity
+          doc.addImage(
+            logoData,
+            "PNG", // specify format
+            pageWidth / 2 - 40,
+            pageHeight / 2 - 40,
+            80,
+            80,
+            "", // alias
+            "FAST", // compression
+            0 // rotation
+          );
+
+          // Set global transparency for watermark ONLY
+          doc.setGState(
+            doc.GState({ opacity: template.watermarkOpacity || 0.1 })
+          );
+        } catch (error) {
+          console.log("Could not load watermark image:", error);
+          // Reset opacity if watermark fails
+          doc.setGState(doc.GState({ opacity: 1 }));
+        }
+      }
+
+      // Reset opacity for main content
+      doc.setGState(doc.GState({ opacity: 1 }));
+
+      // Header Section
+      // Left: Company Logo (not watermark)
+      if (template?.logoUrl) {
+        try {
+          // Directly use Cloudinary URL
+          doc.addImage(
+            template.logoUrl,
+            "PNG",
+            margin,
+            margin,
+            40,
+            20,
+            "",
+            "FAST"
+          );
+        } catch (error) {
+          console.log("Could not load logo image:", error);
+          // Fallback: Add text logo
+          doc.setFontSize(16);
+          doc.setFont("helvetica", "bold");
+          doc.text(
+            template?.companyName?.substring(0, 15) || "Company",
+            margin,
+            margin + 10
+          );
+        }
+      }
+
+      // Add watermark (as background) if enabled
+      if (template?.watermarkEnabled && template?.logoUrl) {
+        try {
+          // Directly use Cloudinary URL for watermark
+          doc.addImage(
+            template.logoUrl,
+            "PNG", // specify format
+            pageWidth / 2 - 40,
+            pageHeight / 2 - 40,
+            80,
+            80,
+            "", // alias
+            "FAST", // compression
+            0 // rotation
+          );
+
+          // Set global transparency for watermark ONLY
+          doc.setGState(
+            doc.GState({ opacity: template.watermarkOpacity || 0.1 })
+          );
+        } catch (error) {
+          console.log("Could not load watermark image:", error);
+          // Reset opacity if watermark fails
+          doc.setGState(doc.GState({ opacity: 1 }));
+        }
+      }
+
+      // Center: Document Type
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("PROPOSAL", pageWidth / 2, margin + 15, { align: "center" });
+
+      // Right: Company Info
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      let rightX = pageWidth - margin;
+
+      const companyInfo = [
+        template?.companyName || "Your Company",
+        template?.companyAddress || "Address not set",
+        `Email: ${template?.companyEmail || "email@company.com"}`,
+        `Phone: ${template?.companyPhone || "Not provided"}`,
+      ];
+
+      companyInfo.forEach((line, index) => {
+        doc.text(line, rightX, margin + 10 + index * 5, { align: "right" });
+      });
+
+      // Separator line
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, margin + 35, pageWidth - margin, margin + 35);
+
+      let yPosition = margin + 50;
+
+      // Proposal Details
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text(
+        `Proposal: ${proposal.title || "Untitled Proposal"}`,
+        margin,
+        yPosition
+      );
+      yPosition += 10;
+
+      // Proposal Number and Date
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const formatProposalNumber = (num) => {
+        if (!num) return "TEMP-" + proposal._id.slice(-6).toUpperCase();
+        if (num.startsWith("PRO-")) return num;
+        const matches = num.match(/\d+/);
+        const numberPart = matches ? matches[0] : "000001";
+        return `PRO-${String(numberPart).padStart(6, "0")}`;
+      };
+
+      doc.text(
+        `Proposal #: ${formatProposalNumber(proposal.proposalNumber)}`,
+        margin,
+        yPosition
+      );
+      doc.text(
+        `Date: ${new Date(proposal.date || Date.now()).toLocaleDateString()}`,
+        pageWidth / 2,
+        yPosition
+      );
+      yPosition += 8;
+
+      doc.text(`Status: ${proposal.status || "Draft"}`, margin, yPosition);
+      doc.text(
+        `Valid Until: ${
+          proposal.openTill
+            ? new Date(proposal.openTill).toLocaleDateString()
+            : "N/A"
+        }`,
+        pageWidth / 2,
+        yPosition
+      );
+      yPosition += 15;
+
+      // Client Information
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Client Information:", margin, yPosition);
+      yPosition += 8;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `Client: ${proposal.clientName || "Not specified"}`,
+        margin,
+        yPosition
+      );
+      yPosition += 5;
+
+      if (proposal.clientEmail) {
+        doc.text(`Email: ${proposal.clientEmail}`, margin, yPosition);
+        yPosition += 5;
+      }
+
+      if (proposal.phone) {
+        doc.text(`Phone: ${proposal.phone}`, margin, yPosition);
+        yPosition += 5;
+      }
+
+      // Address if available
+      if (
+        proposal.address ||
+        proposal.city ||
+        proposal.state ||
+        proposal.country
+      ) {
+        const addressParts = [];
+        if (proposal.address) addressParts.push(proposal.address);
+        if (proposal.city) addressParts.push(proposal.city);
+        if (proposal.state) addressParts.push(proposal.state);
+        if (proposal.country) addressParts.push(proposal.country);
+        if (proposal.zip) addressParts.push(`ZIP: ${proposal.zip}`);
+
+        if (addressParts.length > 0) {
+          doc.text(`Address: ${addressParts.join(", ")}`, margin, yPosition);
+          yPosition += 5;
+        }
+      }
+
+      yPosition += 10;
+
+      // Items Table
+      if (proposal.items && proposal.items.length > 0) {
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Items / Services:", margin, yPosition);
+        yPosition += 10;
+
+        // Prepare table data
+        const tableColumns = [
+          { header: "#", dataKey: "index" },
+          { header: "Description", dataKey: "description" },
+          { header: "Qty", dataKey: "quantity" },
+          { header: "Rate", dataKey: "rate" },
+          { header: "Amount", dataKey: "amount" },
+        ];
+
+        const tableRows = proposal.items.map((item, index) => ({
+          index: index + 1,
+          description: item.description || "Item",
+          quantity: item.quantity || 1,
+          rate: `${proposal.currency || "USD"} ${(item.rate || 0).toFixed(2)}`,
+          amount: `${proposal.currency || "USD"} ${(
+            (item.quantity || 1) * (item.rate || 0)
+          ).toFixed(2)}`,
+        }));
+
+        autoTable(doc, {
+          startY: yPosition,
+          head: [tableColumns.map((col) => col.header)],
+          body: tableRows.map((row) =>
+            tableColumns.map((col) => row[col.dataKey])
+          ),
+          margin: { left: margin, right: margin },
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: template?.primaryColor || [51, 51, 51] },
+        });
+
+        yPosition = doc.lastAutoTable.finalY + 10;
+      }
+
+      // Calculations
+      const subtotal =
+        proposal.items?.reduce(
+          (sum, item) => sum + (item.quantity || 1) * (item.rate || 0),
+          0
+        ) || 0;
+      const discount = proposal.discount || 0;
+      const total = proposal.total || subtotal - discount;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      // Right align calculations
+      const calcX = pageWidth - margin - 60;
+
+      doc.text("Subtotal:", calcX, yPosition);
+      doc.text(
+        `${proposal.currency || "USD"} ${subtotal.toFixed(2)}`,
+        pageWidth - margin,
+        yPosition,
+        { align: "right" }
+      );
+      yPosition += 6;
+
+      if (discount > 0) {
+        doc.text("Discount:", calcX, yPosition);
+        doc.text(
+          `- ${proposal.currency || "USD"} ${discount.toFixed(2)}`,
+          pageWidth - margin,
+          yPosition,
+          { align: "right" }
+        );
+        yPosition += 6;
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Total:", calcX, yPosition);
+      doc.text(
+        `${proposal.currency || "USD"} ${total.toFixed(2)}`,
+        pageWidth - margin,
+        yPosition,
+        { align: "right" }
+      );
+      yPosition += 15;
+
+      // Terms and Notes
+      if (proposal.tags) {
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Tags: ${proposal.tags}`, margin, yPosition);
+        yPosition += 8;
+      }
+
+      // Assigned staff
+      if (proposal.assigned) {
+        doc.text(`Assigned To: ${proposal.assigned}`, margin, yPosition);
+        yPosition += 8;
+      }
+
+      // Footer
+      const footerY = pageHeight - margin;
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 100, 100);
+
+      // Footer text from template
+      doc.text(
+        template?.footerText || "Thank you for your business!",
+        pageWidth / 2,
+        footerY - 10,
+        { align: "center" }
+      );
+
+      // Page number
+      doc.text(`Page 1 of 1`, pageWidth / 2, footerY, { align: "center" });
+
+      // Company contact in footer
+      const footerContact = [
+        template?.companyName || "Your Company",
+        template?.companyEmail ? `Email: ${template.companyEmail}` : "",
+        template?.companyPhone ? `Phone: ${template.companyPhone}` : "",
+      ]
+        .filter(Boolean)
+        .join(" | ");
+
+      doc.text(footerContact, pageWidth / 2, footerY - 20, { align: "center" });
+
+      // Save the PDF
+      const fileName = `Proposal_${formatProposalNumber(
+        proposal.proposalNumber
+      )}_${proposal.clientName?.replace(/[^a-z0-9]/gi, "_") || "Untitled"}.pdf`;
+      doc.save(fileName);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Error generating PDF. Please try again.");
     }
   };
 
@@ -384,21 +783,6 @@ const Proposals = () => {
             </div>
             <div className="bg-green-100 p-3 rounded-full">
               <FaEye className="text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Rejected Proposals */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Rejected</p>
-              <p className="text-2xl font-bold">
-                {proposals.filter((p) => p.status === "Rejected").length}
-              </p>
-            </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <FaTimes className="text-red-600" />
             </div>
           </div>
         </div>
@@ -712,6 +1096,13 @@ const Proposals = () => {
                                 <FaEye size={16} />
                               </button>
                               <button
+                                onClick={() => downloadProposalPDF(proposal)}
+                                className="text-green-500 hover:text-green-700"
+                                title="Download"
+                              >
+                                <FaDownload size={16} />
+                              </button>
+                              <button
                                 onClick={() => {
                                   setEditProposal(proposal);
                                   setFormData({
@@ -765,6 +1156,13 @@ const Proposals = () => {
                                 title="View"
                               >
                                 <FaEye size={16} />
+                              </button>
+                              <button
+                                onClick={() => downloadProposalPDF(proposal)}
+                                className="text-green-500 hover:text-green-700"
+                                title="Download"
+                              >
+                                <FaDownload size={16} />
                               </button>
                               <button
                                 onClick={() => {
@@ -906,7 +1304,13 @@ const Proposals = () => {
                 </p>
               )}
             </div>
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => downloadProposalPDF(viewProposal)}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                <FaDownload className="inline mr-2" /> Download PDF
+              </button>
               <button
                 onClick={() => setViewProposal(null)}
                 className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"

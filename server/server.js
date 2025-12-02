@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 dotenv.config();
-connectDB();
 
 import express from "express";
 import cors from "cors";
@@ -14,7 +13,7 @@ import proposalRoutes from "./routes/admin/proposalRoutes.js";
 import estimateRoutes from "./routes/admin/estimateRoutes.js";
 import invoiceRoutes from "./routes/admin/invoiceRoutes.js";
 import paymentRoutes from "./routes/admin/paymentRoutes.js";
-
+import documentTemplateRoutes from "./routes/admin/documentTemplateRoutes.js";
 import creditNoteRoutes from "./routes/admin/creditNoteRoutes.js";
 import subscriptionRoutes from "./routes/admin/subscriptionRoutes.js";
 import expenseRoutes from "./routes/admin/expenseRoutes.js";
@@ -41,10 +40,18 @@ import clientEstimateRoutes from "./routes/client/clientEstimateRoutes.js";
 import clientInvoiceRoutes from "./routes/client/clientInvoiceRoutes.js";
 import clientPaymentRoutes from "./routes/client/clientPaymentRoutes.js";
 import staffAuthRoutes from "./routes/staff/staffAuthRoutes.js";
+
+// Connect to database first
+connectDB();
+
 const app = express();
+
+// Middleware
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
+// API Routes
 app.use("/api/admin", adminAuthRoutes);
 app.use("/api/client", clientAuthRoutes);
 app.use("/api/customers", customerRoutes);
@@ -52,9 +59,9 @@ app.use("/api/staff", staffAuthRoutes);
 app.use("/api/staffs", staffRoutes); // Admin staff management
 app.use("/api/admin", itemRoutes);
 app.use("/api/admin", proposalRoutes);
+app.use("/api/admin/document-templates", documentTemplateRoutes);
 app.use("/api/admin", estimateRoutes);
 app.use("/api/admin", invoiceRoutes);
-
 app.use("/api/admin", paymentRoutes);
 app.use("/api/admin", creditNoteRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
@@ -73,7 +80,7 @@ app.use("/api/admin/events", eventRoutes);
 app.use("/api/admin/announcements", announcementRoutes);
 app.use("/api/admin/goals", goalsRoutes);
 
-//client routes
+// Client routes
 app.use("/api/client/knowledge-base", clientKnowledgeBaseRoutes);
 app.use("/api/client/projects", clientProjectRoutes);
 app.use("/api/client/contacts", clientContactRoutes);
@@ -84,5 +91,35 @@ app.use("/api/client", clientEstimateRoutes);
 app.use("/api/client", clientInvoiceRoutes);
 app.use("/api/client", clientPaymentRoutes);
 
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    message: "Server is running with Cloudinary integration",
+    timestamp: new Date().toISOString(),
+    cloudinary: process.env.CLOUDINARY_CLOUD_NAME
+      ? "Configured"
+      : "Not configured",
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Server error:", err);
+  res.status(500).json({
+    success: false,
+    message: "Internal server error",
+    error: process.env.NODE_ENV === "development" ? err.message : undefined,
+  });
+});
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(
+    `☁️  Cloudinary integration: ${
+      process.env.CLOUDINARY_CLOUD_NAME ? "Enabled" : "Disabled"
+    }`
+  );
+  console.log(`📄 API Documentation: http://localhost:${PORT}/api/health`);
+});

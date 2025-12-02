@@ -36,6 +36,7 @@ import SupportPage from "../pages/admin/Support";
 import LeadsPage from "../pages/admin/Leads";
 import EstimateRequestPage from "../pages/admin/EstimateRequest";
 import KnowledgeBase from "../pages/admin/KnowledgeBase";
+import DocumentTemplate from "../components/DocumentTemplate"; // ADD THIS IMPORT
 
 import InvoiceForm from "../pages/admin/sales/invoiceForm";
 import CreditNoteForm from "../pages/admin/sales/creditNoteForm";
@@ -105,24 +106,50 @@ const AppRoutes = () => {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="customers" element={<Customers />} />
               <Route path="staffs" element={<StaffsPage />} />
+              {/* Sales Routes */}
               <Route path="sales/proposals" element={<Proposals />} />
-              <Route path="/proposals/new" element={<ProposalForm />} />
+              <Route
+                path="sales/proposals/new"
+                element={<ProposalForm />}
+              />{" "}
+              {/* FIXED PATH */}
               <Route path="sales/estimates" element={<Estimates />} />
-              <Route path="/estimates/new" element={<EstimateForm />} />
+              <Route
+                path="sales/estimates/new"
+                element={<EstimateForm />}
+              />{" "}
+              {/* FIXED PATH */}
               <Route path="sales/invoices" element={<Invoices />} />
-              <Route path="/invoices/new" element={<InvoiceForm />} />
+              <Route path="sales/invoices/new" element={<InvoiceForm />} />{" "}
+              {/* FIXED PATH */}
               <Route path="sales/payments" element={<Payments />} />
               <Route path="sales/creditNotes" element={<CreditNotes />} />
+              <Route
+                path="sales/credit-notes/new"
+                element={<CreditNoteForm />}
+              />{" "}
+              {/* FIXED PATH */}
+              <Route path="sales/items" element={<Items />} />
+              {/* Reports Routes */}
               <Route path="reports/sales" element={<SalesReports />} />
               <Route path="reports/expenses" element={<ExpenseReports />} />
               <Route
                 path="reports/expenses-vs-income"
                 element={<ExpensesVsIncome />}
               />
+              <Route path="reports/leads" element={<LeadsReport />} />
+              <Route
+                path="reports/kb-articles"
+                element={<KbArticlesReport />}
+              />
+              {/* Settings & Configuration */}
+              <Route
+                path="document-templates"
+                element={<DocumentTemplate />}
+              />{" "}
+              {/* ADDED */}
               <Route path="change-password" element={<ChangePassword />} />
-
-              <Route path="/credit-notes/new" element={<CreditNoteForm />} />
-              <Route path="sales/items" element={<Items />} />
+              {/* Management Routes */}
               <Route path="subscriptions" element={<SubscriptionPage />} />
               <Route path="expenses" element={<ExpensesPage />} />
               <Route path="contracts" element={<ContactsPage />} />
@@ -135,15 +162,10 @@ const AppRoutes = () => {
                 element={<EstimateRequestPage />}
               />
               <Route path="knowledge-base" element={<KnowledgeBase />} />
-              <Route path="reports/leads" element={<LeadsReport />} />
-              <Route
-                path="reports/kb-articles"
-                element={<KbArticlesReport />}
-              />
+              {/* Admin Management */}
               <Route path="admins/all" element={<AllAdmins />} />
               <Route path="admins/pending" element={<PendingAdmins />} />
-
-              {/*Utilities */}
+              {/* Utilities */}
               <Route path="utilities/bulk-pdf" element={<BulkPdfExport />} />
               <Route path="utilities/csv" element={<CsvExport />} />
               <Route path="utilities/calendar" element={<Calendar />} />
@@ -152,8 +174,11 @@ const AppRoutes = () => {
                 element={<AnnouncementsPage />}
               />
               <Route path="utilities/goals" element={<GoalsPage />} />
-
-              {/* Add more admin routes here */}
+              {/* Redirect admin root to dashboard */}
+              <Route
+                path="/"
+                element={<Navigate to="/admin/dashboard" replace />}
+              />
             </Routes>
           </AdminLayout>
         }

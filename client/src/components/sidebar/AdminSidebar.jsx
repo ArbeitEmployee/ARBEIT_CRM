@@ -26,8 +26,14 @@ import {
   FiBarChart,
   FiShoppingCart,
   FiClipboard,
-} from "react-icons/fi";
-import { FaUserGraduate, FaProjectDiagram, FaHeadset } from "react-icons/fa";
+  FiFile,
+} from "react-icons/fi"; // Added FiFile for Document Templates
+import {
+  FaUserGraduate,
+  FaProjectDiagram,
+  FaHeadset,
+  FaFileAlt,
+} from "react-icons/fa";
 import { TiBusinessCard } from "react-icons/ti";
 import { MdOutlineLeaderboard } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
@@ -107,7 +113,6 @@ const AdminSidebar = ({ isOpen, onToggle, userType = "admin" }) => {
       icon: <FaProjectDiagram />,
       path: `/${userType}/projects`,
     },
-
     {
       name: "Contracts",
       icon: <FiClipboard />,
@@ -117,6 +122,12 @@ const AdminSidebar = ({ isOpen, onToggle, userType = "admin" }) => {
       name: "Knowledge Base",
       icon: <FiHelpCircle />,
       path: `/${userType}/knowledge-base`,
+    },
+    // ADDED: Document Templates
+    {
+      name: "Document Templates",
+      icon: <FaFileAlt />,
+      path: `/${userType}/document-templates`,
     },
     {
       name: "Utilities",
@@ -143,7 +154,6 @@ const AdminSidebar = ({ isOpen, onToggle, userType = "admin" }) => {
         { name: "KB Articles", path: `/${userType}/reports/kb-articles` },
       ],
     },
-
     {
       name: "Support",
       icon: <FaHeadset />,

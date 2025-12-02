@@ -9,8 +9,14 @@ import {
   FiKey,
   FiSearch,
   FiX,
+  FiFile,
 } from "react-icons/fi";
-import { FaBullhorn, FaCalendarAlt, FaBullseye } from "react-icons/fa";
+import {
+  FaBullhorn,
+  FaCalendarAlt,
+  FaBullseye,
+  FaFileAlt,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -62,6 +68,12 @@ const AdminLayout = ({ children, userType = "admin" }) => {
           path: "/admin/estimate-request",
         },
         { label: "Knowledge Base", icon: "❓", path: "/admin/knowledge-base" },
+        // ADDED: Document Templates
+        {
+          label: "Document Templates",
+          icon: "📄",
+          path: "/admin/document-templates",
+        },
         {
           label: "Bulk PDF Export",
           icon: "📄",
