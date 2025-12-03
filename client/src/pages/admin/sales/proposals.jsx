@@ -188,10 +188,13 @@ const Proposals = () => {
       const margin = 15;
       const contentWidth = pageWidth - margin * 2;
 
-      // Add watermark FIRST (as background)
+      // Reset all graphic states first
+      doc.setGState(doc.GState({ opacity: 1 }));
+
+      // Add watermark FIRST with proper opacity
       if (template?.watermarkEnabled && template?.logoUrl) {
         try {
-          // Get logo URL - handle both base64 and server URLs
+          // Get logo URL
           let logoData = template.logoUrl;
 
           // If it's a relative URL, construct full URL
@@ -199,48 +202,52 @@ const Proposals = () => {
             logoData = `${API_BASE_URL}${template.logoUrl}`;
           }
 
-          // Add watermark with reduced opacity
-          doc.addImage(
-            logoData,
-            "PNG", // specify format
-            pageWidth / 2 - 40,
-            pageHeight / 2 - 40,
-            80,
-            80,
-            "", // alias
-            "FAST", // compression
-            0 // rotation
-          );
+          // Save current graphic state
+          doc.saveGraphicsState();
 
-          // Set global transparency for watermark ONLY
+          // Set opacity for watermark only
           doc.setGState(
             doc.GState({ opacity: template.watermarkOpacity || 0.1 })
           );
+
+          // Add watermark image
+          doc.addImage(
+            logoData,
+            "PNG",
+            pageWidth / 2 - 40, // Center horizontally
+            pageHeight / 2 - 40, // Center vertically
+            80, // Width
+            80, // Height
+            "", // alias
+            "FAST"
+          );
+
+          // Restore graphic state to normal opacity
+          doc.restoreGraphicsState();
         } catch (error) {
           console.log("Could not load watermark image:", error);
-          // Reset opacity if watermark fails
-          doc.setGState(doc.GState({ opacity: 1 }));
         }
       }
 
-      // Reset opacity for main content
+      // Reset to normal opacity for main content
       doc.setGState(doc.GState({ opacity: 1 }));
 
-      // Header Section
-      // Left: Company Logo (not watermark)
+      // Now add the main content (text)
+      let yPosition = margin;
+
+      // Header Section - Company Logo (not watermark)
       if (template?.logoUrl) {
         try {
-          // Directly use Cloudinary URL
-          doc.addImage(
-            template.logoUrl,
-            "PNG",
-            margin,
-            margin,
-            40,
-            20,
-            "",
-            "FAST"
-          );
+          // Get logo URL
+          let logoData = template.logoUrl;
+
+          // If it's a relative URL, construct full URL
+          if (template.logoUrl.startsWith("/uploads/")) {
+            logoData = `${API_BASE_URL}${template.logoUrl}`;
+          }
+
+          // Add logo with normal opacity
+          doc.addImage(logoData, "PNG", margin, yPosition, 40, 20, "", "FAST");
         } catch (error) {
           console.log("Could not load logo image:", error);
           // Fallback: Add text logo
@@ -249,35 +256,8 @@ const Proposals = () => {
           doc.text(
             template?.companyName?.substring(0, 15) || "Company",
             margin,
-            margin + 10
+            yPosition + 10
           );
-        }
-      }
-
-      // Add watermark (as background) if enabled
-      if (template?.watermarkEnabled && template?.logoUrl) {
-        try {
-          // Directly use Cloudinary URL for watermark
-          doc.addImage(
-            template.logoUrl,
-            "PNG", // specify format
-            pageWidth / 2 - 40,
-            pageHeight / 2 - 40,
-            80,
-            80,
-            "", // alias
-            "FAST", // compression
-            0 // rotation
-          );
-
-          // Set global transparency for watermark ONLY
-          doc.setGState(
-            doc.GState({ opacity: template.watermarkOpacity || 0.1 })
-          );
-        } catch (error) {
-          console.log("Could not load watermark image:", error);
-          // Reset opacity if watermark fails
-          doc.setGState(doc.GState({ opacity: 1 }));
         }
       }
 
@@ -306,7 +286,7 @@ const Proposals = () => {
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, margin + 35, pageWidth - margin, margin + 35);
 
-      let yPosition = margin + 50;
+      yPosition = margin + 50;
 
       // Proposal Details
       doc.setFontSize(16);
@@ -426,6 +406,7 @@ const Proposals = () => {
           ).toFixed(2)}`,
         }));
 
+        // Add table
         autoTable(doc, {
           startY: yPosition,
           head: [tableColumns.map((col) => col.header)],
@@ -433,8 +414,19 @@ const Proposals = () => {
             tableColumns.map((col) => row[col.dataKey])
           ),
           margin: { left: margin, right: margin },
-          styles: { fontSize: 9 },
-          headStyles: { fillColor: template?.primaryColor || [51, 51, 51] },
+          styles: {
+            fontSize: 9,
+            cellPadding: 3,
+            overflow: "linebreak",
+          },
+          headStyles: {
+            fillColor: template?.primaryColor || [51, 51, 51],
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+          },
+          alternateRowStyles: { fillColor: [245, 245, 245] },
+          tableLineColor: [200, 200, 200],
+          tableLineWidth: 0.1,
         });
 
         yPosition = doc.lastAutoTable.finalY + 10;
