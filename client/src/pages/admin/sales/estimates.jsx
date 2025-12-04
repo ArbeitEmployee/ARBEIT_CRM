@@ -10,6 +10,7 @@ import {
   FaSearch,
   FaChevronRight,
   FaTimes,
+  FaDownload,
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
@@ -35,6 +36,8 @@ const Estimates = () => {
     customer: "",
     status: "Draft",
   });
+  const [template, setTemplate] = useState(null);
+  const [loadingTemplate, setLoadingTemplate] = useState(false);
 
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
@@ -72,6 +75,35 @@ const Estimates = () => {
     };
   }, []);
 
+  // Fetch active document template
+  const fetchTemplate = async () => {
+    setLoadingTemplate(true);
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(
+        `${API_BASE_URL}/admin/document-templates/active`,
+        config
+      );
+      setTemplate(data.data);
+    } catch (err) {
+      console.error("Error fetching template:", err);
+      // If no template exists, create a default one
+      setTemplate({
+        companyName: "Your Company",
+        companyEmail: "info@company.com",
+        companyPhone: "+1 (555) 123-4567",
+        companyAddress: "123 Business Street, City, Country",
+        logoUrl: "",
+        watermarkEnabled: true,
+        watermarkOpacity: 0.1,
+        primaryColor: "#333333",
+        fontFamily: "Arial",
+        footerText: "Thank you for your business!",
+      });
+    }
+    setLoadingTemplate(false);
+  };
+
   // Fetch estimates for the logged-in admin only
   const fetchEstimates = async () => {
     setLoading(true);
@@ -105,6 +137,7 @@ const Estimates = () => {
 
   useEffect(() => {
     fetchEstimates();
+    fetchTemplate();
   }, []);
 
   // Toggle estimate selection
@@ -115,6 +148,397 @@ const Estimates = () => {
       );
     } else {
       setSelectedEstimates([...selectedEstimates, id]);
+    }
+  };
+
+  // Generate and download estimate PDF
+  const downloadEstimatePDF = async (estimate) => {
+    try {
+      // Create PDF document
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentWidth = pageWidth - margin * 2;
+
+      // Reset all graphic states first
+      doc.setGState(doc.GState({ opacity: 1 }));
+
+      // Add watermark FIRST with proper opacity
+      if (template?.watermarkEnabled && template?.logoUrl) {
+        try {
+          // Get logo URL
+          let logoData = template.logoUrl;
+
+          // If it's a relative URL, construct full URL
+          if (template.logoUrl.startsWith("/uploads/")) {
+            logoData = `${API_BASE_URL}${template.logoUrl}`;
+          }
+
+          // Save current graphic state
+          doc.saveGraphicsState();
+
+          // Set opacity for watermark only
+          doc.setGState(
+            doc.GState({ opacity: template.watermarkOpacity || 0.1 })
+          );
+
+          // Add watermark image
+          doc.addImage(
+            logoData,
+            "PNG",
+            pageWidth / 2 - 40, // Center horizontally
+            pageHeight / 2 - 40, // Center vertically
+            80, // Width
+            80, // Height
+            "", // alias
+            "FAST"
+          );
+
+          // Restore graphic state to normal opacity
+          doc.restoreGraphicsState();
+        } catch (error) {
+          console.log("Could not load watermark image:", error);
+        }
+      }
+
+      // Reset to normal opacity for main content
+      doc.setGState(doc.GState({ opacity: 1 }));
+
+      // Now add the main content (text)
+      let yPosition = margin;
+
+      // Header Section - Company Logo (not watermark)
+      if (template?.logoUrl) {
+        try {
+          // Get logo URL
+          let logoData = template.logoUrl;
+
+          // If it's a relative URL, construct full URL
+          if (template.logoUrl.startsWith("/uploads/")) {
+            logoData = `${API_BASE_URL}${template.logoUrl}`;
+          }
+
+          // Add logo with normal opacity
+          doc.addImage(logoData, "PNG", margin, yPosition, 40, 20, "", "FAST");
+        } catch (error) {
+          console.log("Could not load logo image:", error);
+          // Fallback: Add text logo
+          doc.setFontSize(16);
+          doc.setFont("helvetica", "bold");
+          doc.text(
+            template?.companyName?.substring(0, 15) || "Company",
+            margin,
+            yPosition + 10
+          );
+        }
+      }
+
+      // Center: Document Type
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("ESTIMATE", pageWidth / 2, margin + 15, { align: "center" });
+
+      // Right: Company Info
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      let rightX = pageWidth - margin;
+
+      const companyInfo = [
+        template?.companyName || "Your Company",
+        template?.companyAddress || "Address not set",
+        `Email: ${template?.companyEmail || "email@company.com"}`,
+        `Phone: ${template?.companyPhone || "Not provided"}`,
+      ];
+
+      companyInfo.forEach((line, index) => {
+        doc.text(line, rightX, margin + 10 + index * 5, { align: "right" });
+      });
+
+      // Separator line
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, margin + 35, pageWidth - margin, margin + 35);
+
+      yPosition = margin + 50;
+
+      // Estimate Details
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text(
+        `Estimate: ${estimate.reference || "Untitled Estimate"}`,
+        margin,
+        yPosition
+      );
+      yPosition += 10;
+
+      // Estimate Number and Date
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const formatEstimateNumber = (num) => {
+        if (!num) return "TEMP-" + estimate._id.slice(-6).toUpperCase();
+        if (num.startsWith("EST-")) return num;
+        const matches = num.match(/\d+/);
+        const numberPart = matches ? matches[0] : "000001";
+        return `EST-${String(numberPart).padStart(6, "0")}`;
+      };
+
+      doc.text(
+        `Estimate #: ${formatEstimateNumber(estimate.estimateNumber)}`,
+        margin,
+        yPosition
+      );
+      doc.text(
+        `Date: ${new Date(
+          estimate.estimateDate || Date.now()
+        ).toLocaleDateString()}`,
+        pageWidth / 2,
+        yPosition
+      );
+      yPosition += 8;
+
+      doc.text(`Status: ${estimate.status || "Draft"}`, margin, yPosition);
+      doc.text(
+        `Expiry Date: ${
+          estimate.expiryDate
+            ? new Date(estimate.expiryDate).toLocaleDateString()
+            : "N/A"
+        }`,
+        pageWidth / 2,
+        yPosition
+      );
+      yPosition += 15;
+
+      // Customer Information
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Customer Information:", margin, yPosition);
+      yPosition += 8;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `Customer: ${estimate.customer || "Not specified"}`,
+        margin,
+        yPosition
+      );
+      yPosition += 5;
+
+      if (estimate.email) {
+        doc.text(`Email: ${estimate.email}`, margin, yPosition);
+        yPosition += 5;
+      }
+
+      if (estimate.phone) {
+        doc.text(`Phone: ${estimate.phone}`, margin, yPosition);
+        yPosition += 5;
+      }
+
+      // Address if available
+      if (
+        estimate.address ||
+        estimate.city ||
+        estimate.state ||
+        estimate.country
+      ) {
+        const addressParts = [];
+        if (estimate.address) addressParts.push(estimate.address);
+        if (estimate.city) addressParts.push(estimate.city);
+        if (estimate.state) addressParts.push(estimate.state);
+        if (estimate.country) addressParts.push(estimate.country);
+        if (estimate.zip) addressParts.push(`ZIP: ${estimate.zip}`);
+
+        if (addressParts.length > 0) {
+          doc.text(`Address: ${addressParts.join(", ")}`, margin, yPosition);
+          yPosition += 5;
+        }
+      }
+
+      yPosition += 10;
+
+      // Items Table
+      if (estimate.items && estimate.items.length > 0) {
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Items / Services:", margin, yPosition);
+        yPosition += 10;
+
+        // Prepare table data
+        const tableColumns = [
+          { header: "#", dataKey: "index" },
+          { header: "Description", dataKey: "description" },
+          { header: "Qty", dataKey: "quantity" },
+          { header: "Rate", dataKey: "rate" },
+          { header: "Tax", dataKey: "tax" },
+          { header: "Amount", dataKey: "amount" },
+        ];
+
+        const tableRows = estimate.items.map((item, index) => {
+          const subtotal = (item.quantity || 1) * (item.rate || 0);
+          const taxAmount =
+            (((item.tax1 || 0) + (item.tax2 || 0)) * subtotal) / 100;
+          const total = subtotal + taxAmount;
+
+          return {
+            index: index + 1,
+            description: item.description || "Item",
+            quantity: item.quantity || 1,
+            rate: `${estimate.currency || "USD"} ${(item.rate || 0).toFixed(
+              2
+            )}`,
+            tax: `${(item.tax1 || 0) + (item.tax2 || 0)}%`,
+            amount: `${estimate.currency || "USD"} ${total.toFixed(2)}`,
+          };
+        });
+
+        // Add table
+        autoTable(doc, {
+          startY: yPosition,
+          head: [tableColumns.map((col) => col.header)],
+          body: tableRows.map((row) =>
+            tableColumns.map((col) => row[col.dataKey])
+          ),
+          margin: { left: margin, right: margin },
+          styles: {
+            fontSize: 9,
+            cellPadding: 3,
+            overflow: "linebreak",
+          },
+          headStyles: {
+            fillColor: template?.primaryColor || [51, 51, 51],
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+          },
+          alternateRowStyles: { fillColor: [245, 245, 245] },
+          tableLineColor: [200, 200, 200],
+          tableLineWidth: 0.1,
+        });
+
+        yPosition = doc.lastAutoTable.finalY + 10;
+      }
+
+      // Calculations
+      const subtotal =
+        estimate.items?.reduce(
+          (sum, item) => sum + (item.quantity || 1) * (item.rate || 0),
+          0
+        ) || 0;
+
+      const totalTax =
+        estimate.items?.reduce((sum, item) => {
+          const itemSubtotal = (item.quantity || 1) * (item.rate || 0);
+          const taxRate = (item.tax1 || 0) + (item.tax2 || 0);
+          return sum + (itemSubtotal * taxRate) / 100;
+        }, 0) || 0;
+
+      const discount = estimate.discount || 0;
+      const total = estimate.total || subtotal + totalTax - discount;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      // Right align calculations
+      const calcX = pageWidth - margin - 60;
+
+      doc.text("Subtotal:", calcX, yPosition);
+      doc.text(
+        `${estimate.currency || "USD"} ${subtotal.toFixed(2)}`,
+        pageWidth - margin,
+        yPosition,
+        { align: "right" }
+      );
+      yPosition += 6;
+
+      if (totalTax > 0) {
+        doc.text("Tax:", calcX, yPosition);
+        doc.text(
+          `${estimate.currency || "USD"} ${totalTax.toFixed(2)}`,
+          pageWidth - margin,
+          yPosition,
+          { align: "right" }
+        );
+        yPosition += 6;
+      }
+
+      if (discount > 0) {
+        doc.text("Discount:", calcX, yPosition);
+        doc.text(
+          `- ${estimate.currency || "USD"} ${discount.toFixed(2)}`,
+          pageWidth - margin,
+          yPosition,
+          { align: "right" }
+        );
+        yPosition += 6;
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Total:", calcX, yPosition);
+      doc.text(
+        `${estimate.currency || "USD"} ${total.toFixed(2)}`,
+        pageWidth - margin,
+        yPosition,
+        { align: "right" }
+      );
+      yPosition += 15;
+
+      // Terms and Notes
+      if (estimate.tags) {
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Tags: ${estimate.tags}`, margin, yPosition);
+        yPosition += 8;
+      }
+
+      if (estimate.adminNote) {
+        doc.text(`Admin Note: ${estimate.adminNote}`, margin, yPosition);
+        yPosition += 8;
+      }
+
+      if (estimate.clientNote) {
+        doc.text(`Client Note: ${estimate.clientNote}`, margin, yPosition);
+        yPosition += 8;
+      }
+
+      // Footer
+      const footerY = pageHeight - margin;
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 100, 100);
+
+      // Footer text from template
+      doc.text(
+        template?.footerText || "Thank you for your business!",
+        pageWidth / 2,
+        footerY - 10,
+        { align: "center" }
+      );
+
+      // Page number
+      doc.text(`Page 1 of 1`, pageWidth / 2, footerY, { align: "center" });
+
+      // Company contact in footer
+      const footerContact = [
+        template?.companyName || "Your Company",
+        template?.companyEmail ? `Email: ${template.companyEmail}` : "",
+        template?.companyPhone ? `Phone: ${template.companyPhone}` : "",
+      ]
+        .filter(Boolean)
+        .join(" | ");
+
+      doc.text(footerContact, pageWidth / 2, footerY - 20, { align: "center" });
+
+      // Save the PDF
+      const fileName = `Estimate_${formatEstimateNumber(
+        estimate.estimateNumber
+      )}_${estimate.customer?.replace(/[^a-z0-9]/gi, "_") || "Untitled"}.pdf`;
+      doc.save(fileName);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Error generating PDF. Please try again.");
     }
   };
 
@@ -425,7 +849,7 @@ const Estimates = () => {
           <button
             className="px-3 py-1 text-sm rounded flex items-center gap-2"
             style={{ backgroundColor: "#333333", color: "white" }}
-            onClick={() => navigate("../estimates/new")}
+            onClick={() => navigate("new")}
           >
             <FaPlus /> New Estimate
           </button>
@@ -738,6 +1162,13 @@ const Estimates = () => {
                                 <FaEye size={16} />
                               </button>
                               <button
+                                onClick={() => downloadEstimatePDF(estimate)}
+                                className="text-green-500 hover:text-green-700"
+                                title="Download"
+                              >
+                                <FaDownload size={16} />
+                              </button>
+                              <button
                                 onClick={() => {
                                   setEditEstimate(estimate);
                                   setFormData({
@@ -799,6 +1230,13 @@ const Estimates = () => {
                                 title="View"
                               >
                                 <FaEye size={16} />
+                              </button>
+                              <button
+                                onClick={() => downloadEstimatePDF(estimate)}
+                                className="text-green-500 hover:text-green-700"
+                                title="Download"
+                              >
+                                <FaDownload size={16} />
                               </button>
                               <button
                                 onClick={() => {
@@ -938,7 +1376,13 @@ const Estimates = () => {
                 </p>
               )}
             </div>
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => downloadEstimatePDF(viewEstimate)}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                <FaDownload className="inline mr-2" /> Download PDF
+              </button>
               <button
                 onClick={() => setViewEstimate(null)}
                 className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"

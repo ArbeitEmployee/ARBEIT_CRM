@@ -432,7 +432,7 @@ const ProposalForm = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">New Proposal</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-2">New Quotation</h2>
 
       {/* Main Form Container */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
@@ -814,7 +814,7 @@ const ProposalForm = () => {
       {/* Proposal Items Section */}
       <div className="bg-white shadow-md rounded-lg p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Proposal Items</h3>
+          <h3 className="text-lg font-semibold">Quotation Items</h3>
           <button
             onClick={() => {
               setProposalItems([

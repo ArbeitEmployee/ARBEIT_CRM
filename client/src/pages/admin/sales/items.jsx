@@ -10,6 +10,7 @@ import {
   FaTimes,
   FaTrash,
   FaChevronRight,
+  FaEdit,
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
@@ -31,7 +32,7 @@ const Items = () => {
   const [csvData, setCsvData] = useState([]);
   const [csvFile, setCsvFile] = useState(null);
   const [selectedItems, setSelectedItems] = useState([]);
-  const [selectAll, setSelectAll] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [formData, setFormData] = useState({
     description: "",
     longDescription: "",
@@ -115,6 +116,14 @@ const Items = () => {
     }));
 
     switch (type) {
+      case "Excel": {
+        const worksheet = XLSXUtils.json_to_sheet(exportData);
+        const workbook = XLSXUtils.book_new();
+        XLSXUtils.book_append_sheet(workbook, worksheet, "Items");
+        XLSXWriteFile(workbook, "items.xlsx");
+        break;
+      }
+
       case "CSV": {
         const headers = Object.keys(exportData[0]).join(",");
         const rows = exportData
@@ -137,14 +146,6 @@ const Items = () => {
         break;
       }
 
-      case "Excel": {
-        const worksheet = XLSXUtils.json_to_sheet(exportData);
-        const workbook = XLSXUtils.book_new();
-        XLSXUtils.book_append_sheet(workbook, worksheet, "Items");
-        XLSXWriteFile(workbook, "items.xlsx");
-        break;
-      }
-
       case "PDF": {
         const doc = new jsPDF();
         const columns = Object.keys(exportData[0]);
@@ -157,18 +158,34 @@ const Items = () => {
       }
 
       case "Print": {
-        const printWindow = window.open("", "", "height=500,width=800");
-        printWindow.document.write(
-          "<html><head><title>Items</title></head><body>"
-        );
-        printWindow.document.write(
-          "<table border='1' style='border-collapse: collapse; width: 100%;'>"
-        );
+        const printWindow = window.open("", "", "height=600,width=800");
+        printWindow.document.write("<html><head><title>Items</title>");
+        printWindow.document.write("<style>");
+        printWindow.document.write(`
+          body { font-family: Arial, sans-serif; }
+          table { border-collapse: collapse; width: 100%; }
+          th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+          th { background-color: #f2f2f2; }
+          tr:nth-child(even) { background-color: #f9f9f9; }
+          @media print {
+            body { margin: 0; padding: 20px; }
+            .no-print { display: none; }
+          }
+        `);
+        printWindow.document.write("</style>");
+        printWindow.document.write("</head><body>");
+        printWindow.document.write("<h1>Items</h1>");
+        printWindow.document.write("<table>");
+
+        // Table header
         printWindow.document.write("<thead><tr>");
         Object.keys(exportData[0]).forEach((col) => {
           printWindow.document.write(`<th>${col}</th>`);
         });
-        printWindow.document.write("</tr></thead><tbody>");
+        printWindow.document.write("</tr></thead>");
+
+        // Table body
+        printWindow.document.write("<tbody>");
         exportData.forEach((row) => {
           printWindow.document.write("<tr>");
           Object.values(row).forEach((val) => {
@@ -176,9 +193,21 @@ const Items = () => {
           });
           printWindow.document.write("</tr>");
         });
-        printWindow.document.write("</tbody></table></body></html>");
+        printWindow.document.write("</tbody>");
+
+        printWindow.document.write("</table>");
+        printWindow.document.write(
+          '<p class="no-print">Printed on: ' +
+            new Date().toLocaleString() +
+            "</p>"
+        );
+        printWindow.document.write("</body></html>");
         printWindow.document.close();
-        printWindow.print();
+
+        setTimeout(() => {
+          printWindow.print();
+          printWindow.close();
+        }, 200);
         break;
       }
 
@@ -212,7 +241,6 @@ const Items = () => {
       );
       setItems(items.filter((item) => !selectedItems.includes(item._id)));
       setSelectedItems([]);
-      setSelectAll(false);
       alert("Items deleted successfully!");
     } catch (err) {
       console.error("Error deleting items", err);
@@ -233,16 +261,6 @@ const Items = () => {
     }
   };
 
-  // Handle select all checkbox
-  const handleSelectAll = () => {
-    if (selectAll) {
-      setSelectedItems([]);
-    } else {
-      setSelectedItems(filteredItems.map((item) => item._id));
-    }
-    setSelectAll(!selectAll);
-  };
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -261,12 +279,30 @@ const Items = () => {
           ? formData.rate
           : `$${formData.rate}`,
       };
-      const { data } = await axios.post(
-        `${API_BASE_URL}/admin/items`,
-        formattedItem,
-        config
-      );
-      setItems([data, ...items]);
+
+      if (editingItem) {
+        // Update existing item
+        const { data } = await axios.put(
+          `${API_BASE_URL}/admin/items/${editingItem._id}`,
+          formattedItem,
+          config
+        );
+        setItems(
+          items.map((item) => (item._id === editingItem._id ? data : item))
+        );
+        alert("Item updated successfully!");
+      } else {
+        // Create new item
+        const { data } = await axios.post(
+          `${API_BASE_URL}/admin/items`,
+          formattedItem,
+          config
+        );
+        setItems([data, ...items]);
+        alert("Item created successfully!");
+      }
+
+      // Reset form
       setFormData({
         description: "",
         longDescription: "",
@@ -276,12 +312,48 @@ const Items = () => {
         unit: "",
         groupName: "",
       });
+      setEditingItem(null);
       setShowForm(false);
     } catch (err) {
       console.error("Error saving item", err);
       if (err.response?.status === 401) {
         localStorage.removeItem("crm_token");
         navigate("/login");
+      }
+      alert(`Error saving item: ${err.response?.data?.message || err.message}`);
+    }
+  };
+
+  const handleEditItem = (item) => {
+    setEditingItem(item);
+    setFormData({
+      description: item.description,
+      longDescription: item.longDescription,
+      rate: item.rate.replace("$", ""),
+      tax1: item.tax1,
+      tax2: item.tax2,
+      unit: item.unit,
+      groupName: item.groupName,
+    });
+    setShowForm(true);
+  };
+
+  const handleDeleteItem = async (id) => {
+    if (window.confirm("Are you sure you want to delete this item?")) {
+      try {
+        const config = createAxiosConfig();
+        await axios.delete(`${API_BASE_URL}/admin/items/${id}`, config);
+        setItems(items.filter((item) => item._id !== id));
+        alert("Item deleted successfully!");
+      } catch (err) {
+        console.error("Error deleting item", err);
+        if (err.response?.status === 401) {
+          localStorage.removeItem("crm_token");
+          navigate("/login");
+        }
+        alert(
+          `Error deleting item: ${err.response?.data?.message || err.message}`
+        );
       }
     }
   };
@@ -393,10 +465,12 @@ const Items = () => {
   );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen p-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Items</h1>
+        <h1 className="text-2xl font-bold">
+          {showForm ? (editingItem ? "Edit Item" : "Add New Item") : "Items"}
+        </h1>
         <div className="flex items-center text-gray-600">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
@@ -404,58 +478,49 @@ const Items = () => {
         </div>
       </div>
 
-      {/* Top action buttons */}
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-        <div className="flex items-center gap-2">
-          <button
-            className="px-3 py-1 text-sm rounded flex items-center gap-2"
-            style={{ backgroundColor: "#333333", color: "white" }}
-            onClick={() => setShowForm(true)}
-          >
-            <FaPlus /> New Item
-          </button>
-          <button
-            className="px-3 py-1 text-sm rounded flex items-center gap-2"
-            style={{ backgroundColor: "#333333", color: "white" }}
-            onClick={() => setShowImportForm(true)}
-          >
-            <FaUpload /> Import Items
-          </button>
-        </div>
-      </div>
+      {showForm ? (
+        <div className="bg-white shadow-md rounded p-6 mb-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">Item Details</h2>
+            <button
+              onClick={() => {
+                setShowForm(false);
+                setEditingItem(null);
+                setFormData({
+                  description: "",
+                  longDescription: "",
+                  rate: "",
+                  tax1: "",
+                  tax2: "",
+                  unit: "",
+                  groupName: "",
+                });
+              }}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <FaTimes />
+            </button>
+          </div>
 
-      {/* Add Item Form */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-            <div className="flex justify-between items-center border-b p-4">
-              <h2 className="text-xl font-semibold">Add Item</h2>
-              <button
-                onClick={() => setShowForm(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <FaTimes />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6">
-              <div className="space-y-4">
-                {/* Description */}
-                <div>
+          <form onSubmit={handleSubmit}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* Left Column */}
+              <div>
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Description
+                    Description *
                   </label>
                   <input
                     type="text"
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full border rounded px-3 py-2"
                     required
                   />
                 </div>
-                {/* Long Description */}
-                <div>
+
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Long Description
                   </label>
@@ -463,14 +528,14 @@ const Items = () => {
                     name="longDescription"
                     value={formData.longDescription}
                     onChange={handleChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full border rounded px-3 py-2"
                     rows="3"
                   />
                 </div>
-                {/* Rate */}
-                <div>
+
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rate - USD (Base Currency)
+                    Rate - USD (Base Currency) *
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-2">$</span>
@@ -479,52 +544,54 @@ const Items = () => {
                       name="rate"
                       value={formData.rate}
                       onChange={handleChange}
-                      className="w-full border px-3 py-2 rounded text-sm pl-6"
+                      className="w-full border rounded px-3 py-2 pl-6"
                       min="0"
                       step="0.01"
                       required
                     />
                   </div>
                 </div>
-                {/* Tax */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tax 1
-                    </label>
-                    <select
-                      name="tax1"
-                      value={formData.tax1}
-                      onChange={handleChange}
-                      className="w-full border px-3 py-2 rounded text-sm"
-                    >
-                      {taxOptions.map((option, i) => (
-                        <option key={i} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Tax 2
-                    </label>
-                    <select
-                      name="tax2"
-                      value={formData.tax2}
-                      onChange={handleChange}
-                      className="w-full border px-3 py-2 rounded text-sm"
-                    >
-                      {taxOptions.map((option, i) => (
-                        <option key={i} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+              </div>
+
+              {/* Right Column */}
+              <div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tax 1
+                  </label>
+                  <select
+                    name="tax1"
+                    value={formData.tax1}
+                    onChange={handleChange}
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    {taxOptions.map((option, i) => (
+                      <option key={i} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-                {/* Unit */}
-                <div>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Tax 2
+                  </label>
+                  <select
+                    name="tax2"
+                    value={formData.tax2}
+                    onChange={handleChange}
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    {taxOptions.map((option, i) => (
+                      <option key={i} value={option}>
+                        {option}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Unit
                   </label>
@@ -533,11 +600,11 @@ const Items = () => {
                     name="unit"
                     value={formData.unit}
                     onChange={handleChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full border rounded px-3 py-2"
                   />
                 </div>
-                {/* Group Name */}
-                <div>
+
+                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Item Group
                   </label>
@@ -546,361 +613,399 @@ const Items = () => {
                     name="groupName"
                     value={formData.groupName}
                     onChange={handleChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full border rounded px-3 py-2"
                   />
                 </div>
               </div>
+            </div>
 
-              {/* Buttons */}
-              <div className="flex justify-end space-x-3 mt-6">
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
+            <div className="flex justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingItem(null);
+                  setFormData({
+                    description: "",
+                    longDescription: "",
+                    rate: "",
+                    tax1: "",
+                    tax2: "",
+                    unit: "",
+                    groupName: "",
+                  });
+                }}
+                className="px-4 py-2 border rounded text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-black text-white rounded text-sm"
+                disabled={!formData.description || !formData.rate}
+              >
+                {editingItem ? "Update" : "Save"}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <>
+          {/* Top action buttons */}
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+            <div className="flex items-center gap-2">
+              <button
+                className="px-3 py-1 text-sm rounded flex items-center gap-2"
+                style={{ backgroundColor: "#333333", color: "white" }}
+                onClick={() => setShowForm(true)}
+              >
+                <FaPlus /> New Item
+              </button>
+              <button
+                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                onClick={() => setShowImportForm(true)}
+              >
+                <FaUpload /> Import Items
+              </button>
+            </div>
+          </div>
+
+          {/* White box for table */}
+          <div className="bg-white shadow-md rounded p-4">
+            {/* Controls */}
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                {/* Delete Selected button */}
+                {selectedItems.length > 0 && (
+                  <button
+                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    onClick={handleBulkDelete}
+                  >
+                    Delete Selected ({selectedItems.length})
+                  </button>
+                )}
+
+                {/* Entries per page */}
+                <select
+                  className="border rounded px-2 py-1 text-sm"
+                  value={entriesPerPage}
+                  onChange={(e) => {
+                    setEntriesPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
                 >
-                  Close
-                </button>
+                  <option value={5}>5</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+
+                {/* Export button */}
+                <div className="relative">
+                  <button
+                    onClick={() => setShowExportMenu((prev) => !prev)}
+                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                  >
+                    <HiOutlineDownload /> Export
+                  </button>
+
+                  {/* Dropdown menu */}
+                  {showExportMenu && (
+                    <div
+                      ref={exportMenuRef}
+                      className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                    >
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => handleExport("Excel")}
+                      >
+                        Excel
+                      </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => handleExport("CSV")}
+                      >
+                        CSV
+                      </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => handleExport("PDF")}
+                      >
+                        PDF
+                      </button>
+                      <button
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        onClick={() => handleExport("Print")}
+                      >
+                        Print
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Refresh button */}
                 <button
-                  type="submit"
-                  className="px-4 py-2 bg-black text-white rounded text-sm"
+                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  onClick={fetchItems}
                 >
-                  Save Item
+                  <FaSyncAlt />
                 </button>
               </div>
-            </form>
+
+              {/* Search */}
+              <div className="relative">
+                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Table */}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm border-separate border-spacing-y-2">
+                <thead>
+                  <tr className="text-left">
+                    <th
+                      className="p-3 rounded-l-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedItems.length === currentData.length &&
+                          currentData.length > 0
+                        }
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedItems(currentData.map((s) => s._id));
+                          } else {
+                            setSelectedItems([]);
+                          }
+                        }}
+                      />
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Description
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Long Description
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Rate
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Tax1
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Tax2
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Unit
+                    </th>
+                    <th
+                      className="p-3"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Group Name
+                    </th>
+                    <th
+                      className="p-3 rounded-r-lg"
+                      style={{ backgroundColor: "#333333", color: "white" }}
+                    >
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentData.map((item) => (
+                    <tr
+                      key={item._id}
+                      className="bg-white shadow rounded-lg hover:bg-gray-50"
+                      style={{ color: "black" }}
+                    >
+                      <td className="p-3 rounded-l-lg border-0">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.includes(item._id)}
+                            onChange={() => handleCheckboxChange(item._id)}
+                            className="h-4 w-4"
+                          />
+                        </div>
+                      </td>
+                      <td className="p-3 border-0">{item.description}</td>
+                      <td className="p-3 border-0">{item.longDescription}</td>
+                      <td className="p-3 border-0">{item.rate}</td>
+                      <td className="p-3 border-0">{item.tax1}</td>
+                      <td className="p-3 border-0">{item.tax2}</td>
+                      <td className="p-3 border-0">{item.unit}</td>
+                      <td className="p-3 border-0">{item.groupName}</td>
+                      <td className="p-3 rounded-r-lg border-0">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleEditItem(item)}
+                            className="text-blue-500 hover:text-blue-700"
+                            title="Edit"
+                          >
+                            <FaEdit size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteItem(item._id)}
+                            className="text-red-500 hover:text-red-700"
+                            title="Delete"
+                          >
+                            <FaTrash size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-4">
+              <div className="text-sm text-gray-700">
+                Showing {startIndex + 1} to{" "}
+                {Math.min(startIndex + entriesPerPage, filteredItems.length)} of{" "}
+                {filteredItems.length} entries
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(prev - 1, 1))
+                  }
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                <span className="text-sm">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  className="px-3 py-1 border rounded text-sm"
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                  }
+                  disabled={currentPage === totalPages || totalPages === 0}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
-      {/* Import Items Form */}
+      {/* Import Modal */}
       {showImportForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-            <div className="flex justify-between items-center border-b p-4">
-              <h2 className="text-xl font-semibold">Import Items from CSV</h2>
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4">Import Items</h2>
+
+            <div className="mb-4">
+              <p className="text-sm mb-2">Select a CSV file to import items:</p>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                className="w-full border rounded p-2 text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                CSV should contain columns: description, rate, tax1, tax2, unit,
+                groupName
+              </p>
+            </div>
+
+            {csvData.length > 0 && (
+              <div className="mb-4">
+                <h3 className="text-md font-medium mb-2">
+                  Preview (First 5 rows)
+                </h3>
+                <div className="border rounded p-2 max-h-40 overflow-y-auto">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        {Object.keys(csvData[0]).map((key, i) => (
+                          <th key={i} className="p-1 border text-left">
+                            {key}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {csvData.slice(0, 5).map((row, i) => (
+                        <tr key={i}>
+                          {Object.values(row).map((value, j) => (
+                            <td key={j} className="p-1 border">
+                              {value}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-end space-x-2">
               <button
                 onClick={() => {
                   setShowImportForm(false);
                   setCsvFile(null);
                   setCsvData([]);
                 }}
-                className="text-gray-500 hover:text-gray-700"
+                className="px-4 py-2 border rounded text-sm"
               >
-                <FaTimes />
+                Cancel
               </button>
-            </div>
-
-            <div className="p-6">
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Choose CSV File
-                </label>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={handleFileUpload}
-                  className="w-full border px-3 py-2 rounded text-sm"
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  CSV should contain item data with columns like description,
-                  rate, tax1, tax2, unit, groupName
-                </p>
-              </div>
-
-              {csvData.length > 0 && (
-                <div className="mb-4">
-                  <h3 className="text-md font-medium mb-2">
-                    Preview (First 5 rows)
-                  </h3>
-                  <div className="border rounded p-2 max-h-40 overflow-y-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          {Object.keys(csvData[0]).map((key, i) => (
-                            <th key={i} className="p-1 border text-left">
-                              {key}
-                            </th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {csvData.slice(0, 5).map((row, i) => (
-                          <tr key={i}>
-                            {Object.values(row).map((value, j) => (
-                              <td key={j} className="p-1 border">
-                                {value}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex justify-between mt-6">
-                <button
-                  type="button"
-                  onClick={handleSimulateData}
-                  className="px-4 py-2 bg-gray-200 rounded text-sm hover:bg-gray-300"
-                  disabled={csvData.length === 0}
-                >
-                  Simulate Data
-                </button>
-
-                <div className="space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowImportForm(false);
-                      setCsvFile(null);
-                      setCsvData([]);
-                    }}
-                    className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleImport}
-                    className="px-4 py-2 bg-black text-white rounded text-sm"
-                    disabled={csvData.length === 0}
-                  >
-                    Import
-                  </button>
-                </div>
-              </div>
+              <button
+                onClick={handleSimulateData}
+                className="px-4 py-2 bg-gray-200 rounded text-sm hover:bg-gray-300"
+                disabled={csvData.length === 0}
+              >
+                Simulate Data
+              </button>
+              <button
+                onClick={handleImport}
+                className="px-4 py-2 bg-black text-white rounded text-sm"
+                disabled={csvData.length === 0}
+              >
+                Import
+              </button>
             </div>
           </div>
         </div>
       )}
-
-      {/* White box for table */}
-      <div className="bg-white shadow-md rounded p-4">
-        {/* Controls */}
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div className="flex items-center gap-2">
-            {/* Bulk delete button */}
-            {selectedItems.length > 0 && (
-              <button
-                className="bg-red-600 text-white px-3 py-1 rounded"
-                onClick={handleBulkDelete}
-              >
-                Delete Selected ({selectedItems.length})
-              </button>
-            )}
-
-            {/* Entries per page */}
-            <select
-              className="border rounded px-2 py-1 text-sm"
-              value={entriesPerPage}
-              onChange={(e) => {
-                setEntriesPerPage(Number(e.target.value));
-                setCurrentPage(1);
-              }}
-            >
-              <option value={5}>5</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-
-            {/* Export button */}
-            <div className="relative">
-              <button
-                onClick={() => setShowExportMenu((prev) => !prev)}
-                className="border px-2 py-1 rounded text-sm flex items-center gap-1"
-              >
-                <HiOutlineDownload /> Export
-              </button>
-
-              {/* Dropdown menu */}
-              {showExportMenu && (
-                <div
-                  ref={exportMenuRef}
-                  className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
-                >
-                  <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                    onClick={() => handleExport("Excel")}
-                  >
-                    Excel
-                  </button>
-                  <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                    onClick={() => handleExport("CSV")}
-                  >
-                    CSV
-                  </button>
-                  <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                    onClick={() => handleExport("PDF")}
-                  >
-                    PDF
-                  </button>
-                  <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
-                    onClick={() => handleExport("Print")}
-                  >
-                    Print
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Refresh button */}
-            <button
-              className="border px-2.5 py-1.5 rounded text-sm flex items-center"
-              onClick={fetchItems}
-            >
-              <FaSyncAlt />
-            </button>
-          </div>
-
-          {/* Search */}
-          <div className="relative">
-            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
-            />
-          </div>
-        </div>
-
-        {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-separate border-spacing-y-2">
-            <thead>
-              <tr className="text-left">
-                <th
-                  className="p-3 rounded-l-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectAll}
-                    onChange={handleSelectAll}
-                  />
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Description
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Long Description
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Rate
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Tax1
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Tax2
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Unit
-                </th>
-                <th
-                  className="p-3 rounded-r-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Group Name
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentData.map((item) => (
-                <tr
-                  key={item._id}
-                  className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                  style={{ color: "black" }}
-                >
-                  <td className="p-3 rounded-l-lg border-0">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedItems.includes(item._id)}
-                        onChange={() => handleCheckboxChange(item._id)}
-                        className="h-4 w-4"
-                      />
-                    </div>
-                  </td>
-                  <td className="p-3 border-0">{item.description}</td>
-                  <td className="p-3 border-0">{item.longDescription}</td>
-                  <td className="p-3 border-0">{item.rate}</td>
-                  <td className="p-3 border-0">{item.tax1}</td>
-                  <td className="p-3 border-0">{item.tax2}</td>
-                  <td className="p-3 border-0">{item.unit}</td>
-                  <td className="p-3 rounded-r-lg border-0">
-                    {item.groupName}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination */}
-        <div className="flex justify-between items-center mt-4 text-sm">
-          <span>
-            Showing {startIndex + 1} to{" "}
-            {Math.min(startIndex + entriesPerPage, filteredItems.length)} of{" "}
-            {filteredItems.length} entries
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="px-2 py-1 border rounded disabled:opacity-50"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                className={`px-3 py-1 border rounded ${
-                  currentPage === i + 1 ? "bg-gray-200" : ""
-                }`}
-                onClick={() => setCurrentPage(i + 1)}
-              >
-                {i + 1}
-              </button>
-            ))}
-            <button
-              className="px-2 py-1 border rounded disabled:opacity-50"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

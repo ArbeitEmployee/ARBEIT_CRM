@@ -17,6 +17,7 @@ import {
   FaExclamationTriangle,
   FaFileAlt,
   FaMoneyBillWave,
+  FaDownload,
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
@@ -53,6 +54,8 @@ const Invoices = () => {
   const [paymentAmounts, setPaymentAmounts] = useState({});
   const [batchPaymentError, setBatchPaymentError] = useState("");
   const [batchPaymentLoading, setBatchPaymentLoading] = useState(false);
+  const [template, setTemplate] = useState(null);
+  const [loadingTemplate, setLoadingTemplate] = useState(false);
 
   // Stats state
   const [stats, setStats] = useState({
@@ -100,6 +103,35 @@ const Invoices = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Fetch active document template
+  const fetchTemplate = async () => {
+    setLoadingTemplate(true);
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(
+        `${API_BASE_URL}/admin/document-templates/active`,
+        config
+      );
+      setTemplate(data.data);
+    } catch (err) {
+      console.error("Error fetching template:", err);
+      // If no template exists, create a default one
+      setTemplate({
+        companyName: "Your Company",
+        companyEmail: "info@company.com",
+        companyPhone: "+1 (555) 123-4567",
+        companyAddress: "123 Business Street, City, Country",
+        logoUrl: "",
+        watermarkEnabled: true,
+        watermarkOpacity: 0.1,
+        primaryColor: "#333333",
+        fontFamily: "Arial",
+        footerText: "Thank you for your business!",
+      });
+    }
+    setLoadingTemplate(false);
+  };
 
   // Fetch invoices for the logged-in admin only
   const fetchInvoices = async () => {
@@ -161,7 +193,437 @@ const Invoices = () => {
 
   useEffect(() => {
     fetchInvoices();
+    fetchTemplate();
   }, []);
+
+  // Generate and download invoice PDF
+  const downloadInvoicePDF = async (invoice) => {
+    try {
+      // Create PDF document
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentWidth = pageWidth - margin * 2;
+
+      // Reset all graphic states first
+      doc.setGState(doc.GState({ opacity: 1 }));
+
+      // Add watermark FIRST with proper opacity
+      if (template?.watermarkEnabled && template?.logoUrl) {
+        try {
+          // Get logo URL
+          let logoData = template.logoUrl;
+
+          // If it's a relative URL, construct full URL
+          if (template.logoUrl.startsWith("/uploads/")) {
+            logoData = `${API_BASE_URL}${template.logoUrl}`;
+          }
+
+          // Save current graphic state
+          doc.saveGraphicsState();
+
+          // Set opacity for watermark only
+          doc.setGState(
+            doc.GState({ opacity: template.watermarkOpacity || 0.1 })
+          );
+
+          // Add watermark image
+          doc.addImage(
+            logoData,
+            "PNG",
+            pageWidth / 2 - 40, // Center horizontally
+            pageHeight / 2 - 40, // Center vertically
+            80, // Width
+            80, // Height
+            "", // alias
+            "FAST"
+          );
+
+          // Restore graphic state to normal opacity
+          doc.restoreGraphicsState();
+        } catch (error) {
+          console.log("Could not load watermark image:", error);
+        }
+      }
+
+      // Reset to normal opacity for main content
+      doc.setGState(doc.GState({ opacity: 1 }));
+
+      // Now add the main content (text)
+      let yPosition = margin;
+
+      // Header Section - Company Logo (not watermark)
+      if (template?.logoUrl) {
+        try {
+          // Get logo URL
+          let logoData = template.logoUrl;
+
+          // If it's a relative URL, construct full URL
+          if (template.logoUrl.startsWith("/uploads/")) {
+            logoData = `${API_BASE_URL}${template.logoUrl}`;
+          }
+
+          // Add logo with normal opacity
+          doc.addImage(logoData, "PNG", margin, yPosition, 40, 20, "", "FAST");
+        } catch (error) {
+          console.log("Could not load logo image:", error);
+          // Fallback: Add text logo
+          doc.setFontSize(16);
+          doc.setFont("helvetica", "bold");
+          doc.text(
+            template?.companyName?.substring(0, 15) || "Company",
+            margin,
+            yPosition + 10
+          );
+        }
+      }
+
+      // Center: Document Type
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("INVOICE", pageWidth / 2, margin + 15, { align: "center" });
+
+      // Right: Company Info
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      let rightX = pageWidth - margin;
+
+      const companyInfo = [
+        template?.companyName || "Your Company",
+        template?.companyAddress || "Address not set",
+        `Email: ${template?.companyEmail || "email@company.com"}`,
+        `Phone: ${template?.companyPhone || "Not provided"}`,
+      ];
+
+      companyInfo.forEach((line, index) => {
+        doc.text(line, rightX, margin + 10 + index * 5, { align: "right" });
+      });
+
+      // Separator line
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, margin + 35, pageWidth - margin, margin + 35);
+
+      yPosition = margin + 50;
+
+      // Invoice Details
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text(
+        `Invoice: ${invoice.reference || "Untitled Invoice"}`,
+        margin,
+        yPosition
+      );
+      yPosition += 10;
+
+      // Invoice Number and Date
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      const formatInvoiceNumber = (num) => {
+        if (!num) return "TEMP-" + invoice._id.slice(-6).toUpperCase();
+        if (num.startsWith("INV-")) return num;
+        const matches = num.match(/\d+/);
+        const numberPart = matches ? matches[0] : "000001";
+        return `INV-${String(numberPart).padStart(6, "0")}`;
+      };
+
+      doc.text(
+        `Invoice #: ${formatInvoiceNumber(invoice.invoiceNumber)}`,
+        margin,
+        yPosition
+      );
+      doc.text(
+        `Date: ${new Date(
+          invoice.invoiceDate || Date.now()
+        ).toLocaleDateString()}`,
+        pageWidth / 2,
+        yPosition
+      );
+      yPosition += 8;
+
+      doc.text(`Status: ${invoice.status || "Draft"}`, margin, yPosition);
+      doc.text(
+        `Due Date: ${
+          invoice.dueDate
+            ? new Date(invoice.dueDate).toLocaleDateString()
+            : "N/A"
+        }`,
+        pageWidth / 2,
+        yPosition
+      );
+      yPosition += 15;
+
+      // Customer Information
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Customer Information:", margin, yPosition);
+      yPosition += 8;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `Customer: ${invoice.customer || "Not specified"}`,
+        margin,
+        yPosition
+      );
+      yPosition += 5;
+
+      if (invoice.email) {
+        doc.text(`Email: ${invoice.email}`, margin, yPosition);
+        yPosition += 5;
+      }
+
+      if (invoice.phone) {
+        doc.text(`Phone: ${invoice.phone}`, margin, yPosition);
+        yPosition += 5;
+      }
+
+      // Address if available
+      if (invoice.address || invoice.city || invoice.state || invoice.country) {
+        const addressParts = [];
+        if (invoice.address) addressParts.push(invoice.address);
+        if (invoice.city) addressParts.push(invoice.city);
+        if (invoice.state) addressParts.push(invoice.state);
+        if (invoice.country) addressParts.push(invoice.country);
+        if (invoice.zip) addressParts.push(`ZIP: ${invoice.zip}`);
+
+        if (addressParts.length > 0) {
+          doc.text(`Address: ${addressParts.join(", ")}`, margin, yPosition);
+          yPosition += 5;
+        }
+      }
+
+      yPosition += 10;
+
+      // Items Table
+      if (invoice.items && invoice.items.length > 0) {
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Items / Services:", margin, yPosition);
+        yPosition += 10;
+
+        // Prepare table data
+        const tableColumns = [
+          { header: "#", dataKey: "index" },
+          { header: "Description", dataKey: "description" },
+          { header: "Qty", dataKey: "quantity" },
+          { header: "Rate", dataKey: "rate" },
+          { header: "Tax", dataKey: "tax" },
+          { header: "Amount", dataKey: "amount" },
+        ];
+
+        const tableRows = invoice.items.map((item, index) => {
+          const subtotal = (item.quantity || 1) * (item.rate || 0);
+          const taxAmount =
+            (((item.tax1 || 0) + (item.tax2 || 0)) * subtotal) / 100;
+          const total = subtotal + taxAmount;
+
+          return {
+            index: index + 1,
+            description: item.description || "Item",
+            quantity: item.quantity || 1,
+            rate: `${invoice.currency || "USD"} ${(item.rate || 0).toFixed(2)}`,
+            tax: `${(item.tax1 || 0) + (item.tax2 || 0)}%`,
+            amount: `${invoice.currency || "USD"} ${total.toFixed(2)}`,
+          };
+        });
+
+        // Add table
+        autoTable(doc, {
+          startY: yPosition,
+          head: [tableColumns.map((col) => col.header)],
+          body: tableRows.map((row) =>
+            tableColumns.map((col) => row[col.dataKey])
+          ),
+          margin: { left: margin, right: margin },
+          styles: {
+            fontSize: 9,
+            cellPadding: 3,
+            overflow: "linebreak",
+          },
+          headStyles: {
+            fillColor: template?.primaryColor || [51, 51, 51],
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+          },
+          alternateRowStyles: { fillColor: [245, 245, 245] },
+          tableLineColor: [200, 200, 200],
+          tableLineWidth: 0.1,
+        });
+
+        yPosition = doc.lastAutoTable.finalY + 10;
+      }
+
+      // Calculations
+      const subtotal =
+        invoice.items?.reduce(
+          (sum, item) => sum + (item.quantity || 1) * (item.rate || 0),
+          0
+        ) || 0;
+
+      const totalTax =
+        invoice.items?.reduce((sum, item) => {
+          const itemSubtotal = (item.quantity || 1) * (item.rate || 0);
+          const taxRate = (item.tax1 || 0) + (item.tax2 || 0);
+          return sum + (itemSubtotal * taxRate) / 100;
+        }, 0) || 0;
+
+      const discount = invoice.discount || 0;
+      const total = invoice.total || subtotal + totalTax - discount;
+      const paidAmount = invoice.paidAmount || 0;
+      const balanceDue = total - paidAmount;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      // Right align calculations
+      const calcX = pageWidth - margin - 60;
+
+      doc.text("Subtotal:", calcX, yPosition);
+      doc.text(
+        `${invoice.currency || "USD"} ${subtotal.toFixed(2)}`,
+        pageWidth - margin,
+        yPosition,
+        { align: "right" }
+      );
+      yPosition += 6;
+
+      if (totalTax > 0) {
+        doc.text("Tax:", calcX, yPosition);
+        doc.text(
+          `${invoice.currency || "USD"} ${totalTax.toFixed(2)}`,
+          pageWidth - margin,
+          yPosition,
+          { align: "right" }
+        );
+        yPosition += 6;
+      }
+
+      if (discount > 0) {
+        doc.text("Discount:", calcX, yPosition);
+        doc.text(
+          `- ${invoice.currency || "USD"} ${discount.toFixed(2)}`,
+          pageWidth - margin,
+          yPosition,
+          { align: "right" }
+        );
+        yPosition += 6;
+      }
+
+      doc.text("Total:", calcX, yPosition);
+      doc.text(
+        `${invoice.currency || "USD"} ${total.toFixed(2)}`,
+        pageWidth - margin,
+        yPosition,
+        { align: "right" }
+      );
+      yPosition += 6;
+
+      if (paidAmount > 0) {
+        doc.text("Paid Amount:", calcX, yPosition);
+        doc.text(
+          `${invoice.currency || "USD"} ${paidAmount.toFixed(2)}`,
+          pageWidth - margin,
+          yPosition,
+          { align: "right" }
+        );
+        yPosition += 6;
+      }
+
+      doc.setFont("helvetica", "bold");
+      doc.text("Balance Due:", calcX, yPosition);
+      doc.text(
+        `${invoice.currency || "USD"} ${balanceDue.toFixed(2)}`,
+        pageWidth - margin,
+        yPosition,
+        { align: "right" }
+      );
+      yPosition += 15;
+
+      // Payment Status
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Payment Status:", margin, yPosition);
+      yPosition += 8;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      if (invoice.status === "Paid") {
+        doc.text("✓ Payment Completed", margin, yPosition);
+        yPosition += 8;
+      } else if (invoice.status === "Partiallypaid") {
+        doc.text(
+          `● Partially Paid (${paidAmount.toFixed(
+            2
+          )} paid, ${balanceDue.toFixed(2)} remaining)`,
+          margin,
+          yPosition
+        );
+        yPosition += 8;
+      } else {
+        doc.text("● Payment Pending", margin, yPosition);
+        yPosition += 8;
+      }
+
+      // Terms and Notes
+      if (invoice.tags) {
+        doc.text(`Tags: ${invoice.tags}`, margin, yPosition);
+        yPosition += 8;
+      }
+
+      if (invoice.adminNote) {
+        doc.text(`Admin Note: ${invoice.adminNote}`, margin, yPosition);
+        yPosition += 8;
+      }
+
+      if (invoice.clientNote) {
+        doc.text(`Client Note: ${invoice.clientNote}`, margin, yPosition);
+        yPosition += 8;
+      }
+
+      // Footer
+      const footerY = pageHeight - margin;
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 100, 100);
+
+      // Footer text from template
+      doc.text(
+        template?.footerText || "Thank you for your business!",
+        pageWidth / 2,
+        footerY - 10,
+        { align: "center" }
+      );
+
+      // Page number
+      doc.text(`Page 1 of 1`, pageWidth / 2, footerY, { align: "center" });
+
+      // Company contact in footer
+      const footerContact = [
+        template?.companyName || "Your Company",
+        template?.companyEmail ? `Email: ${template.companyEmail}` : "",
+        template?.companyPhone ? `Phone: ${template.companyPhone}` : "",
+      ]
+        .filter(Boolean)
+        .join(" | ");
+
+      doc.text(footerContact, pageWidth / 2, footerY - 20, { align: "center" });
+
+      // Save the PDF
+      const fileName = `Invoice_${formatInvoiceNumber(invoice.invoiceNumber)}_${
+        invoice.customer?.replace(/[^a-z0-9]/gi, "_") || "Untitled"
+      }.pdf`;
+      doc.save(fileName);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Error generating PDF. Please try again.");
+    }
+  };
 
   // Toggle invoice selection
   const toggleInvoiceSelection = (id) => {
@@ -227,7 +689,6 @@ const Invoices = () => {
     }));
   };
 
-  // Process batch payments
   // Process batch payments - UPDATED FOR NEW PAYMENT API
   const processBatchPayments = async () => {
     setBatchPaymentLoading(true);
@@ -592,7 +1053,7 @@ const Invoices = () => {
       <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate("../invoices/new")}
+            onClick={() => navigate("new")}
             className="px-3 py-1 text-sm rounded flex items-center gap-2"
             style={{ backgroundColor: "#333333", color: "white" }}
           >
@@ -902,6 +1363,13 @@ const Invoices = () => {
                                 <FaEye />
                               </button>
                               <button
+                                onClick={() => downloadInvoicePDF(invoice)}
+                                className="p-1 text-green-600 hover:bg-green-100 rounded"
+                                title="Download"
+                              >
+                                <FaDownload />
+                              </button>
+                              <button
                                 onClick={() => {
                                   setEditInvoice(invoice);
                                   setFormData({
@@ -968,6 +1436,13 @@ const Invoices = () => {
                                 title="View"
                               >
                                 <FaEye />
+                              </button>
+                              <button
+                                onClick={() => downloadInvoicePDF(invoice)}
+                                className="p-1 text-green-600 hover:bg-green-100 rounded"
+                                title="Download"
+                              >
+                                <FaDownload />
                               </button>
                               <button
                                 onClick={() => {
@@ -1139,7 +1614,13 @@ const Invoices = () => {
                 </div>
               )}
             </div>
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => downloadInvoicePDF(viewInvoice)}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                <FaDownload className="inline mr-2" /> Download PDF
+              </button>
               <button
                 onClick={() => setViewInvoice(null)}
                 className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"

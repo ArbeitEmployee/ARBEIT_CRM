@@ -7,6 +7,7 @@ import {
   FaChevronRight,
   FaTimes,
   FaPlus,
+  FaDownload,
 } from "react-icons/fa";
 import { HiOutlineDownload } from "react-icons/hi";
 import { useNavigate } from "react-router-dom";
@@ -34,6 +35,8 @@ const Payments = () => {
     refundedPayments: 0,
     totalAmount: 0,
   });
+  const [template, setTemplate] = useState(null);
+  const [loadingTemplate, setLoadingTemplate] = useState(false);
 
   // Add a ref for the export menu
   const exportMenuRef = useRef(null);
@@ -70,6 +73,35 @@ const Payments = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // Fetch active document template
+  const fetchTemplate = async () => {
+    setLoadingTemplate(true);
+    try {
+      const config = createAxiosConfig();
+      const { data } = await axios.get(
+        `${API_BASE_URL}/admin/document-templates/active`,
+        config
+      );
+      setTemplate(data.data);
+    } catch (err) {
+      console.error("Error fetching template:", err);
+      // If no template exists, create a default one
+      setTemplate({
+        companyName: "Your Company",
+        companyEmail: "info@company.com",
+        companyPhone: "+1 (555) 123-4567",
+        companyAddress: "123 Business Street, City, Country",
+        logoUrl: "",
+        watermarkEnabled: true,
+        watermarkOpacity: 0.1,
+        primaryColor: "#333333",
+        fontFamily: "Arial",
+        footerText: "Thank you for your business!",
+      });
+    }
+    setLoadingTemplate(false);
+  };
 
   // Fetch payments data from API
   const fetchPayments = async () => {
@@ -126,7 +158,344 @@ const Payments = () => {
 
   useEffect(() => {
     fetchPayments();
+    fetchTemplate();
   }, []);
+
+  // Generate and download payment receipt PDF
+  const downloadPaymentPDF = async (payment) => {
+    try {
+      // Create PDF document
+      const doc = new jsPDF({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+      });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 15;
+      const contentWidth = pageWidth - margin * 2;
+
+      // Reset all graphic states first
+      doc.setGState(doc.GState({ opacity: 1 }));
+
+      // Add watermark FIRST with proper opacity
+      if (template?.watermarkEnabled && template?.logoUrl) {
+        try {
+          // Get logo URL
+          let logoData = template.logoUrl;
+
+          // If it's a relative URL, construct full URL
+          if (template.logoUrl.startsWith("/uploads/")) {
+            logoData = `${API_BASE_URL}${template.logoUrl}`;
+          }
+
+          // Save current graphic state
+          doc.saveGraphicsState();
+
+          // Set opacity for watermark only
+          doc.setGState(
+            doc.GState({ opacity: template.watermarkOpacity || 0.1 })
+          );
+
+          // Add watermark image
+          doc.addImage(
+            logoData,
+            "PNG",
+            pageWidth / 2 - 40, // Center horizontally
+            pageHeight / 2 - 40, // Center vertically
+            80, // Width
+            80, // Height
+            "", // alias
+            "FAST"
+          );
+
+          // Restore graphic state to normal opacity
+          doc.restoreGraphicsState();
+        } catch (error) {
+          console.log("Could not load watermark image:", error);
+        }
+      }
+
+      // Reset to normal opacity for main content
+      doc.setGState(doc.GState({ opacity: 1 }));
+
+      // Now add the main content (text)
+      let yPosition = margin;
+
+      // Header Section - Company Logo (not watermark)
+      if (template?.logoUrl) {
+        try {
+          // Get logo URL
+          let logoData = template.logoUrl;
+
+          // If it's a relative URL, construct full URL
+          if (template.logoUrl.startsWith("/uploads/")) {
+            logoData = `${API_BASE_URL}${template.logoUrl}`;
+          }
+
+          // Add logo with normal opacity
+          doc.addImage(logoData, "PNG", margin, yPosition, 40, 20, "", "FAST");
+        } catch (error) {
+          console.log("Could not load logo image:", error);
+          // Fallback: Add text logo
+          doc.setFontSize(16);
+          doc.setFont("helvetica", "bold");
+          doc.text(
+            template?.companyName?.substring(0, 15) || "Company",
+            margin,
+            yPosition + 10
+          );
+        }
+      }
+
+      // Center: Document Type
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("PAYMENT RECEIPT", pageWidth / 2, margin + 15, {
+        align: "center",
+      });
+
+      // Right: Company Info
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      let rightX = pageWidth - margin;
+
+      const companyInfo = [
+        template?.companyName || "Your Company",
+        template?.companyAddress || "Address not set",
+        `Email: ${template?.companyEmail || "email@company.com"}`,
+        `Phone: ${template?.companyPhone || "Not provided"}`,
+      ];
+
+      companyInfo.forEach((line, index) => {
+        doc.text(line, rightX, margin + 10 + index * 5, { align: "right" });
+      });
+
+      // Separator line
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, margin + 35, pageWidth - margin, margin + 35);
+
+      yPosition = margin + 50;
+
+      // Payment Details
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Payment Receipt", margin, yPosition);
+      yPosition += 10;
+
+      // Payment Number and Date
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+
+      const formatPaymentNumber = (num) => {
+        if (!num) return "PAY-" + payment._id.slice(-6).toUpperCase();
+        if (num.startsWith("PAY-")) return num;
+        const matches = num.match(/\d+/);
+        const numberPart = matches ? matches[0] : "000001";
+        return `PAY-${String(numberPart).padStart(6, "0")}`;
+      };
+
+      const paymentNumber = formatPaymentNumber(payment.paymentNumber);
+
+      doc.text(`Receipt #: ${paymentNumber}`, margin, yPosition);
+      doc.text(
+        `Date: ${new Date(
+          payment.paymentDate || Date.now()
+        ).toLocaleDateString()}`,
+        pageWidth / 2,
+        yPosition
+      );
+      yPosition += 8;
+
+      doc.text(`Status: ${payment.status || "Completed"}`, margin, yPosition);
+      yPosition += 15;
+
+      // Payment Information
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Payment Information:", margin, yPosition);
+      yPosition += 8;
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `Customer: ${payment.customer || "Not specified"}`,
+        margin,
+        yPosition
+      );
+      yPosition += 5;
+
+      doc.text(
+        `Invoice #: ${payment.invoiceNumber || "N/A"}`,
+        margin,
+        yPosition
+      );
+      yPosition += 5;
+
+      doc.text(
+        `Payment Mode: ${payment.paymentMode || "N/A"}`,
+        margin,
+        yPosition
+      );
+      yPosition += 5;
+
+      if (payment.transactionId) {
+        doc.text(`Transaction ID: ${payment.transactionId}`, margin, yPosition);
+        yPosition += 5;
+      }
+
+      yPosition += 10;
+
+      // Payment Amount Section
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.text("Payment Details:", margin, yPosition);
+      yPosition += 10;
+
+      // Create a box for payment amount
+      doc.setDrawColor(100, 100, 100);
+      doc.setLineWidth(0.5);
+      doc.rect(margin, yPosition - 5, contentWidth, 25);
+
+      doc.setFontSize(16);
+      doc.setFont("helvetica", "bold");
+      doc.text("Amount Paid:", margin + 10, yPosition + 5);
+      doc.text(
+        `${payment.currency || "USD"} ${(payment.amount || 0).toFixed(2)}`,
+        pageWidth - margin - 10,
+        yPosition + 5,
+        { align: "right" }
+      );
+
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `(${(payment.amount || 0).toLocaleString("en-US", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })} ${payment.currency || "USD"})`,
+        pageWidth - margin - 10,
+        yPosition + 12,
+        { align: "right" }
+      );
+
+      yPosition += 35;
+
+      // Payment Status
+      const getStatusColorCode = (status) => {
+        switch (status) {
+          case "Completed":
+            return [34, 197, 94]; // Green
+          case "Pending":
+            return [253, 224, 71]; // Yellow
+          case "Failed":
+            return [239, 68, 68]; // Red
+          case "Refunded":
+            return [249, 115, 22]; // Orange
+          default:
+            return [156, 163, 175]; // Gray
+        }
+      };
+
+      const statusColor = getStatusColorCode(payment.status);
+
+      doc.setFillColor(...statusColor);
+      doc.rect(margin, yPosition, 10, 10, "F");
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "normal");
+      doc.text(
+        `Status: ${payment.status || "Completed"}`,
+        margin + 15,
+        yPosition + 7
+      );
+
+      yPosition += 15;
+
+      // Notes
+      if (payment.notes) {
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("Notes:", margin, yPosition);
+        yPosition += 8;
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const notes = doc.splitTextToSize(payment.notes, contentWidth - 10);
+        notes.forEach((line) => {
+          doc.text(line, margin + 5, yPosition);
+          yPosition += 5;
+        });
+        yPosition += 5;
+      }
+
+      // Terms and Conditions
+      yPosition += 5;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "italic");
+      doc.setTextColor(100, 100, 100);
+      doc.text(
+        "This is an official payment receipt. Please keep this document for your records.",
+        margin,
+        yPosition
+      );
+      yPosition += 5;
+
+      // Footer
+      const footerY = pageHeight - margin;
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(100, 100, 100);
+
+      // Footer text from template
+      doc.text(
+        template?.footerText || "Thank you for your business!",
+        pageWidth / 2,
+        footerY - 10,
+        { align: "center" }
+      );
+
+      // Page number
+      doc.text(`Page 1 of 1`, pageWidth / 2, footerY, { align: "center" });
+
+      // Company contact in footer
+      const footerContact = [
+        template?.companyName || "Your Company",
+        template?.companyEmail ? `Email: ${template.companyEmail}` : "",
+        template?.companyPhone ? `Phone: ${template.companyPhone}` : "",
+      ]
+        .filter(Boolean)
+        .join(" | ");
+
+      doc.text(footerContact, pageWidth / 2, footerY - 20, { align: "center" });
+
+      // Signature line
+      const signatureY = footerY - 40;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(
+        pageWidth - margin - 60,
+        signatureY,
+        pageWidth - margin,
+        signatureY
+      );
+      doc.setFontSize(9);
+      doc.text("Authorized Signature", pageWidth - margin - 60, signatureY + 5);
+      doc.text(
+        template?.companyName?.substring(0, 15) || "Company",
+        pageWidth - margin - 60,
+        signatureY + 10
+      );
+
+      // Save the PDF
+      const fileName = `Payment_Receipt_${paymentNumber}_${
+        payment.customer?.replace(/[^a-z0-9]/gi, "_") || "Customer"
+      }.pdf`;
+      doc.save(fileName);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Error generating PDF. Please try again.");
+    }
+  };
 
   // Export handler
   const handleExport = (type) => {
@@ -530,6 +899,13 @@ const Payments = () => {
                         >
                           <FaEye size={16} />
                         </button>
+                        <button
+                          onClick={() => downloadPaymentPDF(payment)}
+                          className="text-green-500 hover:text-green-700"
+                          title="Download"
+                        >
+                          <FaDownload size={16} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -642,7 +1018,13 @@ const Payments = () => {
                 </p>
               )}
             </div>
-            <div className="mt-6 flex justify-end">
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => downloadPaymentPDF(viewPayment)}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              >
+                <FaDownload className="inline mr-2" /> Download Receipt
+              </button>
               <button
                 onClick={() => setViewPayment(null)}
                 className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"

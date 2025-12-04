@@ -56,41 +56,28 @@ const deleteFromCloudinary = async (publicId) => {
 // Get active template for admin
 export const getActiveTemplate = async (req, res) => {
   try {
+    // First try to get the active default template
     let template = await DocumentTemplate.findOne({
       admin: req.admin._id,
-      $or: [{ isDefault: true }, { active: true }],
-    }).sort({ isDefault: -1, updatedAt: -1 });
+      active: true,
+      isDefault: true,
+    });
 
-    // If no template exists, create a default one
+    // If no default active template, get any active template
     if (!template) {
-      template = new DocumentTemplate({
+      template = await DocumentTemplate.findOne({
         admin: req.admin._id,
-        templateName: "Default Template",
-        documentTypes: ["Proposal", "Invoice", "Expense", "Quote", "Receipt"],
-        companyName: req.admin.companyName || "Your Company",
-        companyEmail: req.admin.email || "",
-        companyPhone: "",
-        companyAddress: "",
-        companyWebsite: "",
-        taxId: "",
-        bankDetails: "",
-        logoUrl: "",
-        logoPublicId: "",
-        watermarkEnabled: true,
-        watermarkOpacity: 0.1,
-        primaryColor: "#333333",
-        secondaryColor: "#666666",
-        fontFamily: "Arial",
-        fontSizeBase: 10,
-        headerHeight: 50,
-        footerHeight: 30,
-        footerText: "Thank you for your business!",
-        showPageNumbers: true,
-        showCompanyInfoInFooter: true,
         active: true,
-        isDefault: true,
+      }).sort({ updatedAt: -1 });
+    }
+
+    // If no template exists at all, return null instead of creating one
+    if (!template) {
+      return res.status(200).json({
+        success: true,
+        data: null,
+        message: "No template found. Please create one.",
       });
-      await template.save();
     }
 
     res.status(200).json({
@@ -147,11 +134,41 @@ export const getTemplateById = async (req, res) => {
 export const createTemplate = async (req, res) => {
   try {
     // Prepare template data
-    const templateData = { ...req.body, admin: req.admin._id };
+    let templateData = { ...req.body, admin: req.admin._id };
     const logoBase64 = templateData.logoBase64;
 
     // Delete logoBase64 from template data before saving to database
     delete templateData.logoBase64;
+
+    // Convert string boolean values to actual booleans
+    const booleanFields = [
+      "watermarkEnabled",
+      "showPageNumbers",
+      "showCompanyInfoInFooter",
+      "active",
+      "isDefault",
+    ];
+
+    booleanFields.forEach((field) => {
+      if (templateData[field] !== undefined) {
+        // Convert to boolean - handles "true", "false", 1, 0, etc.
+        templateData[field] = Boolean(templateData[field]);
+      }
+    });
+
+    // Convert numeric fields
+    const numericFields = [
+      "watermarkOpacity",
+      "fontSizeBase",
+      "headerHeight",
+      "footerHeight",
+    ];
+
+    numericFields.forEach((field) => {
+      if (templateData[field] !== undefined) {
+        templateData[field] = Number(templateData[field]);
+      }
+    });
 
     // Handle logo upload to Cloudinary
     if (logoBase64) {
@@ -193,11 +210,41 @@ export const createTemplate = async (req, res) => {
 export const updateTemplate = async (req, res) => {
   try {
     const { id } = req.params;
-    const templateData = { ...req.body };
+    let templateData = { ...req.body };
     const logoBase64 = templateData.logoBase64;
 
     // Delete logoBase64 from template data before saving to database
     delete templateData.logoBase64;
+
+    // Convert string boolean values to actual booleans
+    const booleanFields = [
+      "watermarkEnabled",
+      "showPageNumbers",
+      "showCompanyInfoInFooter",
+      "active",
+      "isDefault",
+    ];
+
+    booleanFields.forEach((field) => {
+      if (templateData[field] !== undefined) {
+        // Convert to boolean - handles "true", "false", 1, 0, etc.
+        templateData[field] = Boolean(templateData[field]);
+      }
+    });
+
+    // Convert numeric fields
+    const numericFields = [
+      "watermarkOpacity",
+      "fontSizeBase",
+      "headerHeight",
+      "footerHeight",
+    ];
+
+    numericFields.forEach((field) => {
+      if (templateData[field] !== undefined) {
+        templateData[field] = Number(templateData[field]);
+      }
+    });
 
     // Find existing template first
     const existingTemplate = await DocumentTemplate.findOne({

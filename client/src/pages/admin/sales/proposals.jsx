@@ -45,6 +45,21 @@ const Proposals = () => {
   // Status options
   const statusOptions = ["Draft", "Sent", "Accepted", "Rejected"];
 
+  // Helper function to format proposal number
+  const formatProposalNumber = (num, proposalId = "") => {
+    if (!num) {
+      return `AR-PRO-TEMP-${proposalId.slice(-6).toUpperCase()}`;
+    }
+
+    if (num.startsWith("AR-PRO-")) return num;
+    if (num.startsWith("PRO-")) return "AR-" + num;
+
+    // Extract digits from the number
+    const matches = num.match(/\d+/);
+    const numberPart = matches ? matches[0] : "000001";
+    return `AR-PRO-${String(numberPart).padStart(6, "0")}`;
+  };
+
   // Status colors
   const getStatusColor = (status) => {
     switch (status) {
@@ -217,7 +232,7 @@ const Proposals = () => {
             pageWidth / 2 - 40, // Center horizontally
             pageHeight / 2 - 40, // Center vertically
             80, // Width
-            80, // Height
+            50, // Height
             "", // alias
             "FAST"
           );
@@ -261,11 +276,6 @@ const Proposals = () => {
         }
       }
 
-      // Center: Document Type
-      doc.setFontSize(20);
-      doc.setFont("helvetica", "bold");
-      doc.text("PROPOSAL", pageWidth / 2, margin + 15, { align: "center" });
-
       // Right: Company Info
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
@@ -286,49 +296,60 @@ const Proposals = () => {
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, margin + 35, pageWidth - margin, margin + 35);
 
-      yPosition = margin + 50;
+      // QUOTATION text - AFTER the line
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("QUOTATION", pageWidth / 2, margin + 50, { align: "center" });
 
-      // Proposal Details
+      yPosition = margin + 60; // Increased from margin + 50
+
+      // Proposal Details - moved down
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.text(
-        `Proposal: ${proposal.title || "Untitled Proposal"}`,
+        `Quotation: ${proposal.title || "Untitled Quotation"}`,
         margin,
         yPosition
       );
       yPosition += 10;
 
-      // Proposal Number and Date
+      // Proposal Number
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      const formatProposalNumber = (num) => {
-        if (!num) return "TEMP-" + proposal._id.slice(-6).toUpperCase();
-        if (num.startsWith("PRO-")) return num;
-        const matches = num.match(/\d+/);
-        const numberPart = matches ? matches[0] : "000001";
-        return `PRO-${String(numberPart).padStart(6, "0")}`;
-      };
-
       doc.text(
-        `Proposal #: ${formatProposalNumber(proposal.proposalNumber)}`,
+        `Quotation #: ${formatProposalNumber(
+          proposal.proposalNumber,
+          proposal._id
+        )}`,
         margin,
-        yPosition
-      );
-      doc.text(
-        `Date: ${new Date(proposal.date || Date.now()).toLocaleDateString()}`,
-        pageWidth / 2,
         yPosition
       );
       yPosition += 8;
 
+      // Status
       doc.text(`Status: ${proposal.status || "Draft"}`, margin, yPosition);
+      yPosition += 8;
+
+      // Date
+      doc.text(
+        `Date: ${
+          proposal.date
+            ? new Date(proposal.date).toLocaleDateString()
+            : new Date().toLocaleDateString()
+        }`,
+        margin,
+        yPosition
+      );
+      yPosition += 8;
+
+      // Valid Until
       doc.text(
         `Valid Until: ${
           proposal.openTill
             ? new Date(proposal.openTill).toLocaleDateString()
             : "N/A"
         }`,
-        pageWidth / 2,
+        margin,
         yPosition
       );
       yPosition += 15;
@@ -508,20 +529,25 @@ const Proposals = () => {
       // Page number
       doc.text(`Page 1 of 1`, pageWidth / 2, footerY, { align: "center" });
 
-      // Company contact in footer
-      const footerContact = [
-        template?.companyName || "Your Company",
-        template?.companyEmail ? `Email: ${template.companyEmail}` : "",
-        template?.companyPhone ? `Phone: ${template.companyPhone}` : "",
-      ]
-        .filter(Boolean)
-        .join(" | ");
+      // Company contact in footer - ONLY show if enabled in template
+      if (template?.showCompanyInfoInFooter) {
+        const footerContact = [
+          template?.companyName || "Your Company",
+          template?.companyEmail ? `Email: ${template.companyEmail}` : "",
+          template?.companyPhone ? `Phone: ${template.companyPhone}` : "",
+        ]
+          .filter(Boolean)
+          .join(" | ");
 
-      doc.text(footerContact, pageWidth / 2, footerY - 20, { align: "center" });
+        doc.text(footerContact, pageWidth / 2, footerY - 20, {
+          align: "center",
+        });
+      }
 
       // Save the PDF
-      const fileName = `Proposal_${formatProposalNumber(
-        proposal.proposalNumber
+      const fileName = `Quotation_${formatProposalNumber(
+        proposal.proposalNumber,
+        proposal._id
       )}_${proposal.clientName?.replace(/[^a-z0-9]/gi, "_") || "Untitled"}.pdf`;
       doc.save(fileName);
     } catch (error) {
@@ -535,8 +561,7 @@ const Proposals = () => {
     if (!proposals.length) return;
 
     const exportData = proposals.map((p) => ({
-      ProposalNumber:
-        p.proposalNumber || "TEMP-" + p._id.slice(-6).toUpperCase(),
+      ProposalNumber: formatProposalNumber(p.proposalNumber, p._id),
       Client: p.clientName,
       Title: p.title,
       Amount: p.total,
@@ -562,7 +587,7 @@ const Proposals = () => {
         });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.setAttribute("download", "proposals.csv");
+        link.setAttribute("download", "quotations.csv");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -572,8 +597,8 @@ const Proposals = () => {
       case "Excel": {
         const worksheet = XLSXUtils.json_to_sheet(exportData);
         const workbook = XLSXUtils.book_new();
-        XLSXUtils.book_append_sheet(workbook, worksheet, "Proposals");
-        XLSXWriteFile(workbook, "proposals.xlsx");
+        XLSXUtils.book_append_sheet(workbook, worksheet, "Quotations");
+        XLSXWriteFile(workbook, "quotations.xlsx");
         break;
       }
 
@@ -584,14 +609,14 @@ const Proposals = () => {
           columns.map((col) => row[col])
         );
         autoTable(doc, { head: [columns], body: tableRows });
-        doc.save("proposals.pdf");
+        doc.save("quotations.pdf");
         break;
       }
 
       case "Print": {
         const printWindow = window.open("", "", "height=500,width=800");
         printWindow.document.write(
-          "<html><head><title>Proposals</title></head><body>"
+          "<html><head><title>Quotations</title></head><body>"
         );
         printWindow.document.write(
           "<table border='1' style='border-collapse: collapse; width: 100%;'>"
@@ -623,7 +648,7 @@ const Proposals = () => {
 
   // Delete proposal
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this proposal?"))
+    if (!window.confirm("Are you sure you want to delete this quotation?"))
       return;
     try {
       const config = createAxiosConfig();
@@ -661,7 +686,7 @@ const Proposals = () => {
   // Delete selected proposals
   const handleDeleteSelected = async () => {
     if (
-      !window.confirm(`Delete ${selectedProposals.length} selected proposals?`)
+      !window.confirm(`Delete ${selectedProposals.length} selected quotations?`)
     )
       return;
 
@@ -674,7 +699,7 @@ const Proposals = () => {
       );
       setSelectedProposals([]);
       fetchProposals();
-      alert("Selected proposals deleted!");
+      alert("Selected quotations deleted!");
     } catch (err) {
       console.error("Error deleting selected proposals:", err);
       if (err.response?.status === 401) {
@@ -704,18 +729,18 @@ const Proposals = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading proposals...</div>
+      <div className="bg-gray-100 min-h-screen p-4">Loading quotations...</div>
     );
 
   return (
     <div className="bg-gray-100 min-h-screen p-4">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">Proposals</h1>
+        <h1 className="text-2xl font-bold">Quotations</h1>
         <div className="flex items-center text-gray-600">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
-          <span>Proposals</span>
+          <span>Quotations</span>
         </div>
       </div>
 
@@ -725,7 +750,7 @@ const Proposals = () => {
         <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Total Proposals</p>
+              <p className="text-gray-500 text-sm">Total Quotations</p>
               <p className="text-2xl font-bold">{proposals.length}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
@@ -786,9 +811,9 @@ const Proposals = () => {
           <button
             className="px-3 py-1 text-sm rounded flex items-center gap-2"
             style={{ backgroundColor: "#333333", color: "white" }}
-            onClick={() => navigate("../proposals/new")}
+            onClick={() => navigate("new")}
           >
-            <FaPlus /> New Proposal
+            <FaPlus /> New Quotation
           </button>
 
           {/* Delete Selected button */}
@@ -934,7 +959,7 @@ const Proposals = () => {
                   className="p-3"
                   style={{ backgroundColor: "#333333", color: "white" }}
                 >
-                  Proposal#
+                  Quotation#
                 </th>
                 <th
                   className="p-3"
@@ -1014,17 +1039,9 @@ const Proposals = () => {
             <tbody>
               {currentProposals.length > 0 ? (
                 currentProposals.map((proposal) => {
-                  const formatProposalNumber = (num) => {
-                    if (!num)
-                      return "TEMP-" + proposal._id.slice(-6).toUpperCase();
-                    if (num.startsWith("PRO-")) return num;
-                    const matches = num.match(/\d+/);
-                    const numberPart = matches ? matches[0] : "000001";
-                    return `PRO-${String(numberPart).padStart(6, "0")}`;
-                  };
-
                   const displayProposalNumber = formatProposalNumber(
-                    proposal.proposalNumber
+                    proposal.proposalNumber,
+                    proposal._id
                   );
 
                   const displayAmount = new Intl.NumberFormat("en-US", {
@@ -1192,8 +1209,8 @@ const Proposals = () => {
                     className="p-4 text-center text-gray-500"
                   >
                     {proposals.length === 0
-                      ? "No proposals found. Create your first proposal!"
-                      : "No proposals match your search."}
+                      ? "No quotations found. Create your first quotation!"
+                      : "No quotations match your search."}
                   </td>
                 </tr>
               )}
@@ -1245,7 +1262,7 @@ const Proposals = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg p-6 w-11/12 max-w-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Proposal Details</h2>
+              <h2 className="text-xl font-semibold">Quotation Details</h2>
               <button
                 onClick={() => setViewProposal(null)}
                 className="text-gray-500 hover:text-gray-700"
@@ -1255,9 +1272,11 @@ const Proposals = () => {
             </div>
             <div className="space-y-3">
               <p>
-                <b>Proposal #:</b>{" "}
-                {viewProposal.proposalNumber ||
-                  "TEMP-" + viewProposal._id.slice(-6).toUpperCase()}
+                <b>Quotation #:</b>{" "}
+                {formatProposalNumber(
+                  viewProposal.proposalNumber,
+                  viewProposal._id
+                )}
               </p>
               <p>
                 <b>Client:</b> {viewProposal.clientName}
@@ -1318,7 +1337,7 @@ const Proposals = () => {
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white rounded-lg p-6 w-11/12 max-w-md shadow-lg">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Update Proposal</h2>
+              <h2 className="text-xl font-semibold">Update Quotation</h2>
               <button
                 onClick={() => setEditProposal(null)}
                 className="text-gray-500 hover:text-gray-700"

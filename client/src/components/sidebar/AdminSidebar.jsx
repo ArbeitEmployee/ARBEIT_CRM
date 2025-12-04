@@ -90,7 +90,7 @@ const AdminSidebar = ({ isOpen, onToggle, userType = "admin" }) => {
       name: "Sales",
       icon: <FiDollarSign />,
       children: [
-        { name: "Proposals", path: `/${userType}/sales/proposals` },
+        { name: "Quotations", path: `/${userType}/sales/proposals` },
         { name: "Estimates", path: `/${userType}/sales/estimates` },
         { name: "Invoices", path: `/${userType}/sales/invoices` },
         { name: "Payments", path: `/${userType}/sales/payments` },

@@ -1,6 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
-import { FaSave, FaUndo, FaEye, FaUpload, FaPalette } from "react-icons/fa";
+import {
+  FaSave,
+  FaUndo,
+  FaEye,
+  FaUpload,
+  FaPalette,
+  FaPlus,
+} from "react-icons/fa";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
@@ -12,8 +19,9 @@ const DocumentTemplate = () => {
   const [saving, setSaving] = useState(false);
   const [preview, setPreview] = useState(false);
   const [logoPreview, setLogoPreview] = useState("");
+  const [noTemplate, setNoTemplate] = useState(false);
 
-  // Template state
+  // Template state with proper boolean initialization
   const [template, setTemplate] = useState({
     _id: null,
     templateName: "Default Template",
@@ -60,6 +68,7 @@ const DocumentTemplate = () => {
   // Fetch existing template
   const fetchTemplate = async () => {
     setLoading(true);
+    setNoTemplate(false);
     try {
       const config = createAxiosConfig();
       const { data } = await axios.get(
@@ -67,15 +76,35 @@ const DocumentTemplate = () => {
         config
       );
 
-      if (data.success && data.data) {
-        setTemplate(data.data);
-        if (data.data.logoUrl) {
-          setLogoPreview(data.data.logoUrl); // Cloudinary URL
+      if (data.success) {
+        if (data.data) {
+          // Ensure boolean fields are properly converted
+          const templateData = {
+            ...data.data,
+            watermarkEnabled: Boolean(data.data.watermarkEnabled),
+            showPageNumbers: Boolean(data.data.showPageNumbers),
+            showCompanyInfoInFooter: Boolean(data.data.showCompanyInfoInFooter),
+            active: Boolean(data.data.active),
+            isDefault: Boolean(data.data.isDefault),
+            // Ensure opacity is a number
+            watermarkOpacity: Number(data.data.watermarkOpacity) || 0.1,
+            // Ensure fontSizeBase is a number
+            fontSizeBase: Number(data.data.fontSizeBase) || 10,
+          };
+
+          setTemplate(templateData);
+          if (data.data.logoUrl) {
+            setLogoPreview(data.data.logoUrl); // Cloudinary URL
+          }
+        } else {
+          // No template exists
+          setNoTemplate(true);
+          console.log("No existing template found");
         }
       }
     } catch (err) {
       console.error("Error fetching template:", err);
-      // Continue with default template
+      // Don't create template automatically on error
     }
     setLoading(false);
   };
@@ -84,13 +113,26 @@ const DocumentTemplate = () => {
     fetchTemplate();
   }, []);
 
-  // Handle input changes
+  // Handle input changes - fixed for checkboxes
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setTemplate({
-      ...template,
-      [name]: type === "checkbox" ? checked : value,
-    });
+
+    if (type === "checkbox") {
+      setTemplate({
+        ...template,
+        [name]: checked,
+      });
+    } else if (type === "number") {
+      setTemplate({
+        ...template,
+        [name]: Number(value),
+      });
+    } else {
+      setTemplate({
+        ...template,
+        [name]: value,
+      });
+    }
   };
 
   // Handle color changes
@@ -125,14 +167,33 @@ const DocumentTemplate = () => {
     }
   };
 
+  // Create new template (first time)
+  const handleCreateFirstTemplate = () => {
+    setNoTemplate(false);
+    // Keep the default values for new template
+  };
+
   // Save template function
   const handleSave = async () => {
     setSaving(true);
     try {
       const config = createAxiosConfig();
 
-      // Prepare template data
-      const templateData = { ...template };
+      // Prepare template data - ensure all fields are properly formatted
+      const templateData = {
+        ...template,
+        // Ensure boolean fields are properly sent
+        watermarkEnabled: Boolean(template.watermarkEnabled),
+        showPageNumbers: Boolean(template.showPageNumbers),
+        showCompanyInfoInFooter: Boolean(template.showCompanyInfoInFooter),
+        active: Boolean(template.active),
+        isDefault: Boolean(template.isDefault),
+        // Ensure numeric fields are properly sent
+        watermarkOpacity: Number(template.watermarkOpacity),
+        fontSizeBase: Number(template.fontSizeBase),
+        headerHeight: Number(template.headerHeight),
+        footerHeight: Number(template.footerHeight),
+      };
 
       // Check if template has an _id (for update) or not (for create)
       const method = template._id ? "put" : "post";
@@ -145,7 +206,20 @@ const DocumentTemplate = () => {
       if (data.success) {
         alert("Template saved successfully!");
         // Update template with response data including _id
-        setTemplate(data.data);
+        const updatedTemplate = {
+          ...data.data,
+          // Ensure boolean fields are properly converted
+          watermarkEnabled: Boolean(data.data.watermarkEnabled),
+          showPageNumbers: Boolean(data.data.showPageNumbers),
+          showCompanyInfoInFooter: Boolean(data.data.showCompanyInfoInFooter),
+          active: Boolean(data.data.active),
+          isDefault: Boolean(data.data.isDefault),
+          watermarkOpacity: Number(data.data.watermarkOpacity) || 0.1,
+          fontSizeBase: Number(data.data.fontSizeBase) || 10,
+        };
+
+        setTemplate(updatedTemplate);
+        setNoTemplate(false);
         if (data.data.logoUrl) {
           setLogoPreview(data.data.logoUrl); // Cloudinary URL
         }
@@ -181,6 +255,10 @@ const DocumentTemplate = () => {
         fontFamily: "Arial",
         fontSizeBase: 10,
         footerText: "Thank you for your business!",
+        showPageNumbers: true,
+        showCompanyInfoInFooter: true,
+        active: true,
+        isDefault: true,
       });
       setLogoPreview("");
     }
@@ -199,6 +277,41 @@ const DocumentTemplate = () => {
             <div className="text-gray-500">
               Loading template configuration...
             </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state when no template exists
+  if (noTemplate) {
+    return (
+      <div className="p-6 bg-gray-50 min-h-screen">
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          Document Template
+        </h2>
+        <p className="text-gray-600 mb-6">
+          Configure the template for all business documents (Proposals,
+          Invoices, Expenses, etc.)
+        </p>
+
+        <div className="bg-white shadow rounded-lg p-8 text-center">
+          <div className="mb-6">
+            <FaPalette className="text-5xl text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+              No Template Found
+            </h3>
+            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+              You haven't created any document templates yet. Click the button
+              below to create your first template.
+            </p>
+            <button
+              onClick={handleCreateFirstTemplate}
+              className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 flex items-center justify-center mx-auto"
+            >
+              <FaPlus className="mr-2" />
+              Create Your First Template
+            </button>
           </div>
         </div>
       </div>
@@ -792,7 +905,11 @@ const DocumentTemplate = () => {
                 className="w-full px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center"
               >
                 <FaSave className="mr-2" />
-                {saving ? "Saving..." : "Save Template"}
+                {saving
+                  ? "Saving..."
+                  : template._id
+                  ? "Update Template"
+                  : "Create Template"}
               </button>
 
               <button
