@@ -240,7 +240,7 @@ const Invoices = () => {
             pageWidth / 2 - 40, // Center horizontally
             pageHeight / 2 - 40, // Center vertically
             80, // Width
-            80, // Height
+            50, // Height
             "", // alias
             "FAST"
           );
@@ -284,11 +284,6 @@ const Invoices = () => {
         }
       }
 
-      // Center: Document Type
-      doc.setFontSize(20);
-      doc.setFont("helvetica", "bold");
-      doc.text("INVOICE", pageWidth / 2, margin + 15, { align: "center" });
-
       // Right: Company Info
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
@@ -309,9 +304,14 @@ const Invoices = () => {
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, margin + 35, pageWidth - margin, margin + 35);
 
-      yPosition = margin + 50;
+      // INVOICE text - AFTER the line (like quotation)
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("INVOICE", pageWidth / 2, margin + 50, { align: "center" });
 
-      // Invoice Details
+      yPosition = margin + 60; // Increased from margin + 50
+
+      // Invoice Details - moved down
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.text(
@@ -321,9 +321,11 @@ const Invoices = () => {
       );
       yPosition += 10;
 
-      // Invoice Number and Date
+      // Invoice Number
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
+
+      // Format invoice number function
       const formatInvoiceNumber = (num) => {
         if (!num) return "TEMP-" + invoice._id.slice(-6).toUpperCase();
         if (num.startsWith("INV-")) return num;
@@ -337,23 +339,30 @@ const Invoices = () => {
         margin,
         yPosition
       );
+      yPosition += 8;
+
+      // Status
+      doc.text(`Status: ${invoice.status || "Draft"}`, margin, yPosition);
+      yPosition += 8;
+
+      // Date - Left side
       doc.text(
         `Date: ${new Date(
           invoice.invoiceDate || Date.now()
         ).toLocaleDateString()}`,
-        pageWidth / 2,
+        margin,
         yPosition
       );
       yPosition += 8;
 
-      doc.text(`Status: ${invoice.status || "Draft"}`, margin, yPosition);
+      // Due Date - Left side (under date)
       doc.text(
         `Due Date: ${
           invoice.dueDate
             ? new Date(invoice.dueDate).toLocaleDateString()
             : "N/A"
         }`,
-        pageWidth / 2,
+        margin,
         yPosition
       );
       yPosition += 15;
@@ -602,17 +611,6 @@ const Invoices = () => {
 
       // Page number
       doc.text(`Page 1 of 1`, pageWidth / 2, footerY, { align: "center" });
-
-      // Company contact in footer
-      const footerContact = [
-        template?.companyName || "Your Company",
-        template?.companyEmail ? `Email: ${template.companyEmail}` : "",
-        template?.companyPhone ? `Phone: ${template.companyPhone}` : "",
-      ]
-        .filter(Boolean)
-        .join(" | ");
-
-      doc.text(footerContact, pageWidth / 2, footerY - 20, { align: "center" });
 
       // Save the PDF
       const fileName = `Invoice_${formatInvoiceNumber(invoice.invoiceNumber)}_${

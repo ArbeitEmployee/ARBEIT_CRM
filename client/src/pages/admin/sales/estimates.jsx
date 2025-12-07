@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
 import {
@@ -195,7 +196,7 @@ const Estimates = () => {
             pageWidth / 2 - 40, // Center horizontally
             pageHeight / 2 - 40, // Center vertically
             80, // Width
-            80, // Height
+            50, // Height
             "", // alias
             "FAST"
           );
@@ -239,11 +240,6 @@ const Estimates = () => {
         }
       }
 
-      // Center: Document Type
-      doc.setFontSize(20);
-      doc.setFont("helvetica", "bold");
-      doc.text("ESTIMATE", pageWidth / 2, margin + 15, { align: "center" });
-
       // Right: Company Info
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
@@ -264,9 +260,14 @@ const Estimates = () => {
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, margin + 35, pageWidth - margin, margin + 35);
 
-      yPosition = margin + 50;
+      // ESTIMATE text - AFTER the line (like quotation)
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("ESTIMATE", pageWidth / 2, margin + 50, { align: "center" });
 
-      // Estimate Details
+      yPosition = margin + 60; // Increased from margin + 50
+
+      // Estimate Details - moved down
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.text(
@@ -276,9 +277,11 @@ const Estimates = () => {
       );
       yPosition += 10;
 
-      // Estimate Number and Date
+      // Estimate Number
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
+
+      // Format estimate number function
       const formatEstimateNumber = (num) => {
         if (!num) return "TEMP-" + estimate._id.slice(-6).toUpperCase();
         if (num.startsWith("EST-")) return num;
@@ -292,23 +295,30 @@ const Estimates = () => {
         margin,
         yPosition
       );
+      yPosition += 8;
+
+      // Status
+      doc.text(`Status: ${estimate.status || "Draft"}`, margin, yPosition);
+      yPosition += 8;
+
+      // Date - Left side
       doc.text(
         `Date: ${new Date(
           estimate.estimateDate || Date.now()
         ).toLocaleDateString()}`,
-        pageWidth / 2,
+        margin,
         yPosition
       );
       yPosition += 8;
 
-      doc.text(`Status: ${estimate.status || "Draft"}`, margin, yPosition);
+      // Expiry Date - Left side (under date)
       doc.text(
         `Expiry Date: ${
           estimate.expiryDate
             ? new Date(estimate.expiryDate).toLocaleDateString()
             : "N/A"
         }`,
-        pageWidth / 2,
+        margin,
         yPosition
       );
       yPosition += 15;
@@ -519,17 +529,6 @@ const Estimates = () => {
 
       // Page number
       doc.text(`Page 1 of 1`, pageWidth / 2, footerY, { align: "center" });
-
-      // Company contact in footer
-      const footerContact = [
-        template?.companyName || "Your Company",
-        template?.companyEmail ? `Email: ${template.companyEmail}` : "",
-        template?.companyPhone ? `Phone: ${template.companyPhone}` : "",
-      ]
-        .filter(Boolean)
-        .join(" | ");
-
-      doc.text(footerContact, pageWidth / 2, footerY - 20, { align: "center" });
 
       // Save the PDF
       const fileName = `Estimate_${formatEstimateNumber(

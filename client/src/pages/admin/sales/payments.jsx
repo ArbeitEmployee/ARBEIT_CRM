@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from "react";
 import {
@@ -205,7 +206,7 @@ const Payments = () => {
             pageWidth / 2 - 40, // Center horizontally
             pageHeight / 2 - 40, // Center vertically
             80, // Width
-            80, // Height
+            50, // Height
             "", // alias
             "FAST"
           );
@@ -249,13 +250,6 @@ const Payments = () => {
         }
       }
 
-      // Center: Document Type
-      doc.setFontSize(20);
-      doc.setFont("helvetica", "bold");
-      doc.text("PAYMENT RECEIPT", pageWidth / 2, margin + 15, {
-        align: "center",
-      });
-
       // Right: Company Info
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
@@ -276,15 +270,22 @@ const Payments = () => {
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, margin + 35, pageWidth - margin, margin + 35);
 
-      yPosition = margin + 50;
+      // PAYMENT RECEIPT text - AFTER the line
+      doc.setFontSize(20);
+      doc.setFont("helvetica", "bold");
+      doc.text("PAYMENT RECEIPT", pageWidth / 2, margin + 50, {
+        align: "center",
+      });
 
-      // Payment Details
+      yPosition = margin + 60; // Increased from margin + 50
+
+      // Payment Details - moved down
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.text("Payment Receipt", margin, yPosition);
       yPosition += 10;
 
-      // Payment Number and Date
+      // Payment Number
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
 
@@ -299,16 +300,20 @@ const Payments = () => {
       const paymentNumber = formatPaymentNumber(payment.paymentNumber);
 
       doc.text(`Receipt #: ${paymentNumber}`, margin, yPosition);
+      yPosition += 8;
+
+      // Status
+      doc.text(`Status: ${payment.status || "Completed"}`, margin, yPosition);
+      yPosition += 8;
+
+      // Date - Left side
       doc.text(
         `Date: ${new Date(
           payment.paymentDate || Date.now()
         ).toLocaleDateString()}`,
-        pageWidth / 2,
+        margin,
         yPosition
       );
-      yPosition += 8;
-
-      doc.text(`Status: ${payment.status || "Completed"}`, margin, yPosition);
       yPosition += 15;
 
       // Payment Information
@@ -441,6 +446,23 @@ const Payments = () => {
       );
       yPosition += 5;
 
+      // Signature line
+      const signatureY = pageHeight - margin - 50;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(
+        pageWidth - margin - 60,
+        signatureY,
+        pageWidth - margin,
+        signatureY
+      );
+      doc.setFontSize(9);
+      doc.text("Authorized Signature", pageWidth - margin - 60, signatureY + 5);
+      doc.text(
+        template?.companyName?.substring(0, 15) || "Company",
+        pageWidth - margin - 60,
+        signatureY + 10
+      );
+
       // Footer
       const footerY = pageHeight - margin;
       doc.setFontSize(8);
@@ -457,34 +479,6 @@ const Payments = () => {
 
       // Page number
       doc.text(`Page 1 of 1`, pageWidth / 2, footerY, { align: "center" });
-
-      // Company contact in footer
-      const footerContact = [
-        template?.companyName || "Your Company",
-        template?.companyEmail ? `Email: ${template.companyEmail}` : "",
-        template?.companyPhone ? `Phone: ${template.companyPhone}` : "",
-      ]
-        .filter(Boolean)
-        .join(" | ");
-
-      doc.text(footerContact, pageWidth / 2, footerY - 20, { align: "center" });
-
-      // Signature line
-      const signatureY = footerY - 40;
-      doc.setDrawColor(200, 200, 200);
-      doc.line(
-        pageWidth - margin - 60,
-        signatureY,
-        pageWidth - margin,
-        signatureY
-      );
-      doc.setFontSize(9);
-      doc.text("Authorized Signature", pageWidth - margin - 60, signatureY + 5);
-      doc.text(
-        template?.companyName?.substring(0, 15) || "Company",
-        pageWidth - margin - 60,
-        signatureY + 10
-      );
 
       // Save the PDF
       const fileName = `Payment_Receipt_${paymentNumber}_${
