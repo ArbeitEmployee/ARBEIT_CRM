@@ -329,7 +329,7 @@ const EstimateRequestPage = () => {
         alert("Estimate updated successfully!");
       } else {
         await axios.post(
-          "${API_BASE_URL}/estimate-requests",
+          `${API_BASE_URL}/estimate-requests`,
           estimateData,
           config
         );
@@ -417,7 +417,7 @@ const EstimateRequestPage = () => {
       try {
         const config = createAxiosConfig();
         await axios.post(
-          "${API_BASE_URL}/estimate-requests/bulk-delete",
+          `${API_BASE_URL}/estimate-requests/bulk-delete`,
           {
             estimateIds: selectedEstimates,
           },
@@ -614,23 +614,27 @@ const EstimateRequestPage = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
         Loading estimateRequests...
       </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Estimates
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">
           {showNewEstimateForm
             ? editingEstimate
               ? "Edit Estimate"
               : "Add New Estimate"
             : "Estimate Requests"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-500">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Estimates</span>
@@ -638,9 +642,9 @@ const EstimateRequestPage = () => {
       </div>
 
       {showNewEstimateForm ? (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Estimate Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Estimate Details</h2>
             <button
               onClick={() => {
                 setShowNewEstimateForm(false);
@@ -658,7 +662,7 @@ const EstimateRequestPage = () => {
                   notes: "",
                 });
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-500 hover:text-slate-700"
             >
               <FaTimes />
             </button>
@@ -668,7 +672,7 @@ const EstimateRequestPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Project Name *
                 </label>
                 <input
@@ -676,13 +680,13 @@ const EstimateRequestPage = () => {
                   name="projectName"
                   value={newEstimate.projectName}
                   onChange={handleNewEstimateChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer Code
                 </label>
                 <input
@@ -690,16 +694,16 @@ const EstimateRequestPage = () => {
                   name="customerCode"
                   value={newEstimate.customerCode}
                   onChange={handleNewEstimateChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Enter customer code (e.g., CUST-ABC123)"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Enter customer code to auto-populate customer information
                 </p>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer *
                 </label>
                 <div className="relative" ref={customerRef}>
@@ -708,7 +712,7 @@ const EstimateRequestPage = () => {
                     name="customerName"
                     value={newEstimate.customerName}
                     onChange={handleNewEstimateChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     required
                     placeholder="Search customer by company name..."
                   />
@@ -744,7 +748,7 @@ const EstimateRequestPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer Email
                 </label>
                 <input
@@ -752,13 +756,13 @@ const EstimateRequestPage = () => {
                   name="customerEmail"
                   value={newEstimate.customerEmail}
                   onChange={handleNewEstimateChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   readOnly
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer Phone
                 </label>
                 <input
@@ -766,7 +770,7 @@ const EstimateRequestPage = () => {
                   name="customerPhone"
                   value={newEstimate.customerPhone}
                   onChange={handleNewEstimateChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   readOnly
                 />
               </div>
@@ -775,7 +779,7 @@ const EstimateRequestPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Amount *
                 </label>
                 <input
@@ -783,7 +787,7 @@ const EstimateRequestPage = () => {
                   name="amount"
                   value={newEstimate.amount}
                   onChange={handleNewEstimateChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="0.00"
                   step="0.01"
                   required
@@ -791,7 +795,7 @@ const EstimateRequestPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Created Date *
                 </label>
                 <input
@@ -799,20 +803,20 @@ const EstimateRequestPage = () => {
                   name="createdDate"
                   value={newEstimate.createdDate}
                   onChange={handleNewEstimateChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Status
                 </label>
                 <select
                   name="status"
                   value={newEstimate.status}
                   onChange={handleNewEstimateChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {statusOptions.map((option) => (
                     <option key={option} value={option}>
@@ -826,14 +830,14 @@ const EstimateRequestPage = () => {
 
           {/* Notes/Content Field */}
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-slate-700 mb-1">
               Notes/Content
             </label>
             <textarea
               name="notes"
               value={newEstimate.notes}
               onChange={handleNewEstimateChange}
-              className="w-full border rounded px-3 py-2 h-32"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm h-32 focus:outline-none focus:ring-2 focus:ring-slate-300"
               placeholder="Add any relevant notes or detailed content for the estimate..."
             />
           </div>
@@ -857,14 +861,14 @@ const EstimateRequestPage = () => {
                   notes: "",
                 });
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveEstimate}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               disabled={
                 !newEstimate.projectName ||
                 !newEstimate.customerId ||
@@ -882,79 +886,79 @@ const EstimateRequestPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Total Estimates */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Estimates</p>
-                  <p className="text-2xl font-bold">{stats.totalEstimates}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Total Estimates</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.totalEstimates}</p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaFileInvoiceDollar className="text-blue-600" />
+                <div className="h-12 w-12 rounded-2xl bg-[#0ea5e9] flex items-center justify-center">
+                  <FaFileInvoiceDollar className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Draft */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Draft</p>
-                  <p className="text-2xl font-bold">{stats.draft}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Draft</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.draft}</p>
                 </div>
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <FaClock className="text-gray-600" />
+                <div className="h-12 w-12 rounded-2xl bg-slate-400 flex items-center justify-center">
+                  <FaClock className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Sent */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Sent</p>
-                  <p className="text-2xl font-bold">{stats.sent}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Sent</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.sent}</p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaCheckCircle className="text-blue-600" />
+                <div className="h-12 w-12 rounded-2xl bg-[#8b5cf6] flex items-center justify-center">
+                  <FaCheckCircle className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Accepted */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Accepted</p>
-                  <p className="text-2xl font-bold">{stats.accepted}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Accepted</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.accepted}</p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaCheckCircle className="text-green-600" />
+                <div className="h-12 w-12 rounded-2xl bg-[#22c55e] flex items-center justify-center">
+                  <FaCheckCircle className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Rejected */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Rejected</p>
-                  <p className="text-2xl font-bold">{stats.rejected}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Rejected</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.rejected}</p>
                 </div>
-                <div className="bg-red-100 p-3 rounded-full">
-                  <FaBan className="text-red-600" />
+                <div className="h-12 w-12 rounded-2xl bg-[#ef4444] flex items-center justify-center">
+                  <FaBan className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Expired */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Expired</p>
-                  <p className="text-2xl font-bold">{stats.expired}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Expired</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.expired}</p>
                 </div>
-                <div className="bg-yellow-100 p-3 rounded-full">
-                  <FaClock className="text-yellow-600" />
+                <div className="h-12 w-12 rounded-2xl bg-[#f59e0b] flex items-center justify-center">
+                  <FaClock className="text-white" />
                 </div>
               </div>
             </div>
@@ -964,8 +968,7 @@ const EstimateRequestPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewEstimateForm(true)}
               >
                 <FaPlus /> New Estimate
@@ -973,7 +976,7 @@ const EstimateRequestPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -983,7 +986,7 @@ const EstimateRequestPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -993,7 +996,7 @@ const EstimateRequestPage = () => {
                 {/* Delete Selected button */}
                 {selectedEstimates.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
                     onClick={handleBulkDeleteEstimates}
                   >
                     Delete Selected ({selectedEstimates.length})
@@ -1001,7 +1004,7 @@ const EstimateRequestPage = () => {
                 )}
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -1018,34 +1021,34 @@ const EstimateRequestPage = () => {
                 <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute mt-1 w-32 rounded-2xl border border-white/60 bg-white shadow-2xl z-10 overflow-hidden">
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToExcel}
                       >
                         Excel
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToCSV}
                       >
                         CSV
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToPDF}
                       >
                         PDF
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={printTable}
                       >
                         Print
@@ -1056,7 +1059,7 @@ const EstimateRequestPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchEstimates}
                 >
                   <FaSyncAlt />
@@ -1065,7 +1068,7 @@ const EstimateRequestPage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-3 top-3 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -1074,7 +1077,7 @@ const EstimateRequestPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -1083,11 +1086,8 @@ const EstimateRequestPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
-                  <tr className="text-left">
-                    <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                  <tr className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
+                    <th className="px-4 sm:px-6 py-3 text-left rounded-l-lg">
                       <input
                         type="checkbox"
                         checked={
@@ -1105,75 +1105,42 @@ const EstimateRequestPage = () => {
                         }}
                       />
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="px-4 sm:px-6 py-3 text-left">
                       Project Name
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="px-4 sm:px-6 py-3 text-left">
                       Customer
                     </th>
                     {compactView ? (
                       <>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="px-4 sm:px-6 py-3 text-left">
                           Amount
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="px-4 sm:px-6 py-3 text-left">
                           Status
                         </th>
-                        <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="px-4 sm:px-6 py-3 text-left rounded-r-lg">
                           Actions
                         </th>
                       </>
                     ) : (
                       <>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="px-4 sm:px-6 py-3 text-left">
                           Customer Email
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="px-4 sm:px-6 py-3 text-left">
                           Customer Phone
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="px-4 sm:px-6 py-3 text-left">
                           Amount
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="px-4 sm:px-6 py-3 text-left">
                           Created Date
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="px-4 sm:px-6 py-3 text-left">
                           Status
                         </th>
-                        <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="px-4 sm:px-6 py-3 text-left rounded-r-lg">
                           Actions
                         </th>
                       </>
@@ -1185,7 +1152,7 @@ const EstimateRequestPage = () => {
                     <tr>
                       <td
                         colSpan={compactView ? 6 : 10}
-                        className="text-center py-4"
+                        className="text-center py-4 text-slate-500"
                       >
                         {searchTerm
                           ? "No matching estimates found."
@@ -1194,8 +1161,8 @@ const EstimateRequestPage = () => {
                     </tr>
                   ) : (
                     currentData.map((estimate) => (
-                      <tr key={estimate._id} className="hover:bg-gray-50">
-                        <td className="p-3 rounded-l-lg bg-white">
+                      <tr key={estimate._id} className="bg-white/70 hover:bg-white">
+                        <td className="px-4 sm:px-6 py-3 text-sm rounded-l-lg">
                           <input
                             type="checkbox"
                             checked={selectedEstimates.includes(estimate._id)}
@@ -1204,8 +1171,8 @@ const EstimateRequestPage = () => {
                             }
                           />
                         </td>
-                        <td className="p-3 bg-white">{estimate.projectName}</td>
-                        <td className="p-3 bg-white">
+                        <td className="px-4 sm:px-6 py-3 text-sm">{estimate.projectName}</td>
+                        <td className="px-4 sm:px-6 py-3 text-sm">
                           {estimate.customer
                             ? estimate.customer.company
                             : "N/A"}
@@ -1218,30 +1185,30 @@ const EstimateRequestPage = () => {
                         </td>
                         {compactView ? (
                           <>
-                            <td className="p-3 bg-white">
+                            <td className="px-4 sm:px-6 py-3 text-sm text-right tabular-nums">
                               {formatCurrency(estimate.amount)}
                             </td>
-                            <td className="p-3 bg-white">
+                            <td className="px-4 sm:px-6 py-3 text-sm">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                   estimate.status
                                 )}`}
                               >
                                 {estimate.status}
                               </span>
                             </td>
-                            <td className="p-3 bg-white rounded-r-lg">
+                            <td className="px-4 sm:px-6 py-3 text-sm rounded-r-lg">
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => setViewingEstimate(estimate)}
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="rounded-lg p-2 bg-slate-100 text-slate-700"
                                   title="View"
                                 >
                                   <FaEye />
                                 </button>
                                 <button
                                   onClick={() => handleEditEstimate(estimate)}
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="rounded-lg p-2 bg-blue-100 text-blue-700"
                                   title="Edit"
                                 >
                                   <FaEdit />
@@ -1250,7 +1217,7 @@ const EstimateRequestPage = () => {
                                   onClick={() =>
                                     handleDeleteEstimate(estimate._id)
                                   }
-                                  className="text-red-600 hover:text-red-800"
+                                  className="rounded-lg p-2 bg-red-100 text-red-700"
                                   title="Delete"
                                 >
                                   <FaTrash />
@@ -1260,43 +1227,43 @@ const EstimateRequestPage = () => {
                           </>
                         ) : (
                           <>
-                            <td className="p-3 bg-white">
+                            <td className="px-4 sm:px-6 py-3 text-sm">
                               {estimate.customer
                                 ? estimate.customer.email
                                 : "N/A"}
                             </td>
-                            <td className="p-3 bg-white">
+                            <td className="px-4 sm:px-6 py-3 text-sm">
                               {estimate.customer
                                 ? estimate.customer.phone
                                 : "N/A"}
                             </td>
-                            <td className="p-3 bg-white">
+                            <td className="px-4 sm:px-6 py-3 text-sm text-right tabular-nums">
                               {formatCurrency(estimate.amount)}
                             </td>
-                            <td className="p-3 bg-white">
+                            <td className="px-4 sm:px-6 py-3 text-sm">
                               {displayDate(estimate.createdDate)}
                             </td>
-                            <td className="p-3 bg-white">
+                            <td className="px-4 sm:px-6 py-3 text-sm">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                   estimate.status
                                 )}`}
                               >
                                 {estimate.status}
                               </span>
                             </td>
-                            <td className="p-3 bg-white rounded-r-lg">
+                            <td className="px-4 sm:px-6 py-3 text-sm rounded-r-lg">
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => setViewingEstimate(estimate)}
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="rounded-lg p-2 bg-slate-100 text-slate-700"
                                   title="View"
                                 >
                                   <FaEye />
                                 </button>
                                 <button
                                   onClick={() => handleEditEstimate(estimate)}
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="rounded-lg p-2 bg-blue-100 text-blue-700"
                                   title="Edit"
                                 >
                                   <FaEdit />
@@ -1305,7 +1272,7 @@ const EstimateRequestPage = () => {
                                   onClick={() =>
                                     handleDeleteEstimate(estimate._id)
                                   }
-                                  className="text-red-600 hover:text-red-800"
+                                  className="rounded-lg p-2 bg-red-100 text-red-700"
                                   title="Delete"
                                 >
                                   <FaTrash />
@@ -1323,7 +1290,7 @@ const EstimateRequestPage = () => {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-slate-500 tabular-nums">
                 Showing {startIndex + 1} to{" "}
                 {Math.min(
                   startIndex + entriesPerPage,
@@ -1333,14 +1300,14 @@ const EstimateRequestPage = () => {
               </div>
               <div className="flex gap-1">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() => setCurrentPage(1)}
                   disabled={currentPage === 1}
                 >
                   First
                 </button>
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -1362,8 +1329,10 @@ const EstimateRequestPage = () => {
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        currentPage === pageNum ? "bg-gray-200" : ""
+                      className={`rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold tabular-nums ${
+                        currentPage === pageNum
+                          ? "bg-slate-900 text-white"
+                          : "bg-white/80 text-slate-700 hover:bg-white"
                       }`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
@@ -1372,7 +1341,7 @@ const EstimateRequestPage = () => {
                   );
                 })}
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
@@ -1381,7 +1350,7 @@ const EstimateRequestPage = () => {
                   Next
                 </button>
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={currentPage === totalPages}
                 >
@@ -1395,24 +1364,24 @@ const EstimateRequestPage = () => {
 
       {/* View Estimate Modal */}
       {viewingEstimate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-11/12 max-w-2xl">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-11/12 max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Estimate Details</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Estimate Details</h2>
               <button
                 onClick={() => setViewingEstimate(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 <FaTimes />
               </button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <p className="text-sm text-gray-500">Project Name</p>
+                <p className="text-sm text-slate-500">Project Name</p>
                 <p className="font-medium">{viewingEstimate.projectName}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Customer</p>
+                <p className="text-sm text-slate-500">Customer</p>
                 <p className="font-medium">
                   {viewingEstimate.customer
                     ? viewingEstimate.customer.company
@@ -1426,7 +1395,7 @@ const EstimateRequestPage = () => {
                   )}
               </div>
               <div>
-                <p className="text-sm text-gray-500">Customer Email</p>
+                <p className="text-sm text-slate-500">Customer Email</p>
                 <p className="font-medium">
                   {viewingEstimate.customer
                     ? viewingEstimate.customer.email
@@ -1434,7 +1403,7 @@ const EstimateRequestPage = () => {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Customer Phone</p>
+                <p className="text-sm text-slate-500">Customer Phone</p>
                 <p className="font-medium">
                   {viewingEstimate.customer
                     ? viewingEstimate.customer.phone
@@ -1442,22 +1411,22 @@ const EstimateRequestPage = () => {
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Amount</p>
-                <p className="font-medium">
+                <p className="text-sm text-slate-500">Amount</p>
+                <p className="font-medium tabular-nums">
                   {formatCurrency(viewingEstimate.amount)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Created Date</p>
+                <p className="text-sm text-slate-500">Created Date</p>
                 <p className="font-medium">
                   {displayDate(viewingEstimate.createdDate)}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Status</p>
+                <p className="text-sm text-slate-500">Status</p>
                 <p className="font-medium">
                   <span
-                    className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                       viewingEstimate.status
                     )}`}
                   >
@@ -1468,8 +1437,8 @@ const EstimateRequestPage = () => {
             </div>
             {viewingEstimate.notes && (
               <div className="mb-4">
-                <p className="text-sm text-gray-500">Notes/Content</p>
-                <p className="font-medium mt-1 p-3 bg-gray-100 rounded">
+                <p className="text-sm text-slate-500">Notes/Content</p>
+                <p className="font-medium mt-1 p-3 bg-slate-100 rounded-xl">
                   {viewingEstimate.notes}
                 </p>
               </div>
@@ -1477,7 +1446,7 @@ const EstimateRequestPage = () => {
             <div className="flex justify-end">
               <button
                 onClick={() => setViewingEstimate(null)}
-                className="px-4 py-2 bg-black text-white rounded text-sm"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
               >
                 Close
               </button>
@@ -1485,6 +1454,7 @@ const EstimateRequestPage = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

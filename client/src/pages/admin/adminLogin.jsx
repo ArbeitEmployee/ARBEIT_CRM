@@ -65,35 +65,47 @@ export default function AdminLogin() {
     }
   };
   const getInputClasses = (field, value) =>
-    `w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+    `w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border transition focus:outline-none focus:ring-2 ${
       touched[field] && !value
-        ? "border border-red-500 focus:ring-red-400"
-        : "focus:ring-blue-400"
+        ? "border-red-500/70 focus:ring-red-400/40"
+        : "border-white/10 focus:ring-sky-400/50 focus:border-sky-400/50"
     }`;
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-white">Welcome to CRM</h2>
-        <p className="text-sm text-gray-300">Log in to your admin account</p>
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      {/* Ambient background image + aurora blobs */}
+      <div
+        className="absolute inset-0 opacity-25"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      />
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-500/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-violet-500/25 blur-3xl" />
+
+      <div className="relative z-10 mb-6 text-center">
+        <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 shadow-lg shadow-indigo-900/40">
+          <span className="text-xl font-black text-white">A</span>
+        </div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-sky-300/80">
+          ARBEIT CRM
+        </p>
+        <h2 className="mt-2 text-2xl font-bold text-white">Welcome back</h2>
+        <p className="text-sm text-slate-400">Log in to your admin account</p>
       </div>
 
-      <div className="w-full max-w-sm bg-[#0c123d] bg-opacity-80 p-6 rounded-xl shadow-xl text-white">
-        <form className="space-y-4" onSubmit={handleSubmit}>
+      <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.06] p-7 text-white shadow-[0_30px_90px_rgba(2,6,23,.6)] backdrop-blur-xl">
+        <form className="space-y-5" onSubmit={handleSubmit}>
           {/* Email */}
           <div>
-            <label className="block text-sm mb-1">Email</label>
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-300">
+              Email
+            </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiMail className="text-gray-400" />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <FiMail className="text-slate-400" />
               </div>
               <input
                 type="email"
@@ -106,7 +118,7 @@ export default function AdminLogin() {
               />
             </div>
             {touched.email && !email && (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="mt-1 text-xs text-red-400">
                 Please fill up the email field.
               </p>
             )}
@@ -114,19 +126,21 @@ export default function AdminLogin() {
 
           {/* Password */}
           <div>
-            <div className="flex justify-between items-center mb-1">
-              <label className="text-sm">Password</label>
+            <div className="mb-1.5 flex items-center justify-between">
+              <label className="text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-300">
+                Password
+              </label>
               <Link
                 to="/admin/forgot-password"
-                className="text-xs text-gray-100 hover:underline"
+                className="text-xs text-slate-300 transition hover:text-sky-300"
               >
                 Forgot Password?
               </Link>
             </div>
 
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className="text-gray-400" />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <FiLock className="text-slate-400" />
               </div>
               <input
                 type={showPassword ? "text" : "password"}
@@ -138,19 +152,15 @@ export default function AdminLogin() {
                 className={getInputClasses("password", password)}
               />
               <div
-                className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                className="absolute inset-y-0 right-0 flex cursor-pointer items-center pr-3 text-slate-400 hover:text-white"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
-                {showPassword ? (
-                  <FiEyeOff className="text-gray-400" />
-                ) : (
-                  <FiEye className="text-gray-400" />
-                )}
+                {showPassword ? <FiEyeOff /> : <FiEye />}
               </div>
             </div>
             {touched.password && !password && (
-              <p className="text-red-400 text-xs mt-1">
+              <p className="mt-1 text-xs text-red-400">
                 Please fill up the password field.
               </p>
             )}
@@ -159,19 +169,22 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+            className={`w-full rounded-xl py-2.5 text-sm font-semibold tracking-wide transition ${
               loading
-                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                : "bg-white text-[#0c123d] hover:bg-gray-200"
+                ? "cursor-not-allowed bg-slate-600 text-slate-300"
+                : "bg-gradient-to-r from-sky-500 to-indigo-600 text-white shadow-lg shadow-indigo-900/40 hover:brightness-110"
             }`}
           >
             {loading ? "Logging in..." : "LOG IN"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-300 mt-3">
+        <p className="mt-5 text-center text-sm text-slate-400">
           Don't have an account?{" "}
-          <Link to="/admin/signup" className="text-blue-400 hover:underline">
+          <Link
+            to="/admin/signup"
+            className="font-semibold text-sky-400 hover:underline"
+          >
             Sign Up
           </Link>
         </p>

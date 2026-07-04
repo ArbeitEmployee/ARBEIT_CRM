@@ -11,6 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { formatBDT } from "../../../utils/currency";
 
 const ExpensesReport = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -160,246 +161,302 @@ const ExpensesReport = () => {
 
   // Format currency
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(amount);
+    return formatBDT(amount);
   };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Loading expenses data...</div>
+        <div className="text-lg text-slate-500">Loading expenses data...</div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Expenses Report</h1>
-        <div className="flex items-center text-gray-600">
-          <span>Dashboard</span>
-          <span className="mx-1">/</span>
-          <span>Reports</span>
-          <span className="mx-1">/</span>
-          <span>Expenses</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Dashboard / Reports / Expenses
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">Expenses Report</h1>
         </div>
-      </div>
 
-      {/* Year Selection */}
-      <div className="bg-white shadow-md rounded p-4 mb-6 flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Expenses Report</h2>
-        <div className="flex items-center">
-          <label htmlFor="year-select" className="mr-2 font-medium">
-            Select Year:
-          </label>
-          <select
-            id="year-select"
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-            className="border rounded px-3 py-2"
-          >
-            {availableYears.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Expenses Table */}
-      <div className="bg-white shadow-md rounded p-4 mb-6">
-        <h2 className="text-xl font-semibold mb-4">
-          Monthly Expenses by Category ({selectedYear})
-        </h2>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-gray-800 text-white">
-                <th className="p-3 text-left">Category</th>
-                <th className="p-3 text-right">January</th>
-                <th className="p-3 text-right">February</th>
-                <th className="p-3 text-right">March</th>
-                <th className="p-3 text-right">April</th>
-                <th className="p-3 text-right">May</th>
-                <th className="p-3 text-right">June</th>
-                <th className="p-3 text-right">July</th>
-                <th className="p-3 text-right">August</th>
-                <th className="p-3 text-right">September</th>
-                <th className="p-3 text-right">October</th>
-                <th className="p-3 text-right">November</th>
-                <th className="p-3 text-right">December</th>
-                <th className="p-3 text-right">Total {selectedYear}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {monthlyData.map((categoryData, index) => (
-                <tr
-                  key={index}
-                  className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                >
-                  <td className="p-3 font-medium">{categoryData.category}</td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.January || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.February || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.March || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.April || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.May || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.June || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.July || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.August || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.September || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.October || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.November || 0)}
-                  </td>
-                  <td className="p-3 text-right">
-                    {formatCurrency(categoryData.December || 0)}
-                  </td>
-                  <td className="p-3 text-right font-bold">
-                    {formatCurrency(categoryData.total || 0)}
-                  </td>
-                </tr>
+        {/* Year Selection */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              Filter
+            </p>
+            <h2 className="text-lg font-semibold text-slate-900">
+              Expenses Report
+            </h2>
+          </div>
+          <div className="flex items-center gap-2">
+            <label
+              htmlFor="year-select"
+              className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500"
+            >
+              Select Year
+            </label>
+            <select
+              id="year-select"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+            >
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
               ))}
-              {/* Total row */}
-              <tr className="bg-gray-100 font-bold">
-                <td className="p-3">Total</td>
-                {[
-                  "January",
-                  "February",
-                  "March",
-                  "April",
-                  "May",
-                  "June",
-                  "July",
-                  "August",
-                  "September",
-                  "October",
-                  "November",
-                  "December",
-                ].map((month) => (
-                  <td key={month} className="p-3 text-right">
+            </select>
+          </div>
+        </div>
+
+        {/* Expenses Table */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Breakdown
+          </p>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">
+            Monthly Expenses by Category ({selectedYear})
+          </h2>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
+                  <th className="px-4 sm:px-6 py-3 text-left">Category</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">January</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">February</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">March</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">April</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">May</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">June</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">July</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">August</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">September</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">October</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">November</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">December</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">
+                    Total {selectedYear}
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/70">
+                {monthlyData.map((categoryData, index) => (
+                  <tr key={index} className="hover:bg-white/70">
+                    <td className="px-4 sm:px-6 py-3 font-medium text-slate-900">
+                      {categoryData.category}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.January || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.February || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.March || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.April || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.May || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.June || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.July || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.August || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.September || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.October || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.November || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                      {formatCurrency(categoryData.December || 0)}
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-right font-bold tabular-nums text-slate-900">
+                      {formatCurrency(categoryData.total || 0)}
+                    </td>
+                  </tr>
+                ))}
+                {/* Total row */}
+                <tr className="bg-slate-50/80 font-bold text-slate-900">
+                  <td className="px-4 sm:px-6 py-3">Total</td>
+                  {[
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
+                  ].map((month) => (
+                    <td
+                      key={month}
+                      className="px-4 sm:px-6 py-3 text-right tabular-nums"
+                    >
+                      {formatCurrency(
+                        monthlyData.reduce(
+                          (sum, category) => sum + (category[month] || 0),
+                          0
+                        )
+                      )}
+                    </td>
+                  ))}
+                  <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
                     {formatCurrency(
                       monthlyData.reduce(
-                        (sum, category) => sum + (category[month] || 0),
+                        (sum, category) => sum + (category.total || 0),
                         0
                       )
                     )}
                   </td>
-                ))}
-                <td className="p-3 text-right">
-                  {formatCurrency(
-                    monthlyData.reduce(
-                      (sum, category) => sum + (category.total || 0),
-                      0
-                    )
-                  )}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Billable Expenses Chart */}
-        <div className="bg-white shadow-md rounded p-4">
-          <h3 className="text-lg font-semibold mb-4">
-            Billable Expenses by Month ({selectedYear})
-          </h3>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={billableData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip
-                  formatter={(value) => [formatCurrency(value), "Amount"]}
-                />
-                <Legend />
-                <Bar dataKey="amount" name="Billable Amount" fill="#10B981" />
-              </BarChart>
-            </ResponsiveContainer>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* Non-Billable Expenses Chart */}
-        <div className="bg-white shadow-md rounded p-4">
-          <h3 className="text-lg font-semibold mb-4">
-            Non-Billable Expenses by Month ({selectedYear})
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Billable Expenses Chart */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              Billable
+            </p>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+              Billable Expenses by Month ({selectedYear})
+            </h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={billableData}>
+                  <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 12, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    formatter={(value) => [formatCurrency(value), "Amount"]}
+                  />
+                  <Legend />
+                  <Bar
+                    dataKey="amount"
+                    name="Billable Amount"
+                    fill="#22c55e"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Non-Billable Expenses Chart */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              Non-Billable
+            </p>
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">
+              Non-Billable Expenses by Month ({selectedYear})
+            </h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={nonBillableData}>
+                  <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="month"
+                    tick={{ fontSize: 12, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    formatter={(value) => [formatCurrency(value), "Amount"]}
+                  />
+                  <Legend />
+                  <Bar
+                    dataKey="amount"
+                    name="Non-Billable Amount"
+                    fill="#ef4444"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Category Charts */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            By Category
+          </p>
+          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+            Expenses by Category ({selectedYear})
           </h3>
-          <div className="h-64">
+          <div className="h-96">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={nonBillableData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+              <BarChart
+                data={monthlyData}
+                margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
+              >
+                <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="category"
+                  angle={0}
+                  textAnchor="middle"
+                  height={70}
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
                 <Tooltip
                   formatter={(value) => [formatCurrency(value), "Amount"]}
                 />
                 <Legend />
                 <Bar
-                  dataKey="amount"
-                  name="Non-Billable Amount"
-                  fill="#EF4444"
+                  dataKey="total"
+                  name="Total Amount"
+                  fill="#0ea5e9"
+                  radius={[8, 8, 0, 0]}
                 />
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
-      </div>
-
-      {/* Additional Category Charts */}
-      <div className="bg-white shadow-md rounded p-4 mb-6">
-        <h3 className="text-lg font-semibold mb-4">
-          Expenses by Category ({selectedYear})
-        </h3>
-        <div className="h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={monthlyData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 70 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="category"
-                angle={0}
-                textAnchor="middle"
-                height={70}
-              />
-              <YAxis />
-              <Tooltip
-                formatter={(value) => [formatCurrency(value), "Amount"]}
-              />
-              <Legend />
-              <Bar dataKey="total" name="Total Amount" fill="#3B82F6" />
-            </BarChart>
-          </ResponsiveContainer>
         </div>
       </div>
     </div>

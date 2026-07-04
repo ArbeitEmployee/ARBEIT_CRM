@@ -224,9 +224,9 @@ const ClientEstimateRequest = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white flex items-center justify-center">
+        <div className="text-center text-slate-600">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
           <p>Loading estimates...</p>
         </div>
       </div>
@@ -235,14 +235,14 @@ const ClientEstimateRequest = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen">
-        <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded-lg shadow-md">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        <div className="max-w-md mx-auto mt-20 rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="text-red-600 text-center">
             <h2 className="text-xl font-bold mb-4">Error Loading Estimates</h2>
             <p className="mb-4">{error}</p>
             <button
               onClick={fetchClientEstimates}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
             >
               Try Again
             </button>
@@ -253,11 +253,15 @@ const ClientEstimateRequest = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">My Estimate Requests</h1>
-        <div className="flex items-center text-gray-600">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Client Portal
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">My Estimate Requests</h1>
+        <div className="flex items-center text-slate-500">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Estimates</span>
@@ -265,8 +269,8 @@ const ClientEstimateRequest = () => {
 
         {/* Client Info */}
         {clientInfo.company && (
-          <div className="mt-4 p-4 bg-white rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-2">Company Information</h3>
+          <div className="mt-4 rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h3 className="text-lg font-semibold mb-2 text-slate-900">Company Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600">
@@ -305,10 +309,10 @@ const ClientEstimateRequest = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {/* Total Estimates */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Total Estimates</p>
+              <p className="text-slate-500 text-sm">Total Estimates</p>
               <p className="text-2xl font-bold">{stats.totalEstimates}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
@@ -318,10 +322,10 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Draft */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Draft</p>
+              <p className="text-slate-500 text-sm">Draft</p>
               <p className="text-2xl font-bold">{stats.draft}</p>
             </div>
             <div className="bg-gray-100 p-3 rounded-full">
@@ -331,10 +335,10 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Sent */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Sent</p>
+              <p className="text-slate-500 text-sm">Sent</p>
               <p className="text-2xl font-bold">{stats.sent}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-full">
@@ -344,10 +348,10 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Accepted */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Accepted</p>
+              <p className="text-slate-500 text-sm">Accepted</p>
               <p className="text-2xl font-bold">{stats.accepted}</p>
             </div>
             <div className="bg-green-100 p-3 rounded-full">
@@ -357,10 +361,10 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Rejected */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Rejected</p>
+              <p className="text-slate-500 text-sm">Rejected</p>
               <p className="text-2xl font-bold">{stats.rejected}</p>
             </div>
             <div className="bg-red-100 p-3 rounded-full">
@@ -370,10 +374,10 @@ const ClientEstimateRequest = () => {
         </div>
 
         {/* Expired */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Expired</p>
+              <p className="text-slate-500 text-sm">Expired</p>
               <p className="text-2xl font-bold">{stats.expired}</p>
             </div>
             <div className="bg-yellow-100 p-3 rounded-full">
@@ -386,7 +390,7 @@ const ClientEstimateRequest = () => {
       {/* Toggle View Button */}
       <div className="flex items-center justify-end mb-4">
         <button
-          className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+          className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
           onClick={() => setCompactView(!compactView)}
         >
           {compactView ? "Full View" : "Compact View"}
@@ -395,7 +399,7 @@ const ClientEstimateRequest = () => {
 
       {/* White box for table */}
       <div
-        className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+        className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
           compactView ? "w-full" : "w-full"
         }`}
       >
@@ -404,7 +408,7 @@ const ClientEstimateRequest = () => {
           <div className="flex items-center gap-2">
             {/* Status Filter */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
@@ -421,7 +425,7 @@ const ClientEstimateRequest = () => {
 
             {/* Entries per page */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={entriesPerPage}
               onChange={(e) => {
                 setEntriesPerPage(Number(e.target.value));
@@ -436,7 +440,7 @@ const ClientEstimateRequest = () => {
 
             {/* Refresh button */}
             <button
-              className="border px-2.5 py-1.5 rounded text-sm flex items-center hover:bg-gray-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
               onClick={fetchClientEstimates}
               disabled={loading}
             >
@@ -446,7 +450,7 @@ const ClientEstimateRequest = () => {
 
           {/* Search */}
           <div className="relative">
-            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+            <FaSearch className="absolute left-3 top-3 text-slate-400 text-sm" />
             <input
               type="text"
               placeholder="Search estimates..."
@@ -455,40 +459,40 @@ const ClientEstimateRequest = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             />
           </div>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-separate border-spacing-y-2">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="text-left">
+              <tr className="text-left bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
                 <th
                   className="p-3 rounded-l-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
                 >
+
                   Project Name
                 </th>
                 {compactView ? (
                   <>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
                     >
+
                       Amount
                     </th>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
                     >
+
                       Created Date
                     </th>
                     <th
                       className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
                     >
+
                       Status
                     </th>
                   </>
@@ -496,32 +500,32 @@ const ClientEstimateRequest = () => {
                   <>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
                     >
+
                       Customer
                     </th>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
                     >
+
                       Amount
                     </th>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
                     >
+
                       Created Date
                     </th>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
                     >
+
                       Status
                     </th>
                     <th
                       className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
                     >
+
                       Actions
                     </th>
                   </>
@@ -533,15 +537,14 @@ const ClientEstimateRequest = () => {
                 currentData.map((estimate) => (
                   <tr
                     key={estimate._id}
-                    className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                    style={{ color: "black" }}
+                    className="border-b border-slate-200/70 hover:bg-white/70 transition-colors text-slate-700"
                   >
                     <td className="p-3 rounded-l-lg border-0">
                       <div className="font-medium">{estimate.projectName}</div>
                     </td>
                     {compactView ? (
                       <>
-                        <td className="p-3 border-0">
+                        <td className="p-3 border-0 text-right tabular-nums">
                           {formatCurrency(estimate.amount)}
                         </td>
                         <td className="p-3 border-0">
@@ -549,7 +552,7 @@ const ClientEstimateRequest = () => {
                         </td>
                         <td className="p-3 border-0 rounded-r-lg">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                               estimate.status
                             )}`}
                           >
@@ -564,7 +567,7 @@ const ClientEstimateRequest = () => {
                             ? estimate.customer.company
                             : "N/A"}
                         </td>
-                        <td className="p-3 border-0">
+                        <td className="p-3 border-0 text-right tabular-nums">
                           {formatCurrency(estimate.amount)}
                         </td>
                         <td className="p-3 border-0">
@@ -572,7 +575,7 @@ const ClientEstimateRequest = () => {
                         </td>
                         <td className="p-3 border-0">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                               estimate.status
                             )}`}
                           >
@@ -620,7 +623,7 @@ const ClientEstimateRequest = () => {
                 <tr>
                   <td
                     colSpan={compactView ? 4 : 6}
-                    className="p-4 text-center text-gray-500"
+                    className="p-8 text-center text-slate-500"
                   >
                     {searchTerm || statusFilter !== "All"
                       ? "No estimates match your search criteria"
@@ -634,14 +637,14 @@ const ClientEstimateRequest = () => {
 
         {/* Pagination */}
         <div className="flex items-center justify-between mt-4">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-slate-500">
             Showing {startIndex + 1} to{" "}
             {Math.min(startIndex + entriesPerPage, filteredEstimates.length)} of{" "}
             {filteredEstimates.length} entries
           </div>
           <div className="flex gap-1">
             <button
-              className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage === 1}
             >
@@ -662,8 +665,10 @@ const ClientEstimateRequest = () => {
               return (
                 <button
                   key={pageNum}
-                  className={`px-3 py-1 border rounded text-sm ${
-                    currentPage === pageNum ? "bg-gray-200" : ""
+                  className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
+                    currentPage === pageNum
+                      ? "border-transparent bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                      : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
                   }`}
                   onClick={() => setCurrentPage(pageNum)}
                 >
@@ -672,7 +677,7 @@ const ClientEstimateRequest = () => {
               );
             })}
             <button
-              className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
               onClick={() =>
                 setCurrentPage(Math.min(totalPages, currentPage + 1))
               }
@@ -686,13 +691,13 @@ const ClientEstimateRequest = () => {
 
       {/* View Estimate Modal */}
       {viewingEstimate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Estimate Details</h3>
+              <h3 className="text-xl font-bold text-slate-900">Estimate Details</h3>
               <button
                 onClick={() => setViewingEstimate(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-600"
               >
                 &times;
               </button>
@@ -701,19 +706,19 @@ const ClientEstimateRequest = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-slate-600">
                     Project Name
                   </label>
-                  <p className="mt-1 p-2 bg-gray-50 rounded">
+                  <p className="mt-1 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-sm">
                     {viewingEstimate.projectName}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-slate-600">
                     Amount
                   </label>
-                  <p className="mt-1 p-2 bg-gray-50 rounded">
+                  <p className="mt-1 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-sm">
                     {formatCurrency(viewingEstimate.amount)}
                   </p>
                 </div>
@@ -721,21 +726,21 @@ const ClientEstimateRequest = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-slate-600">
                     Created Date
                   </label>
-                  <p className="mt-1 p-2 bg-gray-50 rounded">
+                  <p className="mt-1 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-sm">
                     {formatDate(viewingEstimate.createdDate)}
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-slate-600">
                     Status
                   </label>
                   <p className="mt-1">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                         viewingEstimate.status
                       )}`}
                     >
@@ -747,10 +752,10 @@ const ClientEstimateRequest = () => {
 
               {viewingEstimate.sentDate && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-slate-600">
                     Sent Date
                   </label>
-                  <p className="mt-1 p-2 bg-gray-50 rounded">
+                  <p className="mt-1 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-sm">
                     {formatDate(viewingEstimate.sentDate)}
                   </p>
                 </div>
@@ -758,10 +763,10 @@ const ClientEstimateRequest = () => {
 
               {viewingEstimate.responseDate && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-slate-600">
                     Response Date
                   </label>
-                  <p className="mt-1 p-2 bg-gray-50 rounded">
+                  <p className="mt-1 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-sm">
                     {formatDate(viewingEstimate.responseDate)}
                   </p>
                 </div>
@@ -769,10 +774,10 @@ const ClientEstimateRequest = () => {
 
               {viewingEstimate.notes && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-slate-600">
                     Admin Notes
                   </label>
-                  <p className="mt-1 p-2 bg-gray-50 rounded whitespace-pre-wrap">
+                  <p className="mt-1 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-sm whitespace-pre-wrap">
                     {viewingEstimate.notes}
                   </p>
                 </div>
@@ -780,10 +785,10 @@ const ClientEstimateRequest = () => {
 
               {viewingEstimate.clientResponseNotes && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-sm font-medium text-slate-600">
                     Your Response Notes
                   </label>
-                  <p className="mt-1 p-2 bg-gray-50 rounded whitespace-pre-wrap">
+                  <p className="mt-1 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-sm whitespace-pre-wrap">
                     {viewingEstimate.clientResponseNotes}
                   </p>
                 </div>
@@ -793,7 +798,7 @@ const ClientEstimateRequest = () => {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setViewingEstimate(null)}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 Close
               </button>
@@ -804,36 +809,36 @@ const ClientEstimateRequest = () => {
 
       {/* Respond to Estimate Modal */}
       {respondingEstimate && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 max-w-md w-full">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">Respond to Estimate</h3>
+              <h3 className="text-xl font-bold text-slate-900">Respond to Estimate</h3>
               <button
                 onClick={() => {
                   setRespondingEstimate(null);
                   setResponseNotes("");
                 }}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-600"
               >
                 &times;
               </button>
             </div>
 
             <div className="mb-4">
-              <p className="font-medium">{respondingEstimate.projectName}</p>
-              <p className="text-gray-600">
+              <p className="font-medium text-slate-900">{respondingEstimate.projectName}</p>
+              <p className="text-slate-500 tabular-nums">
                 {formatCurrency(respondingEstimate.amount)}
               </p>
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-slate-600 mb-2">
                 Response Notes (Optional)
               </label>
               <textarea
                 value={responseNotes}
                 onChange={(e) => setResponseNotes(e.target.value)}
-                className="w-full p-2 border rounded"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 rows={3}
                 placeholder="Add any notes about your response..."
               />
@@ -843,7 +848,7 @@ const ClientEstimateRequest = () => {
               <button
                 onClick={() => handleEstimateResponse("Rejected")}
                 disabled={isResponding}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               >
                 {isResponding ? "Processing..." : "Reject Estimate"}
               </button>
@@ -851,7 +856,7 @@ const ClientEstimateRequest = () => {
               <button
                 onClick={() => handleEstimateResponse("Accepted")}
                 disabled={isResponding}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                className="rounded-xl bg-green-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               >
                 {isResponding ? "Processing..." : "Accept Estimate"}
               </button>
@@ -859,6 +864,7 @@ const ClientEstimateRequest = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

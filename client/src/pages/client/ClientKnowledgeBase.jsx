@@ -249,10 +249,10 @@ const ClientKnowledgeBasePage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 md:p-8 flex items-center justify-center">
         <div className="flex flex-col items-center justify-center">
-          <div className="animate-pulse bg-gray-300 h-12 w-12 rounded-full mb-4"></div>
-          <div className="text-gray-600 font-medium">
+          <div className="animate-pulse bg-slate-300 h-12 w-12 rounded-full mb-4"></div>
+          <div className="text-slate-600 font-medium">
             Loading knowledge base...
           </div>
         </div>
@@ -261,8 +261,8 @@ const ClientKnowledgeBasePage = () => {
   }
 
   return (
-    <div className=" flex flex-col items-center p-2">
-      <div className="w-full">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white flex flex-col items-center p-4 sm:p-6">
+      <div className="w-full space-y-6">
         {/* Header */}
         <div className="mb-8 text-center">
           <div className="flex items-center justify-center mb-4">
@@ -273,13 +273,13 @@ const ClientKnowledgeBasePage = () => {
                     ? goBackToGroupArticles
                     : goBackToGroups
                 }
-                className="flex items-center text-gray-600 hover:text-gray-800 mr-3"
+                className="flex items-center text-slate-600 hover:text-slate-900 mr-3"
               >
                 <FaArrowLeft className="mr-1" />
                 Back
               </button>
             )}
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">
               {view === "groups" && "Knowledge Base"}
               {view === "group-articles" && selectedGroupName}
               {view === "article-detail" && selectedArticle?.title}
@@ -290,21 +290,21 @@ const ClientKnowledgeBasePage = () => {
           {view !== "article-detail" && (
             <div className="relative max-w-2xl mx-auto mb-8">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaSearch className="h-5 w-5 text-gray-400" />
+                <FaSearch className="h-5 w-5 text-slate-400" />
               </div>
               <input
                 type="text"
                 placeholder="Search articles..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="block w-full pl-10 pr-3 py-3 rounded-xl border border-slate-200 bg-slate-50/80 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:border-transparent"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm("")}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                 >
-                  <FaTimes className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                  <FaTimes className="h-4 w-4 text-slate-400 hover:text-slate-600" />
                 </button>
               )}
             </div>
@@ -319,24 +319,24 @@ const ClientKnowledgeBasePage = () => {
                 <div
                   key={group}
                   onClick={() => handleGroupSelect(group)}
-                  className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                  className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow cursor-pointer"
                 >
                   <div className="flex items-center mb-4">
-                    <div className="p-2 bg-gray-100 rounded-lg mr-4">
-                      <FaFolder className="text-xl text-gray-600" />
+                    <div className="p-2 bg-slate-100 rounded-xl mr-4">
+                      <FaFolder className="text-xl text-slate-600" />
                     </div>
-                    <h2 className="text-lg font-semibold text-gray-800">
+                    <h2 className="text-lg font-semibold text-slate-900">
                       {group}
                     </h2>
                   </div>
-                  <div className="flex justify-between items-center text-gray-600">
+                  <div className="flex justify-between items-center text-slate-600">
                     <span>
                       {group === "All"
                         ? articles.length
                         : articles.filter((a) => a.group === group).length}{" "}
                       articles
                     </span>
-                    <FaChevronRight className="text-gray-400" />
+                    <FaChevronRight className="text-slate-400" />
                   </div>
                 </div>
               ))}
@@ -344,8 +344,8 @@ const ClientKnowledgeBasePage = () => {
 
             {/* Empty State for Groups View */}
             {filteredArticles.length === 0 && searchTerm && (
-              <div className="bg-white rounded-lg border border-gray-200 p-8 text-center mt-8">
-                <p className="text-gray-500 mb-2">
+              <div className="rounded-3xl border border-white/60 bg-white/80 p-8 text-center mt-8 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+                <p className="text-slate-500 mb-2">
                   No articles found matching your search.
                 </p>
                 <button
@@ -373,33 +373,33 @@ const ClientKnowledgeBasePage = () => {
                   <div
                     key={article._id}
                     onClick={() => handleArticleSelect(article)}
-                    className="bg-white rounded-lg border border-gray-200 p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                    className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow cursor-pointer"
                   >
                     <div className="flex items-start">
-                      <div className="p-2 bg-gray-100 rounded-lg mr-4 mt-1">
-                        <FaFileAlt className="text-lg text-gray-600" />
+                      <div className="p-2 bg-slate-100 rounded-xl mr-4 mt-1">
+                        <FaFileAlt className="text-lg text-slate-600" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-medium text-gray-800 mb-2">
+                        <h3 className="text-lg font-medium text-slate-900 mb-2">
                           {article.title}
                         </h3>
-                        <p className="text-gray-600 text-sm line-clamp-2">
+                        <p className="text-slate-600 text-sm line-clamp-2">
                           {article.content.substring(0, 150)}
                           {article.content.length > 150 ? "..." : ""}
                         </p>
                         {selectedGroup === "All" && (
-                          <span className="inline-block bg-gray-100 text-gray-700 text-xs font-medium px-2 py-1 rounded mt-2">
+                          <span className="inline-block bg-slate-100 text-slate-700 text-xs font-medium px-3 py-1 rounded-full mt-2">
                             {article.group}
                           </span>
                         )}
                       </div>
-                      <FaChevronRight className="text-gray-400 mt-2" />
+                      <FaChevronRight className="text-slate-400 mt-2" />
                     </div>
                   </div>
                 ))
             ) : (
-              <div className="bg-white rounded-lg border border-gray-200 p-8 text-center">
-                <p className="text-gray-500">
+              <div className="rounded-3xl border border-white/60 bg-white/80 p-8 text-center shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+                <p className="text-slate-500">
                   No articles found{" "}
                   {searchTerm ? "matching your search" : "in this category"}.
                 </p>
@@ -416,18 +416,18 @@ const ClientKnowledgeBasePage = () => {
 
         {/* Article Detail View */}
         {view === "article-detail" && selectedArticle && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
             <div className="mb-4">
-              <span className="inline-block bg-gray-100 text-gray-700 text-sm font-medium px-3 py-1 rounded">
+              <span className="inline-block bg-slate-100 text-slate-700 text-sm font-medium px-3 py-1 rounded-full">
                 {selectedArticle.group}
               </span>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">
               {selectedArticle.title}
             </h2>
 
-            <div className="prose max-w-none text-gray-700 mb-8">
+            <div className="prose max-w-none text-slate-700 mb-8">
               {selectedArticle.content.split("\n").map((paragraph, index) => (
                 <p key={index} className="mb-4">
                   {paragraph}
@@ -436,20 +436,20 @@ const ClientKnowledgeBasePage = () => {
             </div>
 
             {/* Voting */}
-            <div className="border-t pt-6 mt-6">
-              <p className="text-sm font-medium text-gray-700 mb-3">
+            <div className="border-t border-slate-200/70 pt-6 mt-6">
+              <p className="text-sm font-medium text-slate-700 mb-3">
                 Was this article helpful?
               </p>
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => handleVote(selectedArticle._id, "helpful")}
                   disabled={userVotes[selectedArticle._id]}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl ${
                     userVotes[selectedArticle._id] === "helpful"
                       ? "bg-green-100 text-green-800"
                       : userVotes[selectedArticle._id]
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-100 text-gray-700 hover:bg-green-50"
+                      ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                      : "bg-slate-100 text-slate-700 hover:bg-green-50"
                   }`}
                 >
                   <FaThumbsUp className="text-sm" />
@@ -459,12 +459,12 @@ const ClientKnowledgeBasePage = () => {
                 <button
                   onClick={() => handleVote(selectedArticle._id, "notHelpful")}
                   disabled={userVotes[selectedArticle._id]}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg ${
+                  className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl ${
                     userVotes[selectedArticle._id] === "notHelpful"
                       ? "bg-red-100 text-red-800"
                       : userVotes[selectedArticle._id]
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-gray-100 text-gray-700 hover:bg-red-50"
+                      ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                      : "bg-slate-100 text-slate-700 hover:bg-red-50"
                   }`}
                 >
                   <FaThumbsDown className="text-sm" />
@@ -474,7 +474,7 @@ const ClientKnowledgeBasePage = () => {
 
               {/* Show voting status */}
               {userVotes[selectedArticle._id] && (
-                <p className="text-xs text-gray-500 mt-3">
+                <p className="text-xs text-slate-500 mt-3">
                   You voted this article as{" "}
                   <span className="font-medium">
                     {userVotes[selectedArticle._id] === "helpful"

@@ -211,38 +211,39 @@ const ClientRegistration = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-8 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      {/* Aurora blobs */}
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-500/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-600/30 blur-3xl" />
+
+      {/* Brand chip */}
+      <div className="relative mb-5 h-14 w-14 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg">
+        <span className="text-2xl font-bold text-white">A</span>
+      </div>
+
       {/* Title */}
-      <div className="text-center mb-6">
+      <div className="relative text-center mb-6">
         <h2 className="text-2xl font-bold text-white">Welcome to CRM</h2>
-        <p className="text-sm text-gray-300">
+        <p className="text-sm text-slate-300">
           Register your new client account
         </p>
       </div>
 
       {/* Registration Card */}
-      <div className="w-full max-w-4xl bg-[#0c123d] bg-opacity-80 p-6 rounded-xl shadow-xl text-white">
+      <div className="relative w-full max-w-4xl rounded-3xl border border-white/10 bg-white/[0.06] p-7 text-white shadow-[0_30px_90px_rgba(2,6,23,.6)] backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {/* Customer Code Validation */}
-          <div className="mb-6 p-4 bg-[#10194f] rounded-lg">
+          <div className="mb-6 p-4 bg-white/[0.04] border border-white/10 rounded-2xl">
             <h3 className="text-lg font-semibold text-white mb-3">
               Step 1: Validate Your Customer Code
             </h3>
 
             <div className="flex items-center gap-3 mt-1">
               <div className="flex-1">
-                <label className="block text-sm mb-1">Customer Code</label>
+                <label className="block text-sm text-slate-300 mb-1">Customer Code</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiKey className="text-gray-400" />
+                    <FiKey className="text-slate-400" />
                   </div>
                   <input
                     type="text"
@@ -252,17 +253,17 @@ const ClientRegistration = () => {
                       setCustomerCode(e.target.value.toUpperCase())
                     }
                     disabled={codeValidated}
-                    className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#0a0f30] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                    className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 ${
                       codeError
-                        ? "focus:ring-red-500 border border-red-500"
-                        : "focus:ring-blue-500"
+                        ? "focus:ring-red-500 border-red-500"
+                        : "focus:ring-sky-400/50"
                     } ${codeValidated ? "opacity-70" : ""}`}
                   />
                 </div>
                 {codeError && (
                   <p className="text-red-400 text-xs mt-1">{codeError}</p>
                 )}
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-slate-400 mt-1">
                   This code was provided by your account manager
                 </p>
               </div>
@@ -271,7 +272,7 @@ const ClientRegistration = () => {
                 type="button"
                 onClick={validateCode}
                 disabled={validatingCode || codeValidated}
-                className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition disabled:opacity-50"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-sm font-semibold shadow-md hover:brightness-110 transition disabled:opacity-50"
               >
                 {validatingCode
                   ? "Validating..."
@@ -282,7 +283,7 @@ const ClientRegistration = () => {
             </div>
 
             {customerInfo && (
-              <div className="mt-4 p-3 bg-green-900/20 rounded border border-green-800/50">
+              <div className="mt-4 p-3 bg-green-500/10 rounded-xl border border-green-400/30">
                 <p className="text-green-400 text-sm">
                   ✓ Validated for: <strong>{customerInfo.company}</strong> (
                   {customerInfo.contact})
@@ -297,16 +298,16 @@ const ClientRegistration = () => {
               <div className="flex flex-col md:flex-row gap-8">
                 {/* Left Column - Primary Contact Information */}
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-white/10">
                     Primary Contact Information
                   </h3>
                   <div className="space-y-4">
                     {/* Name */}
                     <div>
-                      <label className="block text-sm mb-1">Name</label>
+                      <label className="block text-sm text-slate-300 mb-1">Name</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiUser className="text-gray-400" />
+                          <FiUser className="text-slate-400" />
                         </div>
                         <input
                           type="text"
@@ -315,10 +316,10 @@ const ClientRegistration = () => {
                           value={formData.name}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                          className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 ${
                             errors.name
                               ? "focus:ring-red-500"
-                              : "focus:ring-gray-700"
+                              : "focus:ring-sky-400/50"
                           }`}
                         />
                       </div>
@@ -331,10 +332,10 @@ const ClientRegistration = () => {
 
                     {/* Email */}
                     <div>
-                      <label className="block text-sm mb-1">Email</label>
+                      <label className="block text-sm text-slate-300 mb-1">Email</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiMail className="text-gray-400" />
+                          <FiMail className="text-slate-400" />
                         </div>
                         <input
                           type="email"
@@ -343,10 +344,10 @@ const ClientRegistration = () => {
                           value={formData.email}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                          className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 ${
                             errors.email
                               ? "focus:ring-red-500"
-                              : "focus:ring-gray-700"
+                              : "focus:ring-sky-400/50"
                           }`}
                         />
                       </div>
@@ -359,10 +360,10 @@ const ClientRegistration = () => {
 
                     {/* Phone */}
                     <div>
-                      <label className="block text-sm mb-1">Phone</label>
+                      <label className="block text-sm text-slate-300 mb-1">Phone</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiPhone className="text-gray-400" />
+                          <FiPhone className="text-slate-400" />
                         </div>
                         <input
                           type="tel"
@@ -371,10 +372,10 @@ const ClientRegistration = () => {
                           value={formData.phone}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                          className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 ${
                             errors.phone
                               ? "focus:ring-red-500"
-                              : "focus:ring-gray-700"
+                              : "focus:ring-sky-400/50"
                           }`}
                         />
                       </div>
@@ -387,10 +388,10 @@ const ClientRegistration = () => {
 
                     {/* Website */}
                     <div>
-                      <label className="block text-sm mb-1">Website</label>
+                      <label className="block text-sm text-slate-300 mb-1">Website</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiGlobe className="text-gray-400" />
+                          <FiGlobe className="text-slate-400" />
                         </div>
                         <input
                           type="url"
@@ -398,17 +399,17 @@ const ClientRegistration = () => {
                           placeholder="Enter your website address"
                           value={formData.website}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-700"
+                          className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400/50"
                         />
                       </div>
                     </div>
 
                     {/* Position */}
                     <div>
-                      <label className="block text-sm mb-1">Position</label>
+                      <label className="block text-sm text-slate-300 mb-1">Position</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiBriefcase className="text-gray-400" />
+                          <FiBriefcase className="text-slate-400" />
                         </div>
                         <input
                           type="text"
@@ -416,17 +417,17 @@ const ClientRegistration = () => {
                           placeholder="Enter your position"
                           value={formData.position}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-700"
+                          className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400/50"
                         />
                       </div>
                     </div>
 
                     {/* Password */}
                     <div>
-                      <label className="block text-sm mb-1">Password</label>
+                      <label className="block text-sm text-slate-300 mb-1">Password</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiLock className="text-gray-400" />
+                          <FiLock className="text-slate-400" />
                         </div>
 
                         <input
@@ -436,9 +437,9 @@ const ClientRegistration = () => {
                           value={formData.password}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-10 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 
+                          className={`w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm
       focus:outline-none focus:ring-2 ${
-        errors.password ? "focus:ring-red-500" : "focus:ring-gray-700"
+        errors.password ? "focus:ring-red-500" : "focus:ring-sky-400/50"
       }`}
                         />
 
@@ -448,9 +449,9 @@ const ClientRegistration = () => {
                           onClick={() => setShowPassword(!showPassword)}
                         >
                           {showPassword ? (
-                            <FiEyeOff className="text-gray-300" />
+                            <FiEyeOff className="text-slate-300" />
                           ) : (
-                            <FiEye className="text-gray-300" />
+                            <FiEye className="text-slate-300" />
                           )}
                         </div>
                       </div>
@@ -464,12 +465,12 @@ const ClientRegistration = () => {
 
                     {/* Confirm Password */}
                     <div>
-                      <label className="block text-sm mb-1">
+                      <label className="block text-sm text-slate-300 mb-1">
                         Confirm Password
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiLock className="text-gray-400" />
+                          <FiLock className="text-slate-400" />
                         </div>
 
                         <input
@@ -479,9 +480,9 @@ const ClientRegistration = () => {
                           value={formData.confirmPassword}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-10 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 
+                          className={`w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm
       focus:outline-none focus:ring-2 ${
-        errors.confirmPassword ? "focus:ring-red-500" : "focus:ring-gray-700"
+        errors.confirmPassword ? "focus:ring-red-500" : "focus:ring-sky-400/50"
       }`}
                         />
 
@@ -493,9 +494,9 @@ const ClientRegistration = () => {
                           }
                         >
                           {showConfirmPassword ? (
-                            <FiEyeOff className="text-gray-300" />
+                            <FiEyeOff className="text-slate-300" />
                           ) : (
-                            <FiEye className="text-gray-300" />
+                            <FiEye className="text-slate-300" />
                           )}
                         </div>
                       </div>
@@ -511,16 +512,16 @@ const ClientRegistration = () => {
 
                 {/* Right Column - Company Information */}
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-gray-700">
+                  <h3 className="text-lg font-semibold text-white mb-4 pb-2 border-b border-white/10">
                     Company Information
                   </h3>
                   <div className="space-y-4">
                     {/* Company Name */}
                     <div>
-                      <label className="block text-sm mb-1">Company Name</label>
+                      <label className="block text-sm text-slate-300 mb-1">Company Name</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiHome className="text-gray-400" />
+                          <FiHome className="text-slate-400" />
                         </div>
                         <input
                           type="text"
@@ -529,10 +530,10 @@ const ClientRegistration = () => {
                           value={formData.companyName}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                          className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 ${
                             errors.companyName
                               ? "focus:ring-red-500"
-                              : "focus:ring-gray-700"
+                              : "focus:ring-sky-400/50"
                           }`}
                         />
                       </div>
@@ -545,10 +546,10 @@ const ClientRegistration = () => {
 
                     {/* VAT Number */}
                     <div>
-                      <label className="block text-sm mb-1">VAT Number</label>
+                      <label className="block text-sm text-slate-300 mb-1">VAT Number</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiBriefcase className="text-gray-400" />
+                          <FiBriefcase className="text-slate-400" />
                         </div>
                         <input
                           type="text"
@@ -556,17 +557,17 @@ const ClientRegistration = () => {
                           placeholder="Enter your vat number"
                           value={formData.vatNumber}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-700"
+                          className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400/50"
                         />
                       </div>
                     </div>
 
                     {/* Company Phone */}
                     <div>
-                      <label className="block text-sm mb-1">Phone</label>
+                      <label className="block text-sm text-slate-300 mb-1">Phone</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiPhone className="text-gray-400" />
+                          <FiPhone className="text-slate-400" />
                         </div>
                         <input
                           type="tel"
@@ -575,10 +576,10 @@ const ClientRegistration = () => {
                           value={formData.companyPhone}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                          className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 ${
                             errors.companyPhone
                               ? "focus:ring-red-500"
-                              : "focus:ring-gray-700"
+                              : "focus:ring-sky-400/50"
                           }`}
                         />
                       </div>
@@ -591,10 +592,10 @@ const ClientRegistration = () => {
 
                     {/* Country */}
                     <div>
-                      <label className="block text-sm mb-1">Country</label>
+                      <label className="block text-sm text-slate-300 mb-1">Country</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiMapPin className="text-gray-400" />
+                          <FiMapPin className="text-slate-400" />
                         </div>
                         <input
                           type="text"
@@ -602,17 +603,17 @@ const ClientRegistration = () => {
                           placeholder="Enter your country"
                           value={formData.country}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-700"
+                          className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400/50"
                         />
                       </div>
                     </div>
 
                     {/* City */}
                     <div>
-                      <label className="block text-sm mb-1">City</label>
+                      <label className="block text-sm text-slate-300 mb-1">City</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiMapPin className="text-gray-400" />
+                          <FiMapPin className="text-slate-400" />
                         </div>
                         <input
                           type="text"
@@ -620,17 +621,17 @@ const ClientRegistration = () => {
                           placeholder="Enter your city"
                           value={formData.city}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-700"
+                          className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400/50"
                         />
                       </div>
                     </div>
 
                     {/* Address */}
                     <div>
-                      <label className="block text-sm mb-1">Address</label>
+                      <label className="block text-sm text-slate-300 mb-1">Address</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiMapPin className="text-gray-400" />
+                          <FiMapPin className="text-slate-400" />
                         </div>
                         <input
                           type="text"
@@ -638,17 +639,17 @@ const ClientRegistration = () => {
                           placeholder="Enter your address"
                           value={formData.address}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-700"
+                          className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400/50"
                         />
                       </div>
                     </div>
 
                     {/* Zip Code */}
                     <div>
-                      <label className="block text-sm mb-1">Zip Code</label>
+                      <label className="block text-sm text-slate-300 mb-1">Zip Code</label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <FiMapPin className="text-gray-400" />
+                          <FiMapPin className="text-slate-400" />
                         </div>
                         <input
                           type="text"
@@ -656,7 +657,7 @@ const ClientRegistration = () => {
                           placeholder="Enter your zip code"
                           value={formData.zipCode}
                           onChange={handleChange}
-                          className="w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-700"
+                          className="w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400/50"
                         />
                       </div>
                     </div>
@@ -668,8 +669,10 @@ const ClientRegistration = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
+                className={`w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-md transition ${
+                  loading
+                    ? "bg-slate-600 opacity-70 cursor-not-allowed"
+                    : "bg-gradient-to-r from-sky-500 to-indigo-600 hover:brightness-110"
                 }`}
               >
                 {loading ? "Registering..." : "REGISTER"}
@@ -678,11 +681,11 @@ const ClientRegistration = () => {
           )}
 
           {/* Login Link */}
-          <p className="text-center text-sm text-gray-400 mt-4">
+          <p className="text-center text-sm text-slate-400 mt-4">
             Already have an account?{" "}
             <Link
               to="/client/login"
-              className="text-white hover:underline font-medium"
+              className="text-sky-400 hover:text-sky-300 font-medium"
             >
               LOG IN
             </Link>

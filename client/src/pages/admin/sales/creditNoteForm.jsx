@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { FaPlus, FaTimes, FaSearch, FaChevronRight } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { formatBDT, CURRENCY_SYMBOL } from "../../../utils/currency";
 
 const CreditNoteForm = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -20,7 +21,7 @@ const CreditNoteForm = () => {
     billTo: "",
     shipTo: "",
     creditNoteDate: new Date().toISOString().split("T")[0],
-    currency: "USD",
+    currency: "BDT",
     status: "Draft",
     discountType: "percent",
     discountValue: 0,
@@ -369,11 +370,14 @@ const CreditNoteForm = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">New Credit Note</h1>
-        <div className="flex items-center text-gray-600">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 space-y-6">
+      {/* Hero band */}
+      <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-300">
+          Sales
+        </p>
+        <h2 className="text-2xl font-bold text-white mt-1">New Credit Note</h2>
+        <div className="flex items-center text-slate-300 mt-2 text-sm">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Credit Notes</span>
@@ -383,14 +387,14 @@ const CreditNoteForm = () => {
       </div>
 
       {/* Main Form Container */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+      <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         {/* Two-column form layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column */}
           <div>
             {/* Customer */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Customer*
               </label>
               <div className="relative">
@@ -398,18 +402,18 @@ const CreditNoteForm = () => {
                   type="text"
                   value={formData.customer}
                   onChange={handleCustomerSearchChange}
-                  className={`w-full border px-3 py-2 rounded text-sm ${
-                    errors.customer ? "border-red-500" : "border-gray-300"
+                  className={`w-full rounded-xl border bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 ${
+                    errors.customer ? "border-red-500" : "border-slate-200"
                   }`}
                   placeholder="Search customer by company name..."
                 />
-                <FaSearch className="absolute right-3 top-3 text-gray-400 text-sm" />
+                <FaSearch className="absolute right-3 top-3 text-slate-400 text-sm" />
                 {showCustomerDropdown && customerSearchResults.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg max-h-60 overflow-auto">
                     {customerSearchResults.map((customer, index) => (
                       <div
                         key={index}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        className="px-3 py-2 hover:bg-slate-100 cursor-pointer"
                         onClick={() => handleSelectCustomer(customer)}
                       >
                         <div className="font-medium">{customer.company}</div>
@@ -423,7 +427,7 @@ const CreditNoteForm = () => {
                 {showCustomerDropdown &&
                   customerSearchResults.length === 0 &&
                   customerSearchTerm.length >= 2 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                    <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg">
                       <div className="px-3 py-2 text-gray-500">
                         No customers found
                       </div>
@@ -437,14 +441,14 @@ const CreditNoteForm = () => {
 
             {/* Bill To */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Bill To
               </label>
               <textarea
                 name="billTo"
                 value={formData.billTo}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 rows="3"
                 placeholder="Billing address"
               />
@@ -452,14 +456,14 @@ const CreditNoteForm = () => {
 
             {/* Ship To */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Ship To
               </label>
               <textarea
                 name="shipTo"
                 value={formData.shipTo}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 rows="3"
                 placeholder="Shipping address"
               />
@@ -467,7 +471,7 @@ const CreditNoteForm = () => {
 
             {/* Date field */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Credit Note Date
               </label>
               <input
@@ -475,7 +479,7 @@ const CreditNoteForm = () => {
                 name="creditNoteDate"
                 value={formData.creditNoteDate}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               />
             </div>
           </div>
@@ -484,7 +488,7 @@ const CreditNoteForm = () => {
           <div>
             {/* Reference */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Reference
               </label>
               <input
@@ -492,14 +496,14 @@ const CreditNoteForm = () => {
                 name="reference"
                 value={formData.reference}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 placeholder="Reference number"
               />
             </div>
 
             {/* Project */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Project
               </label>
               <input
@@ -507,21 +511,21 @@ const CreditNoteForm = () => {
                 name="project"
                 value={formData.project}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 placeholder="Project name"
               />
             </div>
 
             {/* Status */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Status
               </label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               >
                 {statusOptions.map((status, i) => (
                   <option key={i} value={status}>
@@ -533,17 +537,17 @@ const CreditNoteForm = () => {
 
             {/* Currency */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Currency
               </label>
               <select
                 name="currency"
                 value={formData.currency}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               >
-                <option value="USD">USD</option>
                 <option value="BDT">BDT</option>
+                <option value="USD">USD</option>
                 <option value="EUR">EUR</option>
               </select>
             </div>
@@ -551,21 +555,21 @@ const CreditNoteForm = () => {
             {/* Discount */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   Discount Type
                 </label>
                 <select
                   name="discountType"
                   value={formData.discountType}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="percent">Percentage</option>
                   <option value="fixed">Fixed Amount</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   Discount Value
                 </label>
                 <input
@@ -573,7 +577,7 @@ const CreditNoteForm = () => {
                   name="discountValue"
                   value={formData.discountValue}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   min="0"
                   step={formData.discountType === "percent" ? "1" : "0.01"}
                 />
@@ -582,14 +586,14 @@ const CreditNoteForm = () => {
 
             {/* Admin Note */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Admin Note
               </label>
               <textarea
                 name="adminNote"
                 value={formData.adminNote}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 rows="3"
                 placeholder="Internal notes about this credit note"
               />
@@ -599,14 +603,19 @@ const CreditNoteForm = () => {
       </div>
 
       {/* Items Database Management Section */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+      <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Item Database</h3>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              Catalog
+            </p>
+            <h3 className="text-lg font-semibold text-slate-900">Item Database</h3>
+          </div>
           <button
             onClick={() => setShowItemForm(true)}
-            className="bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 flex items-center"
+            className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
           >
-            <FaPlus /> <span className="ml-1">Add New Item</span>
+            <FaPlus /> <span>Add New Item</span>
           </button>
         </div>
 
@@ -614,25 +623,25 @@ const CreditNoteForm = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-3 font-medium">Description</th>
-                <th className="p-3 font-medium">Rate</th>
-                <th className="p-3 font-medium">Tax 1</th>
-                <th className="p-3 font-medium">Tax 2</th>
-                <th className="p-3 font-medium">Action</th>
+              <tr className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left">
+                <th className="p-3 rounded-l-xl">Description</th>
+                <th className="p-3">Rate</th>
+                <th className="p-3">Tax 1</th>
+                <th className="p-3">Tax 2</th>
+                <th className="p-3 rounded-r-xl">Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200/70">
               {databaseItems.map((item) => (
-                <tr key={item._id}>
-                  <td className="p-3">{item.description}</td>
-                  <td className="p-3">{item.rate}</td>
-                  <td className="p-3">{item.tax1}%</td>
-                  <td className="p-3">{item.tax2}%</td>
+                <tr key={item._id} className="hover:bg-white/70 transition-colors">
+                  <td className="p-3 text-slate-700">{item.description}</td>
+                  <td className="p-3 text-slate-700 tabular-nums">{item.rate}</td>
+                  <td className="p-3 text-slate-700">{item.tax1}%</td>
+                  <td className="p-3 text-slate-700">{item.tax2}%</td>
                   <td className="p-3">
                     <button
                       onClick={() => addItemFromDatabase(item)}
-                      className="text-blue-500 hover:text-blue-700 px-2 py-1 border border-blue-500 rounded hover:bg-blue-50"
+                      className="text-sm font-semibold text-slate-900 hover:text-slate-600"
                     >
                       Add to Credit Note
                     </button>
@@ -645,9 +654,14 @@ const CreditNoteForm = () => {
       </div>
 
       {/* Credit Note Items Section */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+      <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Credit Note Items</h3>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              Line Items
+            </p>
+            <h3 className="text-lg font-semibold text-slate-900">Credit Note Items</h3>
+          </div>
           <button
             onClick={() => {
               setCreditNoteItems([
@@ -662,9 +676,9 @@ const CreditNoteForm = () => {
                 },
               ]);
             }}
-            className="bg-blue-500 text-white px-3 py-2 rounded text-sm hover:bg-blue-600 flex items-center"
+            className="rounded-xl border border-dashed border-slate-300 text-slate-600 px-5 py-2.5 text-sm font-semibold hover:bg-white flex items-center gap-2"
           >
-            <FaPlus /> <span className="ml-1">Add Custom Item</span>
+            <FaPlus /> <span>Add Custom Item</span>
           </button>
         </div>
         {errors.items && (
@@ -675,21 +689,21 @@ const CreditNoteForm = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-100 text-left">
-                <th className="p-3 font-medium">#</th>
-                <th className="p-3 font-medium">Item Description</th>
-                <th className="p-3 font-medium">Qty</th>
-                <th className="p-3 font-medium">Rate</th>
-                <th className="p-3 font-medium">Tax 1 (%)</th>
-                <th className="p-3 font-medium">Tax 2 (%)</th>
-                <th className="p-3 font-medium">Amount</th>
-                <th className="p-3 font-medium">Action</th>
+              <tr className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left">
+                <th className="p-3 rounded-l-xl">#</th>
+                <th className="p-3">Item Description</th>
+                <th className="p-3">Qty</th>
+                <th className="p-3">Rate</th>
+                <th className="p-3">Tax 1 (%)</th>
+                <th className="p-3">Tax 2 (%)</th>
+                <th className="p-3 text-right">Amount</th>
+                <th className="p-3 rounded-r-xl">Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200/70">
               {creditNoteItems.map((item, i) => (
-                <tr key={i}>
-                  <td className="p-3">{i + 1}</td>
+                <tr key={i} className="hover:bg-white/70 transition-colors">
+                  <td className="p-3 text-slate-500 tabular-nums">{i + 1}</td>
                   <td className="p-3">
                     <input
                       type="text"
@@ -697,10 +711,10 @@ const CreditNoteForm = () => {
                       onChange={(e) =>
                         handleItemChange(i, "description", e.target.value)
                       }
-                      className={`w-full border px-2 py-1 rounded ${
+                      className={`w-full rounded-lg border bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 ${
                         errors[`item-${i}-description`]
                           ? "border-red-500"
-                          : "border-gray-300"
+                          : "border-slate-200"
                       }`}
                       placeholder="Item description"
                       required
@@ -718,10 +732,10 @@ const CreditNoteForm = () => {
                       onChange={(e) =>
                         handleItemChange(i, "quantity", e.target.value)
                       }
-                      className={`w-full border px-2 py-1 rounded ${
+                      className={`w-full rounded-lg border bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 ${
                         errors[`item-${i}-quantity`]
                           ? "border-red-500"
-                          : "border-gray-300"
+                          : "border-slate-200"
                       }`}
                       min="1"
                       step="1"
@@ -740,10 +754,10 @@ const CreditNoteForm = () => {
                       onChange={(e) =>
                         handleItemChange(i, "rate", e.target.value)
                       }
-                      className={`w-full border px-2 py-1 rounded ${
+                      className={`w-full rounded-lg border bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 ${
                         errors[`item-${i}-rate`]
                           ? "border-red-500"
-                          : "border-gray-300"
+                          : "border-slate-200"
                       }`}
                       min="0"
                       step="0.01"
@@ -761,7 +775,7 @@ const CreditNoteForm = () => {
                       onChange={(e) =>
                         handleItemChange(i, "tax1", e.target.value)
                       }
-                      className="w-full border px-2 py-1 rounded"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     >
                       {taxOptions.map((option, i) => (
                         <option key={i} value={option}>
@@ -776,7 +790,7 @@ const CreditNoteForm = () => {
                       onChange={(e) =>
                         handleItemChange(i, "tax2", e.target.value)
                       }
-                      className="w-full border px-2 py-1 rounded"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     >
                       {taxOptions.map((option, i) => (
                         <option key={i} value={option}>
@@ -785,11 +799,11 @@ const CreditNoteForm = () => {
                       ))}
                     </select>
                   </td>
-                  <td className="p-3 text-right">${item.amount.toFixed(2)}</td>
+                  <td className="p-3 text-right font-semibold text-slate-900 tabular-nums">{formatBDT(item.amount)}</td>
                   <td className="p-3 text-center">
                     <button
                       onClick={() => deleteItem(i)}
-                      className="text-red-500 hover:text-red-700 p-1"
+                      className="text-red-600 hover:text-red-800 p-1"
                       title="Remove"
                       type="button"
                     >
@@ -805,45 +819,45 @@ const CreditNoteForm = () => {
 
       {/* Totals Section */}
       <div className="flex justify-end">
-        <div className="bg-white shadow-md rounded-lg p-6 w-full md:w-1/3">
-          <div className="flex justify-between py-2 border-b">
-            <span className="font-medium">Subtotal:</span>
-            <span>${subtotal.toFixed(2)}</span>
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur w-full md:w-1/3">
+          <div className="flex justify-between py-2 border-b border-slate-200/70">
+            <span className="font-medium text-slate-600">Subtotal:</span>
+            <span className="tabular-nums text-slate-900">{formatBDT(subtotal)}</span>
           </div>
 
-          <div className="flex justify-between items-center py-2 border-b">
+          <div className="flex justify-between items-center py-2 border-b border-slate-200/70">
             <div className="flex items-center">
-              <span className="font-medium mr-2">Discount:</span>
-              <span className="text-sm">
+              <span className="font-medium text-slate-600 mr-2">Discount:</span>
+              <span className="text-sm text-slate-600">
                 (
                 {formData.discountType === "percent"
                   ? `${formData.discountValue}%`
-                  : `$${formData.discountValue}`}
+                  : `${CURRENCY_SYMBOL} ${formData.discountValue}`}
                 )
               </span>
             </div>
             <div className="flex items-center">
               <span className="text-red-500 mr-1">-</span>
-              <span>${discount.toFixed(2)}</span>
+              <span className="tabular-nums text-slate-900">{formatBDT(discount)}</span>
             </div>
           </div>
 
-          <div className="flex justify-between py-2 font-bold text-lg mt-2">
-            <span>Total:</span>
-            <span>${total.toFixed(2)}</span>
+          <div className="flex justify-between items-baseline py-2 mt-2">
+            <span className="font-semibold text-slate-600">Total:</span>
+            <span className="text-2xl font-extrabold text-slate-900 tabular-nums">{formatBDT(total)}</span>
           </div>
         </div>
       </div>
 
       {/* Add Item Form Modal */}
       {showItemForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-            <div className="flex justify-between items-center border-b p-4">
-              <h2 className="text-xl font-semibold">Add Item</h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="rounded-3xl border border-white/60 bg-white/90 shadow-[0_30px_90px_rgba(15,23,42,.25)] backdrop-blur w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-200/70 p-5">
+              <h2 className="text-xl font-semibold text-slate-900">Add Item</h2>
               <button
                 onClick={() => setShowItemForm(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-600"
                 type="button"
               >
                 <FaTimes />
@@ -853,7 +867,7 @@ const CreditNoteForm = () => {
             <form onSubmit={saveNewItemToDatabase} className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                     Description
                   </label>
                   <input
@@ -861,23 +875,23 @@ const CreditNoteForm = () => {
                     name="description"
                     value={newItem.description}
                     onChange={handleNewItemChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     required
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Rate - USD
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
+                      Rate - BDT
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-2">$</span>
+                      <span className="absolute left-3 top-2">{CURRENCY_SYMBOL}</span>
                       <input
                         type="number"
                         name="rate"
                         value={newItem.rate}
                         onChange={handleNewItemChange}
-                        className="w-full border px-3 py-2 rounded text-sm pl-6"
+                        className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 pl-6 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                         min="0"
                         step="0.01"
                         required
@@ -885,14 +899,14 @@ const CreditNoteForm = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                       Tax 1
                     </label>
                     <select
                       name="tax1"
                       value={newItem.tax1}
                       onChange={handleNewItemChange}
-                      className="w-full border px-3 py-2 rounded text-sm"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     >
                       {taxOptions.map((option, i) => (
                         <option key={i} value={option}>
@@ -902,14 +916,14 @@ const CreditNoteForm = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                       Tax 2
                     </label>
                     <select
                       name="tax2"
                       value={newItem.tax2}
                       onChange={handleNewItemChange}
-                      className="w-full border px-3 py-2 rounded text-sm"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     >
                       {taxOptions.map((option, i) => (
                         <option key={i} value={option}>
@@ -925,13 +939,13 @@ const CreditNoteForm = () => {
                 <button
                   type="button"
                   onClick={() => setShowItemForm(false)}
-                  className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                 >
                   Close
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                  className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
                 >
                   Save Item
                 </button>
@@ -942,11 +956,11 @@ const CreditNoteForm = () => {
       )}
 
       {/* Form Buttons */}
-      <div className="mt-6 flex justify-end gap-3">
+      <div className="flex justify-end gap-3">
         <button
           onClick={() => handleSubmit(false)}
           disabled={loading}
-          className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 disabled:opacity-50"
+          className="rounded-xl border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
           type="button"
         >
           {loading ? "Saving..." : "Save Draft"}
@@ -954,7 +968,7 @@ const CreditNoteForm = () => {
         <button
           onClick={() => handleSubmit(true)}
           disabled={loading}
-          className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+          className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
           type="button"
         >
           {loading ? "Saving..." : "Save & Send"}

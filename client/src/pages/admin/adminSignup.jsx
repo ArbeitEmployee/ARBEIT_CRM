@@ -22,10 +22,10 @@ export default function AdminSignup() {
   const emailRegex = /^\S+@\S+\.\S+$/;
 
   const getInputClasses = (hasError) =>
-    `w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+    `w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 focus:outline-none focus:ring-2 ${
       hasError
-        ? "border border-red-500 focus:ring-red-400"
-        : "focus:ring-blue-400"
+        ? "border border-red-500/70 focus:ring-red-400/50 focus:border-red-400/50"
+        : "border border-white/10 focus:ring-sky-400/50 focus:border-sky-400/50"
     }`;
 
   const handleSubmit = async (e) => {
@@ -105,27 +105,39 @@ export default function AdminSignup() {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      <div className="text-center mb-6">
-        <h2 className="text-3xl font-bold text-white">Admin Registration</h2>
-        <p className="text-sm text-gray-300">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      {/* Background image */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-25"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+      {/* Aurora blobs */}
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-500/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-500/25 blur-3xl" />
+
+      <div className="relative z-10 text-center mb-6 flex flex-col items-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-2xl font-bold text-white shadow-lg">
+          A
+        </div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-sky-300/80">
+          ARBEIT CRM
+        </p>
+        <h2 className="text-2xl font-bold text-white mt-1">Admin Registration</h2>
+        <p className="text-sm text-slate-300 mt-1">
           Create your secure admin account
         </p>
       </div>
 
-      <div className="w-full max-w-sm bg-[#0c123d] bg-opacity-90 p-6 rounded-xl shadow-2xl text-white">
+      <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.06] p-7 text-white shadow-[0_30px_90px_rgba(2,6,23,.6)] backdrop-blur-xl">
         <form className="space-y-4" onSubmit={handleSubmit}>
           {/* Name */}
           <div>
-            <label className="block text-sm mb-1">Name</label>
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-300 mb-1">Name</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FiUser className="text-gray-400" />
@@ -148,7 +160,7 @@ export default function AdminSignup() {
 
           {/* Email */}
           <div>
-            <label className="block text-sm mb-1">Email</label>
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-300 mb-1">Email</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FiMail className="text-gray-400" />
@@ -178,7 +190,7 @@ export default function AdminSignup() {
 
           {/* Password */}
           <div>
-            <label className="block text-sm mb-1">Password</label>
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-300 mb-1">Password</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FiLock className="text-gray-400" />
@@ -216,7 +228,7 @@ export default function AdminSignup() {
 
           {/* Confirm Password */}
           <div>
-            <label className="block text-sm mb-1">Confirm Password</label>
+            <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-300 mb-1">Confirm Password</label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center">
                 <FiLock className="text-gray-400" />
@@ -260,15 +272,15 @@ export default function AdminSignup() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-500 hover:bg-blue-600 font-semibold text-sm py-2 rounded-md transition text-white"
+            className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 py-2.5 text-sm font-semibold text-white shadow-lg hover:brightness-110 transition"
           >
             SIGN UP
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-300 mt-3">
+        <p className="text-center text-sm text-slate-300 mt-4">
           Already have an account?{" "}
-          <Link to="/admin/login" className="text-blue-400 hover:underline">
+          <Link to="/admin/login" className="text-sky-400 hover:underline">
             Log In
           </Link>
         </p>

@@ -4,6 +4,26 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
+  motion,
+  useMotionValue,
+  useTransform,
+  animate,
+  useReducedMotion,
+} from "framer-motion";
+import {
+  FiRefreshCw,
+  FiUsers,
+  FiFileText,
+  FiFolder,
+  FiClipboard,
+  FiFile,
+  FiTrendingUp,
+  FiTrendingDown,
+  FiDollarSign,
+} from "react-icons/fi";
+import { MdOutlineLeaderboard } from "react-icons/md";
+import { formatBDT, compactBDT } from "../../utils/currency";
+import {
   BarChart,
   Bar,
   XAxis,
@@ -17,7 +37,135 @@ import {
   PieChart,
   Pie,
   Cell,
+  Area,
+  AreaChart,
 } from "recharts";
+
+/* ---------- Small presentational helpers ---------- */
+
+// Animated count-up number (respects reduced motion)
+const CountUp = ({ value, prefix = "", format = (v) => v.toLocaleString() }) => {
+  const reduce = useReducedMotion();
+  const mv = useMotionValue(0);
+  const rounded = useTransform(mv, (v) => `${prefix}${format(Math.round(v))}`);
+  const [display, setDisplay] = useState(`${prefix}${format(0)}`);
+
+  useEffect(() => {
+    if (reduce) {
+      setDisplay(`${prefix}${format(Math.round(value || 0))}`);
+      return;
+    }
+    const controls = animate(mv, value || 0, { duration: 1.1, ease: "easeOut" });
+    const unsub = rounded.on("change", (v) => setDisplay(v));
+    return () => {
+      controls.stop();
+      unsub();
+    };
+  }, [value, reduce]);
+
+  return <span className="tabular-nums">{display}</span>;
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0 },
+};
+
+const StatCard = ({ icon, label, value, accent }) => (
+  <motion.div
+    variants={cardVariants}
+    className="relative overflow-hidden rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.10)] backdrop-blur"
+  >
+    <div
+      className="absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-20 blur-2xl"
+      style={{ background: accent }}
+    />
+    <div className="flex items-center gap-4">
+      <div
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white shadow-sm"
+        style={{ background: accent }}
+      >
+        {icon}
+      </div>
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+          {label}
+        </p>
+        <p className="mt-1 text-3xl font-extrabold text-slate-900 md:text-[2.25rem] md:leading-none">
+          <CountUp value={value} />
+        </p>
+      </div>
+    </div>
+  </motion.div>
+);
+
+// Glass chart / section wrapper
+const Panel = ({ title, subtitle, action, children, className = "" }) => (
+  <div
+    className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur sm:p-6 ${className}`}
+  >
+    <div className="mb-4 flex items-center justify-between gap-3">
+      <div>
+        {subtitle && (
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            {subtitle}
+          </p>
+        )}
+        <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
+      </div>
+      {action}
+    </div>
+    {children}
+  </div>
+);
+
+// Legend/list row under pie charts
+const LegendRow = ({ items, total, formatNumber, calculatePercentage }) => (
+  <div className="space-y-2">
+    {items.map((item, index) => (
+      <div key={index} className="flex items-center justify-between text-sm">
+        <div className="flex items-center gap-2">
+          <span
+            className="h-2.5 w-2.5 rounded-full"
+            style={{ backgroundColor: item.color }}
+          />
+          <span className="text-slate-600">{item.name}</span>
+        </div>
+        <div className="text-right">
+          <span className="font-semibold tabular-nums text-slate-800">
+            {formatNumber(item.value)}
+          </span>
+          <span className="ml-2 text-xs text-slate-400 tabular-nums">
+            {calculatePercentage(item.value, total)}
+          </span>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const GlassTooltip = ({ active, payload, label, valueFormatter }) => {
+  if (!active || !payload || !payload.length) return null;
+  return (
+    <div className="rounded-xl border border-white/60 bg-white/95 px-3 py-2 shadow-lg backdrop-blur">
+      {label && (
+        <p className="mb-1 text-xs font-semibold text-slate-700">{label}</p>
+      )}
+      {payload.map((p, i) => (
+        <p key={i} className="text-xs text-slate-600">
+          <span
+            className="mr-1 inline-block h-2 w-2 rounded-full align-middle"
+            style={{ backgroundColor: p.color || p.fill }}
+          />
+          {p.name}:{" "}
+          <span className="font-semibold text-slate-900">
+            {valueFormatter ? valueFormatter(p.value) : p.value}
+          </span>
+        </p>
+      ))}
+    </div>
+  );
+};
 
 const Dashboard = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -77,15 +225,6 @@ const Dashboard = () => {
     },
   });
 
-  // Colors for charts
-  const COLORS = [
-    "#0088FE",
-    "#00C49F",
-    "#FFBB28",
-    "#FF8042",
-    "#8884D8",
-    "#82CA9D",
-  ];
   const STATUS_COLORS = {
     draft: "#9CA3AF",
     notSent: "#8884d8",
@@ -126,15 +265,6 @@ const Dashboard = () => {
       },
     };
   };
-
-  useEffect(() => {
-    const token = getAuthToken();
-    if (!token) {
-      navigate("/admin/login");
-    } else {
-      fetchDashboardData();
-    }
-  }, [navigate]);
 
   const fetchDashboardData = async () => {
     try {
@@ -345,7 +475,7 @@ const Dashboard = () => {
       // Extract available years
       const expenseYears = [
         ...new Set(
-          expensesResponse.data.expenses.map((expense) => {
+          (expensesResponse.data.expenses || []).map((expense) => {
             const dateParts = expense.date.split("-");
             if (dateParts.length === 3) {
               return parseInt(dateParts[2]);
@@ -357,7 +487,7 @@ const Dashboard = () => {
 
       const invoiceYears = [
         ...new Set(
-          invoicesResponse.data.data.map((invoice) => {
+          (invoicesResponse.data.data || []).map((invoice) => {
             const invoiceDate = new Date(
               invoice.invoiceDate || invoice.createdAt
             );
@@ -398,18 +528,18 @@ const Dashboard = () => {
 
   const processCombinedData = () => {
     const months = [
-      "January",
-      "February",
-      "March",
-      "April",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
       "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
 
     const monthlyData = months.map((month) => ({
@@ -493,13 +623,9 @@ const Dashboard = () => {
     return ((value / total) * 100).toFixed(2) + "%";
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(amount || 0);
-  };
+  const formatCurrency = (amount) => formatBDT(amount);
+
+  const compactCurrency = (amount) => compactBDT(amount);
 
   // Calculate totals for expenses vs income
   const totalExpenses = combinedData.reduce(
@@ -584,207 +710,174 @@ const Dashboard = () => {
   ];
 
   const overviewData = [
-    { name: "Leads", value: stats.leads.total, fill: "#3B82F6" },
-    { name: "Invoices", value: stats.invoices.total, fill: "#10B981" },
-    { name: "Projects", value: stats.projects.total, fill: "#8B5CF6" },
-    { name: "Proposals", value: stats.proposals.total, fill: "#F59E0B" },
-    { name: "Estimates", value: stats.estimates.total, fill: "#EF4444" },
+    { name: "Leads", value: stats.leads.total, fill: "#0ea5e9" },
+    { name: "Invoices", value: stats.invoices.total, fill: "#22c55e" },
+    { name: "Projects", value: stats.projects.total, fill: "#8b5cf6" },
+    { name: "Proposals", value: stats.proposals.total, fill: "#f59e0b" },
+    { name: "Estimates", value: stats.estimates.total, fill: "#ef4444" },
+  ];
+
+  const estimateBarData = [
+    { name: "Draft", value: stats.estimates.draft },
+    { name: "Pending", value: stats.estimates.pending },
+    { name: "Approved", value: stats.estimates.approved },
+    { name: "Rejected", value: stats.estimates.rejected },
+    { name: "Expired", value: stats.estimates.expired },
+  ];
+
+  const proposalLineData = [
+    { name: "Draft", value: stats.proposals.draft },
+    { name: "Sent", value: stats.proposals.sent },
+    { name: "Open", value: stats.proposals.open },
+    { name: "Revised", value: stats.proposals.revised },
+    { name: "Declined", value: stats.proposals.declined },
+    { name: "Accepted", value: stats.proposals.accepted },
+  ];
+
+  const statCards = [
+    {
+      label: "Total Leads",
+      value: stats.leads.total,
+      icon: <MdOutlineLeaderboard className="h-6 w-6" />,
+      accent: "#0ea5e9",
+    },
+    {
+      label: "Total Invoices",
+      value: stats.invoices.total,
+      icon: <FiFileText className="h-6 w-6" />,
+      accent: "#22c55e",
+    },
+    {
+      label: "Total Projects",
+      value: stats.projects.total,
+      icon: <FiFolder className="h-6 w-6" />,
+      accent: "#8b5cf6",
+    },
+    {
+      label: "Proposals",
+      value: stats.proposals.total,
+      icon: <FiClipboard className="h-6 w-6" />,
+      accent: "#f59e0b",
+    },
+    {
+      label: "Estimates",
+      value: stats.estimates.total,
+      icon: <FiFile className="h-6 w-6" />,
+      accent: "#ef4444",
+    },
   ];
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        <div className="mb-6 h-28 w-full animate-pulse rounded-3xl bg-slate-200/70" />
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="h-28 animate-pulse rounded-3xl bg-slate-200/70"
+            />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={i}
+              className="h-80 animate-pulse rounded-3xl bg-slate-200/70"
+            />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen p-6">
-      <div className="w-full mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              Admin Dashboard
-            </h1>
-          </div>
-          <button
-            onClick={fetchDashboardData}
-            className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 mr-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-              />
-            </svg>
-            Refresh Data
-          </button>
-        </div>
-
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {/* Leads Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 rounded-full bg-blue-100 text-blue-600 mr-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="mx-auto w-full space-y-6">
+        {/* Hero band */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)] sm:p-8"
+        >
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-sky-500/20 blur-3xl" />
+          <div className="absolute -bottom-16 left-24 h-40 w-40 rounded-full bg-violet-500/20 blur-3xl" />
+          <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-sky-300/80">
+                ARBEIT CRM
+              </p>
+              <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
+                Admin Dashboard
+              </h1>
+              <p className="mt-1 text-sm text-slate-300">
+                Overview of leads, sales, projects and finances.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-6">
               <div>
-                <h2 className="text-gray-500 text-xs">Total Leads</h2>
-                <p className="text-lg font-bold text-gray-800">
-                  {formatNumber(stats.leads.total)}
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                  Net ({selectedYear})
+                </p>
+                <p
+                  className={`text-2xl font-extrabold tabular-nums ${
+                    netProfit >= 0 ? "text-emerald-400" : "text-rose-400"
+                  }`}
+                >
+                  {compactCurrency(netProfit)}
                 </p>
               </div>
+              <button
+                onClick={() => {
+                  fetchDashboardData();
+                  fetchExpensesAndIncomeData();
+                }}
+                className="inline-flex items-center gap-2 rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
+              >
+                <FiRefreshCw className="h-4 w-4" />
+                Refresh
+              </button>
             </div>
           </div>
+        </motion.div>
 
-          {/* Invoices Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 rounded-full bg-green-100 text-green-600 mr-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-gray-500 text-xs">Total Invoices</h2>
-                <p className="text-lg font-bold text-gray-800">
-                  {formatNumber(stats.invoices.total)}
-                </p>
-              </div>
-            </div>
-          </div>
+        {/* KPI cards */}
+        <motion.div
+          variants={{
+            show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+          }}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5"
+        >
+          {statCards.map((c) => (
+            <StatCard key={c.label} {...c} />
+          ))}
+        </motion.div>
 
-          {/* Projects Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 rounded-full bg-purple-100 text-purple-600 mr-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-gray-500 text-xs">Total Projects</h2>
-                <p className="text-lg font-bold text-gray-800">
-                  {formatNumber(stats.projects.total)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Proposals Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 rounded-full bg-yellow-100 text-yellow-600 mr-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-gray-500 text-xs">Proposals</h2>
-                <p className="text-lg font-bold text-gray-800">
-                  {formatNumber(stats.proposals.total)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Estimates Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 rounded-full bg-indigo-100 text-indigo-600 mr-3">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                  />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-gray-500 text-xs">Estimates</h2>
-                <p className="text-lg font-bold text-gray-800">
-                  {formatNumber(stats.estimates.total)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Overview Chart */}
-        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 mb-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Overview</h2>
-          <div className="h-80">
+        {/* Overview bar */}
+        <Panel subtitle="Pipeline" title="Overview">
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={overviewData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" name="Count">
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  cursor={{ fill: "rgba(148,163,184,.1)" }}
+                  content={<GlassTooltip />}
+                />
+                <Bar dataKey="value" name="Count" radius={[8, 8, 0, 0]}>
                   {overviewData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
@@ -792,26 +885,22 @@ const Dashboard = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </Panel>
 
-        {/* Invoice, Estimate, and Proposal Overviews */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {/* Invoice / Estimate / Proposal */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Invoice Overview */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
-              Invoice Overview
-            </h2>
-            <div className="h-64 mb-4">
+          <Panel subtitle="Billing" title="Invoice Overview">
+            <div className="mb-4 h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={invoiceChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    paddingAngle={5}
+                    innerRadius={55}
+                    outerRadius={85}
+                    paddingAngle={2}
                     dataKey="value"
                     nameKey="name"
                   >
@@ -819,275 +908,123 @@ const Dashboard = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`${value}`, "Count"]} />
-                  <Legend />
+                  <Tooltip content={<GlassTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="space-y-2">
-              {invoiceChartData.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center text-sm"
-                >
-                  <div className="flex items-center">
-                    <div
-                      className="w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: item.color }}
-                    ></div>
-                    <span className="text-gray-600">{item.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-medium">
-                      {formatNumber(item.value)}
-                    </span>
-                    <span className="text-gray-500 text-xs ml-2">
-                      {calculatePercentage(item.value, stats.invoices.total)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+            <LegendRow
+              items={invoiceChartData}
+              total={stats.invoices.total}
+              formatNumber={formatNumber}
+              calculatePercentage={calculatePercentage}
+            />
+          </Panel>
 
           {/* Estimate Overview */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
-              Estimate Overview
-            </h2>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Draft</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.estimates.draft)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.estimates.draft,
-                      stats.estimates.total
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Pending</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.estimates.pending)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.estimates.pending,
-                      stats.estimates.total
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Approved</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.estimates.approved)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.estimates.approved,
-                      stats.estimates.total
-                    )}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Rejected</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.estimates.rejected)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.estimates.rejected,
-                      stats.estimates.total
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Expired</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.estimates.expired)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.estimates.expired,
-                      stats.estimates.total
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 h-48">
+          <Panel subtitle="Sales" title="Estimate Overview">
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
-                  data={[
-                    { name: "Draft", value: stats.estimates.draft },
-                    { name: "Pending", value: stats.estimates.pending },
-                    { name: "Approved", value: stats.estimates.approved },
-                    { name: "Rejected", value: stats.estimates.rejected },
-                    { name: "Expired", value: stats.estimates.expired },
-                  ]}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  data={estimateBarData}
+                  margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#8884d8" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "rgba(148,163,184,.1)" }}
+                    content={<GlassTooltip />}
+                  />
+                  <Bar dataKey="value" fill="#8b5cf6" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          </div>
+            <div className="mt-4">
+              <LegendRow
+                items={estimateBarData.map((d) => ({
+                  ...d,
+                  color: "#8b5cf6",
+                }))}
+                total={stats.estimates.total}
+                formatNumber={formatNumber}
+                calculatePercentage={calculatePercentage}
+              />
+            </div>
+          </Panel>
 
           {/* Proposal Overview */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
-              Proposal Overview
-            </h2>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Draft</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.proposals.draft)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.proposals.draft,
-                      stats.proposals.total
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Sent</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.proposals.sent)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.proposals.sent,
-                      stats.proposals.total
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Open</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.proposals.open)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.proposals.open,
-                      stats.proposals.total
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Revised</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.proposals.revised)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.proposals.revised,
-                      stats.proposals.total
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Declined</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.proposals.declined)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.proposals.declined,
-                      stats.proposals.total
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600 text-sm">Accepted</span>
-                <div className="text-right">
-                  <span className="font-medium">
-                    {formatNumber(stats.proposals.accepted)}
-                  </span>
-                  <span className="text-gray-500 text-xs ml-2">
-                    {calculatePercentage(
-                      stats.proposals.accepted,
-                      stats.proposals.total
-                    )}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="mt-4 h-48">
+          <Panel subtitle="Sales" title="Proposal Overview">
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={[
-                    { name: "Draft", value: stats.proposals.draft },
-                    { name: "Sent", value: stats.proposals.sent },
-                    { name: "Open", value: stats.proposals.open },
-                    { name: "Revised", value: stats.proposals.revised },
-                    { name: "Declined", value: stats.proposals.declined },
-                    { name: "Accepted", value: stats.proposals.accepted },
-                  ]}
-                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                <AreaChart
+                  data={proposalLineData}
+                  margin={{ top: 5, right: 10, left: -10, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Line
+                  <defs>
+                    <linearGradient id="propGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#0ea5e9" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="#0ea5e9" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 11, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip content={<GlassTooltip />} />
+                  <Area
                     type="monotone"
                     dataKey="value"
-                    stroke="#8884d8"
-                    activeDot={{ r: 8 }}
+                    stroke="#0ea5e9"
+                    strokeWidth={2}
+                    fill="url(#propGrad)"
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
             </div>
-          </div>
+            <div className="mt-4">
+              <LegendRow
+                items={proposalLineData.map((d) => ({
+                  ...d,
+                  color: "#0ea5e9",
+                }))}
+                total={stats.proposals.total}
+                formatNumber={formatNumber}
+                calculatePercentage={calculatePercentage}
+              />
+            </div>
+          </Panel>
         </div>
 
-        {/* Leads and Projects Overview */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Leads Overview */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
-              Leads Overview
-            </h2>
-            <div className="h-64 mb-4">
+        {/* Leads & Projects */}
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Panel subtitle="Funnel" title="Leads Overview">
+            <div className="mb-4 h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={leadsChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    paddingAngle={5}
+                    innerRadius={55}
+                    outerRadius={85}
+                    paddingAngle={2}
                     dataKey="value"
                     nameKey="name"
                   >
@@ -1095,53 +1032,29 @@ const Dashboard = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`${value}`, "Count"]} />
-                  <Legend />
+                  <Tooltip content={<GlassTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="space-y-2">
-              {leadsChartData.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center text-sm"
-                >
-                  <div className="flex items-center">
-                    <div
-                      className="w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: item.color }}
-                    ></div>
-                    <span className="text-gray-600">{item.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-medium">
-                      {formatNumber(item.value)}
-                    </span>
-                    <span className="text-gray-500 text-xs ml-2">
-                      {calculatePercentage(item.value, stats.leads.total)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+            <LegendRow
+              items={leadsChartData}
+              total={stats.leads.total}
+              formatNumber={formatNumber}
+              calculatePercentage={calculatePercentage}
+            />
+          </Panel>
 
-          {/* Projects Overview */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4 border-b pb-2">
-              Projects Overview
-            </h2>
-            <div className="h-64 mb-4">
+          <Panel subtitle="Delivery" title="Projects Overview">
+            <div className="mb-4 h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={projectChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    paddingAngle={5}
+                    innerRadius={55}
+                    outerRadius={85}
+                    paddingAngle={2}
                     dataKey="value"
                     nameKey="name"
                   >
@@ -1149,48 +1062,28 @@ const Dashboard = () => {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`${value}`, "Count"]} />
-                  <Legend />
+                  <Tooltip content={<GlassTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-
-            <div className="space-y-2">
-              {projectChartData.map((item, index) => (
-                <div
-                  key={index}
-                  className="flex justify-between items-center text-sm"
-                >
-                  <div className="flex items-center">
-                    <div
-                      className="w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: item.color }}
-                    ></div>
-                    <span className="text-gray-600">{item.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <span className="font-medium">
-                      {formatNumber(item.value)}
-                    </span>
-                    <span className="text-gray-500 text-xs ml-2">
-                      {calculatePercentage(item.value, stats.projects.total)}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+            <LegendRow
+              items={projectChartData}
+              total={stats.projects.total}
+              formatNumber={formatNumber}
+              calculatePercentage={calculatePercentage}
+            />
+          </Panel>
         </div>
-        {/* Expenses vs Income Overview */}
-        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold text-gray-800">
-              Expenses vs Income ({selectedYear})
-            </h2>
+
+        {/* Expenses vs Income */}
+        <Panel
+          subtitle="Finance"
+          title={`Expenses vs Income (${selectedYear})`}
+          action={
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="border rounded px-3 py-1 text-sm"
+              className="glass-select text-sm"
             >
               {availableYears.map((year) => (
                 <option key={year} value={year}>
@@ -1198,189 +1091,151 @@ const Dashboard = () => {
                 </option>
               ))}
             </select>
-          </div>
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+          }
+        >
+          {/* Summary tiles */}
+          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-sky-100 bg-sky-50/70 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-500 text-sm">Total Income</p>
-                  <p className="text-xl font-bold text-blue-700">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-sky-500">
+                    Total Income
+                  </p>
+                  <p className="mt-1 text-xl font-bold tabular-nums text-sky-700">
                     {formatCurrency(totalIncome)}
                   </p>
                 </div>
-                <div className="bg-blue-100 p-2 rounded-full">
-                  <svg
-                    className="w-5 h-5 text-blue-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-500 text-white">
+                  <FiTrendingUp className="h-5 w-5" />
                 </div>
               </div>
             </div>
 
-            <div className="bg-red-50 p-4 rounded-lg border border-red-100">
+            <div className="rounded-2xl border border-rose-100 bg-rose-50/70 p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-red-500 text-sm">Total Expenses</p>
-                  <p className="text-xl font-bold text-red-700">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-rose-500">
+                    Total Expenses
+                  </p>
+                  <p className="mt-1 text-xl font-bold tabular-nums text-rose-700">
                     {formatCurrency(totalExpenses)}
                   </p>
                 </div>
-                <div className="bg-red-100 p-2 rounded-full">
-                  <svg
-                    className="w-5 h-5 text-red-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                    ></path>
-                  </svg>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-rose-500 text-white">
+                  <FiTrendingDown className="h-5 w-5" />
                 </div>
               </div>
             </div>
 
             <div
-              className={`p-4 rounded-lg border ${
+              className={`rounded-2xl border p-4 ${
                 netProfit >= 0
-                  ? "bg-green-50 border-green-100"
-                  : "bg-red-50 border-red-100"
+                  ? "border-emerald-100 bg-emerald-50/70"
+                  : "border-rose-100 bg-rose-50/70"
               }`}
             >
               <div className="flex items-center justify-between">
                 <div>
                   <p
-                    className={`text-sm ${
-                      netProfit >= 0 ? "text-green-500" : "text-red-500"
+                    className={`text-[10px] font-semibold uppercase tracking-[0.25em] ${
+                      netProfit >= 0 ? "text-emerald-500" : "text-rose-500"
                     }`}
                   >
-                    Net Profit/Loss
+                    Net Profit / Loss
                   </p>
                   <p
-                    className={`text-xl font-bold ${
-                      netProfit >= 0 ? "text-green-700" : "text-red-700"
+                    className={`mt-1 text-xl font-bold tabular-nums ${
+                      netProfit >= 0 ? "text-emerald-700" : "text-rose-700"
                     }`}
                   >
                     {formatCurrency(netProfit)}
                   </p>
                 </div>
                 <div
-                  className={`p-2 rounded-full ${
-                    netProfit >= 0 ? "bg-green-100" : "bg-red-100"
+                  className={`flex h-10 w-10 items-center justify-center rounded-xl text-white ${
+                    netProfit >= 0 ? "bg-emerald-500" : "bg-rose-500"
                   }`}
                 >
-                  <svg
-                    className={`w-5 h-5 ${
-                      netProfit >= 0 ? "text-green-600" : "text-red-600"
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    {netProfit >= 0 ? (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M9 11l3-3m0 0l3 3m-3-3v8m0-13a9 9 0 110 18 9 9 0 010-18z"
-                      />
-                    ) : (
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        d="M15 13l-3 3m0 0l-3-3m3 3V8m0 13a9 9 0 110-18 9 9 0 010 18z"
-                      />
-                    )}
-                  </svg>
+                  <FiDollarSign className="h-5 w-5" />
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Bar Chart */}
-          <div className="h-80 mb-6">
+          {/* Bar chart */}
+          <div className="mb-6 h-72">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={combinedData}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
+                margin={{ top: 10, right: 10, left: 0, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => compactCurrency(v)}
+                />
                 <Tooltip
-                  formatter={(value, name) => [
-                    formatCurrency(value),
-                    name === "income" ? "Income" : "Expenses",
-                  ]}
+                  cursor={{ fill: "rgba(148,163,184,.1)" }}
+                  content={<GlassTooltip valueFormatter={formatCurrency} />}
                 />
                 <Legend />
-                <Bar dataKey="income" name="Income" fill="#4CAF50" />
-                <Bar dataKey="expenses" name="Expenses" fill="#F44336" />
+                <Bar dataKey="income" name="Income" fill="#22c55e" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="expenses" name="Expenses" fill="#ef4444" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Trend Line Chart */}
-          <div className="h-80">
+          {/* Trend line */}
+          <div className="h-72">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
                 data={combinedData}
-                margin={{
-                  top: 5,
-                  right: 30,
-                  left: 20,
-                  bottom: 5,
-                }}
+                margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
               >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip
-                  formatter={(value, name) => [
-                    formatCurrency(value),
-                    name === "income" ? "Income" : "Expenses",
-                  ]}
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
                 />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => compactCurrency(v)}
+                />
+                <Tooltip content={<GlassTooltip valueFormatter={formatCurrency} />} />
                 <Legend />
                 <Line
                   type="monotone"
                   dataKey="income"
                   name="Income"
-                  stroke="#4CAF50"
-                  activeDot={{ r: 8 }}
+                  stroke="#22c55e"
                   strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 6 }}
                 />
                 <Line
                   type="monotone"
                   dataKey="expenses"
                   name="Expenses"
-                  stroke="#F44336"
+                  stroke="#ef4444"
                   strokeWidth={2}
+                  dot={false}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </Panel>
       </div>
     </div>
   );

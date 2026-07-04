@@ -105,13 +105,16 @@ const ClientChangePassword = () => {
   };
 
   return (
-    <div className="flex items-center justify-center">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 flex items-center justify-center">
+      <div className="max-w-md w-full space-y-8 rounded-3xl border border-white/60 bg-white/80 p-8 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         <div className="text-center">
-          <h2 className="mt-6 text-2xl font-bold text-gray-900">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Account Security
+          </p>
+          <h2 className="mt-2 text-2xl font-bold text-slate-900">
             Change Password
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-slate-500">
             Secure your account with a new password
           </p>
         </div>
@@ -122,7 +125,7 @@ const ClientChangePassword = () => {
             <div className="relative">
               <label
                 htmlFor="oldPassword"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-slate-700 mb-1"
               >
                 Current Password
               </label>
@@ -132,14 +135,14 @@ const ClientChangePassword = () => {
                   name="oldPassword"
                   type={showPasswords.oldPassword ? "text" : "password"}
                   required
-                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400  focus:border-gray-500 transition duration-300"
+                  className="appearance-none block w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 transition duration-300"
                   placeholder="Enter your current password"
                   value={formData.oldPassword}
                   onChange={handleChange}
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
                   onClick={() => togglePasswordVisibility("oldPassword")}
                 >
                   {showPasswords.oldPassword ? (
@@ -187,7 +190,7 @@ const ClientChangePassword = () => {
             <div className="relative">
               <label
                 htmlFor="newPassword"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-slate-700 mb-1"
               >
                 New Password
               </label>
@@ -197,14 +200,14 @@ const ClientChangePassword = () => {
                   name="newPassword"
                   type={showPasswords.newPassword ? "text" : "password"}
                   required
-                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400  focus:border-gray-500 transition duration-300"
+                  className="appearance-none block w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 transition duration-300"
                   placeholder="Enter new password (min. 6 characters)"
                   value={formData.newPassword}
                   onChange={handleChange}
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
                   onClick={() => togglePasswordVisibility("newPassword")}
                 >
                   {showPasswords.newPassword ? (
@@ -252,7 +255,7 @@ const ClientChangePassword = () => {
             <div className="relative">
               <label
                 htmlFor="confirmNewPassword"
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-slate-700 mb-1"
               >
                 Confirm New Password
               </label>
@@ -262,14 +265,14 @@ const ClientChangePassword = () => {
                   name="confirmNewPassword"
                   type={showPasswords.confirmNewPassword ? "text" : "password"}
                   required
-                  className="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-lg placeholder-gray-400  focus:border-gray-500 transition duration-300"
+                  className="appearance-none block w-full rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 transition duration-300"
                   placeholder="Confirm your new password"
                   value={formData.confirmNewPassword}
                   onChange={handleChange}
                 />
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 transition-colors"
                   onClick={() => togglePasswordVisibility("confirmNewPassword")}
                 >
                   {showPasswords.confirmNewPassword ? (
@@ -318,7 +321,7 @@ const ClientChangePassword = () => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gray-700 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 transition duration-300 disabled:opacity-70"
+              className="group relative w-full flex justify-center items-center rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3 text-sm font-semibold text-white shadow-md hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-700 transition duration-300 disabled:opacity-70"
             >
               {loading ? (
                 <>
@@ -368,7 +371,7 @@ const ClientChangePassword = () => {
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-300 flex items-center justify-center"
+              className="text-sm text-slate-600 hover:text-slate-800 transition-colors duration-300 flex items-center justify-center"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

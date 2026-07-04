@@ -709,21 +709,27 @@ const ContactsPage = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading Contacts...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        Loading Contacts...
+      </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Dashboard
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">
           {showNewContactForm
             ? editingContact
               ? "Edit Contact"
               : "Add New Contact"
             : "Contracts"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-500">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Contracts</span>
@@ -731,15 +737,15 @@ const ContactsPage = () => {
       </div>
 
       {showNewContactForm ? (
-        <div className="bg-white shadow-md rounded p-6 mb-6 border">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Contract Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Contract Details</h2>
             <button
               onClick={() => {
                 setShowNewContactForm(false);
                 setEditingContact(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-500 hover:text-slate-700"
             >
               <FaTimes />
             </button>
@@ -749,7 +755,7 @@ const ContactsPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Subject *
                 </label>
                 <input
@@ -757,13 +763,13 @@ const ContactsPage = () => {
                   name="subject"
                   value={newContact.subject}
                   onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer Code
                 </label>
                 <input
@@ -771,7 +777,7 @@ const ContactsPage = () => {
                   name="customerCode"
                   value={newContact.customerCode}
                   onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Enter customer code (e.g., CUST-ABC123)"
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -780,7 +786,7 @@ const ContactsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer *
                 </label>
                 <div className="relative" ref={customerRef}>
@@ -789,16 +795,16 @@ const ContactsPage = () => {
                     name="customerName"
                     value={newContact.customerName}
                     onChange={handleNewContactChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     required
                     placeholder="Search customer by company name..."
                   />
                   {showCustomerDropdown && customerSearchResults.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                    <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg max-h-60 overflow-auto">
                       {customerSearchResults.map((customer, index) => (
                         <div
                           key={index}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          className="px-3 py-2 hover:bg-slate-100 cursor-pointer"
                           onClick={() => handleSelectCustomer(customer)}
                         >
                           <div className="font-medium">{customer.company}</div>
@@ -815,8 +821,8 @@ const ContactsPage = () => {
                   {showCustomerDropdown &&
                     customerSearchResults.length === 0 &&
                     customerSearchTerm.length >= 2 && (
-                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                        <div className="px-3 py-2 text-gray-500">
+                      <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg">
+                        <div className="px-3 py-2 text-slate-500">
                           No customers found
                         </div>
                       </div>
@@ -825,7 +831,7 @@ const ContactsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Project *
                 </label>
                 <input
@@ -833,7 +839,7 @@ const ContactsPage = () => {
                   name="project"
                   value={newContact.project}
                   onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -842,14 +848,14 @@ const ContactsPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Contract Type
                 </label>
                 <select
                   name="contractType"
                   value={newContact.contractType}
                   onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {contractTypeOptions.map((option) => (
                     <option key={option} value={option}>
@@ -860,7 +866,7 @@ const ContactsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Contract Value (USD) *
                 </label>
                 <input
@@ -868,7 +874,7 @@ const ContactsPage = () => {
                   name="contractValue"
                   value={newContact.contractValue}
                   onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="0.00"
                   step="0.01"
                   required
@@ -876,7 +882,7 @@ const ContactsPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Start Date *
                 </label>
                 <input
@@ -884,13 +890,13 @@ const ContactsPage = () => {
                   name="startDate"
                   value={newContact.startDate}
                   onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   End Date *
                 </label>
                 <input
@@ -898,20 +904,20 @@ const ContactsPage = () => {
                   name="endDate"
                   value={newContact.endDate}
                   onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Signature Status
                 </label>
                 <select
                   name="signature"
                   value={newContact.signature}
                   onChange={handleNewContactChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="Not Signed">Not Signed</option>
                   <option value="Signed">Signed</option>
@@ -926,14 +932,14 @@ const ContactsPage = () => {
                 setShowNewContactForm(false);
                 setEditingContact(null);
               }}
-              className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveContact}
               disabled={isSaving}
-              className="px-4 py-2 bg-black text-white rounded text-sm hover:bg-gray-800 disabled:opacity-50"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
             >
               {isSaving
                 ? "Saving..."
@@ -948,53 +954,69 @@ const ContactsPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Active Contracts */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Active</p>
-                  <p className="text-2xl font-bold">{stats.active}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Active
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.active}
+                  </p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaSyncAlt className="text-blue-600" />
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#0ea5e9]">
+                  <FaSyncAlt className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Expired Contracts */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Expired</p>
-                  <p className="text-2xl font-bold">{stats.expired}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Expired
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.expired}
+                  </p>
                 </div>
-                <div className="bg-red-100 p-3 rounded-full">
-                  <FaTimes className="text-red-600" />
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#ef4444]">
+                  <FaTimes className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* About to Expire */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">About to Expire</p>
-                  <p className="text-2xl font-bold">{stats.aboutToExpire}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    About to Expire
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.aboutToExpire}
+                  </p>
                 </div>
-                <div className="bg-yellow-100 p-3 rounded-full">
-                  <FaFilter className="text-yellow-600" />
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#f59e0b]">
+                  <FaFilter className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Recently Added */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Recently Added</p>
-                  <p className="text-2xl font-bold">{stats.recentlyAdded}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Recently Added
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.recentlyAdded}
+                  </p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaPlus className="text-green-600" />
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#22c55e]">
+                  <FaPlus className="text-white" />
                 </div>
               </div>
             </div>
@@ -1002,8 +1024,8 @@ const ContactsPage = () => {
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white shadow rounded-lg p-4 border">
-              <h3 className="text-lg font-semibold mb-4">Contracts by Type</h3>
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+              <h3 className="text-lg font-semibold mb-4 text-slate-900">Contracts by Type</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -1025,8 +1047,8 @@ const ContactsPage = () => {
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-white shadow rounded-lg p-4 border">
-              <h3 className="text-lg font-semibold mb-4">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+              <h3 className="text-lg font-semibold mb-4 text-slate-900">
                 Contract Value by Type
               </h3>
               <ResponsiveContainer width="100%" height={300}>
@@ -1059,8 +1081,7 @@ const ContactsPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewContactForm(true)}
               >
                 <FaPlus /> New Contract
@@ -1068,14 +1089,14 @@ const ContactsPage = () => {
 
               <button
                 onClick={handleImportClick}
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
               >
                 <FaFileImport /> Import
               </button>
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -1085,9 +1106,9 @@ const ContactsPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
-            } border`}
+            }`}
           >
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
@@ -1095,7 +1116,7 @@ const ContactsPage = () => {
                 {/* Delete Selected button */}
                 {selectedContacts.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
                     onClick={handleDeleteSelected}
                   >
                     Delete Selected ({selectedContacts.length})
@@ -1104,7 +1125,7 @@ const ContactsPage = () => {
 
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -1121,34 +1142,34 @@ const ContactsPage = () => {
                 <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-md z-10">
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToExcel}
                       >
                         Excel
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToCSV}
                       >
                         CSV
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToPDF}
                       >
                         PDF
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={printTable}
                       >
                         Print
@@ -1159,7 +1180,7 @@ const ContactsPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchContacts}
                 >
                   <FaSyncAlt />
@@ -1168,7 +1189,7 @@ const ContactsPage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-3 top-3 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -1177,7 +1198,7 @@ const ContactsPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -1187,10 +1208,7 @@ const ContactsPage = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 px-4 sm:px-6 py-3 text-left text-xs uppercase tracking-wider font-semibold text-slate-500 rounded-l-lg">
                       <input
                         type="checkbox"
                         checked={
@@ -1206,58 +1224,31 @@ const ContactsPage = () => {
                         }}
                       />
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 px-4 sm:px-6 py-3 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
                       Subject
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 px-4 sm:px-6 py-3 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
                       Customer
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 px-4 sm:px-6 py-3 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
                       Contract Type
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 px-4 sm:px-6 py-3 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
                       Contract Value
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 px-4 sm:px-6 py-3 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
                       Start Date
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 px-4 sm:px-6 py-3 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
                       End Date
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 px-4 sm:px-6 py-3 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
                       Project
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 px-4 sm:px-6 py-3 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
                       Signature
                     </th>
-                    <th
-                      className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 px-4 sm:px-6 py-3 text-left text-xs uppercase tracking-wider font-semibold text-slate-500 rounded-r-lg">
                       Actions
                     </th>
                   </tr>
@@ -1265,7 +1256,7 @@ const ContactsPage = () => {
                 <tbody>
                   {currentData.length === 0 ? (
                     <tr>
-                      <td colSpan="10" className="text-center py-4">
+                      <td colSpan="10" className="text-center py-4 text-slate-500">
                         {searchTerm
                           ? "No matching contracts found."
                           : "No contracts available."}
@@ -1275,17 +1266,17 @@ const ContactsPage = () => {
                     currentData.map((contact) => (
                       <tr
                         key={contact._id}
-                        className="bg-gray-50 hover:bg-gray-100"
+                        className="bg-white/70 hover:bg-white"
                       >
-                        <td className="p-3 rounded-l-lg">
+                        <td className="px-4 sm:px-6 py-3 text-sm rounded-l-lg">
                           <input
                             type="checkbox"
                             checked={selectedContacts.includes(contact._id)}
                             onChange={() => toggleContactSelection(contact._id)}
                           />
                         </td>
-                        <td className="p-3">{contact.subject}</td>
-                        <td className="p-3">
+                        <td className="px-4 sm:px-6 py-3 text-sm">{contact.subject}</td>
+                        <td className="px-4 sm:px-6 py-3 text-sm">
                           {contact.customer ? contact.customer.company : "N/A"}
                           {contact.customer &&
                             contact.customer.customerCode && (
@@ -1294,16 +1285,16 @@ const ContactsPage = () => {
                               </div>
                             )}
                         </td>
-                        <td className="p-3">{contact.contractType}</td>
-                        <td className="p-3">
+                        <td className="px-4 sm:px-6 py-3 text-sm">{contact.contractType}</td>
+                        <td className="px-4 sm:px-6 py-3 text-sm text-right tabular-nums">
                           {formatCurrency(contact.contractValue)}
                         </td>
-                        <td className="p-3">{formatDate(contact.startDate)}</td>
-                        <td className="p-3">{formatDate(contact.endDate)}</td>
-                        <td className="p-3">{contact.project}</td>
-                        <td className="p-3">
+                        <td className="px-4 sm:px-6 py-3 text-sm tabular-nums">{formatDate(contact.startDate)}</td>
+                        <td className="px-4 sm:px-6 py-3 text-sm tabular-nums">{formatDate(contact.endDate)}</td>
+                        <td className="px-4 sm:px-6 py-3 text-sm">{contact.project}</td>
+                        <td className="px-4 sm:px-6 py-3 text-sm">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs ${
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${
                               contact.signature === "Signed"
                                 ? "bg-green-100 text-green-800"
                                 : "bg-red-100 text-red-800"
@@ -1312,17 +1303,17 @@ const ContactsPage = () => {
                             {contact.signature}
                           </span>
                         </td>
-                        <td className="p-3 rounded-r-lg">
+                        <td className="px-4 sm:px-6 py-3 text-sm rounded-r-lg">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleEditContact(contact)}
-                              className="text-blue-600 hover:text-blue-800"
+                              className="rounded-lg p-2 bg-blue-100 text-blue-700"
                             >
                               <FaEdit />
                             </button>
                             <button
                               onClick={() => handleDeleteContact(contact._id)}
-                              className="text-red-600 hover:text-red-800"
+                              className="rounded-lg p-2 bg-red-100 text-red-700"
                             >
                               <FaTrash />
                             </button>
@@ -1337,14 +1328,14 @@ const ContactsPage = () => {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-slate-600 tabular-nums">
                 Showing {startIndex + 1} to{" "}
                 {Math.min(startIndex + entriesPerPage, filteredContacts.length)}{" "}
                 of {filteredContacts.length} entries
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  className="px-2 py-1 border rounded text-sm disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -1366,8 +1357,10 @@ const ContactsPage = () => {
                   return (
                     <button
                       key={pageNum}
-                      className={`px-2 py-1 border rounded text-sm ${
-                        currentPage === pageNum ? "bg-gray-200" : ""
+                      className={`rounded-xl border border-slate-200 px-3 py-2 text-sm font-semibold tabular-nums ${
+                        currentPage === pageNum
+                          ? "bg-slate-900 text-white"
+                          : "bg-white/80 text-slate-700 hover:bg-white"
                       }`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
@@ -1377,7 +1370,7 @@ const ContactsPage = () => {
                 })}
                 {totalPages > 5 && <span className="px-1">...</span>}
                 <button
-                  className="px-2 py-1 border rounded text-sm disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
@@ -1393,9 +1386,9 @@ const ContactsPage = () => {
 
       {/* Import Modal */}
       {importModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Import Contacts</h2>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold mb-4 text-slate-900">Import Contacts</h2>
 
             {importProgress ? (
               <div className="mb-4">
@@ -1456,7 +1449,7 @@ const ContactsPage = () => {
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   accept=".xlsx,.xls,.csv"
-                  className="w-full border rounded p-2 text-sm"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Supported formats: Excel (.xlsx, .xls), CSV
@@ -1467,7 +1460,7 @@ const ContactsPage = () => {
             <div className="flex justify-end space-x-3">
               <button
                 onClick={closeImportModal}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50 text-sm"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                 disabled={importProgress !== null}
               >
                 {importResult ? "Close" : "Cancel"}
@@ -1476,7 +1469,7 @@ const ContactsPage = () => {
                 <button
                   onClick={handleImportSubmit}
                   disabled={!importFile || importProgress !== null}
-                  className="px-4 py-2 bg-black text-white rounded text-sm hover:bg-gray-800 disabled:opacity-50"
+                  className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
                 >
                   Import
                 </button>
@@ -1485,6 +1478,7 @@ const ContactsPage = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

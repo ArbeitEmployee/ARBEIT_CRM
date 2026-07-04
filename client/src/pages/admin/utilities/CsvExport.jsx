@@ -111,23 +111,30 @@ const CsvExport = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className=" mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-gray-900 text-white p-6">
-          <h1 className="text-3xl font-bold">CSV Export</h1>
-          <p className="mt-2 opacity-90">Export your data as CSV files</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="mx-auto max-w-3xl space-y-6">
+        {/* Header */}
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Utilities
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">CSV Export</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Export your data as CSV files
+          </p>
         </div>
 
-        <div className="p-8">
+        {/* Form Card */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           {/* Export Type Selection */}
-          <div className="mb-8">
-            <label className="block text-lg font-medium text-gray-700 mb-3">
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
               Export Type *
             </label>
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             >
               {exportTypes.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -138,14 +145,14 @@ const CsvExport = () => {
           </div>
 
           {/* Period Selection */}
-          <div className="mb-8">
-            <label className="block text-lg font-medium text-gray-700 mb-3">
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
               Period *
             </label>
             <select
               value={selectedPeriod}
               onChange={(e) => setSelectedPeriod(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             >
               {periodOptions.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -157,28 +164,28 @@ const CsvExport = () => {
 
           {/* Custom Date Range - Separate rows */}
           {selectedPeriod === "custom" && (
-            <div className="space-y-6 mb-8">
+            <div className="space-y-5 mb-6">
               <div>
-                <label className="block text-lg font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   Start Date *
                 </label>
                 <input
                   type="date"
                   value={customStartDate}
                   onChange={(e) => setCustomStartDate(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
               <div>
-                <label className="block text-lg font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
                   End Date *
                 </label>
                 <input
                   type="date"
                   value={customEndDate}
                   onChange={(e) => setCustomEndDate(e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -195,7 +202,7 @@ const CsvExport = () => {
               (selectedPeriod === "custom" &&
                 (!customStartDate || !customEndDate))
             }
-            className="w-full bg-gray-800 text-white py-4 px-6 rounded-lg text-lg font-semibold flex items-center justify-center hover:bg-gray-900 transition-colors duration-200 shadow-md"
+            className="w-full rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50 flex items-center justify-center"
           >
             {isExporting ? (
               <span className="flex items-center">
@@ -223,7 +230,7 @@ const CsvExport = () => {
               </span>
             ) : (
               <>
-                <FaDownload className="mr-3" />
+                <FaDownload className="mr-2" />
                 Export CSV
               </>
             )}
@@ -232,10 +239,10 @@ const CsvExport = () => {
           {/* Message Display */}
           {exportMessage && (
             <div
-              className={`mt-6 p-4 rounded-lg text-base ${
+              className={`mt-5 rounded-xl px-4 py-3 text-sm font-medium ${
                 exportMessage.includes("success")
-                  ? "bg-green-100 text-green-800 border border-green-200"
-                  : "bg-red-100 text-red-800 border border-red-200"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
               }`}
             >
               {exportMessage}
@@ -243,7 +250,7 @@ const CsvExport = () => {
           )}
         </div>
 
-        <div className="bg-gray-100 p-6 text-center text-gray-600">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 text-center text-sm text-slate-500 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <p>Select an export type and period to generate a CSV file</p>
         </div>
       </div>

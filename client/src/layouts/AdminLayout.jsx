@@ -359,10 +359,10 @@ const AdminLayout = ({ children, userType = "admin" }) => {
   };
 
   return (
-    <div className="bg-white min-h-screen flex items-center justify-center p-2 md:p-4 relative">
+    <div className="bg-gradient-to-br from-slate-100 to-white min-h-screen flex items-center justify-center p-2 md:p-4 relative">
       {/* Main Content Container */}
       <div
-        className={`flex w-full bg-white rounded-3xl md:rounded-3xl shadow-sm sm:shadow-lg border border-gray-200 overflow-hidden relative ${
+        className={`flex w-full bg-white rounded-3xl md:rounded-3xl shadow-sm sm:shadow-[0_30px_90px_rgba(15,23,42,.12)] border border-[rgba(226,232,240,.7)] overflow-hidden relative ${
           isMobile ? "mt-16 mb-2 h-[calc(100vh-5rem)]" : "h-[95vh]"
         }`}
       >
@@ -378,13 +378,13 @@ const AdminLayout = ({ children, userType = "admin" }) => {
         {/* Main Content Area */}
         <div className="flex-1 h-full overflow-auto relative">
           {/* Top Header */}
-          <header className="bg-white border-b border-gray-200 shadow-sm z-30 sticky top-0">
+          <header className="bg-white/80 backdrop-blur border-b border-[rgba(226,232,240,.7)] shadow-sm z-30 sticky top-0">
             <div className="flex items-center justify-between px-6 py-4">
               {/* Left Section */}
               <div className="flex items-center space-x-4">
                 <button
                   onClick={handleToggleSidebar}
-                  className="p-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors"
                 >
                   <FiMenu className="w-5 h-5" />
                 </button>
@@ -396,20 +396,22 @@ const AdminLayout = ({ children, userType = "admin" }) => {
                   <input
                     type="text"
                     placeholder={`Search ${userType} menu items...`}
-                    className="w-full px-3 py-2 pl-10 pr-10 rounded-lg bg-gray-100 text-gray-900 placeholder-gray-500 focus:border-gray-400 border border-gray-200"
+                    className="w-full h-11 pl-11 pr-10 rounded-xl bg-slate-100/80 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300 border border-slate-200"
                     value={searchQuery}
                     onChange={handleSearchChange}
                     onFocus={() =>
                       searchQuery.length > 1 && setShowResults(true)
                     }
                   />
-                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <FiSearch className="h-4 w-4" />
+                  </span>
                   {searchQuery && (
                     <button
                       onClick={clearSearch}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
                     >
-                      <FiX />
+                      <FiX className="h-4 w-4" />
                     </button>
                   )}
                 </div>
@@ -548,7 +550,7 @@ const AdminLayout = ({ children, userType = "admin" }) => {
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full bg-[#333333] text-white flex items-center justify-center font-bold text-sm">
+                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 text-white flex items-center justify-center font-bold text-sm shadow-md">
                       {user?.name?.charAt(0)?.toUpperCase() || "U"}
                     </div>
                     <div className="text-left hidden md:block">

@@ -19,6 +19,7 @@ import axios from "axios";
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatBDT } from "../../../utils/currency";
 
 const Proposals = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -64,15 +65,15 @@ const Proposals = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Draft":
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
       case "Sent":
-        return "bg-blue-100 text-blue-800";
+        return "bg-yellow-100 text-yellow-800";
       case "Accepted":
         return "bg-green-100 text-green-800";
       case "Rejected":
         return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
     }
   };
 
@@ -421,10 +422,8 @@ const Proposals = () => {
           index: index + 1,
           description: item.description || "Item",
           quantity: item.quantity || 1,
-          rate: `${proposal.currency || "USD"} ${(item.rate || 0).toFixed(2)}`,
-          amount: `${proposal.currency || "USD"} ${(
-            (item.quantity || 1) * (item.rate || 0)
-          ).toFixed(2)}`,
+          rate: formatBDT(item.rate || 0),
+          amount: formatBDT((item.quantity || 1) * (item.rate || 0)),
         }));
 
         // Add table
@@ -470,7 +469,7 @@ const Proposals = () => {
 
       doc.text("Subtotal:", calcX, yPosition);
       doc.text(
-        `${proposal.currency || "USD"} ${subtotal.toFixed(2)}`,
+        formatBDT(subtotal),
         pageWidth - margin,
         yPosition,
         { align: "right" }
@@ -480,7 +479,7 @@ const Proposals = () => {
       if (discount > 0) {
         doc.text("Discount:", calcX, yPosition);
         doc.text(
-          `- ${proposal.currency || "USD"} ${discount.toFixed(2)}`,
+          `- ${formatBDT(discount)}`,
           pageWidth - margin,
           yPosition,
           { align: "right" }
@@ -491,7 +490,7 @@ const Proposals = () => {
       doc.setFont("helvetica", "bold");
       doc.text("Total:", calcX, yPosition);
       doc.text(
-        `${proposal.currency || "USD"} ${total.toFixed(2)}`,
+        formatBDT(total),
         pageWidth - margin,
         yPosition,
         { align: "right" }
@@ -729,125 +728,140 @@ const Proposals = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading quotations...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 text-slate-600">
+        Loading quotations...
+      </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Quotations</h1>
-        <div className="flex items-center text-gray-600">
-          <span>Dashboard</span>
-          <FaChevronRight className="mx-1 text-xs" />
-          <span>Quotations</span>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Total Proposals */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-gray-500 text-sm">Total Quotations</p>
-              <p className="text-2xl font-bold">{proposals.length}</p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaEye className="text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Draft Proposals */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Draft</p>
-              <p className="text-2xl font-bold">
-                {proposals.filter((p) => p.status === "Draft").length}
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                Sales
               </p>
+              <h1 className="text-2xl font-bold text-white">Quotations</h1>
+              <div className="mt-1 flex items-center text-sm text-slate-300">
+                <span>Dashboard</span>
+                <FaChevronRight className="mx-1 text-xs" />
+                <span>Quotations</span>
+              </div>
             </div>
-            <div className="bg-gray-100 p-3 rounded-full">
-              <FaEdit className="text-gray-600" />
+            <div className="flex items-center gap-2">
+              <button
+                className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/20"
+                onClick={() => navigate("new")}
+              >
+                <FaPlus /> New Quotation
+              </button>
+              {selectedProposals.length > 0 && (
+                <button
+                  className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
+                  onClick={handleDeleteSelected}
+                >
+                  Delete Selected ({selectedProposals.length})
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Sent Proposals */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Sent</p>
-              <p className="text-2xl font-bold">
-                {proposals.filter((p) => p.status === "Sent").length}
-              </p>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Proposals */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Total Quotations
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {proposals.length}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500 text-white">
+                <FaEye />
+              </div>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaEye className="text-blue-600" />
+          </div>
+
+          {/* Draft Proposals */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Draft
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {proposals.filter((p) => p.status === "Draft").length}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-500 text-white">
+                <FaEdit />
+              </div>
+            </div>
+          </div>
+
+          {/* Sent Proposals */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Sent
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {proposals.filter((p) => p.status === "Sent").length}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white">
+                <FaEye />
+              </div>
+            </div>
+          </div>
+
+          {/* Accepted Proposals */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Accepted
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {proposals.filter((p) => p.status === "Accepted").length}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white">
+                <FaEye />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Accepted Proposals */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Accepted</p>
-              <p className="text-2xl font-bold">
-                {proposals.filter((p) => p.status === "Accepted").length}
-              </p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <FaEye className="text-green-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Top action buttons */}
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-        <div className="flex items-center gap-2">
+        {/* Top action buttons */}
+        <div className="flex items-center justify-end flex-wrap gap-2">
           <button
-            className="px-3 py-1 text-sm rounded flex items-center gap-2"
-            style={{ backgroundColor: "#333333", color: "white" }}
-            onClick={() => navigate("new")}
-          >
-            <FaPlus /> New Quotation
-          </button>
-
-          {/* Delete Selected button */}
-          {selectedProposals.length > 0 && (
-            <button
-              className="bg-red-600 text-white px-3 py-1 rounded"
-              onClick={handleDeleteSelected}
-            >
-              Delete Selected ({selectedProposals.length})
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+            className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             onClick={() => setCompactView(!compactView)}
           >
             {compactView ? "<<" : ">>"}
           </button>
         </div>
-      </div>
 
-      {/* White box for table */}
-      <div
-        className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
-          compactView ? "w-1/2" : "w-full"
-        }`}
-      >
+        {/* White box for table */}
+        <div
+          className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
+            compactView ? "w-1/2" : "w-full"
+          }`}
+        >
         {/* Controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {/* Entries per page */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={entriesPerPage}
               onChange={(e) => {
                 setEntriesPerPage(Number(e.target.value));
@@ -865,7 +879,7 @@ const Proposals = () => {
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu((prev) => !prev)}
-                className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 <HiOutlineDownload /> Export
               </button>
@@ -874,28 +888,28 @@ const Proposals = () => {
               {showExportMenu && (
                 <div
                   ref={exportMenuRef}
-                  className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                  className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10 overflow-hidden"
                 >
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                     onClick={() => handleExport("Excel")}
                   >
                     Excel
                   </button>
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                     onClick={() => handleExport("CSV")}
                   >
                     CSV
                   </button>
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                     onClick={() => handleExport("PDF")}
                   >
                     PDF
                   </button>
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                     onClick={() => handleExport("Print")}
                   >
                     Print
@@ -906,7 +920,7 @@ const Proposals = () => {
 
             {/* Refresh button */}
             <button
-              className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+              className="flex items-center rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               onClick={fetchProposals}
             >
               <FaSyncAlt />
@@ -915,7 +929,7 @@ const Proposals = () => {
 
           {/* Search */}
           <div className="relative">
-            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+            <FaSearch className="absolute left-3 top-3.5 text-slate-400 text-sm" />
             <input
               type="text"
               placeholder="Search..."
@@ -924,20 +938,17 @@ const Proposals = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             />
           </div>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-separate border-spacing-y-2">
-            <thead>
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
               <tr className="text-left">
-                <th
-                  className="p-3 rounded-l-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="px-4 sm:px-6 py-3">
                   <input
                     type="checkbox"
                     checked={
@@ -955,88 +966,28 @@ const Proposals = () => {
                     }}
                   />
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Quotation#
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Client
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Title
-                </th>
+                <th className="px-4 sm:px-6 py-3">Quotation#</th>
+                <th className="px-4 sm:px-6 py-3">Client</th>
+                <th className="px-4 sm:px-6 py-3">Title</th>
                 {compactView ? (
                   <>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Amount
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Actions
-                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-right">Amount</th>
+                    <th className="px-4 sm:px-6 py-3">Status</th>
+                    <th className="px-4 sm:px-6 py-3">Actions</th>
                   </>
                 ) : (
                   <>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Amount
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Date
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Open Till
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Tags
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Actions
-                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-right">Amount</th>
+                    <th className="px-4 sm:px-6 py-3">Date</th>
+                    <th className="px-4 sm:px-6 py-3">Open Till</th>
+                    <th className="px-4 sm:px-6 py-3">Tags</th>
+                    <th className="px-4 sm:px-6 py-3">Status</th>
+                    <th className="px-4 sm:px-6 py-3">Actions</th>
                   </>
                 )}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200/70">
               {currentProposals.length > 0 ? (
                 currentProposals.map((proposal) => {
                   const displayProposalNumber = formatProposalNumber(
@@ -1044,11 +995,7 @@ const Proposals = () => {
                     proposal._id
                   );
 
-                  const displayAmount = new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: proposal.currency || "USD",
-                    minimumFractionDigits: 2,
-                  }).format(proposal.total || 0);
+                  const displayAmount = formatBDT(proposal.total || 0);
 
                   const formatDate = (dateString) => {
                     if (!dateString) return "-";
@@ -1061,10 +1008,9 @@ const Proposals = () => {
                   return (
                     <tr
                       key={proposal._id}
-                      className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                      style={{ color: "black" }}
+                      className="hover:bg-white/70 text-slate-700"
                     >
-                      <td className="p-3 rounded-l-lg border-0">
+                      <td className="px-4 sm:px-6 py-3">
                         <div className="flex items-center">
                           <input
                             type="checkbox"
@@ -1076,40 +1022,44 @@ const Proposals = () => {
                           />
                         </div>
                       </td>
-                      <td className="p-3 border-0">{displayProposalNumber}</td>
-                      <td className="p-3 border-0">
+                      <td className="px-4 sm:px-6 py-3 font-medium text-slate-900">
+                        {displayProposalNumber}
+                      </td>
+                      <td className="px-4 sm:px-6 py-3">
                         {proposal.clientName || "-"}
                       </td>
-                      <td className="p-3 border-0">{proposal.title || "-"}</td>
+                      <td className="px-4 sm:px-6 py-3">
+                        {proposal.title || "-"}
+                      </td>
                       {compactView ? (
                         <>
-                          <td className="p-3 border-0 text-right">
+                          <td className="px-4 sm:px-6 py-3 text-right tabular-nums font-medium">
                             {displayAmount}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             <span
-                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                 proposal.status
                               )}`}
                             >
                               {proposal.status || "Draft"}
                             </span>
                           </td>
-                          <td className="p-3 rounded-r-lg border-0">
-                            <div className="flex space-x-2">
+                          <td className="px-4 sm:px-6 py-3">
+                            <div className="flex gap-2">
                               <button
                                 onClick={() => setViewProposal(proposal)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg bg-slate-100 p-2 text-slate-700 hover:bg-slate-200"
                                 title="View"
                               >
-                                <FaEye size={16} />
+                                <FaEye size={14} />
                               </button>
                               <button
                                 onClick={() => downloadProposalPDF(proposal)}
-                                className="text-green-500 hover:text-green-700"
+                                className="rounded-lg bg-emerald-100 p-2 text-emerald-700 hover:bg-emerald-200"
                                 title="Download"
                               >
-                                <FaDownload size={16} />
+                                <FaDownload size={14} />
                               </button>
                               <button
                                 onClick={() => {
@@ -1121,57 +1071,59 @@ const Proposals = () => {
                                     status: proposal.status || "Draft",
                                   });
                                 }}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg bg-blue-100 p-2 text-blue-700 hover:bg-blue-200"
                                 title="Edit"
                               >
-                                <FaEdit size={16} />
+                                <FaEdit size={14} />
                               </button>
                               <button
                                 onClick={() => handleDelete(proposal._id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg bg-red-100 p-2 text-red-700 hover:bg-red-200"
                                 title="Delete"
                               >
-                                <FaTrash size={16} />
+                                <FaTrash size={14} />
                               </button>
                             </div>
                           </td>
                         </>
                       ) : (
                         <>
-                          <td className="p-3 border-0">{displayAmount}</td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-right tabular-nums font-medium">
+                            {displayAmount}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3">
                             {formatDate(proposal.date)}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             {formatDate(proposal.openTill)}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             {proposal.tags || "-"}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             <span
-                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                 proposal.status
                               )}`}
                             >
                               {proposal.status || "Draft"}
                             </span>
                           </td>
-                          <td className="p-3 rounded-r-lg border-0">
-                            <div className="flex space-x-2">
+                          <td className="px-4 sm:px-6 py-3">
+                            <div className="flex gap-2">
                               <button
                                 onClick={() => setViewProposal(proposal)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg bg-slate-100 p-2 text-slate-700 hover:bg-slate-200"
                                 title="View"
                               >
-                                <FaEye size={16} />
+                                <FaEye size={14} />
                               </button>
                               <button
                                 onClick={() => downloadProposalPDF(proposal)}
-                                className="text-green-500 hover:text-green-700"
+                                className="rounded-lg bg-emerald-100 p-2 text-emerald-700 hover:bg-emerald-200"
                                 title="Download"
                               >
-                                <FaDownload size={16} />
+                                <FaDownload size={14} />
                               </button>
                               <button
                                 onClick={() => {
@@ -1183,17 +1135,17 @@ const Proposals = () => {
                                     status: proposal.status || "Draft",
                                   });
                                 }}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg bg-blue-100 p-2 text-blue-700 hover:bg-blue-200"
                                 title="Edit"
                               >
-                                <FaEdit size={16} />
+                                <FaEdit size={14} />
                               </button>
                               <button
                                 onClick={() => handleDelete(proposal._id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg bg-red-100 p-2 text-red-700 hover:bg-red-200"
                                 title="Delete"
                               >
-                                <FaTrash size={16} />
+                                <FaTrash size={14} />
                               </button>
                             </div>
                           </td>
@@ -1206,7 +1158,7 @@ const Proposals = () => {
                 <tr>
                   <td
                     colSpan={compactView ? 7 : 10}
-                    className="p-4 text-center text-gray-500"
+                    className="p-8 text-center text-slate-500"
                   >
                     {proposals.length === 0
                       ? "No quotations found. Create your first quotation!"
@@ -1220,7 +1172,7 @@ const Proposals = () => {
 
         {/* Pagination */}
         {filteredProposals.length > 0 && (
-          <div className="flex justify-between items-center mt-4 text-sm">
+          <div className="flex justify-between items-center mt-4 text-sm text-slate-600">
             <span>
               Showing {indexOfFirstProposal + 1} to{" "}
               {Math.min(indexOfLastProposal, filteredProposals.length)} of{" "}
@@ -1228,7 +1180,7 @@ const Proposals = () => {
             </span>
             <div className="flex items-center gap-2">
               <button
-                className="px-2 py-1 border rounded disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm disabled:opacity-50"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => prev - 1)}
               >
@@ -1237,8 +1189,10 @@ const Proposals = () => {
               {Array.from({ length: totalPages }, (_, i) => (
                 <button
                   key={i}
-                  className={`px-3 py-1 border rounded ${
-                    currentPage === i + 1 ? "bg-gray-200" : ""
+                  className={`rounded-xl border border-slate-200 px-3 py-2 text-sm ${
+                    currentPage === i + 1
+                      ? "bg-slate-900 text-white"
+                      : "bg-white/80"
                   }`}
                   onClick={() => setCurrentPage(i + 1)}
                 >
@@ -1246,7 +1200,7 @@ const Proposals = () => {
                 </button>
               ))}
               <button
-                className="px-2 py-1 border rounded disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm disabled:opacity-50"
                 disabled={currentPage === totalPages || totalPages === 0}
                 onClick={() => setCurrentPage((prev) => prev + 1)}
               >
@@ -1255,22 +1209,24 @@ const Proposals = () => {
             </div>
           </div>
         )}
-      </div>
+        </div>
 
       {/* View & Edit Modals */}
       {viewProposal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-11/12 max-w-md shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-50">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 w-11/12 max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Quotation Details</h2>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Quotation Details
+              </h2>
               <button
                 onClick={() => setViewProposal(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-600"
               >
                 <FaTimes />
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 text-slate-700">
               <p>
                 <b>Quotation #:</b>{" "}
                 {formatProposalNumber(
@@ -1285,12 +1241,12 @@ const Proposals = () => {
                 <b>Title:</b> {viewProposal.title}
               </p>
               <p>
-                <b>Amount:</b> ${viewProposal.total || 0}
+                <b>Amount:</b> {formatBDT(viewProposal.total || 0)}
               </p>
               <p>
                 <b>Status:</b>{" "}
                 <span
-                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                     viewProposal.status
                   )}`}
                 >
@@ -1318,13 +1274,13 @@ const Proposals = () => {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => downloadProposalPDF(viewProposal)}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
               >
                 <FaDownload className="inline mr-2" /> Download PDF
               </button>
               <button
                 onClick={() => setViewProposal(null)}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Close
               </button>
@@ -1334,20 +1290,22 @@ const Proposals = () => {
       )}
 
       {editProposal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-11/12 max-w-md shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-50">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 w-11/12 max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Update Quotation</h2>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Update Quotation
+              </h2>
               <button
                 onClick={() => setEditProposal(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-600"
               >
                 <FaTimes />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Client Name
                 </label>
                 <input
@@ -1356,12 +1314,12 @@ const Proposals = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, clientName: e.target.value })
                   }
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Client Name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Title
                 </label>
                 <input
@@ -1370,12 +1328,12 @@ const Proposals = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Title"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Amount
                 </label>
                 <input
@@ -1384,12 +1342,12 @@ const Proposals = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, total: e.target.value })
                   }
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Amount"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Status
                 </label>
                 <select
@@ -1397,7 +1355,7 @@ const Proposals = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, status: e.target.value })
                   }
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {statusOptions.map((option) => (
                     <option key={option} value={option}>
@@ -1410,13 +1368,13 @@ const Proposals = () => {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => setEditProposal(null)}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdate}
-                className="px-4 py-2 bg-black text-white rounded text-sm"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2 text-sm font-semibold text-white hover:brightness-110"
               >
                 Save Changes
               </button>
@@ -1424,6 +1382,7 @@ const Proposals = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

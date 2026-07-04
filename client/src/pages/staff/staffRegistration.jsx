@@ -183,47 +183,44 @@ const StaffRegistration = () => {
   };
 
   const getInputClasses = (hasError) =>
-    `w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-      hasError
-        ? "border border-red-500 focus:ring-red-400"
-        : "focus:ring-blue-400"
+    `w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 focus:outline-none focus:ring-2 ${
+      hasError ? "border-red-400/60 focus:ring-red-400/50" : "focus:ring-sky-400/50"
     }`;
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* Title */}
-      <div className="text-center mb-6">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-8 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      {/* Aurora blobs */}
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-500/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-500/30 blur-3xl" />
+
+      {/* Brand + Title */}
+      <div className="relative z-10 mb-6 flex flex-col items-center text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-2xl font-extrabold text-white shadow-lg">
+          A
+        </div>
         <h2 className="text-2xl font-bold text-white">
           Welcome to CRM Staff Portal
         </h2>
-        <p className="text-sm text-gray-300">Register your new staff account</p>
+        <p className="text-sm text-slate-400">Register your new staff account</p>
       </div>
 
       {/* Registration Card */}
-      <div className="w-full max-w-sm bg-[#0c123d] bg-opacity-90 p-6 rounded-xl shadow-2xl text-white">
+      <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.06] p-7 text-white shadow-[0_30px_90px_rgba(2,6,23,.6)] backdrop-blur-xl">
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {/* Staff Code Validation */}
-          <div className="mb-4 p-4 bg-[#10194f] rounded-lg">
+          <div className="mb-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
             <h3 className="text-lg font-semibold text-white mb-3 text-center">
               Step 1: Validate Staff Code
             </h3>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm mb-1">
+                <label className="block text-sm mb-1 text-slate-200">
                   Staff Registration Code
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <FiKey className="text-gray-400" />
+                    <FiKey className="text-slate-400" />
                   </div>
                   <input
                     type="text"
@@ -231,17 +228,17 @@ const StaffRegistration = () => {
                     value={staffCode}
                     onChange={(e) => setStaffCode(e.target.value.toUpperCase())}
                     disabled={codeValidated}
-                    className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#0a0f30] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                    className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 focus:outline-none focus:ring-2 ${
                       codeError
-                        ? "focus:ring-red-500 border border-red-500"
-                        : "focus:ring-blue-500"
+                        ? "focus:ring-red-400/50 border-red-400/60"
+                        : "focus:ring-sky-400/50"
                     } ${codeValidated ? "opacity-70" : ""}`}
                   />
                 </div>
                 {codeError && (
                   <p className="text-red-400 text-xs mt-1">{codeError}</p>
                 )}
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-slate-400 mt-1">
                   This code is provided by your HR department
                 </p>
               </div>
@@ -250,7 +247,7 @@ const StaffRegistration = () => {
                 type="button"
                 onClick={validateCode}
                 disabled={validatingCode || codeValidated}
-                className="w-full bg-blue-600 text-white font-semibold text-sm py-2 rounded-md hover:bg-blue-700 transition disabled:opacity-50"
+                className="w-full bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-semibold text-sm py-2.5 rounded-xl shadow-md hover:brightness-110 transition disabled:opacity-50"
               >
                 {validatingCode
                   ? "Validating..."
@@ -261,7 +258,7 @@ const StaffRegistration = () => {
             </div>
 
             {staffInfo && (
-              <div className="mt-3 p-3 bg-green-900/20 rounded border border-green-800/50">
+              <div className="mt-3 p-3 bg-green-500/10 rounded-xl border border-green-400/30">
                 <p className="text-green-400 text-sm text-center">
                   ✓ Validated for: <strong>{staffInfo.company}</strong> (
                   {staffInfo.department})
@@ -280,10 +277,10 @@ const StaffRegistration = () => {
 
                 {/* Name */}
                 <div>
-                  <label className="block text-sm mb-1">Full Name</label>
+                  <label className="block text-sm mb-1 text-slate-200">Full Name</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiUser className="text-gray-400" />
+                      <FiUser className="text-slate-400" />
                     </span>
                     <input
                       type="text"
@@ -302,10 +299,10 @@ const StaffRegistration = () => {
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm mb-1">Email</label>
+                  <label className="block text-sm mb-1 text-slate-200">Email</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiMail className="text-gray-400" />
+                      <FiMail className="text-slate-400" />
                     </span>
                     <input
                       type="email"
@@ -324,10 +321,10 @@ const StaffRegistration = () => {
 
                 {/* Password */}
                 <div>
-                  <label className="block text-sm mb-1">Password</label>
+                  <label className="block text-sm mb-1 text-slate-200">Password</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiLock className="text-gray-400" />
+                      <FiLock className="text-slate-400" />
                     </span>
                     <input
                       type="password"
@@ -348,10 +345,10 @@ const StaffRegistration = () => {
 
                 {/* Confirm Password */}
                 <div>
-                  <label className="block text-sm mb-1">Confirm Password</label>
+                  <label className="block text-sm mb-1 text-slate-200">Confirm Password</label>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <FiLock className="text-gray-400" />
+                      <FiLock className="text-slate-400" />
                     </span>
                     <input
                       type="password"
@@ -374,7 +371,7 @@ const StaffRegistration = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition ${
+                  className={`w-full bg-gradient-to-r from-sky-500 to-indigo-600 text-white font-semibold text-sm py-2.5 rounded-xl shadow-md hover:brightness-110 transition ${
                     loading ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
@@ -385,11 +382,11 @@ const StaffRegistration = () => {
           )}
 
           {/* Login Link */}
-          <p className="text-center text-sm text-gray-400 mt-4">
+          <p className="text-center text-sm text-slate-400 mt-4">
             Already have a staff account?{" "}
             <Link
               to="/staff/login"
-              className="text-white hover:underline font-medium"
+              className="text-sky-400 hover:underline font-medium"
             >
               LOG IN
             </Link>

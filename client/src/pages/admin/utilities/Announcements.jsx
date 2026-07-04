@@ -342,23 +342,28 @@ const AnnouncementsPage = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">
-        Loading Announcements...
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 text-slate-500 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          Loading Announcements...
+        </div>
       </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Utilities
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">
           {showNewAnnouncementForm
             ? editingAnnouncement
               ? "Edit Announcement"
               : "Add New Announcement"
             : "Announcements"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="mt-1 flex items-center text-slate-500 text-sm">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Announcements</span>
@@ -366,15 +371,22 @@ const AnnouncementsPage = () => {
       </div>
 
       {showNewAnnouncementForm ? (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Announcement Details</h2>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                Announcement
+              </p>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Announcement Details
+              </h2>
+            </div>
             <button
               onClick={() => {
                 setShowNewAnnouncementForm(false);
                 setEditingAnnouncement(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-400 hover:text-slate-700"
             >
               <FaTimes />
             </button>
@@ -382,7 +394,7 @@ const AnnouncementsPage = () => {
 
           <div className="grid grid-cols-1 gap-6 mb-8">
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Title *
               </label>
               <input
@@ -390,26 +402,26 @@ const AnnouncementsPage = () => {
                 name="title"
                 value={newAnnouncement.title}
                 onChange={handleNewAnnouncementChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Content *
               </label>
               <textarea
                 name="content"
                 value={newAnnouncement.content}
                 onChange={handleNewAnnouncementChange}
-                className="w-full border rounded px-3 py-2 h-32"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm h-32 focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Date *
               </label>
               <input
@@ -417,7 +429,7 @@ const AnnouncementsPage = () => {
                 name="date"
                 value={newAnnouncement.date}
                 onChange={handleNewAnnouncementChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               />
             </div>
@@ -430,14 +442,14 @@ const AnnouncementsPage = () => {
                 setShowNewAnnouncementForm(false);
                 setEditingAnnouncement(null);
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveAnnouncement}
-              className="px-4 py-2 bg-gray-900 text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               disabled={
                 !newAnnouncement.title ||
                 !newAnnouncement.content ||
@@ -452,10 +464,10 @@ const AnnouncementsPage = () => {
       ) : (
         <>
           {/* Top action buttons */}
-          <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2 bg-gray-900 text-white"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewAnnouncementForm(true)}
               >
                 <FaPlus /> New Announcement
@@ -463,7 +475,7 @@ const AnnouncementsPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -473,7 +485,7 @@ const AnnouncementsPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -483,7 +495,7 @@ const AnnouncementsPage = () => {
                 {/* Delete Selected button */}
                 {selectedAnnouncements.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
                     onClick={async () => {
                       if (
                         window.confirm(
@@ -513,7 +525,7 @@ const AnnouncementsPage = () => {
                 )}
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -530,7 +542,7 @@ const AnnouncementsPage = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1 bg-gray-900 text-white"
+                    className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
@@ -539,28 +551,28 @@ const AnnouncementsPage = () => {
                   {showExportMenu && (
                     <div
                       ref={exportMenuRef}
-                      className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                      className="absolute mt-1 w-32 rounded-2xl border border-white/60 bg-white shadow-2xl z-10 overflow-hidden"
                     >
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToExcel}
                       >
                         Excel
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToCSV}
                       >
                         CSV
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToPDF}
                       >
                         PDF
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={printTable}
                       >
                         Print
@@ -571,7 +583,7 @@ const AnnouncementsPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center bg-gray-900 text-white"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchAnnouncements}
                 >
                   <FaSyncAlt />
@@ -580,7 +592,7 @@ const AnnouncementsPage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-3 top-3 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -589,17 +601,17 @@ const AnnouncementsPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/70">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left">
-                    <th className="p-3 rounded-l-lg bg-gray-900 text-white">
+                  <tr className="bg-slate-50/80 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
+                    <th className="px-4 sm:px-6 py-3">
                       <input
                         type="checkbox"
                         checked={
@@ -619,24 +631,20 @@ const AnnouncementsPage = () => {
                         }}
                       />
                     </th>
-                    <th className="p-3 bg-gray-900 text-white">
-                      Announcement Name
-                    </th>
-                    <th className="p-3 bg-gray-900 text-white">Date</th>
-                    <th className="p-3 rounded-r-lg bg-gray-900 text-white">
-                      Actions
-                    </th>
+                    <th className="px-4 sm:px-6 py-3">Announcement Name</th>
+                    <th className="px-4 sm:px-6 py-3">Date</th>
+                    <th className="px-4 sm:px-6 py-3">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-200/70">
                   {currentData.length > 0 ? (
                     currentData.map((announcement) => (
                       <tr
                         key={announcement._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                        className="hover:bg-white/70 relative"
                         style={{ color: "black" }}
                       >
-                        <td className="p-3 rounded-l-lg border-0">
+                        <td className="px-4 sm:px-6 py-3">
                           <div className="flex items-center">
                             <input
                               type="checkbox"
@@ -650,13 +658,13 @@ const AnnouncementsPage = () => {
                             />
                           </div>
                         </td>
-                        <td className="p-3 border-0 font-medium">
+                        <td className="px-4 sm:px-6 py-3 font-medium text-slate-900">
                           {announcement.title}
                         </td>
-                        <td className="p-3 border-0">
+                        <td className="px-4 sm:px-6 py-3 text-slate-600">
                           {formatDate(announcement.date)}
                         </td>
-                        <td className="p-3 rounded-r-lg border-0">
+                        <td className="px-4 sm:px-6 py-3">
                           <div className="flex space-x-2">
                             {/* View Button */}
                             <button
@@ -692,7 +700,7 @@ const AnnouncementsPage = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="p-4 text-center text-gray-500">
+                      <td colSpan={4} className="px-4 sm:px-6 py-4 text-center text-slate-500">
                         {announcements.length === 0
                           ? "No announcements found. Create your first announcement!"
                           : "No announcements match your search criteria."}
@@ -704,8 +712,8 @@ const AnnouncementsPage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <span>
+            <div className="flex justify-between items-center mt-4 text-sm text-slate-600">
+              <span className="tabular-nums">
                 Showing {startIndex + 1} to{" "}
                 {Math.min(
                   startIndex + entriesPerPage,
@@ -715,7 +723,7 @@ const AnnouncementsPage = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((prev) => prev - 1)}
                 >
@@ -724,8 +732,10 @@ const AnnouncementsPage = () => {
                 {Array.from({ length: totalPages }, (_, i) => (
                   <button
                     key={i}
-                    className={`px-3 py-1 border rounded ${
-                      currentPage === i + 1 ? "bg-gray-200" : ""
+                    className={`rounded-xl border px-3 py-2 font-semibold tabular-nums ${
+                      currentPage === i + 1
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
                     }`}
                     onClick={() => setCurrentPage(i + 1)}
                   >
@@ -733,7 +743,7 @@ const AnnouncementsPage = () => {
                   </button>
                 ))}
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   disabled={currentPage === totalPages || totalPages === 0}
                   onClick={() => setCurrentPage((prev) => prev + 1)}
                 >
@@ -747,34 +757,34 @@ const AnnouncementsPage = () => {
 
       {/* View Announcement Modal */}
       {viewingAnnouncement && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-50 p-4">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 w-full max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-lg font-semibold text-slate-900">
                 {viewingAnnouncement.title}
               </h2>
               <button
                 onClick={() => setViewingAnnouncement(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-700"
               >
                 <FaTimes />
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 text-slate-700">
               <p>
                 <b>Date:</b> {formatDate(viewingAnnouncement.date)}
               </p>
               <p>
                 <b>Content:</b>
               </p>
-              <div className="border p-3 rounded-md bg-gray-50 max-h-60 overflow-y-auto">
+              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/80 max-h-60 overflow-y-auto text-sm">
                 {viewingAnnouncement.content}
               </div>
             </div>
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setViewingAnnouncement(null)}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 Close
               </button>

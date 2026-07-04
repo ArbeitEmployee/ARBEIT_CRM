@@ -195,10 +195,10 @@ const ClientContactsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-white">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p>Loading contracts...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading contracts...</p>
         </div>
       </div>
     );
@@ -206,14 +206,14 @@ const ClientContactsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen">
-        <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded-lg shadow-md">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        <div className="max-w-md mx-auto mt-20 p-6 rounded-3xl border border-white/60 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="text-red-600 text-center">
             <h2 className="text-xl font-bold mb-4">Error Loading Contracts</h2>
             <p className="mb-4">{error}</p>
             <button
               onClick={fetchClientContacts}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
             >
               Try Again
             </button>
@@ -224,11 +224,15 @@ const ClientContactsPage = () => {
   }
 
   return (
-    <div className=" min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">My Contracts</h1>
-        <div className="flex items-center text-gray-600">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Dashboard / Contracts
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">My Contracts</h1>
+        <div className="flex items-center text-slate-500 text-sm mt-1">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Contracts</span>
@@ -236,7 +240,7 @@ const ClientContactsPage = () => {
 
         {/* Client Info */}
         {clientInfo.company && (
-          <div className="mt-4 p-4 bg-white rounded-lg shadow">
+          <div className="mt-4 p-5 rounded-3xl border border-white/60 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
             <h3 className="text-lg font-semibold mb-2">Company Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -276,7 +280,7 @@ const ClientContactsPage = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {/* Active Contracts */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Active Contracts</p>
@@ -289,7 +293,7 @@ const ClientContactsPage = () => {
         </div>
 
         {/* Expired Contracts */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Expired Contracts</p>
@@ -302,7 +306,7 @@ const ClientContactsPage = () => {
         </div>
 
         {/* About to Expire */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">About to Expire</p>
@@ -316,9 +320,9 @@ const ClientContactsPage = () => {
       </div>
 
       {/* Toggle View Button */}
-      <div className="flex items-center justify-end mb-4">
+      <div className="flex items-center justify-end">
         <button
-          className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+          className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
           onClick={() => setCompactView(!compactView)}
         >
           {compactView ? "Full View" : "Compact View"}
@@ -327,16 +331,16 @@ const ClientContactsPage = () => {
 
       {/* White box for table */}
       <div
-        className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+        className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
           compactView ? "w-full" : "w-full"
         }`}
       >
         {/* Controls */}
-        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {/* Status Filter */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={statusFilter}
               onChange={(e) => {
                 setStatusFilter(e.target.value);
@@ -351,7 +355,7 @@ const ClientContactsPage = () => {
 
             {/* Entries per page */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={entriesPerPage}
               onChange={(e) => {
                 setEntriesPerPage(Number(e.target.value));
@@ -366,7 +370,7 @@ const ClientContactsPage = () => {
 
             {/* Refresh button */}
             <button
-              className="border px-2.5 py-1.5 rounded text-sm flex items-center hover:bg-gray-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm flex items-center text-slate-700 hover:bg-white"
               onClick={fetchClientContacts}
               disabled={loading}
             >
@@ -376,7 +380,7 @@ const ClientContactsPage = () => {
 
           {/* Search */}
           <div className="relative">
-            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+            <FaSearch className="absolute left-3 top-3.5 text-slate-400 text-sm" />
             <input
               type="text"
               placeholder="Search contracts..."
@@ -385,7 +389,7 @@ const ClientContactsPage = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             />
           </div>
         </div>
@@ -394,16 +398,16 @@ const ClientContactsPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
-              <tr className="text-left">
+              <tr className="text-left text-xs uppercase tracking-wider font-semibold">
                 <th
                   className="p-3 rounded-l-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
+                  style={{ backgroundColor: "#0f172a", color: "white" }}
                 >
                   Subject
                 </th>
                 <th
                   className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
+                  style={{ backgroundColor: "#0f172a", color: "white" }}
                 >
                   Contract Type
                 </th>
@@ -411,19 +415,19 @@ const ClientContactsPage = () => {
                   <>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      style={{ backgroundColor: "#0f172a", color: "white" }}
                     >
                       Contract Value
                     </th>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      style={{ backgroundColor: "#0f172a", color: "white" }}
                     >
                       End Date
                     </th>
                     <th
                       className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      style={{ backgroundColor: "#0f172a", color: "white" }}
                     >
                       Status
                     </th>
@@ -432,31 +436,31 @@ const ClientContactsPage = () => {
                   <>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      style={{ backgroundColor: "#0f172a", color: "white" }}
                     >
                       Contract Value
                     </th>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      style={{ backgroundColor: "#0f172a", color: "white" }}
                     >
                       Start Date
                     </th>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      style={{ backgroundColor: "#0f172a", color: "white" }}
                     >
                       End Date
                     </th>
                     <th
                       className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      style={{ backgroundColor: "#0f172a", color: "white" }}
                     >
                       Project
                     </th>
                     <th
                       className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      style={{ backgroundColor: "#0f172a", color: "white" }}
                     >
                       Status
                     </th>
@@ -469,7 +473,7 @@ const ClientContactsPage = () => {
                 currentData.map((contact) => (
                   <tr
                     key={contact._id}
-                    className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                    className="bg-white/70 shadow-[0_10px_30px_rgba(15,23,42,.06)] rounded-lg hover:bg-white relative"
                     style={{ color: "black" }}
                   >
                     <td className="p-3 rounded-l-lg border-0">
@@ -561,7 +565,7 @@ const ClientContactsPage = () => {
             </div>
             <div className="flex items-center gap-1">
               <button
-                className="border px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white"
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
               >
@@ -573,10 +577,10 @@ const ClientContactsPage = () => {
                 return pageNum <= totalPages ? (
                   <button
                     key={pageNum}
-                    className={`border px-3 py-1 rounded text-sm hover:bg-gray-50 ${
+                    className={`rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-semibold hover:bg-white ${
                       currentPage === pageNum
-                        ? "bg-gray-800 text-white hover:bg-gray-700"
-                        : ""
+                        ? "bg-gradient-to-r from-slate-900 to-slate-800 text-white border-transparent hover:brightness-110"
+                        : "bg-white/80 text-slate-700"
                     }`}
                     onClick={() => setCurrentPage(pageNum)}
                   >
@@ -585,7 +589,7 @@ const ClientContactsPage = () => {
                 ) : null;
               })}
               <button
-                className="border px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white"
                 onClick={() =>
                   setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                 }
@@ -596,6 +600,7 @@ const ClientContactsPage = () => {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

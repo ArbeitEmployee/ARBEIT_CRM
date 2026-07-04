@@ -307,9 +307,9 @@ const ClientSupportPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white flex items-center justify-center">
+        <div className="text-center text-slate-600">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-4"></div>
           <p>Loading support tickets...</p>
         </div>
       </div>
@@ -318,8 +318,8 @@ const ClientSupportPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen">
-        <div className="max-w-md mx-auto mt-20 p-6 bg-white rounded-lg shadow-md">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        <div className="max-w-md mx-auto mt-20 rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="text-red-600 text-center">
             <h2 className="text-xl font-bold mb-4">
               Error Loading Support Tickets
@@ -327,7 +327,7 @@ const ClientSupportPage = () => {
             <p className="mb-4">{error}</p>
             <button
               onClick={fetchClientTickets}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
             >
               Try Again
             </button>
@@ -338,13 +338,17 @@ const ClientSupportPage = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Client Portal
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">
           {showNewTicketForm ? "Create New Ticket" : "My Support Tickets"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-500">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Support</span>
@@ -352,8 +356,8 @@ const ClientSupportPage = () => {
 
         {/* Client Info */}
         {clientInfo.company && (
-          <div className="mt-4 p-4 bg-white rounded-lg shadow">
-            <h3 className="text-lg font-semibold mb-2">Company Information</h3>
+          <div className="mt-4 rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h3 className="text-lg font-semibold mb-2 text-slate-900">Company Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-gray-600">
@@ -390,14 +394,14 @@ const ClientSupportPage = () => {
       </div>
 
       {showNewTicketForm ? (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Ticket Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Ticket Details</h2>
             <button
               onClick={() => {
                 setShowNewTicketForm(false);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-400 hover:text-slate-600"
             >
               <FaTimes />
             </button>
@@ -407,7 +411,7 @@ const ClientSupportPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Subject *
                 </label>
                 <input
@@ -415,33 +419,33 @@ const ClientSupportPage = () => {
                   name="subject"
                   value={newTicket.subject}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Description *
                 </label>
                 <textarea
                   name="description"
                   value={newTicket.description}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2 h-32"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 h-32"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Customer Code
                 </label>
                 <input
                   type="text"
                   name="customerCode"
                   value={clientInfo.customerCode || ""}
-                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-100/80 px-3 py-2.5 text-sm text-slate-500 focus:outline-none"
                   disabled
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -450,20 +454,20 @@ const ClientSupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Customer
                 </label>
                 <input
                   type="text"
                   name="customerName"
                   value={clientInfo.company || ""}
-                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-100/80 px-3 py-2.5 text-sm text-slate-500 focus:outline-none"
                   disabled
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Tags
                 </label>
                 <input
@@ -471,7 +475,7 @@ const ClientSupportPage = () => {
                   name="tags"
                   value={newTicket.tags}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="e.g., UI, BUG, URGENT"
                 />
               </div>
@@ -480,14 +484,14 @@ const ClientSupportPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Service
                 </label>
                 <select
                   name="service"
                   value={newTicket.service}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="">Select Service</option>
                   {serviceOptions.map((option) => (
@@ -499,14 +503,14 @@ const ClientSupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Department
                 </label>
                 <select
                   name="department"
                   value={newTicket.department}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="">Select Department</option>
                   {departmentOptions.map((option) => (
@@ -518,14 +522,14 @@ const ClientSupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Priority
                 </label>
                 <select
                   name="priority"
                   value={newTicket.priority}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {priorityOptions.map((option) => (
                     <option key={option} value={option}>
@@ -536,13 +540,13 @@ const ClientSupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Status
                 </label>
                 <input
                   type="text"
                   value="Open"
-                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-100/80 px-3 py-2.5 text-sm text-slate-500 focus:outline-none"
                   disabled
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -558,14 +562,14 @@ const ClientSupportPage = () => {
               onClick={() => {
                 setShowNewTicketForm(false);
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveTicket}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               disabled={
                 !newTicket.subject || !newTicket.description || isSaving
               }
@@ -579,10 +583,10 @@ const ClientSupportPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Total Tickets */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Tickets</p>
+                  <p className="text-slate-500 text-sm">Total Tickets</p>
                   <p className="text-2xl font-bold">{stats.totalTickets}</p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-full">
@@ -592,10 +596,10 @@ const ClientSupportPage = () => {
             </div>
 
             {/* Open Tickets */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Open</p>
+                  <p className="text-slate-500 text-sm">Open</p>
                   <p className="text-2xl font-bold">{stats.openTickets}</p>
                 </div>
                 <div className="bg-gray-100 p-3 rounded-full">
@@ -605,10 +609,10 @@ const ClientSupportPage = () => {
             </div>
 
             {/* Answered Tickets */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Answered</p>
+                  <p className="text-slate-500 text-sm">Answered</p>
                   <p className="text-2xl font-bold">{stats.answeredTickets}</p>
                 </div>
                 <div className="bg-blue-100 p-3 rounded-full">
@@ -618,10 +622,10 @@ const ClientSupportPage = () => {
             </div>
 
             {/* On Hold Tickets */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">On Hold</p>
+                  <p className="text-slate-500 text-sm">On Hold</p>
                   <p className="text-2xl font-bold">{stats.onHoldTickets}</p>
                 </div>
                 <div className="bg-yellow-100 p-3 rounded-full">
@@ -631,10 +635,10 @@ const ClientSupportPage = () => {
             </div>
 
             {/* In Progress Tickets */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">In Progress</p>
+                  <p className="text-slate-500 text-sm">In Progress</p>
                   <p className="text-2xl font-bold">
                     {stats.inProgressTickets}
                   </p>
@@ -646,10 +650,10 @@ const ClientSupportPage = () => {
             </div>
 
             {/* Closed Tickets */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Closed</p>
+                  <p className="text-slate-500 text-sm">Closed</p>
                   <p className="text-2xl font-bold">{stats.closedTickets}</p>
                 </div>
                 <div className="bg-green-100 p-3 rounded-full">
@@ -663,8 +667,7 @@ const ClientSupportPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewTicketForm(true)}
               >
                 <FaPlus /> New Ticket
@@ -672,7 +675,7 @@ const ClientSupportPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "Full View" : "Compact View"}
@@ -682,7 +685,7 @@ const ClientSupportPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-full" : "w-full"
             }`}
           >
@@ -691,7 +694,7 @@ const ClientSupportPage = () => {
               <div className="flex items-center gap-2">
                 {/* Status Filter */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={statusFilter}
                   onChange={(e) => {
                     setStatusFilter(e.target.value);
@@ -708,7 +711,7 @@ const ClientSupportPage = () => {
 
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -723,7 +726,7 @@ const ClientSupportPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center hover:bg-gray-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchClientTickets}
                   disabled={loading}
                 >
@@ -733,7 +736,7 @@ const ClientSupportPage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-3 top-3 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search tickets..."
@@ -742,19 +745,18 @@ const ClientSupportPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
 
             {/* Table */}
             <div className="overflow-x-auto">
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left">
+                  <tr className="text-left bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
                     <th
                       className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
                     >
                       Subject
                     </th>
@@ -762,32 +764,32 @@ const ClientSupportPage = () => {
                       <>
                         <th
                           className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Tags
                         </th>
                         <th
                           className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Service
                         </th>
                         <th
                           className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Priority
                         </th>
                         <th
                           className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Status
                         </th>
                         <th
                           className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Created
                         </th>
                       </>
@@ -795,44 +797,44 @@ const ClientSupportPage = () => {
                       <>
                         <th
                           className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Tags
                         </th>
                         <th
                           className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Service
                         </th>
                         <th
                           className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Department
                         </th>
                         <th
                           className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Priority
                         </th>
                         <th
                           className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Status
                         </th>
                         <th
                           className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Created
                         </th>
                         <th
                           className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
                         >
+
                           Last Reply
                         </th>
                       </>
@@ -844,11 +846,10 @@ const ClientSupportPage = () => {
                     currentData.map((ticket) => (
                       <tr
                         key={ticket._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                        style={{ color: "black" }}
+                        className="border-b border-slate-200/70 hover:bg-white/70 transition-colors text-slate-700"
                       >
                         <td className="p-3 rounded-l-lg border-0">
-                          <div className="font-medium">{ticket.subject}</div>
+                          <div className="font-medium text-slate-900">{ticket.subject}</div>
                         </td>
                         <td className="p-3 border-0">{ticket.tags || "N/A"}</td>
                         <td className="p-3 border-0">{ticket.service}</td>
@@ -859,7 +860,7 @@ const ClientSupportPage = () => {
 
                         <td className="p-3 border-0">
                           <span
-                            className={`px-2 py-1 rounded text-xs ${getPriorityColor(
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${getPriorityColor(
                               ticket.priority
                             )}`}
                           >
@@ -868,7 +869,7 @@ const ClientSupportPage = () => {
                         </td>
                         <td className="p-3 border-0">
                           <span
-                            className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                               ticket.status
                             )}`}
                           >
@@ -890,9 +891,9 @@ const ClientSupportPage = () => {
                         colSpan={compactView ? 6 : 8}
                         className="p-8 text-center"
                       >
-                        <div className="text-gray-500">
-                          <FaExclamationCircle className="mx-auto mb-4 text-4xl text-gray-300" />
-                          <h3 className="text-lg font-medium mb-2">
+                        <div className="text-slate-500">
+                          <FaExclamationCircle className="mx-auto mb-4 text-4xl text-slate-300" />
+                          <h3 className="text-lg font-medium mb-2 text-slate-700">
                             No Support Tickets Found
                           </h3>
                           <p className="text-sm">
@@ -906,7 +907,7 @@ const ClientSupportPage = () => {
                                 setSearchTerm("");
                                 setStatusFilter("All");
                               }}
-                              className="mt-2 text-blue-600 hover:text-blue-800 text-sm"
+                              className="mt-2 text-blue-600 hover:text-blue-800 text-sm font-semibold"
                             >
                               Clear filters
                             </button>
@@ -922,7 +923,7 @@ const ClientSupportPage = () => {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-slate-500">
                   Showing {startIndex + 1} to{" "}
                   {Math.min(
                     startIndex + entriesPerPage,
@@ -932,7 +933,7 @@ const ClientSupportPage = () => {
                 </div>
                 <div className="flex items-center gap-1">
                   <button
-                    className="border px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() =>
                       setCurrentPage((prev) => Math.max(prev - 1, 1))
                     }
@@ -947,10 +948,10 @@ const ClientSupportPage = () => {
                     return pageNum <= totalPages ? (
                       <button
                         key={pageNum}
-                        className={`border px-3 py-1 rounded text-sm hover:bg-gray-50 ${
+                        className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
                           currentPage === pageNum
-                            ? "bg-gray-800 text-white hover:bg-gray-700"
-                            : ""
+                            ? "border-transparent bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                            : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
                         }`}
                         onClick={() => setCurrentPage(pageNum)}
                       >
@@ -959,7 +960,7 @@ const ClientSupportPage = () => {
                     ) : null;
                   })}
                   <button
-                    className="border px-3 py-1 rounded text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() =>
                       setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                     }
@@ -973,6 +974,7 @@ const ClientSupportPage = () => {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 };

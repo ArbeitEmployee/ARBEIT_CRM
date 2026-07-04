@@ -19,6 +19,7 @@ import axios from "axios";
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatBDT } from "../../../utils/currency";
 
 const Estimates = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -397,11 +398,9 @@ const Estimates = () => {
             index: index + 1,
             description: item.description || "Item",
             quantity: item.quantity || 1,
-            rate: `${estimate.currency || "USD"} ${(item.rate || 0).toFixed(
-              2
-            )}`,
+            rate: formatBDT(item.rate || 0),
             tax: `${(item.tax1 || 0) + (item.tax2 || 0)}%`,
-            amount: `${estimate.currency || "USD"} ${total.toFixed(2)}`,
+            amount: formatBDT(total),
           };
         });
 
@@ -456,7 +455,7 @@ const Estimates = () => {
 
       doc.text("Subtotal:", calcX, yPosition);
       doc.text(
-        `${estimate.currency || "USD"} ${subtotal.toFixed(2)}`,
+        formatBDT(subtotal),
         pageWidth - margin,
         yPosition,
         { align: "right" }
@@ -466,7 +465,7 @@ const Estimates = () => {
       if (totalTax > 0) {
         doc.text("Tax:", calcX, yPosition);
         doc.text(
-          `${estimate.currency || "USD"} ${totalTax.toFixed(2)}`,
+          formatBDT(totalTax),
           pageWidth - margin,
           yPosition,
           { align: "right" }
@@ -477,7 +476,7 @@ const Estimates = () => {
       if (discount > 0) {
         doc.text("Discount:", calcX, yPosition);
         doc.text(
-          `- ${estimate.currency || "USD"} ${discount.toFixed(2)}`,
+          `- ${formatBDT(discount)}`,
           pageWidth - margin,
           yPosition,
           { align: "right" }
@@ -488,7 +487,7 @@ const Estimates = () => {
       doc.setFont("helvetica", "bold");
       doc.text("Total:", calcX, yPosition);
       doc.text(
-        `${estimate.currency || "USD"} ${total.toFixed(2)}`,
+        formatBDT(total),
         pageWidth - margin,
         yPosition,
         { align: "right" }
@@ -735,7 +734,7 @@ const Estimates = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Draft":
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
       case "Pending":
         return "bg-blue-100 text-blue-800";
       case "Approved":
@@ -745,146 +744,163 @@ const Estimates = () => {
       case "Expired":
         return "bg-yellow-100 text-yellow-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
     }
   };
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading estimates...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 text-slate-600">
+        Loading estimates...
+      </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Estimates</h1>
-        <div className="flex items-center text-gray-600">
-          <span>Dashboard</span>
-          <FaChevronRight className="mx-1 text-xs" />
-          <span>Estimates</span>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Total Estimates */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+          <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
-              <p className="text-gray-500 text-sm">Total Estimates</p>
-              <p className="text-2xl font-bold">{estimates.length}</p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaEye className="text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Draft Estimates */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Draft</p>
-              <p className="text-2xl font-bold">
-                {estimates.filter((e) => e.status === "Draft").length}
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                Sales
               </p>
+              <h1 className="text-2xl font-bold text-white">Estimates</h1>
+              <div className="mt-1 flex items-center text-sm text-slate-300">
+                <span>Dashboard</span>
+                <FaChevronRight className="mx-1 text-xs" />
+                <span>Estimates</span>
+              </div>
             </div>
-            <div className="bg-gray-100 p-3 rounded-full">
-              <FaEdit className="text-gray-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Pending Estimates */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Pending</p>
-              <p className="text-2xl font-bold">
-                {estimates.filter((e) => e.status === "Pending").length}
-              </p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaEye className="text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Approved Estimates */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Approved</p>
-              <p className="text-2xl font-bold">
-                {estimates.filter((e) => e.status === "Approved").length}
-              </p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <FaEye className="text-green-600" />
+            <div className="flex items-center gap-2">
+              <button
+                className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/20"
+                onClick={() => navigate("new")}
+              >
+                <FaPlus /> New Estimate
+              </button>
+              {selectedEstimates.length > 0 && (
+                <button
+                  className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
+                  onClick={handleBulkDelete}
+                >
+                  Delete Selected ({selectedEstimates.length})
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Rejected Estimates */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Rejected</p>
-              <p className="text-2xl font-bold">
-                {estimates.filter((e) => e.status === "Rejected").length}
-              </p>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Estimates */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Total Estimates
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {estimates.length}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500 text-white">
+                <FaEye />
+              </div>
             </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <FaTimes className="text-red-600" />
+          </div>
+
+          {/* Draft Estimates */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Draft
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {estimates.filter((e) => e.status === "Draft").length}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-500 text-white">
+                <FaEdit />
+              </div>
+            </div>
+          </div>
+
+          {/* Pending Estimates */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Pending
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {estimates.filter((e) => e.status === "Pending").length}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500 text-white">
+                <FaEye />
+              </div>
+            </div>
+          </div>
+
+          {/* Approved Estimates */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Approved
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {estimates.filter((e) => e.status === "Approved").length}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500 text-white">
+                <FaEye />
+              </div>
+            </div>
+          </div>
+
+          {/* Rejected Estimates */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Rejected
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {estimates.filter((e) => e.status === "Rejected").length}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500 text-white">
+                <FaTimes />
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Top action buttons */}
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-        <div className="flex items-center gap-2">
+        {/* Top action buttons */}
+        <div className="flex items-center justify-end flex-wrap gap-2">
           <button
-            className="px-3 py-1 text-sm rounded flex items-center gap-2"
-            style={{ backgroundColor: "#333333", color: "white" }}
-            onClick={() => navigate("new")}
-          >
-            <FaPlus /> New Estimate
-          </button>
-
-          {/* Bulk delete button */}
-          {selectedEstimates.length > 0 && (
-            <button
-              className="bg-red-600 text-white px-3 py-1 rounded"
-              onClick={handleBulkDelete}
-            >
-              Delete Selected ({selectedEstimates.length})
-            </button>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+            className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             onClick={() => setCompactView(!compactView)}
           >
             {compactView ? "<<" : ">>"}
           </button>
         </div>
-      </div>
 
-      {/* White box for table */}
-      <div
-        className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
-          compactView ? "w-1/2" : "w-full"
-        }`}
-      >
+        {/* White box for table */}
+        <div
+          className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
+            compactView ? "w-1/2" : "w-full"
+          }`}
+        >
         {/* Controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {/* Entries per page */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={entriesPerPage}
               onChange={(e) => {
                 setEntriesPerPage(Number(e.target.value));
@@ -902,7 +918,7 @@ const Estimates = () => {
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu((prev) => !prev)}
-                className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 <HiOutlineDownload /> Export
               </button>
@@ -911,28 +927,28 @@ const Estimates = () => {
               {showExportMenu && (
                 <div
                   ref={exportMenuRef}
-                  className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                  className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10 overflow-hidden"
                 >
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                     onClick={() => handleExport("Excel")}
                   >
                     Excel
                   </button>
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                     onClick={() => handleExport("CSV")}
                   >
                     CSV
                   </button>
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                     onClick={() => handleExport("PDF")}
                   >
                     PDF
                   </button>
                   <button
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                     onClick={() => handleExport("Print")}
                   >
                     Print
@@ -943,7 +959,7 @@ const Estimates = () => {
 
             {/* Refresh button */}
             <button
-              className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+              className="flex items-center rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               onClick={fetchEstimates}
             >
               <FaSyncAlt />
@@ -952,7 +968,7 @@ const Estimates = () => {
 
           {/* Search */}
           <div className="relative">
-            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+            <FaSearch className="absolute left-3 top-3.5 text-slate-400 text-sm" />
             <input
               type="text"
               placeholder="Search..."
@@ -961,20 +977,17 @@ const Estimates = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             />
           </div>
         </div>
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-sm border-separate border-spacing-y-2">
-            <thead>
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
               <tr className="text-left">
-                <th
-                  className="p-3 rounded-l-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="px-4 sm:px-6 py-3">
                   <input
                     type="checkbox"
                     checked={
@@ -992,111 +1005,37 @@ const Estimates = () => {
                     }}
                   />
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Estimate#
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Customer
-                </th>
+                <th className="px-4 sm:px-6 py-3">Estimate#</th>
+                <th className="px-4 sm:px-6 py-3">Customer</th>
                 {compactView ? (
                   <>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Amount
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Date
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Actions
-                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-right">Amount</th>
+                    <th className="px-4 sm:px-6 py-3">Date</th>
+                    <th className="px-4 sm:px-6 py-3">Status</th>
+                    <th className="px-4 sm:px-6 py-3">Actions</th>
                   </>
                 ) : (
                   <>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Amount
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Total Tax
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Project
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Tags
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Date
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Expiry Date
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Actions
-                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-right">Amount</th>
+                    <th className="px-4 sm:px-6 py-3 text-right">Total Tax</th>
+                    <th className="px-4 sm:px-6 py-3">Project</th>
+                    <th className="px-4 sm:px-6 py-3">Tags</th>
+                    <th className="px-4 sm:px-6 py-3">Date</th>
+                    <th className="px-4 sm:px-6 py-3">Expiry Date</th>
+                    <th className="px-4 sm:px-6 py-3">Status</th>
+                    <th className="px-4 sm:px-6 py-3">Actions</th>
                   </>
                 )}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200/70">
               {currentEstimates.length > 0 ? (
                 currentEstimates.map((estimate) => {
                   const displayEstimateNumber =
                     estimate.estimateNumber ||
                     "EST-" + estimate._id.slice(-6).toUpperCase();
 
-                  const displayAmount = new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: estimate.currency || "USD",
-                    minimumFractionDigits: 2,
-                  }).format(estimate.total || 0);
+                  const displayAmount = formatBDT(estimate.total || 0);
 
                   const totalTax = estimate.items
                     ? estimate.items.reduce(
@@ -1117,10 +1056,9 @@ const Estimates = () => {
                   return (
                     <tr
                       key={estimate._id}
-                      className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                      style={{ color: "black" }}
+                      className="hover:bg-white/70 text-slate-700"
                     >
-                      <td className="p-3 rounded-l-lg border-0">
+                      <td className="px-4 sm:px-6 py-3">
                         <div className="flex items-center">
                           <input
                             type="checkbox"
@@ -1132,40 +1070,44 @@ const Estimates = () => {
                           />
                         </div>
                       </td>
-                      <td className="p-3 border-0 ">{displayEstimateNumber}</td>
-                      <td className="p-3 border-0">
+                      <td className="px-4 sm:px-6 py-3 font-medium text-slate-900">
+                        {displayEstimateNumber}
+                      </td>
+                      <td className="px-4 sm:px-6 py-3">
                         {estimate.customer || "-"}
                       </td>
                       {compactView ? (
                         <>
-                          <td className="p-3 border-0 ">{displayAmount}</td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-right tabular-nums font-medium">
+                            {displayAmount}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3">
                             {formatDate(estimate.estimateDate)}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             <span
-                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                 estimate.status
                               )}`}
                             >
                               {estimate.status || "Draft"}
                             </span>
                           </td>
-                          <td className="p-3 rounded-r-lg border-0">
-                            <div className="flex space-x-2">
+                          <td className="px-4 sm:px-6 py-3">
+                            <div className="flex gap-2">
                               <button
                                 onClick={() => setViewEstimate(estimate)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg bg-slate-100 p-2 text-slate-700 hover:bg-slate-200"
                                 title="View"
                               >
-                                <FaEye size={16} />
+                                <FaEye size={14} />
                               </button>
                               <button
                                 onClick={() => downloadEstimatePDF(estimate)}
-                                className="text-green-500 hover:text-green-700"
+                                className="rounded-lg bg-emerald-100 p-2 text-emerald-700 hover:bg-emerald-200"
                                 title="Download"
                               >
-                                <FaDownload size={16} />
+                                <FaDownload size={14} />
                               </button>
                               <button
                                 onClick={() => {
@@ -1175,67 +1117,65 @@ const Estimates = () => {
                                     status: estimate.status || "Draft",
                                   });
                                 }}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg bg-blue-100 p-2 text-blue-700 hover:bg-blue-200"
                                 title="Edit"
                               >
-                                <FaEdit size={16} />
+                                <FaEdit size={14} />
                               </button>
                               <button
                                 onClick={() => handleDelete(estimate._id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg bg-red-100 p-2 text-red-700 hover:bg-red-200"
                                 title="Delete"
                               >
-                                <FaTrash size={16} />
+                                <FaTrash size={14} />
                               </button>
                             </div>
                           </td>
                         </>
                       ) : (
                         <>
-                          <td className="p-3 border-0 ">{displayAmount}</td>
-                          <td className="p-3 border-0 ">
-                            {new Intl.NumberFormat("en-US", {
-                              style: "currency",
-                              currency: estimate.currency || "USD",
-                              minimumFractionDigits: 2,
-                            }).format(totalTax)}
+                          <td className="px-4 sm:px-6 py-3 text-right tabular-nums font-medium">
+                            {displayAmount}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-right tabular-nums font-medium">
+                            {formatBDT(totalTax)}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3">
                             {estimate.reference || "-"}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             {estimate.tags || "-"}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             {formatDate(estimate.estimateDate)}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             {formatDate(estimate.expiryDate)}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             <span
-                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                 estimate.status
                               )}`}
                             >
                               {estimate.status || "Draft"}
                             </span>
                           </td>
-                          <td className="p-3 rounded-r-lg border-0">
-                            <div className="flex space-x-2">
+                          <td className="px-4 sm:px-6 py-3">
+                            <div className="flex gap-2">
                               <button
                                 onClick={() => setViewEstimate(estimate)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg bg-slate-100 p-2 text-slate-700 hover:bg-slate-200"
                                 title="View"
                               >
-                                <FaEye size={16} />
+                                <FaEye size={14} />
                               </button>
                               <button
                                 onClick={() => downloadEstimatePDF(estimate)}
-                                className="text-green-500 hover:text-green-700"
+                                className="rounded-lg bg-emerald-100 p-2 text-emerald-700 hover:bg-emerald-200"
                                 title="Download"
                               >
-                                <FaDownload size={16} />
+                                <FaDownload size={14} />
                               </button>
                               <button
                                 onClick={() => {
@@ -1245,17 +1185,17 @@ const Estimates = () => {
                                     status: estimate.status || "Draft",
                                   });
                                 }}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg bg-blue-100 p-2 text-blue-700 hover:bg-blue-200"
                                 title="Edit"
                               >
-                                <FaEdit size={16} />
+                                <FaEdit size={14} />
                               </button>
                               <button
                                 onClick={() => handleDelete(estimate._id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg bg-red-100 p-2 text-red-700 hover:bg-red-200"
                                 title="Delete"
                               >
-                                <FaTrash size={16} />
+                                <FaTrash size={14} />
                               </button>
                             </div>
                           </td>
@@ -1268,7 +1208,7 @@ const Estimates = () => {
                 <tr>
                   <td
                     colSpan={compactView ? 7 : 11}
-                    className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
+                    className="p-8 text-center text-slate-500"
                   >
                     {estimates.length === 0
                       ? "No estimates found. Create your first estimate!"
@@ -1282,7 +1222,7 @@ const Estimates = () => {
 
         {/* Pagination */}
         {filteredEstimates.length > 0 && (
-          <div className="flex justify-between items-center mt-4 text-sm">
+          <div className="flex justify-between items-center mt-4 text-sm text-slate-600">
             <span>
               Showing {indexOfFirstEstimate + 1} to{" "}
               {Math.min(indexOfLastEstimate, filteredEstimates.length)} of{" "}
@@ -1290,7 +1230,7 @@ const Estimates = () => {
             </span>
             <div className="flex items-center gap-2">
               <button
-                className="px-2 py-1 border rounded disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm disabled:opacity-50"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => prev - 1)}
               >
@@ -1299,8 +1239,10 @@ const Estimates = () => {
               {Array.from({ length: totalPages }, (_, i) => (
                 <button
                   key={i}
-                  className={`px-3 py-1 border rounded ${
-                    currentPage === i + 1 ? "bg-gray-200" : ""
+                  className={`rounded-xl border border-slate-200 px-3 py-2 text-sm ${
+                    currentPage === i + 1
+                      ? "bg-slate-900 text-white"
+                      : "bg-white/80"
                   }`}
                   onClick={() => setCurrentPage(i + 1)}
                 >
@@ -1308,7 +1250,7 @@ const Estimates = () => {
                 </button>
               ))}
               <button
-                className="px-2 py-1 border rounded disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm disabled:opacity-50"
                 disabled={currentPage === totalPages || totalPages === 0}
                 onClick={() => setCurrentPage((prev) => prev + 1)}
               >
@@ -1317,22 +1259,24 @@ const Estimates = () => {
             </div>
           </div>
         )}
-      </div>
+        </div>
 
       {/* View & Edit Modals */}
       {viewEstimate && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-50">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 w-full max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Estimate Details</h2>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Estimate Details
+              </h2>
               <button
                 onClick={() => setViewEstimate(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-600"
               >
                 <FaTimes />
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 text-slate-700">
               <p>
                 <b>Estimate #:</b>{" "}
                 {viewEstimate.estimateNumber ||
@@ -1346,16 +1290,12 @@ const Estimates = () => {
               </p>
               <p>
                 <b>Amount:</b>{" "}
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: viewEstimate.currency || "USD",
-                  minimumFractionDigits: 2,
-                }).format(viewEstimate.total || 0)}
+                {formatBDT(viewEstimate.total || 0)}
               </p>
               <p>
                 <b>Status:</b>{" "}
                 <span
-                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                     viewEstimate.status
                   )}`}
                 >
@@ -1378,13 +1318,13 @@ const Estimates = () => {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => downloadEstimatePDF(viewEstimate)}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-600"
               >
                 <FaDownload className="inline mr-2" /> Download PDF
               </button>
               <button
                 onClick={() => setViewEstimate(null)}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Close
               </button>
@@ -1394,20 +1334,22 @@ const Estimates = () => {
       )}
 
       {editEstimate && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-50">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 w-full max-w-md shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Update Estimate</h2>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Update Estimate
+              </h2>
               <button
                 onClick={() => setEditEstimate(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-600"
               >
                 <FaTimes />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer
                 </label>
                 <input
@@ -1416,12 +1358,12 @@ const Estimates = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, customer: e.target.value })
                   }
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Customer Name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Status
                 </label>
                 <select
@@ -1429,7 +1371,7 @@ const Estimates = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, status: e.target.value })
                   }
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="Draft">Draft</option>
                   <option value="Pending">Pending</option>
@@ -1441,13 +1383,13 @@ const Estimates = () => {
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setEditEstimate(null)}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdate}
-                className="px-4 py-2 bg-black text-white rounded text-sm"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2 text-sm font-semibold text-white hover:brightness-110"
               >
                 Update Estimate
               </button>
@@ -1455,6 +1397,7 @@ const Estimates = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

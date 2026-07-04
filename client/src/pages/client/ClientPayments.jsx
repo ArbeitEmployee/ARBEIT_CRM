@@ -178,7 +178,7 @@ const ClientPayments = () => {
       case "Refunded":
         return "bg-purple-100 text-purple-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
     }
   };
 
@@ -198,88 +198,97 @@ const ClientPayments = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen">Loading payments...</div>;
+  if (loading)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 text-slate-600">
+        Loading payments...
+      </div>
+    );
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">My Payments</h1>
-        <div className="flex items-center text-gray-600">
-          <span>Dashboard</span>
-          <FaChevronRight className="mx-1 text-xs" />
-          <span>Payments</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Dashboard / Payments
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">My Payments</h1>
+          <div className="mt-1 flex items-center text-slate-500 text-sm">
+            <span>Dashboard</span>
+            <FaChevronRight className="mx-1 text-xs" />
+            <span>Payments</span>
+          </div>
         </div>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Total Payments */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Total Payments</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
-              <p className="text-sm text-gray-600">
-                {formatCurrency(stats.totalAmount)}
-              </p>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Payments */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-[0_24px_70px_rgba(15,23,42,.12)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm">Total Payments</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats.total}</p>
+                <p className="text-sm text-slate-500 tabular-nums">
+                  {formatCurrency(stats.totalAmount)}
+                </p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <FaFileInvoiceDollar className="text-blue-600" />
+              </div>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaFileInvoiceDollar className="text-blue-600" />
+          </div>
+
+          {/* Completed Payments */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-[0_24px_70px_rgba(15,23,42,.12)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm">Completed</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats.completed}</p>
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <FaCheckCircle className="text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Pending Payments */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-[0_24px_70px_rgba(15,23,42,.12)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm">Pending</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats.pending}</p>
+              </div>
+              <div className="bg-yellow-100 p-3 rounded-full">
+                <FaClock className="text-yellow-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Failed Payments */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-[0_24px_70px_rgba(15,23,42,.12)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm">Failed/Refunded</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">
+                  {stats.failed + stats.refunded}
+                </p>
+              </div>
+              <div className="bg-red-100 p-3 rounded-full">
+                <FaTimesCircle className="text-red-600" />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Completed Payments */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Completed</p>
-              <p className="text-2xl font-bold">{stats.completed}</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <FaCheckCircle className="text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Pending Payments */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Pending</p>
-              <p className="text-2xl font-bold">{stats.pending}</p>
-            </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <FaClock className="text-yellow-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Failed Payments */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Failed/Refunded</p>
-              <p className="text-2xl font-bold">
-                {stats.failed + stats.refunded}
-              </p>
-            </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <FaTimesCircle className="text-red-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* White box for table */}
-      <div className="bg-white shadow-md rounded-lg p-4">
+        {/* White box for table */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         {/* Controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {/* Status Filter */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -292,7 +301,7 @@ const ClientPayments = () => {
 
             {/* Entries per page */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={entriesPerPage}
               onChange={(e) => {
                 setEntriesPerPage(Number(e.target.value));
@@ -307,7 +316,7 @@ const ClientPayments = () => {
 
             {/* Refresh button */}
             <button
-              className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
               onClick={() => {
                 fetchClientPayments();
                 fetchPaymentStats();
@@ -319,7 +328,7 @@ const ClientPayments = () => {
 
           {/* Search */}
           <div className="relative">
-            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+            <FaSearch className="absolute left-3 top-3.5 text-slate-400 text-sm" />
             <input
               type="text"
               placeholder="Search payments..."
@@ -328,92 +337,56 @@ const ClientPayments = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             />
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-separate border-spacing-y-2">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200/70">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="text-left">
-                <th
-                  className="p-3 rounded-l-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Payment #
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Invoice #
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Date
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Amount
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Payment Mode
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Status
-                </th>
-                <th
-                  className="p-3 rounded-r-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Actions
-                </th>
+              <tr className="bg-slate-50/80 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
+                <th className="px-4 sm:px-6 py-3">Payment #</th>
+                <th className="px-4 sm:px-6 py-3">Invoice #</th>
+                <th className="px-4 sm:px-6 py-3">Date</th>
+                <th className="px-4 sm:px-6 py-3 text-right">Amount</th>
+                <th className="px-4 sm:px-6 py-3">Payment Mode</th>
+                <th className="px-4 sm:px-6 py-3">Status</th>
+                <th className="px-4 sm:px-6 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200/70">
               {currentData.length > 0 ? (
                 currentData.map((payment) => (
                   <tr
                     key={payment._id}
-                    className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                    style={{ color: "black" }}
+                    className="hover:bg-white/70 text-slate-700"
                   >
-                    <td className="p-3 rounded-l-lg border-0 font-medium">
+                    <td className="px-4 sm:px-6 py-3 text-sm font-medium text-slate-900">
                       {payment.paymentNumber}
                     </td>
-                    <td className="p-3 border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm">
                       {payment.invoice?.invoiceNumber || "N/A"}
                     </td>
-                    <td className="p-3 border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm">
                       {formatDate(payment.paymentDate)}
                     </td>
-                    <td className="p-3 border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm text-right tabular-nums">
                       {formatCurrency(payment.amount, payment.currency)}
                     </td>
-                    <td className="p-3 border-0">{payment.paymentMode}</td>
-                    <td className="p-3 border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm">{payment.paymentMode}</td>
+                    <td className="px-4 sm:px-6 py-3 text-sm">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                           payment.status
-                        )} flex items-center gap-1`}
+                        )} inline-flex items-center gap-1`}
                       >
                         {getStatusIcon(payment.status)}
                         {payment.status}
                       </span>
                     </td>
-                    <td className="p-3 border-0 rounded-r-lg">
+                    <td className="px-4 sm:px-6 py-3 text-sm">
                       <button
                         onClick={() => {
                           setSelectedPayment(payment);
@@ -429,7 +402,7 @@ const ClientPayments = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={7} className="p-4 text-center">
+                  <td colSpan={7} className="px-4 sm:px-6 py-4 text-center text-slate-500">
                     No payments found
                   </td>
                 </tr>
@@ -440,14 +413,14 @@ const ClientPayments = () => {
 
         {/* Pagination */}
         <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-slate-500">
             Showing {startIndex + 1} to{" "}
             {Math.min(startIndex + entriesPerPage, filteredPayments.length)} of{" "}
             {filteredPayments.length} entries
           </div>
           <div className="flex items-center gap-1">
             <button
-              className="border px-3 py-1 rounded text-sm disabled:opacity-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
@@ -459,8 +432,10 @@ const ClientPayments = () => {
               return pageNum <= totalPages ? (
                 <button
                   key={pageNum}
-                  className={`border px-3 py-1 rounded text-sm ${
-                    currentPage === pageNum ? "bg-gray-800 text-white" : ""
+                  className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
+                    currentPage === pageNum
+                      ? "border-transparent bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                      : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
                   }`}
                   onClick={() => setCurrentPage(pageNum)}
                 >
@@ -469,7 +444,7 @@ const ClientPayments = () => {
               ) : null;
             })}
             <button
-              className="border px-3 py-1 rounded text-sm disabled:opacity-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
@@ -483,13 +458,13 @@ const ClientPayments = () => {
 
       {/* View Payment Modal */}
       {viewModal && selectedPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-            <div className="flex justify-between items-center border-b p-4">
-              <h2 className="text-xl font-semibold">Payment Details</h2>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl w-full max-w-2xl">
+            <div className="flex justify-between items-center border-b border-slate-200 p-4">
+              <h2 className="text-xl font-semibold text-slate-900">Payment Details</h2>
               <button
                 onClick={() => setViewModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 <FaTimesCircle className="text-xl" />
               </button>
@@ -498,42 +473,42 @@ const ClientPayments = () => {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">
+                  <h3 className="text-lg font-semibold mb-2 text-slate-900">
                     Payment #{selectedPayment.paymentNumber}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600">
                     <strong>Invoice:</strong>{" "}
                     {selectedPayment.invoice?.invoiceNumber || "N/A"}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600">
                     <strong>Date:</strong>{" "}
                     {formatDate(selectedPayment.paymentDate)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600">
                     <strong>Payment Mode:</strong> {selectedPayment.paymentMode}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600">
                     <strong>Transaction ID:</strong>{" "}
                     {selectedPayment.transactionId}
                   </p>
                 </div>
                 <div className="text-right">
                   <span
-                    className={`px-3 py-1 rounded-full text-sm ${getStatusColor(
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                       selectedPayment.status
                     )} inline-flex items-center gap-1`}
                   >
                     {getStatusIcon(selectedPayment.status)}
                     {selectedPayment.status}
                   </span>
-                  <p className="text-2xl font-bold mt-2">
+                  <p className="text-2xl font-bold mt-2 text-slate-900 tabular-nums">
                     {formatCurrency(
                       selectedPayment.amount,
                       selectedPayment.currency
                     )}
                   </p>
                   {selectedPayment.invoice && (
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-slate-600 mt-1 tabular-nums">
                       For invoice total:{" "}
                       {formatCurrency(
                         selectedPayment.invoice.total,
@@ -546,8 +521,8 @@ const ClientPayments = () => {
 
               {selectedPayment.notes && (
                 <div className="mb-6">
-                  <h4 className="font-semibold mb-2">Notes</h4>
-                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">
+                  <h4 className="font-semibold mb-2 text-slate-900">Notes</h4>
+                  <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-xl">
                     {selectedPayment.notes}
                   </p>
                 </div>
@@ -555,8 +530,8 @@ const ClientPayments = () => {
 
               {selectedPayment.invoice && (
                 <div>
-                  <h4 className="font-semibold mb-2">Invoice Details</h4>
-                  <div className="bg-gray-50 p-3 rounded text-sm">
+                  <h4 className="font-semibold mb-2 text-slate-900">Invoice Details</h4>
+                  <div className="bg-slate-50 p-3 rounded-xl text-sm text-slate-600">
                     <p>
                       <strong>Status:</strong> {selectedPayment.invoice.status}
                     </p>
@@ -577,6 +552,7 @@ const ClientPayments = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

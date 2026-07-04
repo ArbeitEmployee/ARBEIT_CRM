@@ -386,23 +386,27 @@ const KnowledgeBasePage = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
         Loading KnowledgeBase...
       </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Admin
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">
           {showNewArticleForm
             ? editingArticle
               ? "Edit Article"
               : "Add New Article"
             : "Knowledge Base"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-500">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Knowledge Base</span>
@@ -410,15 +414,15 @@ const KnowledgeBasePage = () => {
       </div>
 
       {showNewArticleForm ? (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur mb-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Article Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Article Details</h2>
             <button
               onClick={() => {
                 setShowNewArticleForm(false);
                 setEditingArticle(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-500 hover:text-slate-700"
             >
               <FaTimes />
             </button>
@@ -426,7 +430,7 @@ const KnowledgeBasePage = () => {
 
           <div className="grid grid-cols-1 gap-6 mb-8">
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Title *
               </label>
               <input
@@ -434,34 +438,34 @@ const KnowledgeBasePage = () => {
                 name="title"
                 value={newArticle.title}
                 onChange={handleNewArticleChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
                 Content *
               </label>
               <textarea
                 name="content"
                 value={newArticle.content}
                 onChange={handleNewArticleChange}
-                className="w-full border rounded px-3 py-2 h-32"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm h-32 focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Group *
                 </label>
                 <select
                   name="group"
                   value={newArticle.group}
                   onChange={handleNewArticleChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 >
                   <option value="">Select Group</option>
@@ -476,7 +480,7 @@ const KnowledgeBasePage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Date Created
                 </label>
                 <input
@@ -484,7 +488,7 @@ const KnowledgeBasePage = () => {
                   name="dateCreated"
                   value={newArticle.dateCreated}
                   onChange={handleNewArticleChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -497,14 +501,14 @@ const KnowledgeBasePage = () => {
                 setShowNewArticleForm(false);
                 setEditingArticle(null);
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveArticle}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               disabled={
                 !newArticle.title ||
                 !newArticle.content ||
@@ -522,8 +526,7 @@ const KnowledgeBasePage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewArticleForm(true)}
               >
                 <FaPlus /> New Article
@@ -531,7 +534,7 @@ const KnowledgeBasePage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -541,7 +544,7 @@ const KnowledgeBasePage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -551,7 +554,7 @@ const KnowledgeBasePage = () => {
                 {/* Delete Selected button */}
                 {selectedArticles.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 text-white px-4 py-2.5 text-sm font-semibold shadow-md hover:brightness-110"
                     onClick={async () => {
                       if (
                         window.confirm(
@@ -589,7 +592,7 @@ const KnowledgeBasePage = () => {
                 )}
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -603,12 +606,12 @@ const KnowledgeBasePage = () => {
                 </select>
 
                 {/* Group filter */}
-                <div className="flex items-center gap-1 border rounded px-2 py-1 text-sm">
-                  <FaFilter className="text-gray-400" />
+                <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm">
+                  <FaFilter className="text-slate-400" />
                   <select
                     value={filterGroup}
                     onChange={(e) => setFilterGroup(e.target.value)}
-                    className="border-none focus:ring-0 p-0"
+                    className="border-none bg-transparent focus:ring-0 p-0"
                   >
                     {groups.map((group) => (
                       <option key={group} value={group}>
@@ -622,7 +625,7 @@ const KnowledgeBasePage = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
@@ -631,28 +634,28 @@ const KnowledgeBasePage = () => {
                   {showExportMenu && (
                     <div
                       ref={exportMenuRef}
-                      className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                      className="absolute mt-1 w-32 rounded-2xl border border-white/60 bg-white shadow-2xl z-10 overflow-hidden"
                     >
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToExcel}
                       >
                         Excel
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToCSV}
                       >
                         CSV
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToPDF}
                       >
                         PDF
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={printTable}
                       >
                         Print
@@ -663,7 +666,7 @@ const KnowledgeBasePage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchArticles}
                 >
                   <FaSyncAlt />
@@ -672,7 +675,7 @@ const KnowledgeBasePage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-3 top-3 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -681,7 +684,7 @@ const KnowledgeBasePage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -691,10 +694,7 @@ const KnowledgeBasePage = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="p-3 rounded-l-lg bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
                       <input
                         type="checkbox"
                         checked={
@@ -712,45 +712,27 @@ const KnowledgeBasePage = () => {
                         }}
                       />
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="p-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
                       Article Name
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="p-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
                       Group
                     </th>
                     {compactView ? (
                       <>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="p-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
                           Date Created
                         </th>
-                        <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="p-3 rounded-r-lg bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
                           Actions
                         </th>
                       </>
                     ) : (
                       <>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="p-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
                           Date Created
                         </th>
-                        <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="p-3 rounded-r-lg bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
                           Actions
                         </th>
                       </>
@@ -762,7 +744,7 @@ const KnowledgeBasePage = () => {
                     currentData.map((article) => (
                       <tr
                         key={article._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                        className="bg-white/70 shadow rounded-lg hover:bg-white relative"
                         style={{ color: "black" }}
                       >
                         <td className="p-3 rounded-l-lg border-0">
@@ -791,14 +773,14 @@ const KnowledgeBasePage = () => {
                                 {/* View Button */}
                                 <button
                                   onClick={() => setViewingArticle(article)}
-                                  className="text-blue-500 hover:text-blue-700"
+                                  className="rounded-lg p-2 bg-slate-100 text-slate-700"
                                   title="View"
                                 >
                                   <FaEye size={16} />
                                 </button>
                                 <button
                                   onClick={() => handleEditArticle(article)}
-                                  className="text-blue-500 hover:text-blue-700"
+                                  className="rounded-lg p-2 bg-blue-100 text-blue-700"
                                   title="Edit"
                                 >
                                   <FaEdit size={16} />
@@ -807,7 +789,7 @@ const KnowledgeBasePage = () => {
                                   onClick={() =>
                                     handleDeleteArticle(article._id)
                                   }
-                                  className="text-red-500 hover:text-red-700"
+                                  className="rounded-lg p-2 bg-red-100 text-red-700"
                                   title="Delete"
                                 >
                                   <FaTrash size={16} />
@@ -825,14 +807,14 @@ const KnowledgeBasePage = () => {
                                 {/* View Button */}
                                 <button
                                   onClick={() => setViewingArticle(article)}
-                                  className="text-blue-500 hover:text-blue-700"
+                                  className="rounded-lg p-2 bg-slate-100 text-slate-700"
                                   title="View"
                                 >
                                   <FaEye size={16} />
                                 </button>
                                 <button
                                   onClick={() => handleEditArticle(article)}
-                                  className="text-blue-500 hover:text-blue-700"
+                                  className="rounded-lg p-2 bg-blue-100 text-blue-700"
                                   title="Edit"
                                 >
                                   <FaEdit size={16} />
@@ -841,7 +823,7 @@ const KnowledgeBasePage = () => {
                                   onClick={() =>
                                     handleDeleteArticle(article._id)
                                   }
-                                  className="text-red-500 hover:text-red-700"
+                                  className="rounded-lg p-2 bg-red-100 text-red-700"
                                   title="Delete"
                                 >
                                   <FaTrash size={16} />
@@ -856,7 +838,7 @@ const KnowledgeBasePage = () => {
                     <tr>
                       <td
                         colSpan={compactView ? 5 : 5}
-                        className="p-4 text-center text-gray-500"
+                        className="p-4 text-center text-slate-500"
                       >
                         {articles.length === 0
                           ? "No articles found. Create your first article!"
@@ -869,15 +851,15 @@ const KnowledgeBasePage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-4 text-sm">
-              <span>
+            <div className="flex justify-between items-center mt-4 text-sm text-slate-600">
+              <span className="tabular-nums">
                 Showing {startIndex + 1} to{" "}
                 {Math.min(startIndex + entriesPerPage, filteredArticles.length)}{" "}
                 of {filteredArticles.length} entries
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((prev) => prev - 1)}
                 >
@@ -886,8 +868,10 @@ const KnowledgeBasePage = () => {
                 {Array.from({ length: totalPages }, (_, i) => (
                   <button
                     key={i}
-                    className={`px-3 py-1 border rounded ${
-                      currentPage === i + 1 ? "bg-gray-200" : ""
+                    className={`rounded-xl border px-3 py-2 tabular-nums ${
+                      currentPage === i + 1
+                        ? "border-slate-900 bg-slate-900 text-white"
+                        : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
                     }`}
                     onClick={() => setCurrentPage(i + 1)}
                   >
@@ -895,7 +879,7 @@ const KnowledgeBasePage = () => {
                   </button>
                 ))}
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   disabled={currentPage === totalPages || totalPages === 0}
                   onClick={() => setCurrentPage((prev) => prev + 1)}
                 >
@@ -909,18 +893,18 @@ const KnowledgeBasePage = () => {
 
       {/* View Article Modal */}
       {viewingArticle && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">{viewingArticle.title}</h2>
+              <h2 className="text-xl font-semibold text-slate-900">{viewingArticle.title}</h2>
               <button
                 onClick={() => setViewingArticle(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 <FaTimes />
               </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 text-slate-700">
               <p>
                 <b>Group:</b> {viewingArticle.group}
               </p>
@@ -930,14 +914,14 @@ const KnowledgeBasePage = () => {
               <p>
                 <b>Content:</b>
               </p>
-              <div className="border p-3 rounded-md bg-gray-50 max-h-60 overflow-y-auto">
+              <div className="rounded-xl border border-slate-200 p-3 bg-slate-50/80 max-h-60 overflow-y-auto">
                 {viewingArticle.content}
               </div>
             </div>
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setViewingArticle(null)}
-                className="px-4 py-2 bg-black text-white rounded text-sm"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
               >
                 Close
               </button>
@@ -945,6 +929,7 @@ const KnowledgeBasePage = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

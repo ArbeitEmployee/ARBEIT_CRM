@@ -97,99 +97,60 @@ export default function KbArticles() {
 
   if (loading) {
     return (
-      <div
-        style={{
-          maxWidth: 720,
-          margin: "2rem auto",
-          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-          textAlign: "center",
-          padding: "2rem",
-        }}
-      >
-        <div style={{ marginBottom: "1rem" }}>Loading articles...</div>
-        <div
-          style={{
-            width: "40px",
-            height: "40px",
-            border: "4px solid #f3f3f3",
-            borderTop: "4px solid #007acc",
-            borderRadius: "50%",
-            animation: "spin 1s linear infinite",
-            margin: "0 auto",
-          }}
-        ></div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-white/60 bg-white/80 p-10 text-center shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          <div className="mb-4 text-slate-600">Loading articles...</div>
+          <div
+            className="mx-auto h-10 w-10 rounded-full border-4 border-slate-200 border-t-sky-500"
+            style={{ animation: "spin 1s linear infinite" }}
+          ></div>
+        </div>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div
-        style={{
-          maxWidth: 720,
-          margin: "2rem auto",
-          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-          textAlign: "center",
-          padding: "2rem",
-        }}
-      >
-        <div
-          style={{ color: "#cc0000", fontSize: "1.1rem", marginBottom: "1rem" }}
-        >
-          {error}
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        <div className="mx-auto max-w-3xl rounded-3xl border border-white/60 bg-white/80 p-10 text-center shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          <div className="mb-4 text-lg text-red-600">{error}</div>
+          <button
+            onClick={fetchArticles}
+            className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
+          >
+            Retry
+          </button>
         </div>
-        <button
-          onClick={fetchArticles}
-          style={{
-            padding: "0.5rem 1rem",
-            backgroundColor: "#007acc",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            cursor: "pointer",
-          }}
-        >
-          Retry
-        </button>
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        paddingLeft: "2rem",
-        margin: "2rem auto",
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-      }}
-    >
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 space-y-6">
       {/* Header */}
-      <div style={{ marginBottom: "2rem", textAlign: "center" }}>
-        <h1
-          style={{
-            fontSize: "2rem",
-            fontWeight: "bold",
-            color: "#333",
-            marginBottom: "0.5rem",
-          }}
-        >
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Reports
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">
           Knowledge Base Analytics
         </h1>
-        <p style={{ color: "#666", fontSize: "1rem" }}>
+        <p className="mt-1 text-sm text-slate-500">
           View voting statistics for your knowledge base articles
         </p>
       </div>
 
       {/* Group Filter */}
-      <div style={{ marginBottom: "1.5rem" }}>
+      <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         <label
           htmlFor="groupSelect"
-          style={{
-            fontWeight: "600",
-            fontSize: "1.1rem",
-            display: "block",
-            marginBottom: 8,
-          }}
+          className="mb-2 block text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400"
         >
           Choose Group
         </label>
@@ -197,17 +158,7 @@ export default function KbArticles() {
           id="groupSelect"
           value={selectedGroup}
           onChange={onGroupChange}
-          style={{
-            padding: "0.5rem 1rem",
-            borderRadius: 8,
-            border: "2px solid #007acc",
-            fontSize: "1rem",
-            width: "100%",
-            maxWidth: 320,
-            appearance: "none",
-            backgroundColor: "#fff",
-            cursor: "pointer",
-          }}
+          className="w-full max-w-xs rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
         >
           {groups.map((group) => (
             <option key={group} value={group}>
@@ -218,14 +169,7 @@ export default function KbArticles() {
       </div>
 
       {/* Articles List with Vote Bars */}
-      <div
-        style={{
-          backgroundColor: "#f9f9f9",
-          padding: "1rem 1.5rem",
-          borderRadius: 12,
-          boxShadow: "0 1px 5px rgb(0 0 0 / 0.1)",
-        }}
-      >
+      <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         {articles.length > 0 ? (
           articles.map((article, idx) => {
             const yes = article.votes?.helpful || 0;
@@ -237,109 +181,70 @@ export default function KbArticles() {
             return (
               <div
                 key={article._id}
-                style={{
-                  marginBottom: 24,
-                  borderBottom:
-                    idx === articles.length - 1 ? "none" : "1px solid #ddd",
-                  paddingBottom: 12,
-                }}
+                className={`pb-3 ${
+                  idx === articles.length - 1
+                    ? "mb-0"
+                    : "mb-6 border-b border-slate-200/70"
+                }`}
               >
                 {/* Article Info */}
-                <div style={{ marginBottom: "1rem" }}>
-                  <h3
-                    style={{
-                      fontSize: "1.1rem",
-                      fontWeight: "600",
-                      color: "#333",
-                      marginBottom: "0.5rem",
-                    }}
-                  >
+                <div className="mb-4">
+                  <h3 className="mb-1 text-base font-semibold text-slate-900">
                     {article.title}
                   </h3>
-                  <div style={{ fontSize: "0.9rem", color: "#666" }}>
-                    <span style={{ marginRight: "1rem" }}>
-                      Group: {article.group}
-                    </span>
-                    <span>Total Votes: {total}</span>
+                  <div className="text-sm text-slate-500">
+                    <span className="mr-4">Group: {article.group}</span>
+                    <span className="tabular-nums">Total Votes: {total}</span>
                   </div>
                 </div>
 
                 {/* Yes Votes Bar */}
-                <div style={{ marginBottom: "0.5rem" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "0.9rem",
-                      marginBottom: 4,
-                      color: "#333",
-                    }}
-                  >
+                <div className="mb-2">
+                  <div className="mb-1 flex justify-between text-sm text-slate-700">
                     <span>Helpful Votes</span>
-                    <span>{yes} votes</span>
+                    <span className="tabular-nums">{yes} votes</span>
                   </div>
-                  <div
-                    style={{
-                      ...stripedBarStyle("#007acc"),
-                      width: `${Math.max(yesPercent, 2)}%`, // Minimum 2% width for visibility
-                      maxWidth: "100%",
-                      transition: "width 0.4s ease",
-                      minHeight: "1.5rem",
-                    }}
-                    aria-label={`${yesPercent.toFixed(1)}% Yes votes`}
-                  >
-                    {yesPercent.toFixed(1)}%
+                  <div className="h-6 w-full overflow-hidden rounded-xl bg-slate-100">
+                    <div
+                      className="flex h-6 items-center justify-center rounded-xl text-xs font-semibold text-white tabular-nums"
+                      style={{
+                        width: `${Math.max(yesPercent, 2)}%`, // Minimum 2% width for visibility
+                        maxWidth: "100%",
+                        backgroundColor: "#0ea5e9",
+                        transition: "width 0.4s ease",
+                      }}
+                      aria-label={`${yesPercent.toFixed(1)}% Yes votes`}
+                    >
+                      {yesPercent.toFixed(1)}%
+                    </div>
                   </div>
                 </div>
 
                 {/* No Votes Bar */}
-                <div style={{ marginBottom: "1rem" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: "0.9rem",
-                      marginBottom: 4,
-                      color: "#333",
-                    }}
-                  >
+                <div className="mb-4">
+                  <div className="mb-1 flex justify-between text-sm text-slate-700">
                     <span>Not Helpful Votes</span>
-                    <span>{no} votes</span>
+                    <span className="tabular-nums">{no} votes</span>
                   </div>
-                  <div
-                    style={{
-                      ...stripedBarStyle("#cc0000"),
-                      width: `${Math.max(noPercent, 2)}%`, // Minimum 2% width for visibility
-                      maxWidth: "100%",
-                      backgroundImage: `repeating-linear-gradient(
-                            45deg,
-                            #cc0000,
-                            #cc0000 10px,
-                            #990000 10px,
-                            #990000 20px
-                          )`,
-                      color: "white",
-                      transition: "width 0.4s ease",
-                      minHeight: "1.5rem",
-                    }}
-                    aria-label={`${noPercent.toFixed(1)}% No votes`}
-                  >
-                    {noPercent.toFixed(1)}%
+                  <div className="h-6 w-full overflow-hidden rounded-xl bg-slate-100">
+                    <div
+                      className="flex h-6 items-center justify-center rounded-xl text-xs font-semibold text-white tabular-nums"
+                      style={{
+                        width: `${Math.max(noPercent, 2)}%`, // Minimum 2% width for visibility
+                        maxWidth: "100%",
+                        backgroundColor: "#ef4444",
+                        transition: "width 0.4s ease",
+                      }}
+                      aria-label={`${noPercent.toFixed(1)}% No votes`}
+                    >
+                      {noPercent.toFixed(1)}%
+                    </div>
                   </div>
                 </div>
 
                 {/* Article Stats Summary */}
                 {total > 0 && (
-                  <div
-                    style={{
-                      fontSize: "0.85rem",
-                      color: "#666",
-                      textAlign: "center",
-                      padding: "0.5rem",
-                      backgroundColor: "#f0f0f0",
-                      borderRadius: "4px",
-                    }}
-                  >
+                  <div className="rounded-xl bg-slate-50/80 px-3 py-2 text-center text-sm text-slate-600">
                     {yesPercent > noPercent
                       ? `👍 This article is helpful (${yesPercent.toFixed(
                           1
@@ -355,18 +260,12 @@ export default function KbArticles() {
             );
           })
         ) : (
-          <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
-            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>📊</div>
-            <p
-              style={{
-                fontSize: "1.1rem",
-                color: "#666",
-                marginBottom: "0.5rem",
-              }}
-            >
+          <div className="px-4 py-12 text-center">
+            <div className="mb-4 text-5xl">📊</div>
+            <p className="mb-1 text-lg text-slate-600">
               No articles found for this group.
             </p>
-            <p style={{ fontSize: "0.9rem", color: "#999" }}>
+            <p className="text-sm text-slate-400">
               Create knowledge base articles to see voting analytics here.
             </p>
           </div>
@@ -375,17 +274,7 @@ export default function KbArticles() {
 
       {/* Footer Info */}
       {articles.length > 0 && (
-        <div
-          style={{
-            marginTop: "1.5rem",
-            padding: "1rem",
-            backgroundColor: "#e8f4f8",
-            borderRadius: "8px",
-            fontSize: "0.9rem",
-            color: "#666",
-            textAlign: "center",
-          }}
-        >
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 text-center text-sm text-slate-600 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <p>
             💡 <strong>Tip:</strong> Articles with low helpful votes may need
             content updates or clarification.

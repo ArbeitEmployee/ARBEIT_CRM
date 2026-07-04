@@ -271,10 +271,10 @@ const DocumentTemplate = () => {
 
   if (loading) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
-        <div className="bg-white shadow rounded-lg p-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex items-center justify-center h-64">
-            <div className="text-gray-500">
+            <div className="text-slate-500">
               Loading template configuration...
             </div>
           </div>
@@ -286,28 +286,33 @@ const DocumentTemplate = () => {
   // Show empty state when no template exists
   if (noTemplate) {
     return (
-      <div className="p-6 bg-gray-50 min-h-screen">
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">
-          Document Template
-        </h2>
-        <p className="text-gray-600 mb-6">
-          Configure the template for all business documents (Proposals,
-          Invoices, Expenses, etc.)
-        </p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 space-y-6">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Settings
+          </p>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">
+            Document Template
+          </h2>
+          <p className="text-slate-600">
+            Configure the template for all business documents (Proposals,
+            Invoices, Expenses, etc.)
+          </p>
+        </div>
 
-        <div className="bg-white shadow rounded-lg p-8 text-center">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur text-center">
           <div className="mb-6">
-            <FaPalette className="text-5xl text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-800 mb-2">
+            <FaPalette className="text-5xl text-slate-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
               No Template Found
             </h3>
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            <p className="text-slate-600 mb-6 max-w-md mx-auto">
               You haven't created any document templates yet. Click the button
               below to create your first template.
             </p>
             <button
               onClick={handleCreateFirstTemplate}
-              className="px-6 py-3 bg-black text-white rounded-lg hover:bg-gray-800 flex items-center justify-center mx-auto"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center justify-center mx-auto"
             >
               <FaPlus className="mr-2" />
               Create Your First Template
@@ -319,24 +324,29 @@ const DocumentTemplate = () => {
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">
-        Document Template
-      </h2>
-      <p className="text-gray-600 mb-6">
-        Configure the template for all business documents (Proposals, Invoices,
-        Expenses, etc.)
-      </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 space-y-6">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Settings
+        </p>
+        <h2 className="text-2xl font-bold text-slate-900 mb-2">
+          Document Template
+        </h2>
+        <p className="text-slate-600">
+          Configure the template for all business documents (Proposals,
+          Invoices, Expenses, etc.)
+        </p>
+      </div>
 
       {/* Preview Modal */}
       {preview && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-auto">
-            <div className="flex justify-between items-center border-b p-4">
-              <h3 className="text-xl font-semibold">Template Preview</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="rounded-3xl border border-white/60 bg-white/90 shadow-[0_30px_90px_rgba(15,23,42,.25)] backdrop-blur w-full max-w-4xl max-h-[90vh] overflow-auto">
+            <div className="flex justify-between items-center border-b border-slate-200/70 p-4">
+              <h3 className="text-lg font-semibold text-slate-900">Template Preview</h3>
               <button
                 onClick={() => setPreview(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
+                className="text-slate-500 hover:text-slate-700 text-2xl"
               >
                 &times;
               </button>
@@ -499,10 +509,10 @@ const DocumentTemplate = () => {
                 <p>Font family: {template.fontFamily}</p>
               </div>
             </div>
-            <div className="border-t p-4 flex justify-end">
+            <div className="border-t border-slate-200/70 p-4 flex justify-end">
               <button
                 onClick={() => setPreview(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                className="rounded-xl border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 Close Preview
               </button>
@@ -516,13 +526,13 @@ const DocumentTemplate = () => {
         {/* Left Column - Company Information */}
         <div className="lg:col-span-2 space-y-6">
           {/* Company Information Card */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4 flex items-center">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center">
               <FaPalette className="mr-2" /> Company Information
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Template Name
                 </label>
                 <input
@@ -530,14 +540,14 @@ const DocumentTemplate = () => {
                   name="templateName"
                   value={template.templateName}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm"
+                  className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                   placeholder="Default Template"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Company Name
                   </label>
                   <input
@@ -545,12 +555,12 @@ const DocumentTemplate = () => {
                     name="companyName"
                     value={template.companyName}
                     onChange={handleChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                     placeholder="Your Company Name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Company Email
                   </label>
                   <input
@@ -558,12 +568,12 @@ const DocumentTemplate = () => {
                     name="companyEmail"
                     value={template.companyEmail}
                     onChange={handleChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                     placeholder="contact@company.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Company Phone
                   </label>
                   <input
@@ -571,12 +581,12 @@ const DocumentTemplate = () => {
                     name="companyPhone"
                     value={template.companyPhone}
                     onChange={handleChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Tax ID / VAT Number
                   </label>
                   <input
@@ -584,21 +594,21 @@ const DocumentTemplate = () => {
                     name="taxId"
                     value={template.taxId}
                     onChange={handleChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                     placeholder="TAX-123456789"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Company Address
                 </label>
                 <textarea
                   name="companyAddress"
                   value={template.companyAddress}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm"
+                  className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                   rows="2"
                   placeholder="123 Business Street, City, State, ZIP, Country"
                 />
@@ -606,7 +616,7 @@ const DocumentTemplate = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Company Website
                   </label>
                   <input
@@ -614,12 +624,12 @@ const DocumentTemplate = () => {
                     name="companyWebsite"
                     value={template.companyWebsite}
                     onChange={handleChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                     placeholder="https://company.com"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Bank Details (Optional)
                   </label>
                   <input
@@ -627,7 +637,7 @@ const DocumentTemplate = () => {
                     name="bankDetails"
                     value={template.bankDetails}
                     onChange={handleChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                     placeholder="Bank Name, Account Number, IBAN, etc."
                   />
                 </div>
@@ -636,15 +646,15 @@ const DocumentTemplate = () => {
           </div>
 
           {/* Logo & Watermark Card */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Logo & Watermark</h3>
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Logo & Watermark</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Company Logo
                 </label>
                 <div className="flex items-center space-x-4">
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center w-48">
+                  <div className="border-2 border-dashed border-slate-300 rounded-2xl p-4 text-center w-48">
                     {logoPreview ? (
                       <div>
                         <img
@@ -652,12 +662,12 @@ const DocumentTemplate = () => {
                           alt="Logo Preview"
                           className="h-20 mx-auto object-contain"
                         />
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="text-xs text-slate-500 mt-2">
                           Current Logo
                         </p>
                       </div>
                     ) : (
-                      <div className="text-gray-400">
+                      <div className="text-slate-400">
                         <FaUpload className="mx-auto text-2xl mb-2" />
                         <p className="text-sm">No logo uploaded</p>
                       </div>
@@ -673,14 +683,14 @@ const DocumentTemplate = () => {
                     />
                     <label
                       htmlFor="logoUpload"
-                      className="px-4 py-2 bg-gray-100 text-gray-800 rounded cursor-pointer hover:bg-gray-200 inline-block"
+                      className="rounded-xl border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white cursor-pointer inline-block"
                     >
                       Choose Logo
                     </label>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-slate-500 mt-1">
                       Recommended: PNG, max 5MB, transparent background
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-slate-500">
                       Uploads directly to Cloudinary
                     </p>
                   </div>
@@ -697,16 +707,16 @@ const DocumentTemplate = () => {
                       onChange={handleChange}
                       className="rounded"
                     />
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-slate-700">
                       Enable Watermark
                     </span>
                   </label>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     Show logo as background watermark on documents
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Watermark Opacity
                   </label>
                   <input
@@ -719,9 +729,9 @@ const DocumentTemplate = () => {
                     onChange={handleChange}
                     className="w-full"
                   />
-                  <div className="flex justify-between text-xs text-gray-500">
+                  <div className="flex justify-between text-xs text-slate-500">
                     <span>Transparent</span>
-                    <span>{template.watermarkOpacity}</span>
+                    <span className="tabular-nums">{template.watermarkOpacity}</span>
                     <span>Visible</span>
                   </div>
                 </div>
@@ -733,11 +743,11 @@ const DocumentTemplate = () => {
         {/* Right Column - Design & Settings */}
         <div className="space-y-6">
           {/* Design Settings Card */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Design Settings</h3>
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Design Settings</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Primary Color
                 </label>
                 <div className="flex items-center space-x-2">
@@ -747,7 +757,7 @@ const DocumentTemplate = () => {
                     onChange={(e) =>
                       handleColorChange("primaryColor", e.target.value)
                     }
-                    className="w-10 h-10 cursor-pointer"
+                    className="w-10 h-10 cursor-pointer rounded-xl border border-slate-200"
                   />
                   <input
                     type="text"
@@ -755,13 +765,13 @@ const DocumentTemplate = () => {
                     onChange={(e) =>
                       handleColorChange("primaryColor", e.target.value)
                     }
-                    className="flex-1 border px-3 py-2 rounded text-sm"
+                    className="flex-1 rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Secondary Color
                 </label>
                 <div className="flex items-center space-x-2">
@@ -771,7 +781,7 @@ const DocumentTemplate = () => {
                     onChange={(e) =>
                       handleColorChange("secondaryColor", e.target.value)
                     }
-                    className="w-10 h-10 cursor-pointer"
+                    className="w-10 h-10 cursor-pointer rounded-xl border border-slate-200"
                   />
                   <input
                     type="text"
@@ -779,20 +789,20 @@ const DocumentTemplate = () => {
                     onChange={(e) =>
                       handleColorChange("secondaryColor", e.target.value)
                     }
-                    className="flex-1 border px-3 py-2 rounded text-sm"
+                    className="flex-1 rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Font Family
                 </label>
                 <select
                   name="fontFamily"
                   value={template.fontFamily}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm"
+                  className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                 >
                   <option value="Arial">Arial</option>
                   <option value="Helvetica">Helvetica</option>
@@ -805,14 +815,14 @@ const DocumentTemplate = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Base Font Size
                 </label>
                 <select
                   name="fontSizeBase"
                   value={template.fontSizeBase}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm"
+                  className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                 >
                   <option value="8">8pt</option>
                   <option value="9">9pt</option>
@@ -825,18 +835,18 @@ const DocumentTemplate = () => {
           </div>
 
           {/* Footer Settings Card */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Footer Settings</h3>
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Footer Settings</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Footer Text
                 </label>
                 <textarea
                   name="footerText"
                   value={template.footerText}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm"
+                  className="w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 focus:border-slate-400 focus:outline-none"
                   rows="2"
                   placeholder="Thank you for your business!"
                 />
@@ -851,7 +861,7 @@ const DocumentTemplate = () => {
                     onChange={handleChange}
                     className="rounded"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-slate-700">
                     Show company info in footer
                   </span>
                 </div>
@@ -863,7 +873,7 @@ const DocumentTemplate = () => {
                     onChange={handleChange}
                     className="rounded"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-slate-700">
                     Show page numbers
                   </span>
                 </div>
@@ -875,7 +885,7 @@ const DocumentTemplate = () => {
                     onChange={handleChange}
                     className="rounded"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-slate-700">
                     Template is active
                   </span>
                 </div>
@@ -887,7 +897,7 @@ const DocumentTemplate = () => {
                     onChange={handleChange}
                     className="rounded"
                   />
-                  <span className="text-sm font-medium text-gray-700">
+                  <span className="text-sm font-medium text-slate-700">
                     Set as default template
                   </span>
                 </div>
@@ -896,13 +906,13 @@ const DocumentTemplate = () => {
           </div>
 
           {/* Action Buttons Card */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold mb-4">Actions</h3>
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h3 className="text-lg font-semibold text-slate-900 mb-4">Actions</h3>
             <div className="space-y-3">
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50 flex items-center justify-center"
+                className="w-full rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50 flex items-center justify-center"
               >
                 <FaSave className="mr-2" />
                 {saving
@@ -914,7 +924,7 @@ const DocumentTemplate = () => {
 
               <button
                 onClick={handlePreview}
-                className="w-full px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 flex items-center justify-center"
+                className="w-full rounded-xl border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center justify-center"
               >
                 <FaEye className="mr-2" />
                 Preview Template
@@ -922,21 +932,21 @@ const DocumentTemplate = () => {
 
               <button
                 onClick={handleReset}
-                className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 flex items-center justify-center"
+                className="w-full rounded-xl border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center justify-center"
               >
                 <FaUndo className="mr-2" />
                 Reset to Defaults
               </button>
             </div>
 
-            <div className="mt-4 pt-4 border-t">
-              <p className="text-sm text-gray-600">
+            <div className="mt-4 pt-4 border-t border-slate-200/70">
+              <p className="text-sm text-slate-600">
                 This template will be used for:
               </p>
-              <ul className="text-sm text-gray-500 mt-2 space-y-1">
+              <ul className="text-sm text-slate-500 mt-2 space-y-1">
                 {template.documentTypes.map((type) => (
                   <li key={type} className="flex items-center">
-                    <span className="w-2 h-2 bg-gray-300 rounded-full mr-2"></span>
+                    <span className="w-2 h-2 bg-slate-300 rounded-full mr-2"></span>
                     {type}
                   </li>
                 ))}

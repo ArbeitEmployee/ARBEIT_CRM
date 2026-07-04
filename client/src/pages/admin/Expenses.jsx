@@ -17,6 +17,7 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatBDT } from "../../utils/currency";
 
 const ExpensesPage = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -507,7 +508,7 @@ const ExpensesPage = () => {
     const tableRows = filteredExpenses.map((expense) => [
       expense._id,
       expense.category,
-      `$${expense.amount.toFixed(2)}`,
+      formatBDT(expense.amount),
       expense.name,
       expense.date,
       expense.project,
@@ -571,7 +572,7 @@ const ExpensesPage = () => {
       [
         expense._id,
         expense.category,
-        `$${expense.amount.toFixed(2)}`,
+        formatBDT(expense.amount),
         expense.name,
         expense.date,
         expense.project,
@@ -600,30 +601,31 @@ const ExpensesPage = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(amount);
+    return formatBDT(amount);
   };
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading expenses...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        Loading expenses...
+      </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div className="mb-6 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-white/50">
+          FINANCE
+        </p>
+        <h1 className="text-2xl font-bold text-white">
           {showNewExpenseForm
             ? editingExpense
               ? "Edit Expense"
               : "Add New Expense"
             : "Expenses"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-500 text-sm">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Expenses</span>
@@ -631,7 +633,7 @@ const ExpensesPage = () => {
       </div>
 
       {showNewExpenseForm ? (
-        <div className="bg-white shadow-md rounded p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Expense Details</h2>
             <button
@@ -656,7 +658,7 @@ const ExpensesPage = () => {
                   name="category"
                   value={newExpense.category}
                   onChange={handleNewExpenseChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 >
                   <option value="">Select Category</option>
@@ -670,14 +672,14 @@ const ExpensesPage = () => {
 
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Amount ($) *
+                  Amount (৳) *
                 </label>
                 <input
                   type="number"
                   name="amount"
                   value={newExpense.amount}
                   onChange={handleNewExpenseChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                   step="0.01"
                   min="0"
@@ -693,7 +695,7 @@ const ExpensesPage = () => {
                   name="name"
                   value={newExpense.name}
                   onChange={handleNewExpenseChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -707,7 +709,7 @@ const ExpensesPage = () => {
                   name="date"
                   value={newExpense.date}
                   onChange={handleNewExpenseChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -725,12 +727,12 @@ const ExpensesPage = () => {
                     name="customerName"
                     value={newExpense.customerName}
                     onChange={handleNewExpenseChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     required
                     placeholder="Search customer by company name..."
                   />
                   {showCustomerDropdown && customerSearchResults.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                    <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg max-h-60 overflow-auto">
                       {customerSearchResults.map((customer, index) => (
                         <div
                           key={index}
@@ -748,7 +750,7 @@ const ExpensesPage = () => {
                   {showCustomerDropdown &&
                     customerSearchResults.length === 0 &&
                     customerSearchTerm.length >= 2 && (
-                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg">
                         <div className="px-3 py-2 text-gray-500">
                           No customers found
                         </div>
@@ -766,7 +768,7 @@ const ExpensesPage = () => {
                   name="project"
                   value={newExpense.project}
                   onChange={handleNewExpenseChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
@@ -778,7 +780,7 @@ const ExpensesPage = () => {
                   name="paymentMode"
                   value={newExpense.paymentMode}
                   onChange={handleNewExpenseChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="">Select Payment Mode</option>
                   {paymentModeOptions.map((option) => (
@@ -813,14 +815,14 @@ const ExpensesPage = () => {
                 setShowNewExpenseForm(false);
                 setEditingExpense(null);
               }}
-              className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveExpense}
               disabled={isSaving}
-              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 disabled:opacity-50"
             >
               {isSaving
                 ? "Saving..."
@@ -835,46 +837,61 @@ const ExpensesPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             {/* Total Expenses */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Expenses</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Total Expenses
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                     {formatCurrency(stats.total)}
                   </p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaReceipt className="text-blue-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#0ea5e9" }}
+                >
+                  <FaReceipt className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Billable Expenses */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Billable</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Billable
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                     {formatCurrency(stats.billable)}
                   </p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaReceipt className="text-green-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#22c55e" }}
+                >
+                  <FaReceipt className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Not Invoiced Expenses */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Not Invoiced</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Not Invoiced
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                     {formatCurrency(stats.notInvoiced)}
                   </p>
                 </div>
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <FaReceipt className="text-purple-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#8b5cf6" }}
+                >
+                  <FaReceipt className="text-white" />
                 </div>
               </div>
             </div>
@@ -884,14 +901,13 @@ const ExpensesPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewExpenseForm(true)}
               >
                 <FaPlus /> New Expense
               </button>
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={handleImportClick}
               >
                 Import Expenses
@@ -899,7 +915,7 @@ const ExpensesPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -909,7 +925,7 @@ const ExpensesPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -919,7 +935,7 @@ const ExpensesPage = () => {
                 {/* Delete Selected button */}
                 {selectedExpenses.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
                     onClick={handleBulkDelete}
                   >
                     Delete Selected ({selectedExpenses.length})
@@ -928,7 +944,7 @@ const ExpensesPage = () => {
 
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -945,7 +961,7 @@ const ExpensesPage = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
@@ -954,7 +970,7 @@ const ExpensesPage = () => {
                   {showExportMenu && (
                     <div
                       ref={exportMenuRef}
-                      className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                      className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10"
                     >
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
@@ -986,7 +1002,7 @@ const ExpensesPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchExpenses}
                 >
                   <FaSyncAlt />
@@ -995,7 +1011,7 @@ const ExpensesPage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-2 top-3.5 text-gray-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -1004,7 +1020,7 @@ const ExpensesPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -1014,10 +1030,7 @@ const ExpensesPage = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-l-lg">
                       <input
                         type="checkbox"
                         checked={
@@ -1033,81 +1046,45 @@ const ExpensesPage = () => {
                         }}
                       />
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                       Category
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                       Amount
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                       Name
                     </th>
                     {compactView ? (
                       <>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Customer
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Date
                         </th>
-                        <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-r-lg">
                           Actions
                         </th>
                       </>
                     ) : (
                       <>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Date
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Project
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Customer
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Invoiced
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Payment Mode
                         </th>
-                        <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-r-lg">
                           Actions
                         </th>
                       </>
@@ -1118,7 +1095,7 @@ const ExpensesPage = () => {
                   {currentData.map((expense) => (
                     <tr
                       key={expense._id}
-                      className="bg-white shadow rounded-lg hover:bg-gray-50"
+                      className="bg-white shadow rounded-lg hover:bg-white/70"
                       style={{ color: "black" }}
                     >
                       <td className="p-3 rounded-l-lg border-0">
@@ -1132,7 +1109,7 @@ const ExpensesPage = () => {
                         </div>
                       </td>
                       <td className="p-3 border-0">{expense.category}</td>
-                      <td className="p-3 border-0">
+                      <td className="p-3 border-0 tabular-nums">
                         {formatCurrency(expense.amount)}
                       </td>
                       <td className="p-3 border-0">{expense.name}</td>
@@ -1148,14 +1125,14 @@ const ExpensesPage = () => {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEditExpense(expense)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:bg-blue-200"
                                 title="Edit"
                               >
                                 <FaEdit size={16} />
                               </button>
                               <button
                                 onClick={() => handleDeleteExpense(expense._id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg p-2 bg-red-100 text-red-700 hover:bg-red-200"
                                 title="Delete"
                               >
                                 <FaTrash size={16} />
@@ -1174,7 +1151,7 @@ const ExpensesPage = () => {
                               ? expense.customer.company
                               : "N/A"}
                             {expense.customer && (
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-slate-500">
                                 {expense.customer.contact} •{" "}
                                 {expense.customer.email}
                               </div>
@@ -1182,11 +1159,11 @@ const ExpensesPage = () => {
                           </td>
                           <td className="p-3 border-0">
                             {expense.isInvoiced ? (
-                              <span className="px-2 py-1 rounded text-xs bg-green-100 text-green-800">
+                              <span className="rounded-full px-3 py-1 text-xs font-medium bg-green-100 text-green-800">
                                 Yes
                               </span>
                             ) : (
-                              <span className="px-2 py-1 rounded text-xs bg-gray-100 text-gray-800">
+                              <span className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700">
                                 No
                               </span>
                             )}
@@ -1198,14 +1175,14 @@ const ExpensesPage = () => {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEditExpense(expense)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:bg-blue-200"
                                 title="Edit"
                               >
                                 <FaEdit size={16} />
                               </button>
                               <button
                                 onClick={() => handleDeleteExpense(expense._id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg p-2 bg-red-100 text-red-700 hover:bg-red-200"
                                 title="Delete"
                               >
                                 <FaTrash size={16} />
@@ -1229,7 +1206,7 @@ const ExpensesPage = () => {
               </div>
               <div className="flex space-x-2">
                 <button
-                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -1253,9 +1230,9 @@ const ExpensesPage = () => {
                     return (
                       <button
                         key={pageNum}
-                        className={`px-3 py-1 border rounded text-sm ${
+                        className={`rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white ${
                           currentPage === pageNum
-                            ? "bg-gray-800 text-white"
+                            ? "bg-slate-900 text-white"
                             : ""
                         }`}
                         onClick={() => setCurrentPage(pageNum)}
@@ -1268,7 +1245,7 @@ const ExpensesPage = () => {
                     <>
                       <span className="px-2 py-1">...</span>
                       <button
-                        className="px-3 py-1 border rounded text-sm"
+                        className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white"
                         onClick={() => setCurrentPage(totalPages)}
                       >
                         {totalPages}
@@ -1277,7 +1254,7 @@ const ExpensesPage = () => {
                   )}
                 </div>
                 <button
-                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
@@ -1293,8 +1270,8 @@ const ExpensesPage = () => {
 
       {/* Import Modal */}
       {importModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Import Expenses</h3>
               <button
@@ -1363,7 +1340,7 @@ const ExpensesPage = () => {
                   <a
                     href="/expenses-template.xlsx"
                     download
-                    className="text-blue-500 text-sm flex items-center gap-1 mb-3"
+                    className="text-sky-600 text-sm flex items-center gap-1 mb-3"
                   >
                     <HiOutlineDownload /> Download template
                   </a>
@@ -1372,21 +1349,21 @@ const ExpensesPage = () => {
                     type="file"
                     accept=".xlsx,.xls,.csv"
                     onChange={handleFileChange}
-                    className="w-full border rounded p-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 p-2 text-sm"
                   />
                 </div>
 
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={closeImportModal}
-                    className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleImportSubmit}
                     disabled={!importFile}
-                    className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                    className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 disabled:opacity-50"
                   >
                     Import
                   </button>

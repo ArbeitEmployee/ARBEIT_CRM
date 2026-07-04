@@ -246,9 +246,9 @@ const ClientInvoices = () => {
       case "Partiallypaid":
         return "bg-yellow-100 text-yellow-800";
       case "Draft":
-        return "bg-gray-100 text-gray-800";
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
     }
   };
 
@@ -277,115 +277,124 @@ const ClientInvoices = () => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   };
 
-  if (loading) return <div className="min-h-screen">Loading invoices...</div>;
+  if (loading)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 text-slate-600">
+        Loading invoices...
+      </div>
+    );
 
   return (
-    <div className="min-h-screen">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">My Invoices</h1>
-        <div className="flex items-center text-gray-600">
-          <span>Dashboard</span>
-          <FaChevronRight className="mx-1 text-xs" />
-          <span>Invoices</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Dashboard / Invoices
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">My Invoices</h1>
+          <div className="mt-1 flex items-center text-slate-500 text-sm">
+            <span>Dashboard</span>
+            <FaChevronRight className="mx-1 text-xs" />
+            <span>Invoices</span>
+          </div>
         </div>
-      </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        {/* Total Invoices */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Total Invoices</p>
-              <p className="text-2xl font-bold">{stats.total}</p>
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Total Invoices */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-[0_24px_70px_rgba(15,23,42,.12)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm">Total Invoices</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats.total}</p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <FaFileInvoiceDollar className="text-blue-600" />
+              </div>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaFileInvoiceDollar className="text-blue-600" />
+          </div>
+
+          {/* Paid Invoices */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-[0_24px_70px_rgba(15,23,42,.12)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm">Paid</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats.paid}</p>
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <FaCheckCircle className="text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Unpaid Invoices */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-[0_24px_70px_rgba(15,23,42,.12)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm">Unpaid</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats.unpaid}</p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-full">
+                <FaFileInvoiceDollar className="text-blue-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Overdue Invoices */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-[0_24px_70px_rgba(15,23,42,.12)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm">Overdue</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats.overdue}</p>
+              </div>
+              <div className="bg-red-100 p-3 rounded-full">
+                <FaTimesCircle className="text-red-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Partially Paid Invoices */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-[0_24px_70px_rgba(15,23,42,.12)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-slate-500 text-sm">Partially Paid</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums">{stats.partiallypaid}</p>
+              </div>
+              <div className="bg-yellow-100 p-3 rounded-full">
+                <FaMoneyBillWave className="text-yellow-600" />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Paid Invoices */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Paid</p>
-              <p className="text-2xl font-bold">{stats.paid}</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <FaCheckCircle className="text-green-600" />
-            </div>
+        {/* Top action buttons */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            {/* Batch Payment Button */}
+            {getPayableInvoices().length > 0 && (
+              <button
+                onClick={() => {
+                  setShowBatchPayment(true);
+                  setBatchPaymentError("");
+                  setPaymentAmounts({});
+                }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
+              >
+                <FaMoneyCheckAlt /> Batch Payment
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Unpaid Invoices */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Unpaid</p>
-              <p className="text-2xl font-bold">{stats.unpaid}</p>
-            </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaFileInvoiceDollar className="text-blue-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Overdue Invoices */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Overdue</p>
-              <p className="text-2xl font-bold">{stats.overdue}</p>
-            </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <FaTimesCircle className="text-red-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Partially Paid Invoices */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Partially Paid</p>
-              <p className="text-2xl font-bold">{stats.partiallypaid}</p>
-            </div>
-            <div className="bg-yellow-100 p-3 rounded-full">
-              <FaMoneyBillWave className="text-yellow-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Top action buttons */}
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
-        <div className="flex items-center gap-2">
-          {/* Batch Payment Button */}
-          {getPayableInvoices().length > 0 && (
-            <button
-              onClick={() => {
-                setShowBatchPayment(true);
-                setBatchPaymentError("");
-                setPaymentAmounts({});
-              }}
-              className="px-3 py-1 text-sm rounded flex items-center gap-2 bg-blue-600 text-white"
-            >
-              <FaMoneyCheckAlt /> Batch Payment
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* White box for table */}
-      <div className="bg-white shadow-md rounded-lg p-4">
+        {/* White box for table */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         {/* Controls */}
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {/* Status Filter */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -399,7 +408,7 @@ const ClientInvoices = () => {
 
             {/* Entries per page */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={entriesPerPage}
               onChange={(e) => {
                 setEntriesPerPage(Number(e.target.value));
@@ -414,7 +423,7 @@ const ClientInvoices = () => {
 
             {/* Refresh button */}
             <button
-              className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
               onClick={fetchClientInvoices}
             >
               <FaSyncAlt />
@@ -423,7 +432,7 @@ const ClientInvoices = () => {
 
           {/* Search */}
           <div className="relative">
-            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+            <FaSearch className="absolute left-3 top-3.5 text-slate-400 text-sm" />
             <input
               type="text"
               placeholder="Search invoices..."
@@ -432,67 +441,27 @@ const ClientInvoices = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             />
           </div>
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-separate border-spacing-y-2">
+        <div className="overflow-x-auto rounded-2xl border border-slate-200/70">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="text-left">
-                <th
-                  className="p-3 rounded-l-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Invoice #
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Date
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Due Date
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Amount
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Paid
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Balance
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Status
-                </th>
-                <th
-                  className="p-3 rounded-r-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Actions
-                </th>
+              <tr className="bg-slate-50/80 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
+                <th className="px-4 sm:px-6 py-3">Invoice #</th>
+                <th className="px-4 sm:px-6 py-3">Date</th>
+                <th className="px-4 sm:px-6 py-3">Due Date</th>
+                <th className="px-4 sm:px-6 py-3 text-right">Amount</th>
+                <th className="px-4 sm:px-6 py-3 text-right">Paid</th>
+                <th className="px-4 sm:px-6 py-3 text-right">Balance</th>
+                <th className="px-4 sm:px-6 py-3">Status</th>
+                <th className="px-4 sm:px-6 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200/70">
               {currentData.length > 0 ? (
                 currentData.map((invoice) => {
                   const paidAmount = invoice.paidAmount || 0;
@@ -503,23 +472,22 @@ const ClientInvoices = () => {
                   return (
                     <tr
                       key={invoice._id}
-                      className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                      style={{ color: "black" }}
+                      className="hover:bg-white/70 text-slate-700"
                     >
-                      <td className="p-3 rounded-l-lg border-0 font-medium">
+                      <td className="px-4 sm:px-6 py-3 text-sm font-medium text-slate-900">
                         {invoice.invoiceNumber ||
                           "INV-" + invoice._id.slice(-6).toUpperCase()}
                       </td>
-                      <td className="p-3 border-0">
+                      <td className="px-4 sm:px-6 py-3 text-sm">
                         {formatDate(invoice.invoiceDate)}
                       </td>
-                      <td className="p-3 border-0">
+                      <td className="px-4 sm:px-6 py-3 text-sm">
                         <div className="flex flex-col">
                           <span>{formatDate(invoice.dueDate)}</span>
                           {daysUntilDue !== null && (
                             <span
                               className={`text-xs ${
-                                isOverdue ? "text-red-500" : "text-gray-500"
+                                isOverdue ? "text-red-500" : "text-slate-500"
                               }`}
                             >
                               {isOverdue
@@ -529,25 +497,25 @@ const ClientInvoices = () => {
                           )}
                         </div>
                       </td>
-                      <td className="p-3 border-0">
+                      <td className="px-4 sm:px-6 py-3 text-sm text-right tabular-nums">
                         {formatCurrency(invoice.total, invoice.currency)}
                       </td>
-                      <td className="p-3 border-0">
+                      <td className="px-4 sm:px-6 py-3 text-sm text-right tabular-nums">
                         {formatCurrency(paidAmount, invoice.currency)}
                       </td>
-                      <td className="p-3 border-0">
+                      <td className="px-4 sm:px-6 py-3 text-sm text-right tabular-nums">
                         {formatCurrency(balanceDue, invoice.currency)}
                       </td>
-                      <td className="p-3 border-0">
+                      <td className="px-4 sm:px-6 py-3 text-sm">
                         <span
-                          className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                             invoice.status
                           )}`}
                         >
                           {invoice.status}
                         </span>
                       </td>
-                      <td className="p-3 border-0 rounded-r-lg">
+                      <td className="px-4 sm:px-6 py-3 text-sm">
                         <div className="flex items-center space-x-2">
                           <button
                             onClick={() => {
@@ -566,7 +534,7 @@ const ClientInvoices = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="p-4 text-center">
+                  <td colSpan={8} className="px-4 sm:px-6 py-4 text-center text-slate-500">
                     No invoices found
                   </td>
                 </tr>
@@ -577,14 +545,14 @@ const ClientInvoices = () => {
 
         {/* Pagination */}
         <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-slate-500">
             Showing {startIndex + 1} to{" "}
             {Math.min(startIndex + entriesPerPage, filteredInvoices.length)} of{" "}
             {filteredInvoices.length} entries
           </div>
           <div className="flex items-center gap-1">
             <button
-              className="border px-3 py-1 rounded text-sm disabled:opacity-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
               onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
             >
@@ -596,8 +564,10 @@ const ClientInvoices = () => {
               return pageNum <= totalPages ? (
                 <button
                   key={pageNum}
-                  className={`border px-3 py-1 rounded text-sm ${
-                    currentPage === pageNum ? "bg-gray-800 text-white" : ""
+                  className={`rounded-xl border px-3 py-2 text-sm font-semibold ${
+                    currentPage === pageNum
+                      ? "border-transparent bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                      : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
                   }`}
                   onClick={() => setCurrentPage(pageNum)}
                 >
@@ -606,7 +576,7 @@ const ClientInvoices = () => {
               ) : null;
             })}
             <button
-              className="border px-3 py-1 rounded text-sm disabled:opacity-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
               onClick={() =>
                 setCurrentPage((prev) => Math.min(prev + 1, totalPages))
               }
@@ -620,13 +590,13 @@ const ClientInvoices = () => {
 
       {/* View Invoice Modal */}
       {viewModal && selectedInvoice && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center border-b p-4 sticky top-0 bg-white">
-              <h2 className="text-xl font-semibold">Invoice Details</h2>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-200 p-4 sticky top-0 bg-white rounded-t-2xl">
+              <h2 className="text-xl font-semibold text-slate-900">Invoice Details</h2>
               <button
                 onClick={() => setViewModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 <FaTimes className="text-xl" />
               </button>
@@ -640,23 +610,23 @@ const ClientInvoices = () => {
                     {selectedInvoice.invoiceNumber ||
                       "INV-" + selectedInvoice._id.slice(-6).toUpperCase()}
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600">
                     <strong>Date:</strong>{" "}
                     {formatDate(selectedInvoice.invoiceDate)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600">
                     <strong>Due Date:</strong>{" "}
                     {formatDate(selectedInvoice.dueDate)}
                   </p>
                   {selectedInvoice.tags && (
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-slate-600">
                       <strong>Tags:</strong> {selectedInvoice.tags}
                     </p>
                   )}
                 </div>
                 <div className="text-right">
                   <span
-                    className={`px-3 py-1 rounded-full text-sm ${getStatusColor(
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                       selectedInvoice.status
                     )}`}
                   >
@@ -668,14 +638,14 @@ const ClientInvoices = () => {
                       selectedInvoice.currency
                     )}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600">
                     Paid:{" "}
                     {formatCurrency(
                       selectedInvoice.paidAmount || 0,
                       selectedInvoice.currency
                     )}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-slate-600">
                     Balance:{" "}
                     {formatCurrency(
                       selectedInvoice.total - (selectedInvoice.paidAmount || 0),
@@ -690,7 +660,7 @@ const ClientInvoices = () => {
                 <h4 className="font-semibold mb-3">Items</h4>
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-100">
+                    <tr className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
                       <th className="p-2 text-left">Description</th>
                       <th className="p-2 text-center">Qty</th>
                       <th className="p-2 text-right">Rate</th>
@@ -755,7 +725,7 @@ const ClientInvoices = () => {
                         </td>
                       </tr>
                     )}
-                    <tr className="bg-gray-50">
+                    <tr className="bg-slate-50/80">
                       <td colSpan="5" className="p-2 text-right font-bold">
                         Total:
                       </td>
@@ -776,13 +746,13 @@ const ClientInvoices = () => {
 
       {/* Batch Payment Modal */}
       {showBatchPayment && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded p-6 w-11/12 max-w-5xl max-h-screen overflow-y-auto shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm z-50 p-4">
+          <div className="rounded-2xl border border-white/60 bg-white p-6 w-11/12 max-w-5xl max-h-screen overflow-y-auto shadow-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold">Batch Payment</h2>
+              <h2 className="text-xl font-bold text-slate-900">Batch Payment</h2>
               <button
                 onClick={() => setShowBatchPayment(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 <FaTimes size={20} />
               </button>
@@ -796,7 +766,7 @@ const ClientInvoices = () => {
 
             <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-slate-700">
                   Payment Date *
                 </label>
                 <input
@@ -808,12 +778,12 @@ const ClientInvoices = () => {
                       paymentDate: e.target.value,
                     })
                   }
-                  className="border rounded w-full p-2"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 w-full px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-slate-700">
                   Payment Mode *
                 </label>
                 <select
@@ -824,7 +794,7 @@ const ClientInvoices = () => {
                       paymentMode: e.target.value,
                     })
                   }
-                  className="border rounded w-full p-2"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 w-full px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 >
                   <option value="">Select Payment Mode</option>
@@ -836,7 +806,7 @@ const ClientInvoices = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-slate-700">
                   Transaction ID *
                 </label>
                 <input
@@ -848,7 +818,7 @@ const ClientInvoices = () => {
                       transactionId: e.target.value,
                     })
                   }
-                  className="border rounded w-full p-2"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 w-full px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Transaction reference"
                   required
                 />
@@ -856,7 +826,7 @@ const ClientInvoices = () => {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Notes</label>
+              <label className="block text-sm font-medium mb-1 text-slate-700">Notes</label>
               <textarea
                 value={batchPaymentData.notes}
                 onChange={(e) =>
@@ -865,51 +835,51 @@ const ClientInvoices = () => {
                     notes: e.target.value,
                   })
                 }
-                className="border rounded w-full p-2"
+                className="rounded-xl border border-slate-200 bg-slate-50/80 w-full px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 rows="3"
                 placeholder="Additional payment notes"
               />
             </div>
 
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3">
+              <h3 className="text-lg font-semibold mb-3 text-slate-900">
                 Invoices for Payment
               </h3>
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm border-collapse">
+              <div className="overflow-x-auto rounded-2xl border border-slate-200/70">
+                <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-100">
-                      <th className="p-2 border">Invoice #</th>
-                      <th className="p-2 border">Customer</th>
-                      <th className="p-2 border">Total Amount</th>
-                      <th className="p-2 border">Paid Amount</th>
-                      <th className="p-2 border">Balance Due</th>
-                      <th className="p-2 border">Payment Amount</th>
+                    <tr className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500">
+                      <th className="px-4 py-3 text-left">Invoice #</th>
+                      <th className="px-4 py-3 text-left">Customer</th>
+                      <th className="px-4 py-3 text-right">Total Amount</th>
+                      <th className="px-4 py-3 text-right">Paid Amount</th>
+                      <th className="px-4 py-3 text-right">Balance Due</th>
+                      <th className="px-4 py-3 text-left">Payment Amount</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-200/70">
                     {getPayableInvoices().map((invoice) => {
                       const paidAmount = invoice.paidAmount || 0;
                       const balanceDue = invoice.total - paidAmount;
 
                       return (
-                        <tr key={invoice._id}>
-                          <td className="p-2 border">
+                        <tr key={invoice._id} className="hover:bg-white/70">
+                          <td className="px-4 py-3 text-sm font-medium text-slate-900">
                             {invoice.invoiceNumber ||
                               "INV-" + invoice._id.slice(-6).toUpperCase()}
                           </td>
-                          <td className="p-2 border">{invoice.customer}</td>
-                          <td className="p-2 border text-right">
+                          <td className="px-4 py-3 text-sm">{invoice.customer}</td>
+                          <td className="px-4 py-3 text-sm text-right tabular-nums">
                             {formatCurrency(invoice.total, invoice.currency)}
                           </td>
-                          <td className="p-2 border text-right">
+                          <td className="px-4 py-3 text-sm text-right tabular-nums">
                             {formatCurrency(paidAmount, invoice.currency)}
                           </td>
-                          <td className="p-2 border text-right">
+                          <td className="px-4 py-3 text-sm text-right tabular-nums">
                             {formatCurrency(balanceDue, invoice.currency)}
                           </td>
-                          <td className="p-2 border">
+                          <td className="px-4 py-3 text-sm">
                             <input
                               type="number"
                               min="0"
@@ -922,7 +892,7 @@ const ClientInvoices = () => {
                                   e.target.value
                                 )
                               }
-                              className="border rounded p-1 w-full"
+                              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-slate-300"
                               placeholder="0.00"
                             />
                           </td>
@@ -937,14 +907,14 @@ const ClientInvoices = () => {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowBatchPayment(false)}
-                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 Cancel
               </button>
               <button
                 onClick={processBatchPayments}
                 disabled={batchPaymentLoading}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               >
                 {batchPaymentLoading ? "Processing..." : "Process Payments"}
               </button>
@@ -952,6 +922,7 @@ const ClientInvoices = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

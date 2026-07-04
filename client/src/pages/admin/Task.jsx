@@ -536,20 +536,27 @@ const TaskPage = () => {
   };
 
   if (loading)
-    return <div className="bg-gray-100 min-h-screen p-4">Loading tasks...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 text-slate-600">
+        Loading tasks...
+      </div>
+    );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Workspace
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">
           {showNewTaskForm
             ? editingTask
               ? "Edit Task"
               : "Add New Task"
             : "Tasks"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-500">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Tasks</span>
@@ -557,15 +564,15 @@ const TaskPage = () => {
       </div>
 
       {showNewTaskForm ? (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Task Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Task Details</h2>
             <button
               onClick={() => {
                 setShowNewTaskForm(false);
                 setEditingTask(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-500 hover:text-slate-700"
             >
               <FaTimes />
             </button>
@@ -575,7 +582,7 @@ const TaskPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Subject *
                 </label>
                 <input
@@ -583,20 +590,20 @@ const TaskPage = () => {
                   name="projectName"
                   value={newTask.projectName}
                   onChange={handleNewTaskChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Priority
                 </label>
                 <select
                   name="priority"
                   value={newTask.priority}
                   onChange={handleNewTaskChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {priorityOptions.map((option) => (
                     <option key={option} value={option}>
@@ -610,14 +617,14 @@ const TaskPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Status
                 </label>
                 <select
                   name="status"
                   value={newTask.status}
                   onChange={handleNewTaskChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {statusOptions.map((option) => (
                     <option key={option} value={option}>
@@ -628,7 +635,7 @@ const TaskPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Start Date
                 </label>
                 <input
@@ -636,12 +643,12 @@ const TaskPage = () => {
                   name="startDate"
                   value={newTask.startDate}
                   onChange={handleNewTaskChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Deadline
                 </label>
                 <input
@@ -649,12 +656,12 @@ const TaskPage = () => {
                   name="deadline"
                   value={newTask.deadline}
                   onChange={handleNewTaskChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Members
                 </label>
                 <div className="relative" ref={staffRef}>
@@ -663,7 +670,7 @@ const TaskPage = () => {
                     name="members"
                     value={newTask.members}
                     onChange={handleNewTaskChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     placeholder="Search staff by name..."
                   />
                   {showStaffDropdown && staffSearchResults.length > 0 && (
@@ -671,7 +678,7 @@ const TaskPage = () => {
                       {staffSearchResults.map((staff, index) => (
                         <div
                           key={index}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          className="px-3 py-2 hover:bg-slate-100 cursor-pointer"
                           onClick={() => handleSelectStaff(staff)}
                         >
                           <div className="font-medium">{staff.name}</div>
@@ -704,7 +711,7 @@ const TaskPage = () => {
               name="description"
               value={newTask.description}
               onChange={handleNewTaskChange}
-              className="w-full border rounded px-3 py-2 h-24"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm h-24 focus:outline-none focus:ring-2 focus:ring-slate-300"
               placeholder="Enter task description..."
             ></textarea>
           </div>
@@ -716,14 +723,14 @@ const TaskPage = () => {
                 setShowNewTaskForm(false);
                 setEditingTask(null);
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveTask}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               disabled={!newTask.projectName || isSaving}
             >
               {isSaving ? "Saving..." : "Save"}
@@ -733,92 +740,115 @@ const TaskPage = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Tasks */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Tasks</p>
-                  <p className="text-2xl font-bold">{stats.totalTasks}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Total Tasks
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.totalTasks}
+                  </p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaCheckSquare className="text-blue-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500">
+                  <FaCheckSquare className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Not Started */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Not Started</p>
-                  <p className="text-2xl font-bold">{stats.notStarted}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Not Started
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.notStarted}
+                  </p>
                 </div>
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <FaClock className="text-gray-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-400">
+                  <FaClock className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* In Progress */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">In Progress</p>
-                  <p className="text-2xl font-bold">{stats.inProgress}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    In Progress
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.inProgress}
+                  </p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaSyncAlt className="text-blue-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-500">
+                  <FaSyncAlt className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Testing */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Testing</p>
-                  <p className="text-2xl font-bold">{stats.testing}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Testing
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.testing}
+                  </p>
                 </div>
-                <div className="bg-yellow-100 p-3 rounded-full">
-                  <FaPauseCircle className="text-yellow-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500">
+                  <FaPauseCircle className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Feedback */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Feedback</p>
-                  <p className="text-2xl font-bold">{stats.feedback}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Feedback
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.feedback}
+                  </p>
                 </div>
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <FaBan className="text-purple-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500">
+                  <FaBan className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Complete */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Complete</p>
-                  <p className="text-2xl font-bold">{stats.complete}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Complete
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.complete}
+                  </p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaCheckCircle className="text-green-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500">
+                  <FaCheckCircle className="text-white" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Top action buttons */}
-          <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewTaskForm(true)}
               >
                 <FaPlus /> New Task
@@ -826,7 +856,7 @@ const TaskPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -836,7 +866,7 @@ const TaskPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -846,7 +876,7 @@ const TaskPage = () => {
                 {/* Delete Selected button */}
                 {selectedTasks.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
                     onClick={async () => {
                       if (
                         window.confirm(
@@ -877,7 +907,7 @@ const TaskPage = () => {
                 )}
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -894,34 +924,34 @@ const TaskPage = () => {
                 <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10 overflow-hidden">
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToExcel}
                       >
                         Excel
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToCSV}
                       >
                         CSV
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToPDF}
                       >
                         PDF
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={printTable}
                       >
                         Print
@@ -932,7 +962,7 @@ const TaskPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchTasks}
                 >
                   <FaSyncAlt />
@@ -941,7 +971,7 @@ const TaskPage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-3 top-3.5 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -950,7 +980,7 @@ const TaskPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -961,8 +991,7 @@ const TaskPage = () => {
                 <thead>
                   <tr className="text-left">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="px-4 sm:px-6 py-3 rounded-l-xl bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                     >
                       <input
                         type="checkbox"
@@ -982,34 +1011,29 @@ const TaskPage = () => {
                       />
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                     >
                       Subject
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                     >
                       Priority
                     </th>
                     {compactView ? (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Status
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Deadline
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 rounded-r-xl bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Actions
                         </th>
@@ -1017,32 +1041,27 @@ const TaskPage = () => {
                     ) : (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Start Date
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Deadline
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Members
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Status
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 rounded-r-xl bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Actions
                         </th>
@@ -1055,10 +1074,9 @@ const TaskPage = () => {
                     currentData.map((task) => (
                       <tr
                         key={task._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                        style={{ color: "black" }}
+                        className="bg-white/70 shadow-sm rounded-xl hover:bg-white relative text-slate-700"
                       >
-                        <td className="p-3 rounded-l-lg border-0">
+                        <td className="px-4 sm:px-6 py-3 rounded-l-xl border-0 text-sm">
                           <div className="flex items-center">
                             <input
                               type="checkbox"
@@ -1068,12 +1086,12 @@ const TaskPage = () => {
                             />
                           </div>
                         </td>
-                        <td className="p-3 border-0 font-medium">
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm font-medium text-slate-900">
                           {task.projectName}
                         </td>
-                        <td className="p-3 border-0">
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                           <span
-                            className={`px-2 py-1 rounded text-xs ${getPriorityColor(
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${getPriorityColor(
                               task.priority
                             )}`}
                           >
@@ -1082,39 +1100,39 @@ const TaskPage = () => {
                         </td>
                         {compactView ? (
                           <>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               <span
-                                className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                   task.status
                                 )}`}
                               >
                                 {task.status}
                               </span>
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               {formatDate(task.deadline)}
                             </td>
-                            <td className="p-3 rounded-r-lg border-0">
+                            <td className="px-4 sm:px-6 py-3 rounded-r-xl border-0 text-sm">
                               <div className="flex space-x-2">
                                 <button
                                   onClick={() =>
                                     handleViewDescription(task.description)
                                   }
-                                  className="text-gray-500 hover:text-gray-700"
+                                  className="rounded-lg p-2 bg-slate-100 text-slate-700 hover:brightness-95"
                                   title="View Description"
                                 >
                                   <FaEye size={16} />
                                 </button>
                                 <button
                                   onClick={() => handleEditTask(task)}
-                                  className="text-blue-500 hover:text-blue-700"
+                                  className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:brightness-95"
                                   title="Edit"
                                 >
                                   <FaEdit size={16} />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteTask(task._id)}
-                                  className="text-red-500 hover:text-red-700"
+                                  className="rounded-lg p-2 bg-red-100 text-red-700 hover:brightness-95"
                                   title="Delete"
                                 >
                                   <FaTrash size={16} />
@@ -1124,45 +1142,45 @@ const TaskPage = () => {
                           </>
                         ) : (
                           <>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               {formatDate(task.startDate)}
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               {formatDate(task.deadline)}
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               {task.members || "-"}
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               <span
-                                className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                   task.status
                                 )}`}
                               >
                                 {task.status}
                               </span>
                             </td>
-                            <td className="p-3 rounded-r-lg border-0">
+                            <td className="px-4 sm:px-6 py-3 rounded-r-xl border-0 text-sm">
                               <div className="flex space-x-2">
                                 <button
                                   onClick={() =>
                                     handleViewDescription(task.description)
                                   }
-                                  className="text-gray-500 hover:text-gray-700"
+                                  className="rounded-lg p-2 bg-slate-100 text-slate-700 hover:brightness-95"
                                   title="View Description"
                                 >
                                   <FaEye size={16} />
                                 </button>
                                 <button
                                   onClick={() => handleEditTask(task)}
-                                  className="text-blue-500 hover:text-blue-700"
+                                  className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:brightness-95"
                                   title="Edit"
                                 >
                                   <FaEdit size={16} />
                                 </button>
                                 <button
                                   onClick={() => handleDeleteTask(task._id)}
-                                  className="text-red-500 hover:text-red-700"
+                                  className="rounded-lg p-2 bg-red-100 text-red-700 hover:brightness-95"
                                   title="Delete"
                                 >
                                   <FaTrash size={16} />
@@ -1190,7 +1208,7 @@ const TaskPage = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-between items-center mt-4 text-sm">
+            <div className="flex justify-between items-center mt-4 text-sm text-slate-500">
               <span>
                 Showing {startIndex + 1} to{" "}
                 {Math.min(startIndex + entriesPerPage, filteredTasks.length)} of{" "}
@@ -1198,7 +1216,7 @@ const TaskPage = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((prev) => prev - 1)}
                 >
@@ -1207,10 +1225,10 @@ const TaskPage = () => {
                 {Array.from({ length: totalPages }, (_, i) => (
                   <button
                     key={i}
-                    className={`px-3 py-1 border rounded ${
+                    className={`rounded-xl border px-3 py-1.5 text-sm font-semibold ${
                       currentPage === i + 1
-                        ? "bg-black text-white"
-                        : "hover:bg-gray-100"
+                        ? "bg-gradient-to-r from-slate-900 to-slate-800 text-white border-transparent"
+                        : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
                     }`}
                     onClick={() => setCurrentPage(i + 1)}
                   >
@@ -1218,7 +1236,7 @@ const TaskPage = () => {
                   </button>
                 ))}
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((prev) => prev + 1)}
                 >
@@ -1232,28 +1250,30 @@ const TaskPage = () => {
 
       {/* Description Modal */}
       {showDescriptionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-11/12 md:w-2/3 lg:w-1/2">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-11/12 md:w-2/3 lg:w-1/2">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Task Description</h3>
+              <h3 className="text-lg font-semibold text-slate-900">
+                Task Description
+              </h3>
               <button
                 onClick={() => setShowDescriptionModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 <FaTimes />
               </button>
             </div>
-            <div className="border rounded p-4 h-64 overflow-y-auto">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-4 h-64 overflow-y-auto text-sm text-slate-700">
               {currentDescription ? (
                 <p className="whitespace-pre-wrap">{currentDescription}</p>
               ) : (
-                <p className="text-gray-500 italic">No description provided</p>
+                <p className="text-slate-500 italic">No description provided</p>
               )}
             </div>
             <div className="mt-4 flex justify-end">
               <button
                 onClick={() => setShowDescriptionModal(false)}
-                className="px-4 py-2 bg-black text-white rounded"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
               >
                 Close
               </button>

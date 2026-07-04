@@ -656,21 +656,26 @@ const ProjectPage = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading projects...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 text-slate-600">
+        Loading projects...
+      </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Workspace
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">
           {showNewProjectForm
             ? editingProject
               ? "Edit Project"
               : "Add New Project"
             : "Projects"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-500">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Projects</span>
@@ -678,15 +683,17 @@ const ProjectPage = () => {
       </div>
 
       {showNewProjectForm ? (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Project Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900">
+              Project Details
+            </h2>
             <button
               onClick={() => {
                 setShowNewProjectForm(false);
                 setEditingProject(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-500 hover:text-slate-700"
             >
               <FaTimes />
             </button>
@@ -696,7 +703,7 @@ const ProjectPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Project Name *
                 </label>
                 <input
@@ -704,13 +711,13 @@ const ProjectPage = () => {
                   name="name"
                   value={newProject.name}
                   onChange={handleNewProjectChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer Code
                 </label>
                 <input
@@ -718,7 +725,7 @@ const ProjectPage = () => {
                   name="customerCode"
                   value={newProject.customerCode}
                   onChange={handleNewProjectChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Enter customer code (e.g., CUST-ABC123)"
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -727,7 +734,7 @@ const ProjectPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer *
                 </label>
                 <div className="relative" ref={customerRef}>
@@ -736,7 +743,7 @@ const ProjectPage = () => {
                     name="customerName"
                     value={newProject.customerName}
                     onChange={handleNewProjectChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     required
                     placeholder="Search customer by company name..."
                   />
@@ -745,7 +752,7 @@ const ProjectPage = () => {
                       {customerSearchResults.map((customer, index) => (
                         <div
                           key={index}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          className="px-3 py-2 hover:bg-slate-100 cursor-pointer"
                           onClick={() => handleSelectCustomer(customer)}
                         >
                           <div className="font-medium">{customer.company}</div>
@@ -772,7 +779,7 @@ const ProjectPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Tags
                 </label>
                 <input
@@ -780,7 +787,7 @@ const ProjectPage = () => {
                   name="tags"
                   value={newProject.tags}
                   onChange={handleNewProjectChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -788,14 +795,14 @@ const ProjectPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Status
                 </label>
                 <select
                   name="status"
                   value={newProject.status}
                   onChange={handleNewProjectChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {statusOptions.map((option) => (
                     <option key={option} value={option}>
@@ -806,7 +813,7 @@ const ProjectPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Start Date
                 </label>
                 <input
@@ -814,12 +821,12 @@ const ProjectPage = () => {
                   name="startDate"
                   value={newProject.startDate}
                   onChange={handleNewProjectChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Deadline
                 </label>
                 <input
@@ -827,12 +834,12 @@ const ProjectPage = () => {
                   name="deadline"
                   value={newProject.deadline}
                   onChange={handleNewProjectChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Members
                 </label>
                 <div className="relative" ref={staffRef}>
@@ -841,7 +848,7 @@ const ProjectPage = () => {
                     name="members"
                     value={newProject.members}
                     onChange={handleNewProjectChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     placeholder="Search staff by name..."
                   />
                   {showStaffDropdown && staffSearchResults.length > 0 && (
@@ -849,7 +856,7 @@ const ProjectPage = () => {
                       {staffSearchResults.map((staff, index) => (
                         <div
                           key={index}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          className="px-3 py-2 hover:bg-slate-100 cursor-pointer"
                           onClick={() => handleSelectStaff(staff)}
                         >
                           <div className="font-medium">{staff.name}</div>
@@ -881,14 +888,14 @@ const ProjectPage = () => {
                 setShowNewProjectForm(false);
                 setEditingProject(null);
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveProject}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               disabled={!newProject.name || !newProject.customerId || isSaving}
             >
               {isSaving ? "Saving..." : "Save"}
@@ -898,81 +905,98 @@ const ProjectPage = () => {
       ) : (
         <>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Projects */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Projects</p>
-                  <p className="text-2xl font-bold">{stats.totalProjects}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Total Projects
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.totalProjects}
+                  </p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaTasks className="text-blue-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500">
+                  <FaTasks className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Progress Projects */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">In Progress</p>
-                  <p className="text-2xl font-bold">{stats.progressProjects}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    In Progress
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.progressProjects}
+                  </p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaTasks className="text-green-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500">
+                  <FaTasks className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* On Hold Projects */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">On Hold</p>
-                  <p className="text-2xl font-bold">{stats.onHoldProjects}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    On Hold
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.onHoldProjects}
+                  </p>
                 </div>
-                <div className="bg-yellow-100 p-3 rounded-full">
-                  <FaPauseCircle className="text-yellow-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500">
+                  <FaPauseCircle className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Cancelled Projects */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Cancelled</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Cancelled
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                     {stats.cancelledProjects}
                   </p>
                 </div>
-                <div className="bg-red-100 p-3 rounded-full">
-                  <FaBan className="text-red-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500">
+                  <FaBan className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Finished Projects */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Finished</p>
-                  <p className="text-2xl font-bold">{stats.finishedProjects}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Finished
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.finishedProjects}
+                  </p>
                 </div>
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <FaCheckCircle className="text-purple-600" />
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500">
+                  <FaCheckCircle className="text-white" />
                 </div>
               </div>
             </div>
           </div>
 
           {/* Top action buttons */}
-          <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewProjectForm(true)}
               >
                 <FaPlus /> New Project
@@ -980,7 +1004,7 @@ const ProjectPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -990,7 +1014,7 @@ const ProjectPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -1000,7 +1024,7 @@ const ProjectPage = () => {
                 {/* Delete Selected button */}
                 {selectedProjects.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
                     onClick={handleDeleteSelected}
                   >
                     Delete Selected ({selectedProjects.length})
@@ -1008,7 +1032,7 @@ const ProjectPage = () => {
                 )}
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -1024,7 +1048,7 @@ const ProjectPage = () => {
                 {/* Filter button */}
                 <div className="relative" ref={filterRef}>
                   <button
-                    className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                     onClick={() => setShowFilterMenu(!showFilterMenu)}
                   >
                     <FaFilter /> Filter
@@ -1032,12 +1056,12 @@ const ProjectPage = () => {
 
                   {/* Filter dropdown menu */}
                   {showFilterMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute mt-1 w-40 rounded-xl border border-slate-200 bg-white shadow-lg z-10 overflow-hidden">
                       <div className="px-3 py-2 text-sm font-medium border-b">
                         Status
                       </div>
                       <button
-                        className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-100 ${
                           statusFilter === "All" ? "bg-gray-100" : ""
                         }`}
                         onClick={() => {
@@ -1050,7 +1074,7 @@ const ProjectPage = () => {
                       {statusOptions.map((option) => (
                         <button
                           key={option}
-                          className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 ${
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-100 ${
                             statusFilter === option ? "bg-gray-100" : ""
                           }`}
                           onClick={() => {
@@ -1069,34 +1093,34 @@ const ProjectPage = () => {
                 <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10 overflow-hidden">
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToExcel}
                       >
                         Excel
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToCSV}
                       >
                         CSV
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToPDF}
                       >
                         PDF
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={printTable}
                       >
                         Print
@@ -1107,7 +1131,7 @@ const ProjectPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchProjects}
                 >
                   <FaSyncAlt />
@@ -1116,7 +1140,7 @@ const ProjectPage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-3 top-3.5 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -1125,7 +1149,7 @@ const ProjectPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -1136,8 +1160,7 @@ const ProjectPage = () => {
                 <thead>
                   <tr className="text-left">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="px-4 sm:px-6 py-3 rounded-l-xl bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                     >
                       <input
                         type="checkbox"
@@ -1157,34 +1180,29 @@ const ProjectPage = () => {
                       />
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                     >
                       Project Name
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                     >
                       Customer
                     </th>
                     {compactView ? (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Status
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Deadline
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 rounded-r-xl bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Actions
                         </th>
@@ -1192,38 +1210,32 @@ const ProjectPage = () => {
                     ) : (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Tags
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Start Date
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Deadline
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Members
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Status
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="px-4 sm:px-6 py-3 rounded-r-xl bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left"
                         >
                           Actions
                         </th>
@@ -1236,10 +1248,9 @@ const ProjectPage = () => {
                     currentData.map((project) => (
                       <tr
                         key={project._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                        style={{ color: "black" }}
+                        className="bg-white/70 shadow-sm rounded-xl hover:bg-white relative text-slate-700"
                       >
-                        <td className="p-3 rounded-l-lg border-0">
+                        <td className="px-4 sm:px-6 py-3 rounded-l-xl border-0 text-sm">
                           <div className="flex items-center">
                             <input
                               type="checkbox"
@@ -1251,10 +1262,10 @@ const ProjectPage = () => {
                             />
                           </div>
                         </td>
-                        <td className="p-3 border-0 font-medium">
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm font-medium text-slate-900">
                           {project.name}
                         </td>
-                        <td className="p-3 border-0">
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                           {project.customer ? (
                             <div>
                               <div className="font-medium">
@@ -1276,23 +1287,23 @@ const ProjectPage = () => {
                         </td>
                         {compactView ? (
                           <>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                   project.status
                                 )}`}
                               >
                                 {project.status}
                               </span>
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               {formatDate(project.deadline)}
                             </td>
-                            <td className="p-3 border-0 rounded-r-lg">
+                            <td className="px-4 sm:px-6 py-3 border-0 rounded-r-xl text-sm">
                               <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => handleEditProject(project)}
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:brightness-95"
                                 >
                                   <FaEdit />
                                 </button>
@@ -1300,7 +1311,7 @@ const ProjectPage = () => {
                                   onClick={() =>
                                     handleDeleteProject(project._id)
                                   }
-                                  className="text-red-600 hover:text-red-800"
+                                  className="rounded-lg p-2 bg-red-100 text-red-700 hover:brightness-95"
                                 >
                                   <FaTrash />
                                 </button>
@@ -1309,32 +1320,32 @@ const ProjectPage = () => {
                           </>
                         ) : (
                           <>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               {project.tags || "N/A"}
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               {formatDate(project.startDate)}
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               {formatDate(project.deadline)}
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               {project.members || "N/A"}
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                   project.status
                                 )}`}
                               >
                                 {project.status}
                               </span>
                             </td>
-                            <td className="p-3 border-0 rounded-r-lg">
+                            <td className="px-4 sm:px-6 py-3 border-0 rounded-r-xl text-sm">
                               <div className="flex items-center space-x-2">
                                 <button
                                   onClick={() => handleEditProject(project)}
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:brightness-95"
                                 >
                                   <FaEdit />
                                 </button>
@@ -1342,7 +1353,7 @@ const ProjectPage = () => {
                                   onClick={() =>
                                     handleDeleteProject(project._id)
                                   }
-                                  className="text-red-600 hover:text-red-800"
+                                  className="rounded-lg p-2 bg-red-100 text-red-700 hover:brightness-95"
                                 >
                                   <FaTrash />
                                 </button>
@@ -1368,14 +1379,14 @@ const ProjectPage = () => {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-              <div className="text-sm text-gray-600">
+              <div className="text-sm text-slate-500">
                 Showing {startIndex + 1} to{" "}
                 {Math.min(startIndex + entriesPerPage, filteredProjects.length)}{" "}
                 of {filteredProjects.length} entries
               </div>
               <div className="flex items-center space-x-1">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -1398,8 +1409,10 @@ const ProjectPage = () => {
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        currentPage === pageNum ? "bg-gray-200" : ""
+                      className={`rounded-xl border px-3 py-1.5 text-sm font-semibold ${
+                        currentPage === pageNum
+                          ? "bg-gradient-to-r from-slate-900 to-slate-800 text-white border-transparent"
+                          : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
                       }`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
@@ -1408,7 +1421,7 @@ const ProjectPage = () => {
                   );
                 })}
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }

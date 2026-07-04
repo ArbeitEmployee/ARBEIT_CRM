@@ -476,24 +476,27 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-100 to-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-slate-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      <div className="w-full mx-auto">
-        <div className="flex justify-between items-center mb-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="w-full mx-auto space-y-6">
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)] flex justify-between items-center gap-4 flex-wrap">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              Client Portal
+            </p>
+            <h1 className="text-2xl font-bold text-white mt-1">
               Client Home
             </h1>
           </div>
           <button
             onClick={fetchDashboardData}
-            className="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-lg flex items-center"
+            className="rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:bg-white/20 flex items-center"
           >
             <FaSyncAlt className="mr-2" />
             Refresh Data
@@ -503,7 +506,7 @@ const Home = () => {
         {/* Overview Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {/* Invoices Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
             <div className="flex items-center">
               <div className="p-2 rounded-full bg-green-100 text-green-600 mr-3">
                 <FaFileInvoiceDollar className="h-5 w-5" />
@@ -521,7 +524,7 @@ const Home = () => {
           </div>
 
           {/* Payments Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
             <div className="flex items-center">
               <div className="p-2 rounded-full bg-blue-100 text-blue-600 mr-3">
                 <FaMoneyCheckAlt className="h-5 w-5" />
@@ -539,7 +542,7 @@ const Home = () => {
           </div>
 
           {/* Projects Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
             <div className="flex items-center">
               <div className="p-2 rounded-full bg-purple-100 text-purple-600 mr-3">
                 <FaProjectDiagram className="h-5 w-5" />
@@ -557,7 +560,7 @@ const Home = () => {
           </div>
 
           {/* Proposals Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
             <div className="flex items-center">
               <div className="p-2 rounded-full bg-yellow-100 text-yellow-600 mr-3">
                 <FaFileContract className="h-5 w-5" />
@@ -575,7 +578,7 @@ const Home = () => {
           </div>
 
           {/* Estimates Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
             <div className="flex items-center">
               <div className="p-2 rounded-full bg-indigo-100 text-indigo-600 mr-3">
                 <FaFileAlt className="h-5 w-5" />
@@ -593,7 +596,7 @@ const Home = () => {
           </div>
 
           {/* Contacts Card */}
-          <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:shadow-[0_24px_70px_rgba(15,23,42,.12)] transition-shadow">
             <div className="flex items-center">
               <div className="p-2 rounded-full bg-gray-100 text-gray-600 mr-3">
                 <FaUsers className="h-5 w-5" />
@@ -612,8 +615,8 @@ const Home = () => {
         {/* Financial Overview */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Invoice Status Chart */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
               Invoice Status
             </h2>
             <div className="h-64">
@@ -666,8 +669,8 @@ const Home = () => {
           </div>
 
           {/* Payment History Chart */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
               Recent Payments
             </h2>
             {paymentHistoryData.length > 0 ? (
@@ -720,8 +723,8 @@ const Home = () => {
         {/* Projects and Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Projects Overview */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
               Projects Overview
             </h2>
             {stats.projects.total > 0 ? (
@@ -785,8 +788,8 @@ const Home = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-white rounded-lg shadow p-6 border border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">
               Recent Activity
             </h2>
             {recentActivity.length > 0 ? (
@@ -829,7 +832,7 @@ const Home = () => {
                       )}
                     </div>
                     <div
-                      className={`px-2 py-1 rounded text-xs ${
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
                         activity.status === "paid" ||
                         activity.status === "completed" ||
                         activity.status === "finished" ||
@@ -859,8 +862,8 @@ const Home = () => {
         </div>
 
         {/* Overview Chart */}
-        <div className="bg-white rounded-lg shadow p-6 border border-gray-200 mb-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">
             Portal Overview
           </h2>
           <div className="h-80">

@@ -125,41 +125,53 @@ export default function ForgotPassword() {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* Title */}
-      <div className="text-center mb-6">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      {/* Background image */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-25"
+        style={{
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      />
+      {/* Aurora blobs */}
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-500/25 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-500/25 blur-3xl" />
+
+      {/* Brand + Title */}
+      <div className="relative z-10 text-center mb-6 flex flex-col items-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-2xl font-bold text-white shadow-lg">
+          A
+        </div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-sky-300/80">
+          ARBEIT CRM
+        </p>
         {step === 1 && (
           <>
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-2xl font-bold text-white mt-1">
               Forgot Password
             </h2>
-            <p className="text-xs text-gray-300">
+            <p className="text-sm text-slate-300 mt-1">
               Enter your email to receive reset instructions
             </p>
           </>
         )}
         {step === 2 && (
           <>
-            <h2 className="text-lg font-semibold text-white">Password Reset</h2>
-            <p className="text-xs text-gray-300">
+            <h2 className="text-2xl font-bold text-white mt-1">Password Reset</h2>
+            <p className="text-sm text-slate-300 mt-1">
               We sent a code to {email || "your email"}
             </p>
           </>
         )}
         {step === 3 && (
           <>
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-2xl font-bold text-white mt-1">
               Set New Password
             </h2>
-            <p className="text-xs text-gray-300">
+            <p className="text-sm text-slate-300 mt-1">
               Must be at least 6 characters
             </p>
           </>
@@ -167,7 +179,7 @@ export default function ForgotPassword() {
       </div>
 
       {/* Card */}
-      <div className="w-full max-w-sm bg-[#0c123d] bg-opacity-80 p-6 rounded-xl shadow-xl text-white">
+      <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.06] p-7 text-white shadow-[0_30px_90px_rgba(2,6,23,.6)] backdrop-blur-xl">
         {step === 1 && (
           <form
             onSubmit={(e) => {
@@ -177,20 +189,20 @@ export default function ForgotPassword() {
             className="space-y-4"
           >
             <div>
-              <label className="block text-sm mb-1">Email Address</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-300 mb-1">Email Address</label>
               <input
                 type="email"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-700"
+                className="w-full px-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-sky-400/50 focus:border-sky-400/50"
                 required
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition disabled:opacity-50"
+              className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 py-2.5 text-sm font-semibold text-white shadow-lg hover:brightness-110 transition disabled:opacity-50"
             >
               {loading ? "Sending..." : "Send code"}
             </button>
@@ -215,22 +227,22 @@ export default function ForgotPassword() {
                   value={digit}
                   onChange={(e) => handleCodeChange(idx, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(idx, e)}
-                  className="w-16 h-14 text-center rounded bg-[#10194f] text-white text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-16 h-14 text-center rounded-xl bg-white/5 text-white text-lg font-semibold border border-white/10 focus:outline-none focus:ring-2 focus:ring-sky-400/50 focus:border-sky-400/50 tabular-nums"
                 />
               ))}
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition disabled:opacity-50"
+              className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 py-2.5 text-sm font-semibold text-white shadow-lg hover:brightness-110 transition disabled:opacity-50"
             >
               {loading ? "Verifying..." : "CONTINUE"}
             </button>
-            <p className="text-center text-xs mt-2">
+            <p className="text-center text-xs mt-2 text-slate-300">
               Didn&apos;t receive the email?{" "}
               <button
                 type="button"
-                className="underline text-blue-400"
+                className="underline text-sky-400"
                 disabled={loading}
                 onClick={sendResetCode}
               >
@@ -249,14 +261,14 @@ export default function ForgotPassword() {
             className="space-y-4"
           >
             <div className="relative">
-              <label className="block text-sm mb-1">New Password</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-300 mb-1">New Password</label>
               <div className="relative">
                 <input
                   type={showNewPassword ? "text" : "password"}
                   placeholder="Enter your new password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full px-3 py-2.5 pr-10 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-sky-400/50 focus:border-sky-400/50"
                   required
                 />
                 <button
@@ -275,14 +287,14 @@ export default function ForgotPassword() {
             </div>
 
             <div className="relative">
-              <label className="block text-sm mb-1">Confirm Password</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.15em] text-slate-300 mb-1">Confirm Password</label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   placeholder="Enter your confirm password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-3 py-2 pr-10 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-full px-3 py-2.5 pr-10 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 focus:outline-none focus:ring-2 focus:ring-sky-400/50 focus:border-sky-400/50"
                   required
                 />
                 <button
@@ -303,7 +315,7 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-[#0c123d] font-semibold text-sm py-2 rounded-md hover:bg-gray-200 transition disabled:opacity-50"
+              className="w-full rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 py-2.5 text-sm font-semibold text-white shadow-lg hover:brightness-110 transition disabled:opacity-50"
             >
               {loading ? "Resetting..." : "RESET PASSWORD"}
             </button>
@@ -314,7 +326,7 @@ export default function ForgotPassword() {
         <p className="text-center text-sm mt-4">
           <a
             href="/admin/login"
-            className="text-white hover:underline transition"
+            className="text-sky-400 hover:underline transition"
           >
             ← Back to log in
           </a>

@@ -39,7 +39,21 @@ const paymentSchema = new mongoose.Schema(
     },
     paymentMode: {
       type: String,
-      enum: ["Bank", "Stripe Checkout", "Cash", "Credit Card", "Other"],
+      enum: [
+        "bKash",
+        "Nagad",
+        "Rocket",
+        "Upay",
+        "Bank Transfer",
+        "Cash",
+        "Cheque",
+        "Card",
+        // legacy values kept for backward compatibility with existing records
+        "Bank",
+        "Stripe Checkout",
+        "Credit Card",
+        "Other",
+      ],
       required: true
     },
     transactionId: {
@@ -53,7 +67,7 @@ const paymentSchema = new mongoose.Schema(
     },
     currency: {
       type: String,
-      default: "USD"
+      default: "BDT"
     },
     status: {
       type: String,

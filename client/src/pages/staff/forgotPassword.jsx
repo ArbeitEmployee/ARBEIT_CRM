@@ -161,19 +161,18 @@ export default function StaffForgotPassword() {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* Title */}
-      <div className="text-center mb-6">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      {/* Aurora blobs */}
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-500/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-500/30 blur-3xl" />
+
+      {/* Brand + Title */}
+      <div className="relative z-10 mb-6 flex flex-col items-center text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-2xl font-extrabold text-white shadow-lg">
+          A
+        </div>
         <h2 className="text-2xl font-bold text-white">Staff Password Reset</h2>
-        <p className="text-sm text-gray-300">
+        <p className="text-sm text-slate-400">
           {step === 1 && "Enter your email to receive a reset code"}
           {step === 2 && "Enter the 4-digit code sent to your email"}
           {step === 3 && "Create your new password"}
@@ -181,15 +180,15 @@ export default function StaffForgotPassword() {
       </div>
 
       {/* Reset Card */}
-      <div className="w-full max-w-sm bg-[#0c123d] bg-opacity-80 p-6 rounded-xl shadow-xl text-white">
+      <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.06] p-7 text-white shadow-[0_30px_90px_rgba(2,6,23,.6)] backdrop-blur-xl">
         {/* Step 1: Email Input */}
         {step === 1 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">Staff Email</label>
+              <label className="block text-sm mb-1 text-slate-200">Staff Email</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiLock className="text-gray-400" />
+                  <FiLock className="text-slate-400" />
                 </div>
                 <input
                   type="email"
@@ -199,8 +198,8 @@ export default function StaffForgotPassword() {
                     setEmail(e.target.value);
                     setErrors({ ...errors, email: "" });
                   }}
-                  className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                    errors.email ? "focus:ring-red-500" : "focus:ring-gray-700"
+                  className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 focus:outline-none focus:ring-2 ${
+                    errors.email ? "focus:ring-red-400/50" : "focus:ring-sky-400/50"
                   }`}
                 />
               </div>
@@ -212,10 +211,10 @@ export default function StaffForgotPassword() {
             <button
               onClick={handleSendCode}
               disabled={loading}
-              className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+              className={`w-full font-semibold text-sm py-2.5 rounded-xl text-white shadow-md transition ${
                 loading
-                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                  : "bg-white text-[#0c123d] hover:bg-gray-200"
+                  ? "bg-slate-600 cursor-not-allowed"
+                  : "bg-gradient-to-r from-sky-500 to-indigo-600 hover:brightness-110"
               }`}
             >
               {loading ? "Sending Code..." : "SEND RESET CODE"}
@@ -227,7 +226,7 @@ export default function StaffForgotPassword() {
         {step === 2 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm mb-1 text-center">
+              <label className="block text-sm mb-1 text-center text-slate-200">
                 Enter 4-digit verification code
               </label>
               <div className="flex justify-center space-x-2">
@@ -240,8 +239,8 @@ export default function StaffForgotPassword() {
                     value={digit}
                     onChange={(e) => handleCodeChange(index, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(index, e)}
-                    className={`w-12 h-12 text-center text-lg rounded-md bg-[#10194f] text-white focus:outline-none focus:ring-2 ${
-                      errors.code ? "focus:ring-red-500" : "focus:ring-gray-700"
+                    className={`w-12 h-12 text-center text-lg rounded-xl bg-white/5 text-white border border-white/10 focus:outline-none focus:ring-2 ${
+                      errors.code ? "focus:ring-red-400/50" : "focus:ring-sky-400/50"
                     }`}
                   />
                 ))}
@@ -256,10 +255,10 @@ export default function StaffForgotPassword() {
             <button
               onClick={handleVerifyCode}
               disabled={loading}
-              className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+              className={`w-full font-semibold text-sm py-2.5 rounded-xl text-white shadow-md transition ${
                 loading
-                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                  : "bg-white text-[#0c123d] hover:bg-gray-200"
+                  ? "bg-slate-600 cursor-not-allowed"
+                  : "bg-gradient-to-r from-sky-500 to-indigo-600 hover:brightness-110"
               }`}
             >
               {loading ? "Verifying..." : "VERIFY CODE"}
@@ -271,10 +270,10 @@ export default function StaffForgotPassword() {
         {step === 3 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">New Password</label>
+              <label className="block text-sm mb-1 text-slate-200">New Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiLock className="text-gray-400" />
+                  <FiLock className="text-slate-400" />
                 </div>
                 <input
                   type="password"
@@ -284,10 +283,10 @@ export default function StaffForgotPassword() {
                     setNewPassword(e.target.value);
                     setErrors({ ...errors, newPassword: "" });
                   }}
-                  className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                  className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 focus:outline-none focus:ring-2 ${
                     errors.newPassword
-                      ? "focus:ring-red-500"
-                      : "focus:ring-gray-700"
+                      ? "focus:ring-red-400/50"
+                      : "focus:ring-sky-400/50"
                   }`}
                 />
               </div>
@@ -299,10 +298,10 @@ export default function StaffForgotPassword() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1">Confirm New Password</label>
+              <label className="block text-sm mb-1 text-slate-200">Confirm New Password</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <FiLock className="text-gray-400" />
+                  <FiLock className="text-slate-400" />
                 </div>
                 <input
                   type="password"
@@ -312,10 +311,10 @@ export default function StaffForgotPassword() {
                     setConfirmPassword(e.target.value);
                     setErrors({ ...errors, confirmPassword: "" });
                   }}
-                  className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
+                  className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 focus:outline-none focus:ring-2 ${
                     errors.confirmPassword
-                      ? "focus:ring-red-500"
-                      : "focus:ring-gray-700"
+                      ? "focus:ring-red-400/50"
+                      : "focus:ring-sky-400/50"
                   }`}
                 />
               </div>
@@ -329,10 +328,10 @@ export default function StaffForgotPassword() {
             <button
               onClick={handleResetPassword}
               disabled={loading}
-              className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+              className={`w-full font-semibold text-sm py-2.5 rounded-xl text-white shadow-md transition ${
                 loading
-                  ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                  : "bg-white text-[#0c123d] hover:bg-gray-200"
+                  ? "bg-slate-600 cursor-not-allowed"
+                  : "bg-gradient-to-r from-sky-500 to-indigo-600 hover:brightness-110"
               }`}
             >
               {loading ? "Resetting..." : "RESET PASSWORD"}
@@ -344,7 +343,7 @@ export default function StaffForgotPassword() {
         <div className="text-center mt-6">
           <Link
             to="/staff/login"
-            className="text-sm text-gray-100 hover:underline"
+            className="text-sm text-sky-400 hover:underline"
           >
             ← Back to Staff Login
           </Link>

@@ -241,136 +241,140 @@ const ExpensesVsIncome = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-lg">Loading expenses and income data...</div>
+        <div className="text-lg text-slate-500">
+          Loading expenses and income data...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Expenses vs Income Report</h1>
-        <div className="flex items-center text-gray-600">
-          <span>Dashboard</span>
-          <span className="mx-1">/</span>
-          <span>Reports</span>
-          <span className="mx-1">/</span>
-          <span>Expenses vs Income</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Dashboard / Reports / Expenses vs Income
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Expenses vs Income Report
+          </h1>
         </div>
-      </div>
 
-      {/* Year Selection */}
-      <div className="bg-white shadow-md rounded p-4 mb-6 flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Expenses vs Income Report</h2>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center">
-            <label htmlFor="year-select" className="mr-2 font-medium">
-              Select Year:
-            </label>
-            <select
-              id="year-select"
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="border rounded px-3 py-2"
+        {/* Year Selection */}
+        <div className="flex flex-col gap-4 rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-lg font-semibold text-slate-900">
+            Expenses vs Income Report
+          </h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center">
+              <label
+                htmlFor="year-select"
+                className="mr-2 text-sm font-medium text-slate-600"
+              >
+                Select Year:
+              </label>
+              <select
+                id="year-select"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+              >
+                {availableYears.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={fetchAllData}
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
-              {availableYears.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-          <button
-            onClick={fetchAllData}
-            className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded text-sm hover:bg-gray-200"
-          >
-            <FaSyncAlt className="text-xs" /> Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white p-4 rounded-lg shadow border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">
-                Total Income ({selectedYear})
-              </p>
-              <p className="text-2xl font-bold text-green-600">
-                {formatCurrency(totalIncome)}
-              </p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <svg
-                className="w-6 h-6 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                ></path>
-              </svg>
-            </div>
+              <FaSyncAlt className="text-xs" /> Refresh
+            </button>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">
-                Total Expenses ({selectedYear})
-              </p>
-              <p className="text-2xl font-bold text-red-600">
-                {formatCurrency(totalExpenses)}
-              </p>
-            </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <svg
-                className="w-6 h-6 text-red-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                ></path>
-              </svg>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Total Income ({selectedYear})
+                </p>
+                <p className="text-3xl font-extrabold tabular-nums text-slate-900">
+                  {formatCurrency(totalIncome)}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-500">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="bg-white p-4 rounded-lg shadow border">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">
-                Net Profit/Loss ({selectedYear})
-              </p>
-              <p
-                className={`text-2xl font-bold ${
-                  netProfit >= 0 ? "text-green-600" : "text-red-600"
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Total Expenses ({selectedYear})
+                </p>
+                <p className="text-3xl font-extrabold tabular-nums text-slate-900">
+                  {formatCurrency(totalExpenses)}
+                </p>
+              </div>
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-500">
+                <svg
+                  className="w-6 h-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Net Profit/Loss ({selectedYear})
+                </p>
+                <p
+                  className={`text-3xl font-extrabold tabular-nums ${
+                    netProfit >= 0 ? "text-green-600" : "text-red-600"
+                  }`}
+                >
+                  {formatCurrency(netProfit)}
+                </p>
+              </div>
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                  netProfit >= 0 ? "bg-green-500" : "bg-red-500"
                 }`}
               >
-                {formatCurrency(netProfit)}
-              </p>
-            </div>
-            <div
-              className={`p-3 rounded-full ${
-                netProfit >= 0 ? "bg-green-100" : "bg-red-100"
-              }`}
-            >
               <svg
-                className={`w-6 h-6 ${
-                  netProfit >= 0 ? "text-green-600" : "text-red-600"
-                }`}
+                className="w-6 h-6 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -394,153 +398,192 @@ const ExpensesVsIncome = () => {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Chart Section */}
-      <div className="bg-white shadow-md rounded p-4 mb-6">
-        <h2 className="text-xl font-semibold mb-4">
-          Expenses vs Income ({selectedYear})
-        </h2>
-        <p className="text-sm text-gray-500 mb-4">
-          Amount is displayed in your base currency - Only use this report if
-          you are using 1 currency for payments and expenses.
-        </p>
-
-        <div className="h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={combinedData}
-              margin={{
-                top: 20,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip
-                formatter={(value, name) => [
-                  formatCurrency(value),
-                  name === "income" ? "Income" : "Expenses",
-                ]}
-              />
-              <Legend />
-              <Bar dataKey="income" name="Income" fill="#4CAF50" />
-              <Bar dataKey="expenses" name="Expenses" fill="#F44336" />
-            </BarChart>
-          </ResponsiveContainer>
         </div>
-      </div>
 
-      {/* Monthly Breakdown Table */}
-      <div className="bg-white shadow-md rounded p-4 mb-6">
-        <h2 className="text-xl font-semibold mb-4">
-          Monthly Breakdown ({selectedYear})
-        </h2>
+        {/* Chart Section */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Overview
+          </p>
+          <h2 className="text-lg font-semibold text-slate-900">
+            Expenses vs Income ({selectedYear})
+          </h2>
+          <p className="mb-4 mt-1 text-sm text-slate-500">
+            Amount is displayed in your base currency - Only use this report if
+            you are using 1 currency for payments and expenses.
+          </p>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-gray-800 text-white">
-                <th className="p-3 text-left">Month</th>
-                <th className="p-3 text-right">Income</th>
-                <th className="p-3 text-right">Expenses</th>
-                <th className="p-3 text-right">Profit/Loss</th>
-              </tr>
-            </thead>
-            <tbody>
-              {combinedData.map((data, index) => {
-                const profitLoss = data.income - data.expenses;
-                return (
-                  <tr
-                    key={index}
-                    className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+          <div className="h-96">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={combinedData}
+                margin={{
+                  top: 20,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  formatter={(value, name) => [
+                    formatCurrency(value),
+                    name === "income" ? "Income" : "Expenses",
+                  ]}
+                />
+                <Legend />
+                <Bar
+                  dataKey="income"
+                  name="Income"
+                  fill="#22c55e"
+                  radius={[8, 8, 0, 0]}
+                />
+                <Bar
+                  dataKey="expenses"
+                  name="Expenses"
+                  fill="#ef4444"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Monthly Breakdown Table */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Details
+          </p>
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">
+            Monthly Breakdown ({selectedYear})
+          </h2>
+
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="bg-slate-50/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <th className="px-4 sm:px-6 py-3 text-left">Month</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">Income</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">Expenses</th>
+                  <th className="px-4 sm:px-6 py-3 text-right">Profit/Loss</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/70">
+                {combinedData.map((data, index) => {
+                  const profitLoss = data.income - data.expenses;
+                  return (
+                    <tr key={index} className="hover:bg-white/70">
+                      <td className="px-4 sm:px-6 py-3 text-sm font-medium text-slate-700">
+                        {data.month}
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 text-right text-sm tabular-nums text-green-600">
+                        {formatCurrency(data.income)}
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 text-right text-sm tabular-nums text-red-600">
+                        {formatCurrency(data.expenses)}
+                      </td>
+                      <td
+                        className={`px-4 sm:px-6 py-3 text-right text-sm font-bold tabular-nums ${
+                          profitLoss >= 0 ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
+                        {formatCurrency(profitLoss)}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {/* Total row */}
+                <tr className="bg-slate-100/80 font-bold">
+                  <td className="px-4 sm:px-6 py-3 text-sm text-slate-700">
+                    Total
+                  </td>
+                  <td className="px-4 sm:px-6 py-3 text-right text-sm tabular-nums text-green-600">
+                    {formatCurrency(totalIncome)}
+                  </td>
+                  <td className="px-4 sm:px-6 py-3 text-right text-sm tabular-nums text-red-600">
+                    {formatCurrency(totalExpenses)}
+                  </td>
+                  <td
+                    className={`px-4 sm:px-6 py-3 text-right text-sm tabular-nums ${
+                      netProfit >= 0 ? "text-green-600" : "text-red-600"
+                    }`}
                   >
-                    <td className="p-3 font-medium">{data.month}</td>
-                    <td className="p-3 text-right text-green-600">
-                      {formatCurrency(data.income)}
-                    </td>
-                    <td className="p-3 text-right text-red-600">
-                      {formatCurrency(data.expenses)}
-                    </td>
-                    <td
-                      className={`p-3 text-right font-bold ${
-                        profitLoss >= 0 ? "text-green-600" : "text-red-600"
-                      }`}
-                    >
-                      {formatCurrency(profitLoss)}
-                    </td>
-                  </tr>
-                );
-              })}
-              {/* Total row */}
-              <tr className="bg-gray-100 font-bold">
-                <td className="p-3">Total</td>
-                <td className="p-3 text-right text-green-600">
-                  {formatCurrency(totalIncome)}
-                </td>
-                <td className="p-3 text-right text-red-600">
-                  {formatCurrency(totalExpenses)}
-                </td>
-                <td
-                  className={`p-3 text-right ${
-                    netProfit >= 0 ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  {formatCurrency(netProfit)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                    {formatCurrency(netProfit)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      {/* Additional Insight: Income vs Expenses Trend */}
-      <div className="bg-white shadow-md rounded p-4 mb-6">
-        <h2 className="text-xl font-semibold mb-4">
-          Income vs Expenses Trend ({selectedYear})
-        </h2>
+        {/* Additional Insight: Income vs Expenses Trend */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Trend
+          </p>
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">
+            Income vs Expenses Trend ({selectedYear})
+          </h2>
 
-        <div className="h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart
-              data={combinedData}
-              margin={{
-                top: 5,
-                right: 30,
-                left: 20,
-                bottom: 5,
-              }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
-              <YAxis />
-              <Tooltip
-                formatter={(value, name) => [
-                  formatCurrency(value),
-                  name === "income" ? "Income" : "Expenses",
-                ]}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="income"
-                name="Income"
-                stroke="#4CAF50"
-                activeDot={{ r: 8 }}
-                strokeWidth={2}
-              />
-              <Line
-                type="monotone"
-                dataKey="expenses"
-                name="Expenses"
-                stroke="#F44336"
-                strokeWidth={2}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <div className="h-96">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart
+                data={combinedData}
+                margin={{
+                  top: 5,
+                  right: 30,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  formatter={(value, name) => [
+                    formatCurrency(value),
+                    name === "income" ? "Income" : "Expenses",
+                  ]}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="income"
+                  name="Income"
+                  stroke="#22c55e"
+                  activeDot={{ r: 8 }}
+                  strokeWidth={2}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="expenses"
+                  name="Expenses"
+                  stroke="#ef4444"
+                  strokeWidth={2}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
     </div>

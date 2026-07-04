@@ -16,6 +16,7 @@ import axios from "axios";
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatBDT } from "../../../utils/currency";
 
 const Payments = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -367,7 +368,7 @@ const Payments = () => {
       doc.setFont("helvetica", "bold");
       doc.text("Amount Paid:", margin + 10, yPosition + 5);
       doc.text(
-        `${payment.currency || "USD"} ${(payment.amount || 0).toFixed(2)}`,
+        formatBDT(payment.amount || 0),
         pageWidth - margin - 10,
         yPosition + 5,
         { align: "right" }
@@ -376,10 +377,7 @@ const Payments = () => {
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
       doc.text(
-        `(${(payment.amount || 0).toLocaleString("en-US", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2,
-        })} ${payment.currency || "USD"})`,
+        `(${formatBDT(payment.amount || 0)})`,
         pageWidth - margin - 10,
         yPosition + 12,
         { align: "right" }
@@ -598,11 +596,8 @@ const Payments = () => {
   const totalPages = Math.ceil(filteredPayments.length / entriesPerPage);
 
   // Format currency
-  const formatCurrency = (amount, currency = "USD") => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency,
-    }).format(amount);
+  const formatCurrency = (amount) => {
+    return formatBDT(amount);
   };
 
   // Get status color
@@ -611,21 +606,21 @@ const Payments = () => {
       case "Completed":
         return "bg-green-100 text-green-800";
       case "Pending":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-blue-100 text-blue-800";
       case "Failed":
         return "bg-red-100 text-red-800";
       case "Refunded":
-        return "bg-orange-100 text-orange-800";
+        return "bg-amber-100 text-amber-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
     }
   };
 
   if (loading) {
     return (
-      <div className="bg-gray-100 min-h-screen p-4 pt-28 flex items-center justify-center">
-        <div className="bg-white shadow-md rounded p-8">
-          <p>Loading payment data...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 flex items-center justify-center">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-8 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          <p className="text-slate-600">Loading payment data...</p>
         </div>
       </div>
     );
@@ -633,12 +628,12 @@ const Payments = () => {
 
   if (error) {
     return (
-      <div className="bg-gray-100 min-h-screen p-4 pt-28 flex items-center justify-center">
-        <div className="bg-white shadow-md rounded p-8 text-red-500">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 flex items-center justify-center">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-8 text-red-500 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <p>Error: {error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+            className="mt-4 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
           >
             Try Again
           </button>
@@ -648,70 +643,84 @@ const Payments = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Payments</h1>
-        <div className="flex items-center text-gray-600">
-          <span>Dashboard</span>
-          <FaChevronRight className="mx-1 text-xs" />
-          <span>Payments</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Sales
+          </p>
+          <h1 className="text-2xl font-bold text-white">Payments</h1>
+          <div className="mt-1 flex items-center text-slate-300 text-sm">
+            <span>Dashboard</span>
+            <FaChevronRight className="mx-1 text-xs" />
+            <span>Payments</span>
+          </div>
         </div>
-      </div>
 
-      {/* Stats Cards */}
+        {/* Stats Cards */}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-        {/* Total Payments */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Total Payments</p>
-              <p className="text-2xl font-bold">{stats.totalPayments}</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Total Payments */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Total Payments
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {stats.totalPayments}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#0ea5e9]">
+                <FaSearch className="text-white" />
+              </div>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaSearch className="text-blue-600" />
+          </div>
+
+          {/* Completed Payments */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Completed
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {stats.completedPayments}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#22c55e]">
+                <FaEye className="text-white" />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Amount */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                  Total Amount
+                </p>
+                <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                  {formatCurrency(stats.totalAmount)}
+                </p>
+              </div>
+              <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#8b5cf6]">
+                <FaPlus className="text-white" />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Completed Payments */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Completed</p>
-              <p className="text-2xl font-bold">{stats.completedPayments}</p>
-            </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <FaEye className="text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        {/* Total Amount */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-gray-500 text-sm">Total Amount</p>
-              <p className="text-2xl font-bold">
-                {formatCurrency(stats.totalAmount)}
-              </p>
-            </div>
-            <div className="bg-purple-100 p-3 rounded-full">
-              <FaPlus className="text-purple-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* White box for table & controls */}
-      <div className="bg-white shadow-md rounded p-4 transition-all duration-300 w-full">
+        {/* White box for table & controls */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 w-full">
         {/* Table controls */}
-        <div className="flex items-center justify-between mt-3 flex-wrap gap-2">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             {/* Entries per page */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={entriesPerPage}
               onChange={(e) => {
                 setEntriesPerPage(Number(e.target.value));
@@ -729,7 +738,7 @@ const Payments = () => {
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu((prev) => !prev)}
-                className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
               >
                 <HiOutlineDownload /> Export
               </button>
@@ -738,7 +747,7 @@ const Payments = () => {
               {showExportMenu && (
                 <div
                   ref={exportMenuRef}
-                  className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                  className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10"
                 >
                   <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
@@ -770,7 +779,7 @@ const Payments = () => {
 
             {/* Refresh button */}
             <button
-              className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
               onClick={fetchPayments}
             >
               <FaSyncAlt />
@@ -779,7 +788,7 @@ const Payments = () => {
 
           {/* Search bar */}
           <div className="relative">
-            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+            <FaSearch className="absolute left-3 top-3.5 text-slate-400 text-sm" />
             <input
               type="text"
               placeholder="Search payments..."
@@ -788,7 +797,7 @@ const Payments = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             />
           </div>
         </div>
@@ -798,58 +807,31 @@ const Payments = () => {
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th
-                  className="p-3 rounded-l-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 rounded-l-lg">
                   Payment #
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                   Invoice #
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                   Payment Mode
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                   Transaction ID
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                   Customer
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-right">
                   Amount
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                   Payment Date
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                   Status
                 </th>
-                <th
-                  className="p-3 rounded-r-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 rounded-r-lg">
                   Actions
                 </th>
               </tr>
@@ -859,43 +841,42 @@ const Payments = () => {
                 currentPayments.map((payment) => (
                   <tr
                     key={payment._id}
-                    className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                    style={{ color: "black" }}
+                    className="bg-white shadow rounded-lg hover:bg-white/70 relative text-slate-700"
                   >
-                    <td className="p-3 rounded-l-lg border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm rounded-l-lg border-0">
                       {payment.paymentNumber}
                     </td>
-                    <td className="p-3 border-0 ">{payment.invoiceNumber}</td>
-                    <td className="p-3 border-0">{payment.paymentMode}</td>
-                    <td className="p-3 border-0 ">{payment.transactionId}</td>
-                    <td className="p-3 border-0">{payment.customer}</td>
-                    <td className="p-3 border-0 ">
+                    <td className="px-4 sm:px-6 py-3 text-sm border-0">{payment.invoiceNumber}</td>
+                    <td className="px-4 sm:px-6 py-3 text-sm border-0">{payment.paymentMode}</td>
+                    <td className="px-4 sm:px-6 py-3 text-sm border-0">{payment.transactionId}</td>
+                    <td className="px-4 sm:px-6 py-3 text-sm border-0">{payment.customer}</td>
+                    <td className="px-4 sm:px-6 py-3 text-sm border-0 text-right tabular-nums font-medium">
                       {formatCurrency(payment.amount, payment.currency)}
                     </td>
-                    <td className="p-3 border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm border-0">
                       {new Date(payment.paymentDate).toLocaleDateString()}
                     </td>
-                    <td className="p-3 border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm border-0">
                       <span
-                        className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                           payment.status
                         )}`}
                       >
                         {payment.status}
                       </span>
                     </td>
-                    <td className="p-3 rounded-r-lg border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm rounded-r-lg border-0">
                       <div className="flex space-x-2">
                         <button
                           onClick={() => setViewPayment(payment)}
-                          className="text-blue-500 hover:text-blue-700"
+                          className="rounded-lg p-2 bg-slate-100 text-slate-700"
                           title="View"
                         >
                           <FaEye size={16} />
                         </button>
                         <button
                           onClick={() => downloadPaymentPDF(payment)}
-                          className="text-green-500 hover:text-green-700"
+                          className="rounded-lg p-2 bg-emerald-100 text-emerald-700"
                           title="Download"
                         >
                           <FaDownload size={16} />
@@ -908,7 +889,7 @@ const Payments = () => {
                 <tr>
                   <td
                     colSpan={9}
-                    className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
+                    className="px-4 sm:px-6 py-4 text-center text-slate-500 bg-white shadow rounded-lg"
                   >
                     {payments.length === 0
                       ? "No payment records found"
@@ -922,7 +903,7 @@ const Payments = () => {
 
         {/* Pagination */}
         {filteredPayments.length > 0 && (
-          <div className="flex justify-between items-center mt-4 text-sm">
+          <div className="flex justify-between items-center mt-4 text-sm text-slate-600">
             <span>
               Showing {indexOfFirstPayment + 1} to{" "}
               {Math.min(indexOfLastPayment, filteredPayments.length)} of{" "}
@@ -930,7 +911,7 @@ const Payments = () => {
             </span>
             <div className="flex items-center gap-2">
               <button
-                className="px-2 py-1 border rounded disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm disabled:opacity-50"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => prev - 1)}
               >
@@ -939,8 +920,10 @@ const Payments = () => {
               {Array.from({ length: totalPages }, (_, i) => (
                 <button
                   key={i}
-                  className={`px-3 py-1 border rounded ${
-                    currentPage === i + 1 ? "bg-gray-200" : ""
+                  className={`rounded-xl border border-slate-200 px-3 py-2 text-sm ${
+                    currentPage === i + 1
+                      ? "bg-slate-900 text-white"
+                      : "bg-white/80"
                   }`}
                   onClick={() => setCurrentPage(i + 1)}
                 >
@@ -948,7 +931,7 @@ const Payments = () => {
                 </button>
               ))}
               <button
-                className="px-2 py-1 border rounded disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm disabled:opacity-50"
                 disabled={currentPage === totalPages || totalPages === 0}
                 onClick={() => setCurrentPage((prev) => prev + 1)}
               >
@@ -957,78 +940,81 @@ const Payments = () => {
             </div>
           </div>
         )}
-      </div>
+        </div>
 
-      {/* View Payment Modal */}
-      {viewPayment && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Payment Details</h2>
-              <button
-                onClick={() => setViewPayment(null)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <FaTimes />
-              </button>
-            </div>
-            <div className="space-y-3">
-              <p>
-                <b>Payment #:</b> {viewPayment.paymentNumber}
-              </p>
-              <p>
-                <b>Invoice #:</b> {viewPayment.invoiceNumber}
-              </p>
-              <p>
-                <b>Customer:</b> {viewPayment.customer}
-              </p>
-              <p>
-                <b>Payment Mode:</b> {viewPayment.paymentMode}
-              </p>
-              <p>
-                <b>Transaction ID:</b> {viewPayment.transactionId}
-              </p>
-              <p>
-                <b>Amount:</b>{" "}
-                {formatCurrency(viewPayment.amount, viewPayment.currency)}
-              </p>
-              <p>
-                <b>Payment Date:</b>{" "}
-                {new Date(viewPayment.paymentDate).toLocaleDateString()}
-              </p>
-              <p>
-                <b>Status:</b>{" "}
-                <span
-                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
-                    viewPayment.status
-                  )}`}
+        {/* View Payment Modal */}
+        {viewPayment && (
+          <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
+            <div className="rounded-2xl border border-white/60 bg-white p-6 w-full max-w-md shadow-2xl">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-slate-900">
+                  Payment Details
+                </h2>
+                <button
+                  onClick={() => setViewPayment(null)}
+                  className="text-slate-500 hover:text-slate-700"
                 >
-                  {viewPayment.status}
-                </span>
-              </p>
-              {viewPayment.notes && (
+                  <FaTimes />
+                </button>
+              </div>
+              <div className="space-y-3 text-slate-700">
                 <p>
-                  <b>Notes:</b> {viewPayment.notes}
+                  <b>Payment #:</b> {viewPayment.paymentNumber}
                 </p>
-              )}
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => downloadPaymentPDF(viewPayment)}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-              >
-                <FaDownload className="inline mr-2" /> Download Receipt
-              </button>
-              <button
-                onClick={() => setViewPayment(null)}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
-              >
-                Close
-              </button>
+                <p>
+                  <b>Invoice #:</b> {viewPayment.invoiceNumber}
+                </p>
+                <p>
+                  <b>Customer:</b> {viewPayment.customer}
+                </p>
+                <p>
+                  <b>Payment Mode:</b> {viewPayment.paymentMode}
+                </p>
+                <p>
+                  <b>Transaction ID:</b> {viewPayment.transactionId}
+                </p>
+                <p>
+                  <b>Amount:</b>{" "}
+                  {formatCurrency(viewPayment.amount, viewPayment.currency)}
+                </p>
+                <p>
+                  <b>Payment Date:</b>{" "}
+                  {new Date(viewPayment.paymentDate).toLocaleDateString()}
+                </p>
+                <p>
+                  <b>Status:</b>{" "}
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
+                      viewPayment.status
+                    )}`}
+                  >
+                    {viewPayment.status}
+                  </span>
+                </p>
+                {viewPayment.notes && (
+                  <p>
+                    <b>Notes:</b> {viewPayment.notes}
+                  </p>
+                )}
+              </div>
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={() => downloadPaymentPDF(viewPayment)}
+                  className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
+                >
+                  <FaDownload className="inline mr-2" /> Download Receipt
+                </button>
+                <button
+                  onClick={() => setViewPayment(null)}
+                  className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

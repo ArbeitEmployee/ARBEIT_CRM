@@ -196,32 +196,32 @@ const AllAdmins = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse">Loading admins...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        <div className="animate-pulse text-slate-500">Loading admins...</div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 space-y-6">
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <div className="rounded-2xl bg-red-100 border border-red-400 text-red-700 px-4 py-3">
           {error}
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">All Admins</h1>
+      <div className="flex flex-wrap gap-4 justify-between items-center">
+        <h1 className="text-2xl font-bold text-slate-900">All Admins</h1>
         <div className="flex items-center gap-4">
           <div className="relative">
             <input
               type="text"
               placeholder="Search admins..."
-              className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white/80 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 backdrop-blur"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <div className="absolute left-3 top-2.5 text-gray-400">
+            <div className="absolute left-3 top-3 text-slate-400">
               <svg
                 className="w-5 h-5"
                 fill="none"
@@ -240,67 +240,40 @@ const AllAdmins = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-4">
-        <div className="overflow-x-auto mt-4">
-          <table className="w-full text-sm border-separate border-spacing-y-2">
+      <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
             <thead>
-              <tr className="text-left">
-                <th
-                  className="p-3 rounded-l-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Name
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Email
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Role
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Status
-                </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Created At
-                </th>
-                <th
-                  className="p-3 rounded-r-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
-                  Actions
-                </th>
+              <tr className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left">
+                <th className="px-4 sm:px-6 py-3 rounded-l-xl">Name</th>
+                <th className="px-4 sm:px-6 py-3">Email</th>
+                <th className="px-4 sm:px-6 py-3">Role</th>
+                <th className="px-4 sm:px-6 py-3">Status</th>
+                <th className="px-4 sm:px-6 py-3">Created At</th>
+                <th className="px-4 sm:px-6 py-3 rounded-r-xl">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200/70">
               {currentAdmins.length > 0 ? (
                 currentAdmins.map((admin) => (
                   <tr
                     key={admin._id}
-                    className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                    style={{ color: "black" }}
+                    className="hover:bg-white/70 transition-colors"
                   >
-                    <td className="p-3 rounded-l-lg border-0">{admin.name}</td>
-                    <td className="p-3 border-0">{admin.email}</td>
-                    <td className="p-3 border-0 capitalize">{admin.role}</td>
-                    <td className="p-3 border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm font-medium text-slate-900">{admin.name}</td>
+                    <td className="px-4 sm:px-6 py-3 text-sm text-slate-600">{admin.email}</td>
+                    <td className="px-4 sm:px-6 py-3 text-sm">
+                      <span className="rounded-full bg-purple-100 text-purple-800 px-3 py-1 text-xs font-medium capitalize">
+                        {admin.role}
+                      </span>
+                    </td>
+                    <td className="px-4 sm:px-6 py-3 text-sm">
                       <select
                         value={admin.status}
                         onChange={(e) =>
                           handleStatusUpdate(admin._id, e.target.value)
                         }
-                        className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                        className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                           admin.status
                         )} border-none focus:ring-0`}
                         disabled={
@@ -313,10 +286,10 @@ const AllAdmins = () => {
                         <option value="rejected">Rejected</option>
                       </select>
                     </td>
-                    <td className="p-3 border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm text-slate-600 tabular-nums">
                       {new Date(admin.createdAt).toLocaleDateString()}
                     </td>
-                    <td className="p-3 rounded-r-lg border-0">
+                    <td className="px-4 sm:px-6 py-3 text-sm">
                       <div className="flex space-x-2">
                         <button
                           onClick={() => setViewAdmin(admin)}
@@ -344,10 +317,10 @@ const AllAdmins = () => {
                           admin.role !== "superAdmin" && (
                             <button
                               onClick={() => handleDeleteAdmin(admin._id)}
-                              className="text-red-500 hover:text-red-700"
+                              className="inline-flex items-center justify-center rounded-lg bg-red-100 text-red-700 p-1.5 hover:bg-red-200"
                               title="Delete"
                             >
-                              <FaTrash size={16} />
+                              <FaTrash size={14} />
                             </button>
                           )}
                       </div>
@@ -358,7 +331,7 @@ const AllAdmins = () => {
                 <tr>
                   <td
                     colSpan={6}
-                    className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
+                    className="px-4 sm:px-6 py-6 text-center text-slate-500"
                   >
                     {admins.length === 0
                       ? "No admin records found"
@@ -372,7 +345,7 @@ const AllAdmins = () => {
 
         {/* Pagination */}
         {filteredAdmins.length > 0 && (
-          <div className="flex justify-between items-center mt-4 text-sm">
+          <div className="flex flex-wrap gap-3 justify-between items-center mt-4 text-sm text-slate-600">
             <span>
               Showing {indexOfFirstAdmin + 1} to{" "}
               {Math.min(indexOfLastAdmin, filteredAdmins.length)} of{" "}
@@ -380,7 +353,7 @@ const AllAdmins = () => {
             </span>
             <div className="flex items-center gap-2">
               <button
-                className="px-2 py-1 border rounded disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 font-medium text-slate-700 hover:bg-white disabled:opacity-50"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => prev - 1)}
               >
@@ -389,8 +362,10 @@ const AllAdmins = () => {
               {Array.from({ length: totalPages }, (_, i) => (
                 <button
                   key={i}
-                  className={`px-3 py-1 border rounded ${
-                    currentPage === i + 1 ? "bg-gray-200" : ""
+                  className={`rounded-xl border px-3 py-1.5 font-medium ${
+                    currentPage === i + 1
+                      ? "border-slate-900 bg-slate-900 text-white"
+                      : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
                   }`}
                   onClick={() => setCurrentPage(i + 1)}
                 >
@@ -398,7 +373,7 @@ const AllAdmins = () => {
                 </button>
               ))}
               <button
-                className="px-2 py-1 border rounded disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 font-medium text-slate-700 hover:bg-white disabled:opacity-50"
                 disabled={currentPage === totalPages || totalPages === 0}
                 onClick={() => setCurrentPage((prev) => prev + 1)}
               >
@@ -411,10 +386,10 @@ const AllAdmins = () => {
 
       {/* View Admin Modal */}
       {viewAdmin && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50 p-4">
+          <div className="rounded-3xl border border-white/60 bg-white/90 p-6 w-full max-w-md shadow-[0_30px_90px_rgba(15,23,42,.25)] backdrop-blur">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Admin Details</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Admin Details</h2>
               <button
                 onClick={() => setViewAdmin(null)}
                 className="text-gray-500 hover:text-gray-700"
@@ -455,7 +430,7 @@ const AllAdmins = () => {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={() => setViewAdmin(null)}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                className="rounded-xl border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 Close
               </button>
@@ -466,10 +441,10 @@ const AllAdmins = () => {
 
       {/* Edit Admin Modal */}
       {editAdmin && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/50 backdrop-blur-sm z-50 p-4">
+          <div className="rounded-3xl border border-white/60 bg-white/90 p-6 w-full max-w-md shadow-[0_30px_90px_rgba(15,23,42,.25)] backdrop-blur">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Edit Admin</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Edit Admin</h2>
               <button
                 onClick={() => setEditAdmin(null)}
                 className="text-gray-500 hover:text-gray-700"
@@ -480,12 +455,12 @@ const AllAdmins = () => {
             <form onSubmit={handleUpdateAdmin}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                     Name
                   </label>
                   <input
                     type="text"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     value={editAdmin.name}
                     onChange={(e) =>
                       setEditAdmin({ ...editAdmin, name: e.target.value })
@@ -494,12 +469,12 @@ const AllAdmins = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                     Email
                   </label>
                   <input
                     type="email"
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     value={editAdmin.email}
                     onChange={(e) =>
                       setEditAdmin({ ...editAdmin, email: e.target.value })
@@ -509,11 +484,11 @@ const AllAdmins = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                     Status
                   </label>
                   <select
-                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     value={editAdmin.status}
                     onChange={(e) =>
                       setEditAdmin({ ...editAdmin, status: e.target.value })
@@ -530,13 +505,13 @@ const AllAdmins = () => {
                 <button
                   type="button"
                   onClick={() => setEditAdmin(null)}
-                  className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
                 >
                   Update Admin
                 </button>

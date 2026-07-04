@@ -18,7 +18,6 @@ import {
   FaBuilding,
   FaEnvelope,
   FaPhone,
-  FaDollarSign,
   FaTag,
   FaUserCheck,
   FaFileImport,
@@ -29,6 +28,7 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatBDT } from "../../utils/currency";
 import {
   BarChart,
   Bar,
@@ -491,7 +491,7 @@ const LeadsPage = () => {
       lead.company,
       lead.email,
       lead.phone || "-",
-      `$${lead.value.toLocaleString()}`,
+      formatBDT(lead.value),
       lead.tags || "-",
       lead.assigned || "-",
       lead.status,
@@ -561,7 +561,7 @@ const LeadsPage = () => {
         lead.company,
         lead.email,
         lead.phone || "-",
-        `$${lead.value.toLocaleString()}`,
+        formatBDT(lead.value),
         lead.tags || "-",
         lead.assigned || "-",
         lead.status,
@@ -592,7 +592,7 @@ const LeadsPage = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "New":
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
       case "Contacted":
         return "bg-blue-100 text-blue-800";
       case "Qualified":
@@ -609,28 +609,32 @@ const LeadsPage = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-      minimumFractionDigits: 2,
-    }).format(amount);
+    return formatBDT(amount);
   };
 
   if (loading)
-    return <div className="bg-gray-100 min-h-screen p-4">Loading leads...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        Loading leads...
+      </div>
+    );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-white/50">
+          CRM
+        </p>
+        <h1 className="text-2xl font-bold text-white">
           {showNewLeadForm
             ? editingLead
               ? "Edit Lead"
               : "Add New Lead"
             : "Leads"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-white/60 text-sm">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Leads</span>
@@ -638,9 +642,9 @@ const LeadsPage = () => {
       </div>
 
       {showNewLeadForm ? (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Lead Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Lead Details</h2>
             <button
               onClick={() => {
                 setShowNewLeadForm(false);
@@ -664,7 +668,7 @@ const LeadsPage = () => {
                   name="name"
                   value={newLead.name}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -678,7 +682,7 @@ const LeadsPage = () => {
                   name="company"
                   value={newLead.company}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -692,7 +696,7 @@ const LeadsPage = () => {
                   name="email"
                   value={newLead.email}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -706,7 +710,7 @@ const LeadsPage = () => {
                   name="phone"
                   value={newLead.phone}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
@@ -719,7 +723,7 @@ const LeadsPage = () => {
                   name="value"
                   value={newLead.value}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="0.00"
                   step="0.01"
                 />
@@ -737,7 +741,7 @@ const LeadsPage = () => {
                   name="tags"
                   value={newLead.tags}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="e.g., warm, urgent, enterprise"
                 />
               </div>
@@ -751,7 +755,7 @@ const LeadsPage = () => {
                   name="assigned"
                   value={newLead.assigned}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="e.g., John Doe"
                 />
               </div>
@@ -764,7 +768,7 @@ const LeadsPage = () => {
                   name="status"
                   value={newLead.status}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {statusOptions.map((option) => (
                     <option key={option} value={option}>
@@ -782,7 +786,7 @@ const LeadsPage = () => {
                   name="source"
                   value={newLead.source}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="">Select Source</option>
                   {sourceOptions.map((option) => (
@@ -802,7 +806,7 @@ const LeadsPage = () => {
                   name="lastContact"
                   value={newLead.lastContact}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
@@ -815,7 +819,7 @@ const LeadsPage = () => {
                   name="created"
                   value={newLead.created}
                   onChange={handleNewLeadChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -827,14 +831,14 @@ const LeadsPage = () => {
                 setShowNewLeadForm(false);
                 setEditingLead(null);
               }}
-              className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveLead}
               disabled={isSaving}
-              className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 disabled:opacity-50"
             >
               {isSaving
                 ? "Saving..."
@@ -848,96 +852,135 @@ const LeadsPage = () => {
         <>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center">
-                <div className="rounded-full p-3 bg-blue-100">
-                  <FaUser className="text-blue-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#0ea5e9" }}
+                >
+                  <FaUser className="text-white" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
                     Total Leads
                   </h3>
-                  <p className="text-2xl font-bold">{stats.totalLeads}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.totalLeads}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-4">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center">
-                <div className="rounded-full p-3 bg-gray-100">
-                  <FaClock className="text-gray-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#64748b" }}
+                >
+                  <FaClock className="text-white" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">New</h3>
-                  <p className="text-2xl font-bold">{stats.new}</p>
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    New
+                  </h3>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.new}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-4">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center">
-                <div className="rounded-full p-3 bg-blue-100">
-                  <FaUserCheck className="text-blue-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#0ea5e9" }}
+                >
+                  <FaUserCheck className="text-white" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
                     Contacted
                   </h3>
-                  <p className="text-2xl font-bold">{stats.contacted}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.contacted}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-4">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center">
-                <div className="rounded-full p-3 bg-yellow-100">
-                  <FaCheckCircle className="text-yellow-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#f59e0b" }}
+                >
+                  <FaCheckCircle className="text-white" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
                     Qualified
                   </h3>
-                  <p className="text-2xl font-bold">{stats.qualified}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.qualified}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-4">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center">
-                <div className="rounded-full p-3 bg-purple-100">
-                  <FaPauseCircle className="text-purple-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#8b5cf6" }}
+                >
+                  <FaPauseCircle className="text-white" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
                     Proposal
                   </h3>
-                  <p className="text-2xl font-bold">{stats.proposal}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.proposal}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-4">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center">
-                <div className="rounded-full p-3 bg-green-100">
-                  <FaCheckCircle className="text-green-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#22c55e" }}
+                >
+                  <FaCheckCircle className="text-white" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
                     Customer
                   </h3>
-                  <p className="text-2xl font-bold">{stats.customer}</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.customer}
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white shadow rounded-lg p-4">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center">
-                <div className="rounded-full p-3 bg-red-100">
-                  <FaBan className="text-red-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#ef4444" }}
+                >
+                  <FaBan className="text-white" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-600">Lost</h3>
-                  <p className="text-2xl font-bold">{stats.lost}</p>
+                  <h3 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Lost
+                  </h3>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.lost}
+                  </p>
                 </div>
               </div>
             </div>
@@ -945,8 +988,10 @@ const LeadsPage = () => {
 
           {/* Leads by Source Chart */}
           {chartData.length > 0 && (
-            <div className="bg-white shadow-md rounded-lg p-6 mb-6">
-              <h2 className="text-xl font-semibold mb-4">Leads by Source</h2>
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+              <h2 className="text-xl font-semibold mb-4 text-slate-900">
+                Leads by Source
+              </h2>
               <ResponsiveContainer width="100%" height={300}>
                 <BarChart
                   data={chartData}
@@ -962,7 +1007,7 @@ const LeadsPage = () => {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="value" fill="#8884d8" name="Number of Leads" />
+                  <Bar dataKey="value" fill="#0ea5e9" name="Number of Leads" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -972,14 +1017,13 @@ const LeadsPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewLeadForm(true)}
               >
                 <FaPlus /> New Lead
               </button>
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={handleImportClick}
               >
                 Import Leads
@@ -987,7 +1031,7 @@ const LeadsPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -1000,7 +1044,7 @@ const LeadsPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -1010,7 +1054,7 @@ const LeadsPage = () => {
                 {/* Delete Selected button */}
                 {selectedLeads.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
                     onClick={handleBulkDelete}
                   >
                     Delete Selected ({selectedLeads.length})
@@ -1019,7 +1063,7 @@ const LeadsPage = () => {
 
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -1036,34 +1080,34 @@ const LeadsPage = () => {
                 <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10">
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToExcel}
                       >
                         Excel
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToCSV}
                       >
                         CSV
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToPDF}
                       >
                         PDF
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={printTable}
                       >
                         Print
@@ -1074,7 +1118,7 @@ const LeadsPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchLeads}
                 >
                   <FaSyncAlt />
@@ -1083,7 +1127,7 @@ const LeadsPage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-2 top-3 text-gray-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -1092,7 +1136,7 @@ const LeadsPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -1102,10 +1146,7 @@ const LeadsPage = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-l-lg">
                       <input
                         type="checkbox"
                         checked={
@@ -1121,69 +1162,39 @@ const LeadsPage = () => {
                         }}
                       />
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                       Name
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                       Company
                     </th>
                     {compactView ? (
                       <>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Status
                         </th>
-                        <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-r-lg">
                           Actions
                         </th>
                       </>
                     ) : (
                       <>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Email
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Phone
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Value
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Status
                         </th>
-                        <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left">
                           Source
                         </th>
-                        <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                        <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-r-lg">
                           Actions
                         </th>
                       </>
@@ -1206,7 +1217,7 @@ const LeadsPage = () => {
                     currentData.map((lead) => (
                       <tr
                         key={lead._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50"
+                        className="bg-white shadow rounded-lg hover:bg-white/70"
                         style={{ color: "black" }}
                       >
                         <td className="p-3 rounded-l-lg border-0">
@@ -1246,7 +1257,7 @@ const LeadsPage = () => {
                           <>
                             <td className="p-3 border-0">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                   lead.status
                                 )}`}
                               >
@@ -1256,13 +1267,13 @@ const LeadsPage = () => {
                             <td className="p-3 rounded-r-lg border-0">
                               <div className="flex items-center space-x-2">
                                 <button
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:bg-blue-200"
                                   onClick={() => handleEditLead(lead)}
                                 >
                                   <FaEdit />
                                 </button>
                                 <button
-                                  className="text-red-600 hover:text-red-800"
+                                  className="rounded-lg p-2 bg-red-100 text-red-700 hover:bg-red-200"
                                   onClick={() => handleDeleteLead(lead._id)}
                                 >
                                   <FaTrash />
@@ -1286,13 +1297,14 @@ const LeadsPage = () => {
                             </td>
                             <td className="p-3 border-0">
                               <div className="flex items-center">
-                                <FaDollarSign className="text-gray-400 mr-1" />
-                                <span>{formatCurrency(lead.value || 0)}</span>
+                                <span className="tabular-nums">
+                                  {formatCurrency(lead.value || 0)}
+                                </span>
                               </div>
                             </td>
                             <td className="p-3 border-0">
                               <span
-                                className={`px-2 py-1 rounded-full text-xs ${getStatusColor(
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                   lead.status
                                 )}`}
                               >
@@ -1308,13 +1320,13 @@ const LeadsPage = () => {
                             <td className="p-3 rounded-r-lg border-0">
                               <div className="flex items-center space-x-2">
                                 <button
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:bg-blue-200"
                                   onClick={() => handleEditLead(lead)}
                                 >
                                   <FaEdit />
                                 </button>
                                 <button
-                                  className="text-red-600 hover:text-red-800"
+                                  className="rounded-lg p-2 bg-red-100 text-red-700 hover:bg-red-200"
                                   onClick={() => handleDeleteLead(lead._id)}
                                 >
                                   <FaTrash />
@@ -1339,7 +1351,7 @@ const LeadsPage = () => {
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm hover:bg-white"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -1361,8 +1373,10 @@ const LeadsPage = () => {
                   return (
                     <button
                       key={pageNum}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        currentPage === pageNum ? "bg-gray-200" : ""
+                      className={`rounded-xl border border-slate-200 px-3 py-1.5 text-sm ${
+                        currentPage === pageNum
+                          ? "bg-slate-900 text-white"
+                          : "bg-white/80 hover:bg-white"
                       }`}
                       onClick={() => setCurrentPage(pageNum)}
                     >
@@ -1371,7 +1385,7 @@ const LeadsPage = () => {
                   );
                 })}
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm hover:bg-white"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
@@ -1387,10 +1401,12 @@ const LeadsPage = () => {
 
       {/* Import Modal */}
       {importModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Import Leads</h2>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Import Leads
+              </h2>
               <button
                 onClick={closeImportModal}
                 className="text-gray-500 hover:text-gray-700"
@@ -1410,7 +1426,7 @@ const LeadsPage = () => {
                 ref={fileInputRef}
                 accept=".xlsx,.xls,.csv"
                 onChange={handleFileChange}
-                className="w-full border rounded p-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               />
             </div>
 
@@ -1456,14 +1472,14 @@ const LeadsPage = () => {
             <div className="flex justify-end gap-3">
               <button
                 onClick={closeImportModal}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 Cancel
               </button>
               <button
                 onClick={handleImportSubmit}
                 disabled={importProgress || !importFile}
-                className="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 disabled:opacity-50"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 disabled:opacity-50"
               >
                 Import
               </button>
@@ -1471,6 +1487,7 @@ const LeadsPage = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

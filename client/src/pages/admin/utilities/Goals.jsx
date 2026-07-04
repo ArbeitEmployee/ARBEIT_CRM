@@ -420,20 +420,27 @@ const GoalsPage = () => {
   };
 
   if (loading)
-    return <div className="bg-gray-100 min-h-screen p-4">Loading Goals...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 text-slate-500">
+        Loading Goals...
+      </div>
+    );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Utilities
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">
           {showNewGoalForm
             ? editingGoal
               ? "Edit Goal"
               : "Add New Goal"
             : "Goals"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="mt-1 flex items-center text-slate-500 text-sm">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Goals</span>
@@ -441,15 +448,22 @@ const GoalsPage = () => {
       </div>
 
       {showNewGoalForm ? (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Goal Details</h2>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                Goal
+              </p>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Goal Details
+              </h2>
+            </div>
             <button
               onClick={() => {
                 setShowNewGoalForm(false);
                 setEditingGoal(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-400 hover:text-slate-700"
             >
               <FaTimes />
             </button>
@@ -457,7 +471,7 @@ const GoalsPage = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Title *
               </label>
               <input
@@ -465,20 +479,20 @@ const GoalsPage = () => {
                 name="title"
                 value={newGoal.title}
                 onChange={handleNewGoalChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Goal Type *
               </label>
               <select
                 name="goalType"
                 value={newGoal.goalType}
                 onChange={handleNewGoalChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               >
                 <option value="Invoiced Amount">Invoiced Amount</option>
@@ -495,7 +509,7 @@ const GoalsPage = () => {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Target Value *
               </label>
               <input
@@ -503,7 +517,7 @@ const GoalsPage = () => {
                 name="targetValue"
                 value={newGoal.targetValue}
                 onChange={handleNewGoalChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 min="0"
                 step="0.01"
                 required
@@ -511,7 +525,7 @@ const GoalsPage = () => {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Current Value
               </label>
               <input
@@ -519,14 +533,14 @@ const GoalsPage = () => {
                 name="currentValue"
                 value={newGoal.currentValue}
                 onChange={handleNewGoalChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 min="0"
                 step="0.01"
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Start Date *
               </label>
               <input
@@ -534,13 +548,13 @@ const GoalsPage = () => {
                 name="startDate"
                 value={newGoal.startDate}
                 onChange={handleNewGoalChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 End Date *
               </label>
               <input
@@ -548,20 +562,20 @@ const GoalsPage = () => {
                 name="endDate"
                 value={newGoal.endDate}
                 onChange={handleNewGoalChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               />
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Status
               </label>
               <select
                 name="status"
                 value={newGoal.status}
                 onChange={handleNewGoalChange}
-                className="w-full border rounded px-3 py-2"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               >
                 <option value="Not Started">Not Started</option>
                 <option value="In Progress">In Progress</option>
@@ -571,14 +585,14 @@ const GoalsPage = () => {
             </div>
 
             <div className="mb-4 md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Description
               </label>
               <textarea
                 name="description"
                 value={newGoal.description}
                 onChange={handleNewGoalChange}
-                className="w-full border rounded px-3 py-2 h-32"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm h-32 focus:outline-none focus:ring-2 focus:ring-slate-300"
                 placeholder="Optional description of the goal"
               />
             </div>
@@ -591,14 +605,14 @@ const GoalsPage = () => {
                 setShowNewGoalForm(false);
                 setEditingGoal(null);
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveGoal}
-              className="px-4 py-2 bg-gray-900 text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               disabled={
                 !newGoal.title ||
                 !newGoal.goalType ||
@@ -618,7 +632,7 @@ const GoalsPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2 bg-gray-900 text-white"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewGoalForm(true)}
               >
                 <FaPlus /> New Goal
@@ -626,7 +640,7 @@ const GoalsPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -636,7 +650,7 @@ const GoalsPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -646,7 +660,7 @@ const GoalsPage = () => {
                 {/* Delete Selected button */}
                 {selectedGoals.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
                     onClick={async () => {
                       if (
                         window.confirm(
@@ -680,7 +694,7 @@ const GoalsPage = () => {
                 )}
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -695,7 +709,7 @@ const GoalsPage = () => {
 
                 {/* Status filter */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -708,7 +722,7 @@ const GoalsPage = () => {
 
                 {/* Type filter */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={typeFilter}
                   onChange={(e) => setTypeFilter(e.target.value)}
                 >
@@ -729,7 +743,7 @@ const GoalsPage = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1 bg-gray-900 text-white"
+                    className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
@@ -738,28 +752,28 @@ const GoalsPage = () => {
                   {showExportMenu && (
                     <div
                       ref={exportMenuRef}
-                      className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                      className="absolute mt-1 w-32 rounded-xl border border-white/60 bg-white shadow-2xl z-10 overflow-hidden"
                     >
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50"
                         onClick={exportToExcel}
                       >
                         Excel
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50"
                         onClick={exportToCSV}
                       >
                         CSV
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50"
                         onClick={exportToPDF}
                       >
                         PDF
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-50"
                         onClick={printTable}
                       >
                         Print
@@ -770,7 +784,7 @@ const GoalsPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center bg-gray-900 text-white"
+                  className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-3 py-2.5 text-sm text-white shadow-md hover:brightness-110 flex items-center"
                   onClick={fetchGoals}
                 >
                   <FaSyncAlt />
@@ -779,7 +793,7 @@ const GoalsPage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-3 top-3 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -788,17 +802,17 @@ const GoalsPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+            <div className="overflow-x-auto rounded-2xl border border-slate-200/70">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left">
-                    <th className="p-3 rounded-l-lg bg-gray-900 text-white">
+                  <tr className="bg-slate-50/80 text-left text-xs uppercase tracking-wider font-semibold text-slate-500">
+                    <th className="px-4 sm:px-6 py-3">
                       <input
                         type="checkbox"
                         checked={
@@ -816,20 +830,18 @@ const GoalsPage = () => {
                         }}
                       />
                     </th>
-                    <th className="p-3 bg-gray-900 text-white">Goal Name</th>
-                    <th className="p-3 bg-gray-900 text-white">Type</th>
-                    <th className="p-3 bg-gray-900 text-white">Target</th>
-                    <th className="p-3 bg-gray-900 text-white">Current</th>
-                    <th className="p-3 bg-gray-900 text-white">Progress</th>
-                    <th className="p-3 bg-gray-900 text-white">Start Date</th>
-                    <th className="p-3 bg-gray-900 text-white">End Date</th>
-                    <th className="p-3 bg-gray-900 text-white">Status</th>
-                    <th className="p-3 rounded-r-lg bg-gray-900 text-white">
-                      Actions
-                    </th>
+                    <th className="px-4 sm:px-6 py-3">Goal Name</th>
+                    <th className="px-4 sm:px-6 py-3">Type</th>
+                    <th className="px-4 sm:px-6 py-3 text-right">Target</th>
+                    <th className="px-4 sm:px-6 py-3 text-right">Current</th>
+                    <th className="px-4 sm:px-6 py-3">Progress</th>
+                    <th className="px-4 sm:px-6 py-3">Start Date</th>
+                    <th className="px-4 sm:px-6 py-3">End Date</th>
+                    <th className="px-4 sm:px-6 py-3">Status</th>
+                    <th className="px-4 sm:px-6 py-3">Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-200/70">
                   {currentData.length > 0 ? (
                     currentData.map((goal) => {
                       const progress = calculateProgress(
@@ -839,10 +851,10 @@ const GoalsPage = () => {
                       return (
                         <tr
                           key={goal._id}
-                          className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                          className="hover:bg-white/70 relative"
                           style={{ color: "black" }}
                         >
-                          <td className="p-3 rounded-l-lg border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             <div className="flex items-center">
                               <input
                                 type="checkbox"
@@ -852,14 +864,20 @@ const GoalsPage = () => {
                               />
                             </div>
                           </td>
-                          <td className="p-3 border-0 font-medium">
+                          <td className="px-4 sm:px-6 py-3 font-medium text-slate-900">
                             {goal.title}
                           </td>
-                          <td className="p-3 border-0">{goal.goalType}</td>
-                          <td className="p-3 border-0">{goal.targetValue}</td>
-                          <td className="p-3 border-0">{goal.currentValue}</td>
-                          <td className="p-3 border-0">
-                            <div className="w-full bg-gray-200 rounded-full h-2.5">
+                          <td className="px-4 sm:px-6 py-3 text-slate-600">
+                            {goal.goalType}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                            {goal.targetValue}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
+                            {goal.currentValue}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3">
+                            <div className="w-full rounded-full bg-slate-100 h-2.5">
                               <div
                                 className={`h-2.5 rounded-full ${
                                   progress < 50
@@ -871,30 +889,32 @@ const GoalsPage = () => {
                                 style={{ width: `${progress}%` }}
                               ></div>
                             </div>
-                            <span className="text-xs">{progress}%</span>
+                            <span className="text-xs tabular-nums text-slate-500">
+                              {progress}%
+                            </span>
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-slate-600">
                             {formatDate(goal.startDate)}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-slate-600">
                             {formatDate(goal.endDate)}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             <span
-                              className={`px-2 py-1 rounded-full text-xs ${
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${
                                 goal.status === "Completed"
                                   ? "bg-green-100 text-green-800"
                                   : goal.status === "In Progress"
                                   ? "bg-blue-100 text-blue-800"
                                   : goal.status === "Cancelled"
                                   ? "bg-red-100 text-red-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  : "bg-slate-100 text-slate-700"
                               }`}
                             >
                               {goal.status}
                             </span>
                           </td>
-                          <td className="p-3 rounded-r-lg border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             <div className="flex space-x-2">
                               {/* View Button */}
                               <button
@@ -927,7 +947,7 @@ const GoalsPage = () => {
                     <tr>
                       <td
                         colSpan={10}
-                        className="p-4 text-center text-gray-500"
+                        className="px-4 sm:px-6 py-4 text-center text-slate-500"
                       >
                         {goals.length === 0
                           ? "No goals found. Create your first goal!"
@@ -948,7 +968,7 @@ const GoalsPage = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage(currentPage - 1)}
                 >
@@ -958,7 +978,7 @@ const GoalsPage = () => {
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage(currentPage + 1)}
                 >
@@ -972,13 +992,20 @@ const GoalsPage = () => {
 
       {/* View Goal Modal */}
       {viewingGoal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-2xl">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-full max-w-2xl">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Goal Details</h2>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                  Goal
+                </p>
+                <h2 className="text-lg font-semibold text-slate-900">
+                  Goal Details
+                </h2>
+              </div>
               <button
                 onClick={() => setViewingGoal(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-700"
               >
                 <FaTimes />
               </button>
@@ -986,74 +1013,74 @@ const GoalsPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Title
                 </label>
-                <p className="border rounded px-3 py-2 bg-gray-50">
+                <p className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800">
                   {viewingGoal.title}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Goal Type
                 </label>
-                <p className="border rounded px-3 py-2 bg-gray-50">
+                <p className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800">
                   {viewingGoal.goalType}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Target Value
                 </label>
-                <p className="border rounded px-3 py-2 bg-gray-50">
+                <p className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800">
                   {viewingGoal.targetValue}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Current Value
                 </label>
-                <p className="border rounded px-3 py-2 bg-gray-50">
+                <p className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800">
                   {viewingGoal.currentValue}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Start Date
                 </label>
-                <p className="border rounded px-3 py-2 bg-gray-50">
+                <p className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800">
                   {formatDate(viewingGoal.startDate)}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   End Date
                 </label>
-                <p className="border rounded px-3 py-2 bg-gray-50">
+                <p className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800">
                   {formatDate(viewingGoal.endDate)}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Status
                 </label>
-                <p className="border rounded px-3 py-2 bg-gray-50">
+                <p className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800">
                   {viewingGoal.status}
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-600 mb-1">
                   Progress
                 </label>
-                <div className="border rounded px-3 py-2 bg-gray-50">
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
+                <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800">
+                  <div className="w-full bg-slate-100 rounded-full h-2.5 mb-1">
                     <div
                       className={`h-2.5 rounded-full ${
                         viewingGoal.progress < 50
@@ -1071,10 +1098,10 @@ const GoalsPage = () => {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-slate-600 mb-1">
                 Description
               </label>
-              <p className="border rounded px-3 py-2 bg-gray-50 min-h-32">
+              <p className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm text-slate-800 min-h-32">
                 {viewingGoal.description || "No description provided"}
               </p>
             </div>
@@ -1085,7 +1112,7 @@ const GoalsPage = () => {
                   setViewingGoal(null);
                   handleEditGoal(viewingGoal);
                 }}
-                className="px-4 py-2 bg-gray-900 text-white rounded text-sm"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
               >
                 Edit Goal
               </button>

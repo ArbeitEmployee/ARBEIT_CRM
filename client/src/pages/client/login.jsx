@@ -96,30 +96,31 @@ const ClientLogin = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      {/* Aurora blobs */}
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-500/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-600/30 blur-3xl" />
+
+      {/* Brand chip */}
+      <div className="relative mb-5 h-14 w-14 rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg">
+        <span className="text-2xl font-bold text-white">A</span>
+      </div>
+
       {/* Title */}
-      <div className="text-center mb-6">
+      <div className="relative text-center mb-6">
         <h2 className="text-2xl font-bold text-white">Welcome to CRM</h2>
-        <p className="text-sm text-gray-300">Login to your client account</p>
+        <p className="text-sm text-slate-300">Login to your client account</p>
       </div>
 
       {/* Login Card */}
-      <div className="w-full max-w-sm bg-[#0c123d] bg-opacity-80 p-6 rounded-xl shadow-xl text-white">
+      <div className="relative w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.06] p-7 text-white shadow-[0_30px_90px_rgba(2,6,23,.6)] backdrop-blur-xl">
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
           {/* Email */}
           <div>
-            <label className="block text-sm mb-1">Email</label>
+            <label className="block text-sm text-slate-300 mb-1">Email</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiMail className="text-gray-400" />
+                <FiMail className="text-slate-400" />
               </div>
               <input
                 type="email"
@@ -129,8 +130,8 @@ const ClientLogin = () => {
                   setEmail(e.target.value);
                   setErrors({ ...errors, email: "" });
                 }}
-                className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                  errors.email ? "focus:ring-red-500" : "focus:ring-gray-700"
+                className={`w-full rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 pl-10 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 ${
+                  errors.email ? "focus:ring-red-500" : "focus:ring-sky-400/50"
                 }`}
               />
             </div>
@@ -142,10 +143,10 @@ const ClientLogin = () => {
           {/* Password */}
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="text-sm">Password</label>
+              <label className="text-sm text-slate-300">Password</label>
               <Link
                 to="/client/forgot-password"
-                className="text-xs text-gray-100 hover:underline"
+                className="text-xs text-sky-400 hover:text-sky-300"
               >
                 Forgot Password?
               </Link>
@@ -153,7 +154,7 @@ const ClientLogin = () => {
             <div className="relative">
               {/* Lock Icon */}
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className="text-gray-400" />
+                <FiLock className="text-slate-400" />
               </div>
 
               {/* Password Input */}
@@ -165,8 +166,8 @@ const ClientLogin = () => {
                   setPassword(e.target.value);
                   setErrors({ ...errors, password: "" });
                 }}
-                className={`w-full pl-10 pr-10 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                  errors.password ? "focus:ring-red-500" : "focus:ring-gray-700"
+                className={`w-full pl-10 pr-10 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 text-sm focus:outline-none focus:ring-2 ${
+                  errors.password ? "focus:ring-red-500" : "focus:ring-sky-400/50"
                 }`}
               />
 
@@ -174,7 +175,7 @@ const ClientLogin = () => {
               <button
                 type="button"
                 onClick={togglePassword}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-300 hover:text-white transition"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-300 hover:text-white transition"
               >
                 {showPassword ? "👁️" : "👁️‍🗨️"}
               </button>
@@ -190,11 +191,11 @@ const ClientLogin = () => {
             <input
               type="checkbox"
               id="remember"
-              className="accent-gray-100 mr-2"
+              className="accent-sky-500 mr-2"
               checked={rememberMe}
               onChange={() => setRememberMe(!rememberMe)}
             />
-            <label htmlFor="remember" className="text-sm">
+            <label htmlFor="remember" className="text-sm text-slate-300">
               Remember me
             </label>
           </div>
@@ -203,10 +204,10 @@ const ClientLogin = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+            className={`w-full rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-md transition ${
               loading
-                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                : "bg-white text-[#0c123d] hover:bg-gray-200"
+                ? "bg-slate-600 cursor-not-allowed opacity-70"
+                : "bg-gradient-to-r from-sky-500 to-indigo-600 hover:brightness-110"
             }`}
           >
             {loading ? "Logging in..." : "LOG IN"}
@@ -214,11 +215,11 @@ const ClientLogin = () => {
         </form>
 
         {/* Sign up */}
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <p className="text-center text-sm text-slate-400 mt-6">
           Don't have an account?{" "}
           <Link
             to="/client/registration"
-            className="text-white hover:underline font-medium"
+            className="text-sky-400 hover:text-sky-300 font-medium"
           >
             Register
           </Link>

@@ -619,28 +619,33 @@ const CustomersPage = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading customers...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        Loading customers...
+      </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div className="mb-6 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-white/50">
+          CONTACTS
+        </p>
+        <h1 className="text-2xl font-bold text-white">
           {showNewCustomerForm
             ? editingCustomer
               ? "Edit Customer"
               : "Add New Customer"
             : "Customers"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-300 text-sm">
           <span>Contacts</span>
           <FaChevronRight className="mx-1 text-xs" />
         </div>
       </div>
 
       {showNewCustomerForm ? (
-        <div className="bg-white shadow-md rounded p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Customer Details</h2>
             <button
@@ -667,7 +672,7 @@ const CustomersPage = () => {
                   placeholder="Leave blank to auto-generate"
                   value={newCustomer.customerCode}
                   onChange={handleNewCustomerChange}
-                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   readOnly={!!editingCustomer} // Read-only when editing
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -683,7 +688,7 @@ const CustomersPage = () => {
                   name="company"
                   value={newCustomer.company}
                   onChange={handleNewCustomerChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -697,7 +702,7 @@ const CustomersPage = () => {
                   name="vatNumber"
                   value={newCustomer.vatNumber}
                   onChange={handleNewCustomerChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
@@ -710,7 +715,7 @@ const CustomersPage = () => {
                   name="contact"
                   value={newCustomer.contact}
                   onChange={handleNewCustomerChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -724,7 +729,7 @@ const CustomersPage = () => {
                   name="phone"
                   value={newCustomer.phone}
                   onChange={handleNewCustomerChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
@@ -737,7 +742,7 @@ const CustomersPage = () => {
                   name="email"
                   value={newCustomer.email}
                   onChange={handleNewCustomerChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -751,7 +756,7 @@ const CustomersPage = () => {
                   name="website"
                   value={newCustomer.website}
                   onChange={handleNewCustomerChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
@@ -767,7 +772,7 @@ const CustomersPage = () => {
                       value={groupSearchTerm}
                       onChange={(e) => setGroupSearchTerm(e.target.value)}
                       onFocus={() => setShowGroupDropdown(true)}
-                      className="w-full border rounded-l px-3 py-2"
+                      className="w-full rounded-l-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     />
                     <button
                       onClick={() => {
@@ -778,7 +783,7 @@ const CustomersPage = () => {
                           handleAddGroup(groupSearchTerm);
                         }
                       }}
-                      className="bg-gray-200 px-3 py-2 rounded-r"
+                      className="rounded-r-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                     >
                       Add
                     </button>
@@ -801,7 +806,7 @@ const CustomersPage = () => {
                   {newCustomer.groups.map((group, index) => (
                     <span
                       key={index}
-                      className="bg-gray-100 px-2 py-1 rounded text-xs flex items-center"
+                      className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700 flex items-center"
                     >
                       {group}
                       <button
@@ -827,7 +832,7 @@ const CustomersPage = () => {
                     name="currency"
                     value={newCustomer.currency}
                     onChange={handleNewCustomerChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   >
                     <option>System Default</option>
                     <option>USD </option>
@@ -844,7 +849,7 @@ const CustomersPage = () => {
                     name="language"
                     value={newCustomer.language}
                     onChange={handleNewCustomerChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   >
                     <option>System Default</option>
                     <option>English</option>
@@ -907,14 +912,14 @@ const CustomersPage = () => {
                 setShowNewCustomerForm(false);
                 setEditingCustomer(null);
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveCustomer}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110"
               disabled={
                 !newCustomer.company ||
                 !newCustomer.contact ||
@@ -931,68 +936,101 @@ const CustomersPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Total Customers */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Customers</p>
-                  <p className="text-2xl font-bold">{stats.totalCustomers}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Total Customers
+                  </p>
+                  <p className="text-2xl font-bold text-slate-900 tabular-nums">
+                    {stats.totalCustomers}
+                  </p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaUser className="text-blue-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#0ea5e9" }}
+                >
+                  <FaUser className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Active Customers */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Active Customers</p>
-                  <p className="text-2xl font-bold">{stats.activeCustomers}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Active Customers
+                  </p>
+                  <p className="text-2xl font-bold text-slate-900 tabular-nums">
+                    {stats.activeCustomers}
+                  </p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaUserCheck className="text-green-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#22c55e" }}
+                >
+                  <FaUserCheck className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Inactive Customers */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Inactive Customers</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Inactive Customers
+                  </p>
+                  <p className="text-2xl font-bold text-slate-900 tabular-nums">
                     {stats.inactiveCustomers}
                   </p>
                 </div>
-                <div className="bg-red-100 p-3 rounded-full">
-                  <FaUserTimes className="text-red-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#ef4444" }}
+                >
+                  <FaUserTimes className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Active Contacts */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Active Contacts</p>
-                  <p className="text-2xl font-bold">{stats.activeContacts}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Active Contacts
+                  </p>
+                  <p className="text-2xl font-bold text-slate-900 tabular-nums">
+                    {stats.activeContacts}
+                  </p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaUserCheck className="text-green-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#22c55e" }}
+                >
+                  <FaUserCheck className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Inactive Contacts */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Inactive Contacts</p>
-                  <p className="text-2xl font-bold">{stats.inactiveContacts}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Inactive Contacts
+                  </p>
+                  <p className="text-2xl font-bold text-slate-900 tabular-nums">
+                    {stats.inactiveContacts}
+                  </p>
                 </div>
-                <div className="bg-red-100 p-3 rounded-full">
-                  <FaUserTimes className="text-red-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#ef4444" }}
+                >
+                  <FaUserTimes className="text-white" />
                 </div>
               </div>
             </div>
@@ -1002,14 +1040,13 @@ const CustomersPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewCustomerForm(true)}
               >
                 <FaPlus /> New Customer
               </button>
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={handleImportClick}
               >
                 Import Customers
@@ -1017,7 +1054,7 @@ const CustomersPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -1027,7 +1064,7 @@ const CustomersPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -1037,7 +1074,7 @@ const CustomersPage = () => {
                 {/* Delete Selected button before the select */}
                 {selectedCustomers.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
                     onClick={async () => {
                       if (
                         window.confirm(
@@ -1073,7 +1110,7 @@ const CustomersPage = () => {
 
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -1090,7 +1127,7 @@ const CustomersPage = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
@@ -1099,7 +1136,7 @@ const CustomersPage = () => {
                   {showExportMenu && (
                     <div
                       ref={exportMenuRef}
-                      className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                      className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10"
                     >
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
@@ -1131,7 +1168,7 @@ const CustomersPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchCustomers}
                 >
                   <FaSyncAlt />
@@ -1149,7 +1186,7 @@ const CustomersPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -1160,8 +1197,7 @@ const CustomersPage = () => {
                 <thead>
                   <tr className="text-left">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-l-lg"
                     >
                       <input
                         type="checkbox"
@@ -1179,46 +1215,39 @@ const CustomersPage = () => {
                       />
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Customer Code
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Company
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Primary Contact
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Primary Email
                     </th>
                     {compactView ? (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Active Customer
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Active Contacts
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-r-lg"
                         >
                           Actions
                         </th>
@@ -1226,38 +1255,32 @@ const CustomersPage = () => {
                     ) : (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Phone
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Active Customer
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Active Contacts
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Groups
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Date Created
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-r-lg"
                         >
                           Actions
                         </th>
@@ -1269,7 +1292,7 @@ const CustomersPage = () => {
                   {currentData.map((customer) => (
                     <tr
                       key={customer._id}
-                      className="bg-white shadow rounded-lg hover:bg-gray-50"
+                      className="bg-white shadow rounded-lg hover:bg-white/70"
                       style={{ color: "black" }}
                     >
                       <td className="p-3 rounded-l-lg border-0">
@@ -1285,7 +1308,7 @@ const CustomersPage = () => {
                         </div>
                       </td>
                       <td className="p-3 border-0">
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-mono">
+                        <span className="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-xs font-mono">
                           {customer.customerCode}
                         </span>
                       </td>
@@ -1324,7 +1347,7 @@ const CustomersPage = () => {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEditCustomer(customer)}
-                                className="text-blue-600 hover:text-blue-800"
+                                className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:bg-blue-200"
                               >
                                 <FaEdit />
                               </button>
@@ -1332,7 +1355,7 @@ const CustomersPage = () => {
                                 onClick={() =>
                                   handleDeleteCustomer(customer._id)
                                 }
-                                className="text-red-600 hover:text-red-800"
+                                className="rounded-lg p-2 bg-red-100 text-red-700 hover:bg-red-200"
                               >
                                 <FaTrash />
                               </button>
@@ -1373,7 +1396,7 @@ const CustomersPage = () => {
                               {customer.groups?.map((group, index) => (
                                 <span
                                   key={index}
-                                  className="bg-gray-100 px-2 py-1 rounded text-xs"
+                                  className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-700"
                                 >
                                   {group}
                                 </span>
@@ -1391,7 +1414,7 @@ const CustomersPage = () => {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEditCustomer(customer)}
-                                className="text-blue-600 hover:text-blue-800"
+                                className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:bg-blue-200"
                               >
                                 <FaEdit />
                               </button>
@@ -1399,7 +1422,7 @@ const CustomersPage = () => {
                                 onClick={() =>
                                   handleDeleteCustomer(customer._id)
                                 }
-                                className="text-red-600 hover:text-red-800"
+                                className="rounded-lg p-2 bg-red-100 text-red-700 hover:bg-red-200"
                               >
                                 <FaTrash />
                               </button>
@@ -1427,7 +1450,7 @@ const CustomersPage = () => {
                 <button
                   onClick={() => setCurrentPage(1)}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                 >
                   First
                 </button>
@@ -1436,7 +1459,7 @@ const CustomersPage = () => {
                     setCurrentPage((prev) => Math.max(1, prev - 1))
                   }
                   disabled={currentPage === 1}
-                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                 >
                   Previous
                 </button>
@@ -1448,14 +1471,14 @@ const CustomersPage = () => {
                     setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                   }
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                 >
                   Next
                 </button>
                 <button
                   onClick={() => setCurrentPage(totalPages)}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                 >
                   Last
                 </button>
@@ -1467,8 +1490,8 @@ const CustomersPage = () => {
 
       {/* Import Modal */}
       {importModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 max-w-md w-full mx-4">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Import Customers</h3>
               <button
@@ -1495,14 +1518,14 @@ const CustomersPage = () => {
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={closeImportModal}
-                    className="px-4 py-2 border rounded text-sm"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleImportSubmit}
                     disabled={!importFile}
-                    className="px-4 py-2 bg-black text-white rounded text-sm disabled:opacity-50"
+                    className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 disabled:opacity-50"
                   >
                     Import
                   </button>
@@ -1549,7 +1572,7 @@ const CustomersPage = () => {
                 <div className="flex justify-end mt-4">
                   <button
                     onClick={closeImportModal}
-                    className="px-4 py-2 bg-black text-white rounded text-sm"
+                    className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110"
                   >
                     Close
                   </button>

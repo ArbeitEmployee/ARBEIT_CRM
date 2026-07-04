@@ -605,21 +605,27 @@ const SupportPage = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading supports...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        Loading supports...
+      </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Dashboard
+        </p>
+        <h1 className="text-2xl font-bold text-slate-900">
           {showNewTicketForm
             ? editingTicket
               ? "Edit Ticket"
               : "Add New Ticket"
             : "Support Tickets"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-500">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Support</span>
@@ -627,15 +633,15 @@ const SupportPage = () => {
       </div>
 
       {showNewTicketForm ? (
-        <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Ticket Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Ticket Details</h2>
             <button
               onClick={() => {
                 setShowNewTicketForm(false);
                 setEditingTicket(null);
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-500 hover:text-slate-700"
             >
               <FaTimes />
             </button>
@@ -645,7 +651,7 @@ const SupportPage = () => {
             {/* Left Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Subject *
                 </label>
                 <input
@@ -653,26 +659,26 @@ const SupportPage = () => {
                   name="subject"
                   value={newTicket.subject}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Description *
                 </label>
                 <textarea
                   name="description"
                   value={newTicket.description}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2 h-32"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm h-32 focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer Code
                 </label>
                 <input
@@ -680,16 +686,16 @@ const SupportPage = () => {
                   name="customerCode"
                   value={newTicket.customerCode}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Enter customer code (e.g., CUST-ABC123)"
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-slate-500 mt-1">
                   Enter customer code to auto-populate customer information
                 </p>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer *
                 </label>
                 <div className="relative" ref={customerRef}>
@@ -698,20 +704,20 @@ const SupportPage = () => {
                     name="customerName"
                     value={newTicket.customerName}
                     onChange={handleNewTicketChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     required
                     placeholder="Search customer by company name..."
                   />
                   {showCustomerDropdown && customerSearchResults.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                    <div className="absolute z-10 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-auto">
                       {customerSearchResults.map((customer, index) => (
                         <div
                           key={index}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          className="px-3 py-2 hover:bg-slate-100 cursor-pointer"
                           onClick={() => handleSelectCustomer(customer)}
                         >
                           <div className="font-medium">{customer.company}</div>
-                          <div className="text-sm text-gray-600">
+                          <div className="text-sm text-slate-600">
                             {customer.contact} - {customer.email}
                           </div>
                           <div className="text-xs text-blue-600">
@@ -724,8 +730,8 @@ const SupportPage = () => {
                   {showCustomerDropdown &&
                     customerSearchResults.length === 0 &&
                     customerSearchTerm.length >= 2 && (
-                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
-                        <div className="px-3 py-2 text-gray-500">
+                      <div className="absolute z-10 mt-1 w-full bg-white border border-slate-200 rounded-xl shadow-lg">
+                        <div className="px-3 py-2 text-slate-500">
                           No customers found
                         </div>
                       </div>
@@ -734,7 +740,7 @@ const SupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Tags
                 </label>
                 <input
@@ -742,7 +748,7 @@ const SupportPage = () => {
                   name="tags"
                   value={newTicket.tags}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="e.g., UI, BUG, URGENT"
                 />
               </div>
@@ -751,14 +757,14 @@ const SupportPage = () => {
             {/* Right Column */}
             <div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Service
                 </label>
                 <select
                   name="service"
                   value={newTicket.service}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="">Select Service</option>
                   {serviceOptions.map((option) => (
@@ -770,14 +776,14 @@ const SupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Department
                 </label>
                 <select
                   name="department"
                   value={newTicket.department}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="">Select Department</option>
                   {departmentOptions.map((option) => (
@@ -789,14 +795,14 @@ const SupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Priority
                 </label>
                 <select
                   name="priority"
                   value={newTicket.priority}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {priorityOptions.map((option) => (
                     <option key={option} value={option}>
@@ -807,14 +813,14 @@ const SupportPage = () => {
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Status
                 </label>
                 <select
                   name="status"
                   value={newTicket.status}
                   onChange={handleNewTicketChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {statusOptions.map((option) => (
                     <option key={option} value={option}>
@@ -833,14 +839,14 @@ const SupportPage = () => {
                 setShowNewTicketForm(false);
                 setEditingTicket(null);
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveTicket}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
               disabled={
                 !newTicket.subject ||
                 !newTicket.description ||
@@ -857,79 +863,79 @@ const SupportPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Total Tickets */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Tickets</p>
-                  <p className="text-2xl font-bold">{stats.totalTickets}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Total Tickets</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.totalTickets}</p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaCheckSquare className="text-blue-600" />
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-sky-500">
+                  <FaCheckSquare className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Open */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Open</p>
-                  <p className="text-2xl font-bold">{stats.open}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Open</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.open}</p>
                 </div>
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <FaClock className="text-gray-600" />
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-slate-500">
+                  <FaClock className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Answered */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Answered</p>
-                  <p className="text-2xl font-bold">{stats.answered}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Answered</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.answered}</p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaCheckCircle className="text-blue-600" />
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-blue-500">
+                  <FaCheckCircle className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* On Hold */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">On Hold</p>
-                  <p className="text-2xl font-bold">{stats.onHold}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">On Hold</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.onHold}</p>
                 </div>
-                <div className="bg-yellow-100 p-3 rounded-full">
-                  <FaPauseCircle className="text-yellow-600" />
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-amber-500">
+                  <FaPauseCircle className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* In Progress */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">In Progress</p>
-                  <p className="text-2xl font-bold">{stats.inProgress}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">In Progress</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.inProgress}</p>
                 </div>
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <FaSyncAlt className="text-purple-600" />
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-violet-500">
+                  <FaSyncAlt className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Closed */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-shadow hover:shadow-md">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Closed</p>
-                  <p className="text-2xl font-bold">{stats.closed}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Closed</p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">{stats.closed}</p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaBan className="text-green-600" />
+                <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-green-500">
+                  <FaBan className="text-white" />
                 </div>
               </div>
             </div>
@@ -939,8 +945,7 @@ const SupportPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewTicketForm(true)}
               >
                 <FaPlus /> New Ticket
@@ -948,7 +953,7 @@ const SupportPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -958,7 +963,7 @@ const SupportPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded-lg p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -968,7 +973,7 @@ const SupportPage = () => {
                 {/* Delete Selected button */}
                 {selectedTickets.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
                     onClick={async () => {
                       if (
                         window.confirm(
@@ -998,7 +1003,7 @@ const SupportPage = () => {
                 )}
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -1016,34 +1021,34 @@ const SupportPage = () => {
                 <div className="relative" ref={exportRef}>
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
 
                   {/* Dropdown menu */}
                   {showExportMenu && (
-                    <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+                    <div className="absolute mt-1 w-32 bg-white border border-slate-200 rounded-xl shadow-md z-10">
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToExcel}
                       >
                         Excel
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToCSV}
                       >
                         CSV
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={exportToPDF}
                       >
                         PDF
                       </button>
                       <button
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-slate-100"
                         onClick={printTable}
                       >
                         Print
@@ -1054,7 +1059,7 @@ const SupportPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchTickets}
                 >
                   <FaSyncAlt />
@@ -1067,11 +1072,11 @@ const SupportPage = () => {
                   <input
                     type="text"
                     placeholder="Search..."
-                    className="border rounded pl-8 pr-3 py-1 text-sm"
+                    className="rounded-xl border border-slate-200 bg-slate-50/80 pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                  <FaSearch className="absolute left-2 top-2.5 transform text-gray-400 text-sm" />
+                  <FaSearch className="absolute left-2 top-3.5 transform text-slate-400 text-sm" />
                 </div>
               </div>
             </div>
@@ -1080,11 +1085,8 @@ const SupportPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
-                  <tr className="text-left">
-                    <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                  <tr className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left">
+                    <th className="px-4 sm:px-6 py-3 text-left rounded-l-lg">
                       <input
                         type="checkbox"
                         checked={
@@ -1102,64 +1104,16 @@ const SupportPage = () => {
                         }}
                       />
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Subject
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Tags
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Service
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Department
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Customer
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Priority
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Status
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Created
-                    </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
-                      Last Reply
-                    </th>
-                    <th
-                      className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="px-4 sm:px-6 py-3 text-left">Subject</th>
+                    <th className="px-4 sm:px-6 py-3 text-left">Tags</th>
+                    <th className="px-4 sm:px-6 py-3 text-left">Service</th>
+                    <th className="px-4 sm:px-6 py-3 text-left">Department</th>
+                    <th className="px-4 sm:px-6 py-3 text-left">Customer</th>
+                    <th className="px-4 sm:px-6 py-3 text-left">Priority</th>
+                    <th className="px-4 sm:px-6 py-3 text-left">Status</th>
+                    <th className="px-4 sm:px-6 py-3 text-left">Created</th>
+                    <th className="px-4 sm:px-6 py-3 text-left">Last Reply</th>
+                    <th className="px-4 sm:px-6 py-3 text-left rounded-r-lg">
                       Actions
                     </th>
                   </tr>
@@ -1169,10 +1123,10 @@ const SupportPage = () => {
                     currentData.map((ticket) => (
                       <tr
                         key={ticket._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                        className="bg-white/70 hover:bg-white shadow rounded-lg relative"
                         style={{ color: "black" }}
                       >
-                        <td className="p-3 rounded-l-lg border-0">
+                        <td className="px-4 sm:px-6 py-3 rounded-l-lg border-0">
                           <input
                             type="checkbox"
                             checked={selectedTickets.includes(ticket._id)}
@@ -1180,23 +1134,23 @@ const SupportPage = () => {
                             className="h-4 w-4"
                           />
                         </td>
-                        <td className="p-3 border-0 text-sm">
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                           {ticket.subject}
                         </td>
-                        <td className="p-3 border-0 text-sm">{ticket.tags}</td>
-                        <td className="p-3 border-0 text-sm">
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm">{ticket.tags}</td>
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                           {ticket.service}
                         </td>
-                        <td className="p-3 border-0 text-sm">
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                           {ticket.department}
                         </td>
-                        <td className="p-3 border-0 text-sm">
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                           {ticket.customer ? (
                             <div>
                               <div className="font-medium">
                                 {ticket.customer.company}
                               </div>
-                              <div className="text-xs text-gray-500">
+                              <div className="text-xs text-slate-500">
                                 {ticket.customer.contact}
                               </div>
                               {ticket.customer.customerCode && (
@@ -1209,34 +1163,34 @@ const SupportPage = () => {
                             "N/A"
                           )}
                         </td>
-                        <td className="p-3 border-0">
+                        <td className="px-4 sm:px-6 py-3 border-0">
                           <span
-                            className={`px-2 py-1 rounded text-xs ${getPriorityColor(
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${getPriorityColor(
                               ticket.priority
                             )}`}
                           >
                             {ticket.priority}
                           </span>
                         </td>
-                        <td className="p-3 border-0">
+                        <td className="px-4 sm:px-6 py-3 border-0">
                           <span
-                            className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                               ticket.status
                             )}`}
                           >
                             {ticket.status}
                           </span>
                         </td>
-                        <td className="p-3 border-0 text-sm">
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm tabular-nums">
                           {formatDateTime(ticket.created)}
                         </td>
-                        <td className="p-3 border-0 text-sm">
+                        <td className="px-4 sm:px-6 py-3 border-0 text-sm">
                           {ticket.lastReply}
                         </td>
-                        <td className="p-3 rounded-r-lg border-0">
+                        <td className="px-4 sm:px-6 py-3 rounded-r-lg border-0">
                           <div className="flex items-center space-x-2">
                             <button
-                              className="text-blue-600 hover:text-blue-800"
+                              className="rounded-lg p-2 bg-slate-100 text-slate-700 hover:brightness-95"
                               onClick={() =>
                                 handleViewDescription(ticket.description)
                               }
@@ -1245,14 +1199,14 @@ const SupportPage = () => {
                               <FaEye />
                             </button>
                             <button
-                              className="text-green-600 hover:text-green-800"
+                              className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:brightness-95"
                               onClick={() => handleEditTicket(ticket)}
                               title="Edit"
                             >
                               <FaEdit />
                             </button>
                             <button
-                              className="text-red-600 hover:text-red-800"
+                              className="rounded-lg p-2 bg-red-100 text-red-700 hover:brightness-95"
                               onClick={() => handleDeleteTicket(ticket._id)}
                               title="Delete"
                             >
@@ -1266,7 +1220,7 @@ const SupportPage = () => {
                     <tr>
                       <td
                         colSpan="11"
-                        className="p-4 text-center text-gray-500"
+                        className="p-4 text-center text-slate-500"
                       >
                         No tickets found
                       </td>
@@ -1278,14 +1232,14 @@ const SupportPage = () => {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4 flex-wrap gap-2">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-slate-600 tabular-nums">
                 Showing {startIndex + 1} to{" "}
                 {Math.min(startIndex + entriesPerPage, filteredTickets.length)}{" "}
                 of {filteredTickets.length} entries
               </div>
               <div className="flex items-center gap-1">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -1297,8 +1251,10 @@ const SupportPage = () => {
                   (page) => (
                     <button
                       key={page}
-                      className={`px-3 py-1 border rounded text-sm ${
-                        currentPage === page ? "bg-black text-white" : ""
+                      className={`rounded-xl border px-3 py-2 text-sm font-semibold tabular-nums ${
+                        currentPage === page
+                          ? "border-transparent bg-gradient-to-r from-slate-900 to-slate-800 text-white"
+                          : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
                       }`}
                       onClick={() => setCurrentPage(page)}
                     >
@@ -1307,7 +1263,7 @@ const SupportPage = () => {
                   )
                 )}
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
@@ -1323,24 +1279,24 @@ const SupportPage = () => {
 
       {/* Description Modal */}
       {showDescriptionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-11/12 md:w-3/4 lg:w-1/2 max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-11/12 md:w-3/4 lg:w-1/2 max-h-screen overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Ticket Description</h3>
+              <h3 className="text-lg font-semibold text-slate-900">Ticket Description</h3>
               <button
                 onClick={() => setShowDescriptionModal(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 <FaTimes />
               </button>
             </div>
-            <div className="border rounded p-4 bg-gray-50 whitespace-pre-wrap">
+            <div className="rounded-xl border border-slate-200 p-4 bg-slate-50/80 whitespace-pre-wrap">
               {currentDescription || "No description available"}
             </div>
             <div className="mt-4 flex justify-end">
               <button
                 onClick={() => setShowDescriptionModal(false)}
-                className="px-4 py-2 bg-black text-white rounded"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
               >
                 Close
               </button>
@@ -1348,6 +1304,7 @@ const SupportPage = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

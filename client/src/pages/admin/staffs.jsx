@@ -508,30 +508,35 @@ const StaffsPage = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">Loading staffs...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        Loading staffs...
+      </div>
     );
 
   return (
-    <div className=" min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div className="mb-6 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-white/50">
+          STAFF MANAGEMENT
+        </p>
+        <h1 className="text-2xl font-bold text-white">
           {showNewStaffForm
             ? editingStaff
               ? "Edit Staff"
               : "Add New Staff"
             : "Staffs"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-white/60 text-sm">
           <span>Staff Management</span>
           <FaChevronRight className="mx-1 text-xs" />
         </div>
       </div>
 
       {showNewStaffForm ? (
-        <div className="bg-white shadow-md rounded p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur mb-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Staff Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Staff Details</h2>
             <button
               onClick={() => {
                 setShowNewStaffForm(false);
@@ -566,7 +571,7 @@ const StaffsPage = () => {
                   placeholder="Leave blank to auto-generate"
                   value={newStaff.staffCode}
                   onChange={handleNewStaffChange}
-                  className="w-full border rounded px-3 py-2 bg-gray-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   readOnly={!!editingStaff} // Read-only when editing
                 />
                 <p className="text-xs text-gray-500 mt-1">
@@ -583,7 +588,7 @@ const StaffsPage = () => {
                   name="name"
                   value={newStaff.name}
                   onChange={handleNewStaffChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -597,7 +602,7 @@ const StaffsPage = () => {
                   name="position"
                   value={newStaff.position}
                   onChange={handleNewStaffChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
@@ -610,7 +615,7 @@ const StaffsPage = () => {
                   name="department"
                   value={newStaff.department}
                   onChange={handleNewStaffChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -626,7 +631,7 @@ const StaffsPage = () => {
                   name="phone"
                   value={newStaff.phone}
                   onChange={handleNewStaffChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
@@ -639,7 +644,7 @@ const StaffsPage = () => {
                   name="email"
                   value={newStaff.email}
                   onChange={handleNewStaffChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -683,14 +688,14 @@ const StaffsPage = () => {
                   active: true,
                 });
               }}
-              className="px-4 py-2 border rounded text-sm"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleSaveStaff}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110"
               disabled={!newStaff.name || !newStaff.email || isSaving}
             >
               {isSaving ? "Saving..." : "Save"}
@@ -702,40 +707,61 @@ const StaffsPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             {/* Total Staffs */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Staffs</p>
-                  <p className="text-2xl font-bold">{stats.totalStaffs}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Total Staffs
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.totalStaffs}
+                  </p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaUser className="text-blue-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#0ea5e9" }}
+                >
+                  <FaUser className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Active Staffs */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Active Staffs</p>
-                  <p className="text-2xl font-bold">{stats.activeStaffs}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Active Staffs
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.activeStaffs}
+                  </p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaUserCheck className="text-green-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#22c55e" }}
+                >
+                  <FaUserCheck className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Inactive Staffs */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Inactive Staffs</p>
-                  <p className="text-2xl font-bold">{stats.inactiveStaffs}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Inactive Staffs
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                    {stats.inactiveStaffs}
+                  </p>
                 </div>
-                <div className="bg-red-100 p-3 rounded-full">
-                  <FaUserTimes className="text-red-600" />
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                  style={{ backgroundColor: "#ef4444" }}
+                >
+                  <FaUserTimes className="text-white" />
                 </div>
               </div>
             </div>
@@ -745,14 +771,13 @@ const StaffsPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewStaffForm(true)}
               >
                 <FaPlus /> New Staff
               </button>
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={handleImportClick}
               >
                 Import Staffs
@@ -760,7 +785,7 @@ const StaffsPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -770,7 +795,7 @@ const StaffsPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -780,7 +805,7 @@ const StaffsPage = () => {
                 {/* Delete Selected button */}
                 {selectedStaffs.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
                     onClick={handleDeleteSelected}
                   >
                     Delete Selected ({selectedStaffs.length})
@@ -789,7 +814,7 @@ const StaffsPage = () => {
 
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -806,7 +831,7 @@ const StaffsPage = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
@@ -815,7 +840,7 @@ const StaffsPage = () => {
                   {showExportMenu && (
                     <div
                       ref={exportMenuRef}
-                      className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                      className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10"
                     >
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
@@ -847,7 +872,7 @@ const StaffsPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchStaffs}
                 >
                   <FaSyncAlt />
@@ -856,7 +881,7 @@ const StaffsPage = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-2 top-3 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -865,7 +890,7 @@ const StaffsPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -876,8 +901,7 @@ const StaffsPage = () => {
                 <thead>
                   <tr className="text-left">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-l-lg"
                     >
                       <input
                         type="checkbox"
@@ -895,41 +919,35 @@ const StaffsPage = () => {
                       />
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Staff Code
                     </th>
                     {/* ADDED: Staff Code column */}
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Name
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Position
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Email
                     </th>
                     {compactView ? (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Active
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-r-lg"
                         >
                           Actions
                         </th>
@@ -937,32 +955,27 @@ const StaffsPage = () => {
                     ) : (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Department
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Phone
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Active
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Date Created
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-r-lg"
                         >
                           Actions
                         </th>
@@ -974,7 +987,7 @@ const StaffsPage = () => {
                   {currentData.map((staff) => (
                     <tr
                       key={staff._id}
-                      className="bg-white shadow rounded-lg hover:bg-gray-50"
+                      className="bg-white shadow rounded-lg hover:bg-white/70"
                       style={{ color: "black" }}
                     >
                       <td className="p-3 rounded-l-lg border-0">
@@ -989,7 +1002,7 @@ const StaffsPage = () => {
                       </td>
                       {/* ADDED: Staff Code cell */}
                       <td className="p-3 border-0">
-                        <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-mono">
+                        <span className="bg-blue-100 text-blue-800 rounded-full px-3 py-1 text-xs font-mono">
                           {staff.staffCode}
                         </span>
                       </td>
@@ -1000,10 +1013,10 @@ const StaffsPage = () => {
                         <>
                           <td className="p-3 border-0">
                             <span
-                              className={`px-2 py-1 rounded text-xs cursor-pointer ${
+                              className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer ${
                                 staff.active
                                   ? "bg-green-100 text-green-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  : "bg-slate-100 text-slate-700"
                               }`}
                               onClick={() => toggleStaffActive(staff._id)}
                               title="Toggle staff active status"
@@ -1015,14 +1028,14 @@ const StaffsPage = () => {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEditStaff(staff)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:bg-blue-200"
                                 title="Edit"
                               >
                                 <FaEdit size={16} />
                               </button>
                               <button
                                 onClick={() => handleDeleteStaff(staff._id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg p-2 bg-red-100 text-red-700 hover:bg-red-200"
                                 title="Delete"
                               >
                                 <FaTrash size={16} />
@@ -1036,10 +1049,10 @@ const StaffsPage = () => {
                           <td className="p-3 border-0">{staff.phone}</td>
                           <td className="p-3 border-0">
                             <span
-                              className={`px-2 py-1 rounded text-xs cursor-pointer ${
+                              className={`rounded-full px-3 py-1 text-xs font-medium cursor-pointer ${
                                 staff.active
                                   ? "bg-green-100 text-green-800"
-                                  : "bg-gray-100 text-gray-800"
+                                  : "bg-slate-100 text-slate-700"
                               }`}
                               onClick={() => toggleStaffActive(staff._id)}
                               title="Toggle staff active status"
@@ -1056,14 +1069,14 @@ const StaffsPage = () => {
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => handleEditStaff(staff)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:bg-blue-200"
                                 title="Edit"
                               >
                                 <FaEdit size={16} />
                               </button>
                               <button
                                 onClick={() => handleDeleteStaff(staff._id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg p-2 bg-red-100 text-red-700 hover:bg-red-200"
                                 title="Delete"
                               >
                                 <FaTrash size={16} />
@@ -1087,7 +1100,7 @@ const StaffsPage = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -1099,7 +1112,7 @@ const StaffsPage = () => {
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
@@ -1115,8 +1128,8 @@ const StaffsPage = () => {
 
       {/* Import Modal */}
       {importModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">Import Staffs</h2>
 
             {importProgress ? (
@@ -1166,7 +1179,7 @@ const StaffsPage = () => {
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   accept=".csv,.xlsx,.xls"
-                  className="w-full border rounded p-2 text-sm"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 p-2 text-sm"
                 />
               </div>
             )}
@@ -1175,7 +1188,7 @@ const StaffsPage = () => {
               {!importResult && (
                 <button
                   onClick={closeImportModal}
-                  className="px-4 py-2 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                 >
                   Cancel
                 </button>
@@ -1183,7 +1196,7 @@ const StaffsPage = () => {
               {!importProgress && !importResult && (
                 <button
                   onClick={handleImportSubmit}
-                  className="px-4 py-2 bg-black text-white rounded text-sm"
+                  className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110"
                   disabled={!importFile}
                 >
                   Import
@@ -1192,7 +1205,7 @@ const StaffsPage = () => {
               {importResult && (
                 <button
                   onClick={closeImportModal}
-                  className="px-4 py-2 bg-black text-white rounded text-sm"
+                  className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110"
                 >
                   Close
                 </button>

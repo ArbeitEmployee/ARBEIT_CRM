@@ -19,6 +19,7 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatBDT } from "../../utils/currency";
 
 const SubscriptionPage = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -518,7 +519,7 @@ const SubscriptionPage = () => {
       subscription.nextBilling
         ? new Date(subscription.nextBilling).toLocaleDateString()
         : "N/A",
-      `$${subscription.amount}`,
+      formatBDT(subscription.amount),
       subscription.billingCycle,
     ]);
 
@@ -582,7 +583,7 @@ const SubscriptionPage = () => {
         subscription.nextBilling
           ? new Date(subscription.nextBilling).toLocaleDateString()
           : "N/A",
-        `$${subscription.amount}`,
+        formatBDT(subscription.amount),
         subscription.billingCycle,
       ].forEach((value) => {
         printWindow.document.write(`<td>${value}</td>`);
@@ -618,7 +619,7 @@ const SubscriptionPage = () => {
       case "Incomplete":
         return "bg-yellow-100 text-yellow-800";
       case "Canceled":
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
       case "Incomplete Expired":
         return "bg-purple-100 text-purple-800";
       default:
@@ -628,23 +629,26 @@ const SubscriptionPage = () => {
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
         Loading subscriptions...
       </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div className="mb-6 rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-white/50">
+          BILLING
+        </p>
+        <h1 className="text-2xl font-bold text-white">
           {showNewSubscriptionForm
             ? editingSubscription
               ? "Edit Subscription"
               : "Add New Subscription"
             : "Subscriptions"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-500 text-sm">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Subscriptions</span>
@@ -652,7 +656,7 @@ const SubscriptionPage = () => {
       </div>
 
       {showNewSubscriptionForm ? (
-        <div className="bg-white shadow-md rounded p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur mb-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-semibold">Subscription Details</h2>
             <button
@@ -678,7 +682,7 @@ const SubscriptionPage = () => {
                   name="name"
                   value={newSubscription.name}
                   onChange={handleNewSubscriptionChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -693,16 +697,16 @@ const SubscriptionPage = () => {
                     name="customerName"
                     value={newSubscription.customerName}
                     onChange={handleNewSubscriptionChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     required
                     placeholder="Search customer by company name..."
                   />
                   {showCustomerDropdown && customerSearchResults.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                    <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg max-h-60 overflow-auto">
                       {customerSearchResults.map((customer, index) => (
                         <div
                           key={index}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          className="px-3 py-2 hover:bg-slate-100 cursor-pointer"
                           onClick={() => handleSelectCustomer(customer)}
                         >
                           <div className="font-medium">{customer.company}</div>
@@ -716,7 +720,7 @@ const SubscriptionPage = () => {
                   {showCustomerDropdown &&
                     customerSearchResults.length === 0 &&
                     customerSearchTerm.length >= 2 && (
-                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg">
                         <div className="px-3 py-2 text-gray-500">
                           No customers found
                         </div>
@@ -734,7 +738,7 @@ const SubscriptionPage = () => {
                   name="project"
                   value={newSubscription.project}
                   onChange={handleNewSubscriptionChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -748,7 +752,7 @@ const SubscriptionPage = () => {
                   name="amount"
                   value={newSubscription.amount}
                   onChange={handleNewSubscriptionChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                   min="0"
                   step="0.01"
@@ -763,7 +767,7 @@ const SubscriptionPage = () => {
                   name="billingCycle"
                   value={newSubscription.billingCycle}
                   onChange={handleNewSubscriptionChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   {billingCycleOptions.map((option) => (
                     <option key={option} value={option}>
@@ -784,7 +788,7 @@ const SubscriptionPage = () => {
                   name="status"
                   value={newSubscription.status}
                   onChange={handleNewSubscriptionChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 >
                   {statusOptions.map((option) => (
@@ -804,7 +808,7 @@ const SubscriptionPage = () => {
                   name="nextBilling"
                   value={newSubscription.nextBilling}
                   onChange={handleNewSubscriptionChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   required
                 />
               </div>
@@ -818,7 +822,7 @@ const SubscriptionPage = () => {
                   name="dateSubscribed"
                   value={newSubscription.dateSubscribed}
                   onChange={handleNewSubscriptionChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
@@ -831,7 +835,7 @@ const SubscriptionPage = () => {
                   name="lastSent"
                   value={newSubscription.lastSent}
                   onChange={handleNewSubscriptionChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
@@ -843,7 +847,7 @@ const SubscriptionPage = () => {
                   name="notes"
                   value={newSubscription.notes}
                   onChange={handleNewSubscriptionChange}
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   rows="3"
                 />
               </div>
@@ -856,14 +860,14 @@ const SubscriptionPage = () => {
                 setShowNewSubscriptionForm(false);
                 setEditingSubscription(null);
               }}
-              className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
             >
               Cancel
             </button>
             <button
               onClick={handleSaveSubscription}
               disabled={isSaving}
-              className="px-4 py-2 bg-black text-white rounded text-sm"
+              className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110"
             >
               {isSaving
                 ? "Saving..."
@@ -878,76 +882,101 @@ const SubscriptionPage = () => {
           {/* Stats Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Total Subscriptions */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Total Subscriptions</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Total Subscriptions
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                     {stats.totalSubscriptions}
                   </p>
                 </div>
-                <div className="bg-blue-100 p-3 rounded-full">
-                  <FaUser className="text-blue-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#0ea5e9" }}
+                >
+                  <FaUser className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Active Subscriptions */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Active</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Active
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                     {stats.activeSubscriptions}
                   </p>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <FaUserCheck className="text-green-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#22c55e" }}
+                >
+                  <FaUserCheck className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Past Due Subscriptions */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Past Due</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Past Due
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                     {stats.pastDueSubscriptions}
                   </p>
                 </div>
-                <div className="bg-red-100 p-3 rounded-full">
-                  <FaUserTimes className="text-red-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#ef4444" }}
+                >
+                  <FaUserTimes className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Canceled Subscriptions */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Canceled</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Canceled
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                     {stats.canceledSubscriptions}
                   </p>
                 </div>
-                <div className="bg-gray-100 p-3 rounded-full">
-                  <FaUserTimes className="text-gray-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#64748b" }}
+                >
+                  <FaUserTimes className="text-white" />
                 </div>
               </div>
             </div>
 
             {/* Future Subscriptions */}
-            <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+            <div className="rounded-3xl border border-white/60 bg-white/80 p-5 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-gray-500 text-sm">Future</p>
-                  <p className="text-2xl font-bold">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                    Future
+                  </p>
+                  <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                     {stats.futureSubscriptions}
                   </p>
                 </div>
-                <div className="bg-purple-100 p-3 rounded-full">
-                  <FaUserClock className="text-purple-600" />
+                <div
+                  className="h-12 w-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: "#8b5cf6" }}
+                >
+                  <FaUserClock className="text-white" />
                 </div>
               </div>
             </div>
@@ -957,14 +986,13 @@ const SubscriptionPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowNewSubscriptionForm(true)}
               >
                 <FaPlus /> New Subscription
               </button>
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={handleImportClick}
               >
                 <FaFileImport /> Import Subscriptions
@@ -972,7 +1000,7 @@ const SubscriptionPage = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setCompactView(!compactView)}
               >
                 {compactView ? "<<" : ">>"}
@@ -982,7 +1010,7 @@ const SubscriptionPage = () => {
 
           {/* White box for table */}
           <div
-            className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+            className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
               compactView ? "w-1/2" : "w-full"
             }`}
           >
@@ -992,7 +1020,7 @@ const SubscriptionPage = () => {
                 {/* Delete Selected button */}
                 {selectedSubscriptions.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
                     onClick={handleDeleteSelected}
                   >
                     Delete Selected ({selectedSubscriptions.length})
@@ -1001,7 +1029,7 @@ const SubscriptionPage = () => {
 
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -1018,7 +1046,7 @@ const SubscriptionPage = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
@@ -1027,7 +1055,7 @@ const SubscriptionPage = () => {
                   {showExportMenu && (
                     <div
                       ref={exportMenuRef}
-                      className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                      className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10"
                     >
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
@@ -1059,7 +1087,7 @@ const SubscriptionPage = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchSubscriptions}
                 >
                   <FaSyncAlt />
@@ -1077,7 +1105,7 @@ const SubscriptionPage = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-8 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -1088,8 +1116,7 @@ const SubscriptionPage = () => {
                 <thead>
                   <tr className="text-left">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-l-lg"
                     >
                       <input
                         type="checkbox"
@@ -1109,46 +1136,39 @@ const SubscriptionPage = () => {
                       />
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Name
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Customer
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
+                      className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                     >
                       Project
                     </th>
                     {compactView ? (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Status
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Next Billing
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Amount
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-r-lg"
                         >
                           Actions
                         </th>
@@ -1156,38 +1176,32 @@ const SubscriptionPage = () => {
                     ) : (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Status
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Next Billing
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Amount
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Billing Cycle
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left"
                         >
                           Date Subscribed
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
+                          className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-left rounded-r-lg"
                         >
                           Actions
                         </th>
@@ -1199,7 +1213,7 @@ const SubscriptionPage = () => {
                   {currentData.map((subscription) => (
                     <tr
                       key={subscription._id}
-                      className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                      className="bg-white shadow rounded-lg hover:bg-white/70 relative"
                       style={{ color: "black" }}
                     >
                       <td className="p-3 rounded-l-lg border-0">
@@ -1222,7 +1236,7 @@ const SubscriptionPage = () => {
                           ? subscription.customer.company
                           : "N/A"}
                         {subscription.customer && (
-                          <div className="text-xs text-gray-500">
+                          <div className="text-xs text-slate-500">
                             {subscription.customer.contact} •{" "}
                             {subscription.customer.email}
                           </div>
@@ -1233,7 +1247,7 @@ const SubscriptionPage = () => {
                         <>
                           <td className="p-3 border-0">
                             <span
-                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                 subscription.status
                               )}`}
                             >
@@ -1247,8 +1261,8 @@ const SubscriptionPage = () => {
                                 ).toLocaleDateString()
                               : "N/A"}
                           </td>
-                          <td className="p-3 border-0">
-                            ${subscription.amount}
+                          <td className="p-3 border-0 tabular-nums">
+                            {formatBDT(subscription.amount)}
                           </td>
                           <td className="p-3 rounded-r-lg border-0">
                             <div className="flex space-x-2">
@@ -1256,7 +1270,7 @@ const SubscriptionPage = () => {
                                 onClick={() =>
                                   handleEditSubscription(subscription)
                                 }
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:bg-blue-200"
                                 title="Edit"
                               >
                                 <FaEdit size={16} />
@@ -1265,7 +1279,7 @@ const SubscriptionPage = () => {
                                 onClick={() =>
                                   handleDeleteSubscription(subscription._id)
                                 }
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg p-2 bg-red-100 text-red-700 hover:bg-red-200"
                                 title="Delete"
                               >
                                 <FaTrash size={16} />
@@ -1277,7 +1291,7 @@ const SubscriptionPage = () => {
                         <>
                           <td className="p-3 border-0">
                             <span
-                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                 subscription.status
                               )}`}
                             >
@@ -1291,8 +1305,8 @@ const SubscriptionPage = () => {
                                 ).toLocaleDateString()
                               : "N/A"}
                           </td>
-                          <td className="p-3 border-0">
-                            ${subscription.amount}
+                          <td className="p-3 border-0 tabular-nums">
+                            {formatBDT(subscription.amount)}
                           </td>
                           <td className="p-3 border-0">
                             {subscription.billingCycle}
@@ -1310,7 +1324,7 @@ const SubscriptionPage = () => {
                                 onClick={() =>
                                   handleEditSubscription(subscription)
                                 }
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg p-2 bg-blue-100 text-blue-700 hover:bg-blue-200"
                                 title="Edit"
                               >
                                 <FaEdit size={16} />
@@ -1319,7 +1333,7 @@ const SubscriptionPage = () => {
                                 onClick={() =>
                                   handleDeleteSubscription(subscription._id)
                                 }
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg p-2 bg-red-100 text-red-700 hover:bg-red-200"
                                 title="Delete"
                               >
                                 <FaTrash size={16} />
@@ -1346,7 +1360,7 @@ const SubscriptionPage = () => {
               </span>
               <div className="flex items-center gap-2">
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   disabled={currentPage === 1}
                   onClick={() => setCurrentPage((prev) => prev - 1)}
                 >
@@ -1355,8 +1369,10 @@ const SubscriptionPage = () => {
                 {Array.from({ length: totalPages }, (_, i) => (
                   <button
                     key={i}
-                    className={`px-3 py-1 border rounded ${
-                      currentPage === i + 1 ? "bg-gray-200" : ""
+                    className={`rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-semibold hover:bg-white ${
+                      currentPage === i + 1
+                        ? "bg-slate-900 text-white"
+                        : "bg-white/80 text-slate-700"
                     }`}
                     onClick={() => setCurrentPage(i + 1)}
                   >
@@ -1364,7 +1380,7 @@ const SubscriptionPage = () => {
                   </button>
                 ))}
                 <button
-                  className="px-2 py-1 border rounded disabled:opacity-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                   disabled={currentPage === totalPages}
                   onClick={() => setCurrentPage((prev) => prev + 1)}
                 >
@@ -1378,8 +1394,8 @@ const SubscriptionPage = () => {
 
       {/* Import Modal */}
       {importModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-full max-w-md">
             <h2 className="text-xl font-semibold mb-4">Import Subscriptions</h2>
 
             {importProgress ? (
@@ -1429,7 +1445,7 @@ const SubscriptionPage = () => {
                   ref={fileInputRef}
                   onChange={handleFileChange}
                   accept=".csv,.xlsx,.xls"
-                  className="w-full border rounded p-2 text-sm"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 p-2 text-sm"
                 />
               </div>
             )}
@@ -1438,7 +1454,7 @@ const SubscriptionPage = () => {
               {!importResult && (
                 <button
                   onClick={closeImportModal}
-                  className="px-4 py-2 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                 >
                   Cancel
                 </button>
@@ -1446,7 +1462,7 @@ const SubscriptionPage = () => {
               {!importProgress && !importResult && (
                 <button
                   onClick={handleImportSubmit}
-                  className="px-4 py-2 bg-black text-white rounded text-sm"
+                  className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110"
                   disabled={!importFile}
                 >
                   Import
@@ -1455,7 +1471,7 @@ const SubscriptionPage = () => {
               {importResult && (
                 <button
                   onClick={closeImportModal}
-                  className="px-4 py-2 bg-black text-white rounded text-sm"
+                  className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110"
                 >
                   Close
                 </button>

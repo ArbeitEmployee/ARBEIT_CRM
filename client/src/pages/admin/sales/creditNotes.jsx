@@ -22,6 +22,7 @@ import axios from "axios";
 import { utils as XLSXUtils, writeFile as XLSXWriteFile } from "xlsx";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import { formatBDT } from "../../../utils/currency";
 
 const CreditNotes = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -377,11 +378,9 @@ const CreditNotes = () => {
             index: index + 1,
             description: item.description || "Item",
             quantity: item.quantity || 1,
-            rate: `${creditNote.currency || "USD"} ${(item.rate || 0).toFixed(
-              2
-            )}`,
+            rate: formatBDT(item.rate || 0),
             tax: `${(item.tax1 || 0) + (item.tax2 || 0)}%`,
-            amount: `${creditNote.currency || "USD"} ${total.toFixed(2)}`,
+            amount: formatBDT(total),
           };
         });
 
@@ -436,7 +435,7 @@ const CreditNotes = () => {
 
       doc.text("Subtotal:", calcX, yPosition);
       doc.text(
-        `${creditNote.currency || "USD"} ${subtotal.toFixed(2)}`,
+        formatBDT(subtotal),
         pageWidth - margin,
         yPosition,
         { align: "right" }
@@ -446,7 +445,7 @@ const CreditNotes = () => {
       if (totalTax > 0) {
         doc.text("Tax:", calcX, yPosition);
         doc.text(
-          `${creditNote.currency || "USD"} ${totalTax.toFixed(2)}`,
+          formatBDT(totalTax),
           pageWidth - margin,
           yPosition,
           { align: "right" }
@@ -457,7 +456,7 @@ const CreditNotes = () => {
       if (discount > 0) {
         doc.text("Discount:", calcX, yPosition);
         doc.text(
-          `- ${creditNote.currency || "USD"} ${discount.toFixed(2)}`,
+          `- ${formatBDT(discount)}`,
           pageWidth - margin,
           yPosition,
           { align: "right" }
@@ -468,7 +467,7 @@ const CreditNotes = () => {
       doc.setFont("helvetica", "bold");
       doc.text("Credit Amount:", calcX, yPosition);
       doc.text(
-        `${creditNote.currency || "USD"} ${total.toFixed(2)}`,
+        formatBDT(total),
         pageWidth - margin,
         yPosition,
         { align: "right" }
@@ -764,7 +763,7 @@ const CreditNotes = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case "Draft":
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
       case "Pending":
         return "bg-blue-100 text-blue-800";
       case "Issued":
@@ -772,111 +771,128 @@ const CreditNotes = () => {
       case "Cancelled":
         return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
     }
   };
 
   if (loading)
     return (
-      <div className="bg-gray-100 min-h-screen p-4">
-        Loading credit notes...
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 text-slate-600 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          Loading credit notes...
+        </div>
       </div>
     );
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Credit Notes</h1>
-        <div className="flex items-center text-gray-600">
-          <span>Dashboard</span>
-          <FaChevronRight className="mx-1 text-xs" />
-          <span>Credit Notes</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Sales
+          </p>
+          <h1 className="text-2xl font-bold text-white">Credit Notes</h1>
+          <div className="mt-1 flex items-center text-slate-300 text-sm">
+            <span>Dashboard</span>
+            <FaChevronRight className="mx-1 text-xs" />
+            <span>Credit Notes</span>
+          </div>
         </div>
-      </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Credit Notes */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Total Credit Notes</p>
-              <p className="text-2xl font-bold">{creditNotes.length}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                Total Credit Notes
+              </p>
+              <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
+                {creditNotes.length}
+              </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaEye className="text-blue-600" />
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#0ea5e9]">
+              <FaEye className="text-white" />
             </div>
           </div>
         </div>
 
         {/* Draft Credit Notes */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Draft</p>
-              <p className="text-2xl font-bold">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                Draft
+              </p>
+              <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                 {creditNotes.filter((cn) => cn.status === "Draft").length}
               </p>
             </div>
-            <div className="bg-gray-100 p-3 rounded-full">
-              <FaEdit className="text-gray-600" />
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#8b5cf6]">
+              <FaEdit className="text-white" />
             </div>
           </div>
         </div>
 
         {/* Pending Credit Notes */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Pending</p>
-              <p className="text-2xl font-bold">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                Pending
+              </p>
+              <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                 {creditNotes.filter((cn) => cn.status === "Pending").length}
               </p>
             </div>
-            <div className="bg-blue-100 p-3 rounded-full">
-              <FaEye className="text-blue-600" />
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#f59e0b]">
+              <FaEye className="text-white" />
             </div>
           </div>
         </div>
 
         {/* Issued Credit Notes */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Issued</p>
-              <p className="text-2xl font-bold">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                Issued
+              </p>
+              <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                 {creditNotes.filter((cn) => cn.status === "Issued").length}
               </p>
             </div>
-            <div className="bg-green-100 p-3 rounded-full">
-              <FaEye className="text-green-600" />
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#22c55e]">
+              <FaEye className="text-white" />
             </div>
           </div>
         </div>
 
         {/* Cancelled Credit Notes */}
-        <div className="bg-white rounded-lg shadow p-4 border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Cancelled</p>
-              <p className="text-2xl font-bold">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
+                Cancelled
+              </p>
+              <p className="text-3xl font-extrabold text-slate-900 tabular-nums">
                 {creditNotes.filter((cn) => cn.status === "Cancelled").length}
               </p>
             </div>
-            <div className="bg-red-100 p-3 rounded-full">
-              <FaTimes className="text-red-600" />
+            <div className="h-12 w-12 rounded-2xl flex items-center justify-center bg-[#ef4444]">
+              <FaTimes className="text-white" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Top action buttons */}
-      <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <button
-            className="px-3 py-1 text-sm rounded flex items-center gap-2"
-            style={{ backgroundColor: "#333333", color: "white" }}
+            className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
             onClick={() => navigate("/admin/sales/credit-notes/new")}
           >
             <FaPlus /> New Credit Note
@@ -885,7 +901,7 @@ const CreditNotes = () => {
           {/* Bulk delete button */}
           {selectedCreditNotes.length > 0 && (
             <button
-              className="bg-red-600 text-white px-3 py-1 rounded"
+              className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
               onClick={handleBulkDelete}
             >
               Delete Selected ({selectedCreditNotes.length})
@@ -895,7 +911,7 @@ const CreditNotes = () => {
 
         <div className="flex items-center gap-2">
           <button
-            className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+            className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
             onClick={() => setCompactView(!compactView)}
           >
             {compactView ? "<<" : ">>"}
@@ -905,7 +921,7 @@ const CreditNotes = () => {
 
       {/* White box */}
       <div
-        className={`bg-white shadow-md rounded p-4 transition-all duration-300 ${
+        className={`rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur transition-all duration-300 ${
           compactView ? "w-1/2" : "w-full"
         }`}
       >
@@ -914,7 +930,7 @@ const CreditNotes = () => {
           <div className="flex items-center gap-2">
             {/* Entries per page */}
             <select
-              className="border rounded px-2 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               value={entriesPerPage}
               onChange={(e) => {
                 setEntriesPerPage(Number(e.target.value));
@@ -932,7 +948,7 @@ const CreditNotes = () => {
             <div className="relative">
               <button
                 onClick={() => setShowExportMenu((prev) => !prev)}
-                className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
               >
                 <HiOutlineDownload /> Export
               </button>
@@ -941,7 +957,7 @@ const CreditNotes = () => {
               {showExportMenu && (
                 <div
                   ref={exportMenuRef}
-                  className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                  className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10 overflow-hidden"
                 >
                   <button
                     className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
@@ -973,7 +989,7 @@ const CreditNotes = () => {
 
             {/* Refresh button */}
             <button
-              className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+              className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
               onClick={fetchCreditNotes}
             >
               <FaSyncAlt />
@@ -982,7 +998,7 @@ const CreditNotes = () => {
 
           {/* Search */}
           <div className="relative">
-            <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+            <FaSearch className="absolute left-3 top-3.5 text-slate-400 text-sm" />
             <input
               type="text"
               placeholder="Search..."
@@ -991,7 +1007,7 @@ const CreditNotes = () => {
                 setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
-              className="border rounded pl-8 pr-3 py-1 text-sm"
+              className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
             />
           </div>
         </div>
@@ -1001,10 +1017,7 @@ const CreditNotes = () => {
           <table className="w-full text-sm border-separate border-spacing-y-2">
             <thead>
               <tr className="text-left">
-                <th
-                  className="p-3 rounded-l-lg"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 rounded-l-lg">
                   <input
                     type="checkbox"
                     checked={
@@ -1023,81 +1036,45 @@ const CreditNotes = () => {
                     }}
                   />
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                   Credit Note#
                 </th>
-                <th
-                  className="p-3"
-                  style={{ backgroundColor: "#333333", color: "white" }}
-                >
+                <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                   Customer
                 </th>
                 {compactView ? (
                   <>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Amount
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Date
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Status
                     </th>
-                    <th
-                      className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 rounded-r-lg">
                       Actions
                     </th>
                   </>
                 ) : (
                   <>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Project
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Reference
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Amount
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Date
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Status
                     </th>
-                    <th
-                      className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 rounded-r-lg">
                       Actions
                     </th>
                   </>
@@ -1111,11 +1088,7 @@ const CreditNotes = () => {
                     creditNote.creditNoteNumber ||
                     "CN-" + creditNote._id.slice(-6).toUpperCase();
 
-                  const displayAmount = new Intl.NumberFormat("en-US", {
-                    style: "currency",
-                    currency: creditNote.currency || "USD",
-                    minimumFractionDigits: 2,
-                  }).format(creditNote.total || 0);
+                  const displayAmount = formatBDT(creditNote.total || 0);
 
                   const formatDate = (dateString) => {
                     if (!dateString) return "-";
@@ -1128,10 +1101,9 @@ const CreditNotes = () => {
                   return (
                     <tr
                       key={creditNote._id}
-                      className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
-                      style={{ color: "black" }}
+                      className="bg-white shadow rounded-lg hover:bg-white/70 relative text-slate-700"
                     >
-                      <td className="p-3 rounded-l-lg border-0">
+                      <td className="px-4 sm:px-6 py-3 text-sm rounded-l-lg border-0">
                         <div className="flex items-center">
                           <input
                             type="checkbox"
@@ -1145,32 +1117,34 @@ const CreditNotes = () => {
                           />
                         </div>
                       </td>
-                      <td className="p-3 border-0 ">
+                      <td className="px-4 sm:px-6 py-3 text-sm border-0 ">
                         {displayCreditNoteNumber}
                       </td>
-                      <td className="p-3 border-0">
+                      <td className="px-4 sm:px-6 py-3 text-sm border-0">
                         {creditNote.customer || "-"}
                       </td>
                       {compactView ? (
                         <>
-                          <td className="p-3 border-0">{displayAmount}</td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-sm text-right tabular-nums font-medium border-0">
+                            {displayAmount}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3 text-sm border-0">
                             {formatDate(creditNote.creditNoteDate)}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-sm border-0">
                             <span
-                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                 creditNote.status
                               )}`}
                             >
                               {creditNote.status || "Draft"}
                             </span>
                           </td>
-                          <td className="p-3 rounded-r-lg border-0">
+                          <td className="px-4 sm:px-6 py-3 text-sm rounded-r-lg border-0">
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => setViewCreditNote(creditNote)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg p-2 bg-slate-100 text-slate-700"
                                 title="View"
                               >
                                 <FaEye size={16} />
@@ -1179,7 +1153,7 @@ const CreditNotes = () => {
                                 onClick={() =>
                                   downloadCreditNotePDF(creditNote)
                                 }
-                                className="text-green-500 hover:text-green-700"
+                                className="rounded-lg p-2 bg-emerald-100 text-emerald-700"
                                 title="Download"
                               >
                                 <FaDownload size={16} />
@@ -1192,14 +1166,14 @@ const CreditNotes = () => {
                                     status: creditNote.status || "Draft",
                                   });
                                 }}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg p-2 bg-blue-100 text-blue-700"
                                 title="Edit"
                               >
                                 <FaEdit size={16} />
                               </button>
                               <button
                                 onClick={() => handleDelete(creditNote._id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg p-2 bg-red-100 text-red-700"
                                 title="Delete"
                               >
                                 <FaTrash size={16} />
@@ -1209,30 +1183,32 @@ const CreditNotes = () => {
                         </>
                       ) : (
                         <>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-sm border-0">
                             {creditNote.project || "-"}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-sm border-0">
                             {creditNote.reference || "-"}
                           </td>
-                          <td className="p-3 border-0">{displayAmount}</td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-sm text-right tabular-nums font-medium border-0">
+                            {displayAmount}
+                          </td>
+                          <td className="px-4 sm:px-6 py-3 text-sm border-0">
                             {formatDate(creditNote.creditNoteDate)}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3 text-sm border-0">
                             <span
-                              className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                              className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                 creditNote.status
                               )}`}
                             >
                               {creditNote.status || "Draft"}
                             </span>
                           </td>
-                          <td className="p-3 rounded-r-lg border-0">
+                          <td className="px-4 sm:px-6 py-3 text-sm rounded-r-lg border-0">
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => setViewCreditNote(creditNote)}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg p-2 bg-slate-100 text-slate-700"
                                 title="View"
                               >
                                 <FaEye size={16} />
@@ -1241,7 +1217,7 @@ const CreditNotes = () => {
                                 onClick={() =>
                                   downloadCreditNotePDF(creditNote)
                                 }
-                                className="text-green-500 hover:text-green-700"
+                                className="rounded-lg p-2 bg-emerald-100 text-emerald-700"
                                 title="Download"
                               >
                                 <FaDownload size={16} />
@@ -1254,14 +1230,14 @@ const CreditNotes = () => {
                                     status: creditNote.status || "Draft",
                                   });
                                 }}
-                                className="text-blue-500 hover:text-blue-700"
+                                className="rounded-lg p-2 bg-blue-100 text-blue-700"
                                 title="Edit"
                               >
                                 <FaEdit size={16} />
                               </button>
                               <button
                                 onClick={() => handleDelete(creditNote._id)}
-                                className="text-red-500 hover:text-red-700"
+                                className="rounded-lg p-2 bg-red-100 text-red-700"
                                 title="Delete"
                               >
                                 <FaTrash size={16} />
@@ -1277,7 +1253,7 @@ const CreditNotes = () => {
                 <tr>
                   <td
                     colSpan={compactView ? 7 : 9}
-                    className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
+                    className="p-4 text-center text-slate-500 bg-white shadow rounded-lg"
                   >
                     {creditNotes.length === 0
                       ? "No credit notes found. Create your first credit note!"
@@ -1299,7 +1275,7 @@ const CreditNotes = () => {
             </span>
             <div className="flex items-center gap-2">
               <button
-                className="px-2 py-1 border rounded disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm disabled:opacity-50"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => prev - 1)}
               >
@@ -1308,8 +1284,10 @@ const CreditNotes = () => {
               {Array.from({ length: totalPages }, (_, i) => (
                 <button
                   key={i}
-                  className={`px-3 py-1 border rounded ${
-                    currentPage === i + 1 ? "bg-gray-200" : ""
+                  className={`rounded-xl border border-slate-200 px-3 py-2 text-sm ${
+                    currentPage === i + 1
+                      ? "bg-slate-900 text-white"
+                      : "bg-white/80"
                   }`}
                   onClick={() => setCurrentPage(i + 1)}
                 >
@@ -1317,7 +1295,7 @@ const CreditNotes = () => {
                 </button>
               ))}
               <button
-                className="px-2 py-1 border rounded disabled:opacity-50"
+                className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm disabled:opacity-50"
                 disabled={currentPage === totalPages || totalPages === 0}
                 onClick={() => setCurrentPage((prev) => prev + 1)}
               >
@@ -1328,15 +1306,19 @@ const CreditNotes = () => {
         )}
       </div>
 
+      </div>
+
       {/* View & Edit Modals */}
       {viewCreditNote && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Credit Note Details</h2>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Credit Note Details
+              </h2>
               <button
                 onClick={() => setViewCreditNote(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 <FaTimes />
               </button>
@@ -1355,16 +1337,12 @@ const CreditNotes = () => {
               </p>
               <p>
                 <b>Amount:</b>{" "}
-                {new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: viewCreditNote.currency || "USD",
-                  minimumFractionDigits: 2,
-                }).format(viewCreditNote.total || 0)}
+                {formatBDT(viewCreditNote.total || 0)}
               </p>
               <p>
                 <b>Status:</b>{" "}
                 <span
-                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                     viewCreditNote.status
                   )}`}
                 >
@@ -1381,13 +1359,13 @@ const CreditNotes = () => {
             <div className="mt-6 flex justify-end gap-3">
               <button
                 onClick={() => downloadCreditNotePDF(viewCreditNote)}
-                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                className="rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-600"
               >
                 <FaDownload className="inline mr-2" /> Download PDF
               </button>
               <button
                 onClick={() => setViewCreditNote(null)}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 Close
               </button>
@@ -1397,20 +1375,22 @@ const CreditNotes = () => {
       )}
 
       {editCreditNote && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Update Credit Note</h2>
+              <h2 className="text-xl font-semibold text-slate-900">
+                Update Credit Note
+              </h2>
               <button
                 onClick={() => setEditCreditNote(null)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-500 hover:text-slate-700"
               >
                 <FaTimes />
               </button>
             </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Customer
                 </label>
                 <input
@@ -1419,12 +1399,12 @@ const CreditNotes = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, customer: e.target.value })
                   }
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   placeholder="Customer Name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
                   Status
                 </label>
                 <select
@@ -1432,7 +1412,7 @@ const CreditNotes = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, status: e.target.value })
                   }
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="Draft">Draft</option>
                   <option value="Pending">Pending</option>
@@ -1444,13 +1424,13 @@ const CreditNotes = () => {
             <div className="mt-6 flex justify-end space-x-3">
               <button
                 onClick={() => setEditCreditNote(null)}
-                className="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 Cancel
               </button>
               <button
                 onClick={handleUpdate}
-                className="px-4 py-2 bg-black text-white rounded text-sm"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
               >
                 Update Credit Note
               </button>

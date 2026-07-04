@@ -95,26 +95,31 @@ const BulkPdfExport = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-gray-900 text-white p-6">
-          <h1 className="text-3xl font-bold">Bulk PDF Export</h1>
-          <p className="mt-2 opacity-90">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="mx-auto max-w-3xl space-y-6">
+        {/* Header */}
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Utilities
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">Bulk PDF Export</h1>
+          <p className="mt-1 text-sm text-slate-500">
             Export multiple documents as PDF files in one batch
           </p>
         </div>
 
-        <div className="p-8">
+        {/* Form Card */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           {/* Document Type Selection */}
-          <div className="mb-8">
-            <label className="block text-lg font-medium text-gray-700 mb-3">
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
               Document Type *
             </label>
             <select
               name="type"
               value={exportData.type}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               required
             >
               <option value="">Select document type</option>
@@ -127,9 +132,9 @@ const BulkPdfExport = () => {
           </div>
 
           {/* Date Range - Full width rows */}
-          <div className="space-y-6 mb-8">
+          <div className="space-y-5 mb-6">
             <div>
-              <label className="block text-lg font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 Start Date *
               </label>
               <input
@@ -137,12 +142,12 @@ const BulkPdfExport = () => {
                 name="startDate"
                 value={exportData.startDate}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               />
             </div>
             <div>
-              <label className="block text-lg font-medium text-gray-700 mb-3">
+              <label className="block text-sm font-medium text-slate-700 mb-2">
                 End Date *
               </label>
               <input
@@ -150,7 +155,7 @@ const BulkPdfExport = () => {
                 name="endDate"
                 value={exportData.endDate}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 required
               />
             </div>
@@ -160,7 +165,7 @@ const BulkPdfExport = () => {
           <button
             onClick={handleExport}
             disabled={loading}
-            className="w-full bg-gray-800 text-white py-4 px-6 rounded-lg text-lg font-semibold flex items-center justify-center hover:bg-gray-900 disabled:opacity-50 transition-colors duration-200 shadow-md"
+            className="w-full rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50 flex items-center justify-center"
           >
             {loading ? (
               <span className="flex items-center">
@@ -188,7 +193,7 @@ const BulkPdfExport = () => {
               </span>
             ) : (
               <>
-                <FaDownload className="mr-3" />
+                <FaDownload className="mr-2" />
                 Export PDF Documents
               </>
             )}
@@ -197,10 +202,10 @@ const BulkPdfExport = () => {
           {/* Message Display */}
           {message && (
             <div
-              className={`mt-6 p-4 rounded-lg text-base ${
+              className={`mt-5 rounded-xl px-4 py-3 text-sm font-medium ${
                 message.includes("success")
-                  ? "bg-green-100 text-green-800 border border-green-200"
-                  : "bg-red-100 text-red-800 border border-red-200"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-red-100 text-red-800"
               }`}
             >
               {message}
@@ -208,7 +213,7 @@ const BulkPdfExport = () => {
           )}
         </div>
 
-        <div className="bg-gray-100 p-6 text-center text-gray-600">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 text-center text-sm text-slate-500 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
           <p>
             Select a document type and date range to export multiple PDFs at
             once

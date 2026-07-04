@@ -116,10 +116,10 @@ const ClientLayout = ({ children }) => {
   };
 
   return (
-    <div className="bg-white min-h-screen flex items-center justify-center p-2 md:p-4 relative">
+    <div className="bg-gradient-to-br from-slate-100 to-white min-h-screen flex items-center justify-center p-2 md:p-4 relative">
       {/* Main Content Container */}
       <div
-        className={`flex w-full bg-white rounded-3xl md:rounded-3xl shadow-sm sm:shadow-lg border border-gray-200 overflow-hidden relative ${
+        className={`flex w-full bg-white/80 backdrop-blur rounded-3xl md:rounded-3xl shadow-[0_30px_90px_rgba(15,23,42,.15)] border border-white/60 overflow-hidden relative ${
           isMobile ? "mt-16 mb-2 h-[calc(100vh-5rem)]" : "h-[95vh]"
         }`}
       >
@@ -134,13 +134,13 @@ const ClientLayout = ({ children }) => {
         {/* Main Content Area */}
         <div className="flex-1 h-full overflow-auto relative">
           {/* Top Header */}
-          <header className="bg-white border-b border-gray-200 shadow-sm z-30 sticky top-0">
+          <header className="bg-white/80 backdrop-blur border-b border-[rgba(226,232,240,.7)] z-30 sticky top-0">
             <div className="flex items-center justify-between px-6 py-4">
               {/* Left Section */}
               <div className="flex items-center space-x-4">
                 <button
                   onClick={handleToggleSidebar}
-                  className="p-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+                  className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/70 transition-colors"
                 >
                   <FiMenu className="w-5 h-5" />
                 </button>
@@ -152,34 +152,36 @@ const ClientLayout = ({ children }) => {
                   <input
                     type="text"
                     placeholder="Search client menu items..."
-                    className="w-full px-3 py-2 pl-10 pr-10 rounded-lg bg-gray-100 text-gray-900 placeholder-gray-500 focus:border-gray-400 border border-gray-200"
+                    className="w-full h-11 pl-11 pr-10 rounded-xl bg-slate-50/80 text-sm text-slate-900 placeholder-slate-400 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-300"
                     value={searchQuery}
                     onChange={handleSearchChange}
                     onFocus={() =>
                       searchQuery.length > 1 && setShowResults(true)
                     }
                   />
-                  <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                    <FiSearch className="h-4 w-4" />
+                  </span>
                   {searchQuery && (
                     <button
                       onClick={clearSearch}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600"
                     >
-                      <FiX />
+                      <FiX className="h-4 w-4" />
                     </button>
                   )}
                 </div>
 
                 {/* Search results dropdown */}
                 {showResults && searchResults.length > 0 && (
-                  <div className="absolute top-full left-0 right-0 bg-white mt-1 rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto z-50">
+                  <div className="absolute top-full left-0 right-0 bg-white/90 backdrop-blur mt-1 rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,.12)] border border-white/60 max-h-60 overflow-y-auto z-50">
                     {searchResults.map((item, index) => (
                       <div
                         key={index}
-                        className="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center border-b border-gray-100 last:border-b-0"
+                        className="px-4 py-3 hover:bg-white/70 cursor-pointer flex items-center border-b border-slate-100 last:border-b-0"
                         onClick={() => navigateToResult(item.path)}
                       >
-                        <span className="text-gray-700">{item.label}</span>
+                        <span className="text-slate-700">{item.label}</span>
                       </div>
                     ))}
                   </div>
@@ -189,8 +191,8 @@ const ClientLayout = ({ children }) => {
                 {showResults &&
                   searchResults.length === 0 &&
                   searchQuery.length > 1 && (
-                    <div className="absolute top-full left-0 right-0 bg-white mt-1 rounded-lg shadow-lg border border-gray-200 p-4 z-50">
-                      <p className="text-gray-500 text-center">
+                    <div className="absolute top-full left-0 right-0 bg-white/90 backdrop-blur mt-1 rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,.12)] border border-white/60 p-4 z-50">
+                      <p className="text-slate-500 text-center">
                         No results found for "{searchQuery}"
                       </p>
                     </div>
@@ -200,7 +202,7 @@ const ClientLayout = ({ children }) => {
               {/* Right Section */}
               <div className="flex items-center space-x-4">
                 {/* Mobile search button */}
-                <button className="md:hidden p-2 rounded-xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors">
+                <button className="md:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/70 transition-colors">
                   <FiSearch className="w-5 h-5" />
                 </button>
 
@@ -208,26 +210,26 @@ const ClientLayout = ({ children }) => {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 transition-colors"
+                    className="flex items-center space-x-3 p-2 rounded-xl hover:bg-white/70 transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-full bg-[#333333] text-white flex items-center justify-center font-bold text-sm">
+                    <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 text-white flex items-center justify-center font-bold text-sm">
                       {client?.name?.charAt(0)?.toUpperCase() || "C"}
                     </div>
                     <div className="text-left hidden md:block">
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-slate-900">
                         {client?.name || "Client"}
                       </p>
-                      <p className="text-xs text-gray-600">Client</p>
+                      <p className="text-xs text-slate-500">Client</p>
                     </div>
-                    <FiUser className="w-4 h-4 text-gray-600" />
+                    <FiUser className="w-4 h-4 text-slate-500" />
                   </button>
 
                   {/* User Dropdown Menu */}
                   {showUserMenu && (
-                    <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-40">
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white/90 backdrop-blur rounded-2xl shadow-[0_20px_60px_rgba(15,23,42,.12)] border border-white/60 py-2 z-40">
                       <button
                         onClick={handleChangePassword}
-                        className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        className="flex items-center space-x-3 w-full px-4 py-2 text-sm text-slate-700 hover:bg-white/70 transition-colors"
                       >
                         <FiKey className="w-4 h-4" />
                         <span>Change Password</span>

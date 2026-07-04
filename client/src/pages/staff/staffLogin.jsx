@@ -76,32 +76,31 @@ const StaffLogin = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {/* Title */}
-      <div className="text-center mb-6">
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      {/* Aurora blobs */}
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-sky-500/30 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-violet-500/30 blur-3xl" />
+
+      {/* Brand + Title */}
+      <div className="relative z-10 mb-6 flex flex-col items-center text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-indigo-600 text-2xl font-extrabold text-white shadow-lg">
+          A
+        </div>
         <h2 className="text-2xl font-bold text-white">
           Welcome to CRM Staff Portal
         </h2>
-        <p className="text-sm text-gray-300">Login to your staff account</p>
+        <p className="text-sm text-slate-400">Login to your staff account</p>
       </div>
 
       {/* Login Card */}
-      <div className="w-full max-w-sm bg-[#0c123d] bg-opacity-80 p-6 rounded-xl shadow-xl text-white">
+      <div className="relative z-10 w-full max-w-sm rounded-3xl border border-white/10 bg-white/[0.06] p-7 text-white shadow-[0_30px_90px_rgba(2,6,23,.6)] backdrop-blur-xl">
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
           {/* Email */}
           <div>
-            <label className="block text-sm mb-1">Email</label>
+            <label className="block text-sm mb-1 text-slate-200">Email</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiMail className="text-gray-400" />
+                <FiMail className="text-slate-400" />
               </div>
               <input
                 type="email"
@@ -111,8 +110,8 @@ const StaffLogin = () => {
                   setEmail(e.target.value);
                   setErrors({ ...errors, email: "" });
                 }}
-                className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                  errors.email ? "focus:ring-red-500" : "focus:ring-gray-700"
+                className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 focus:outline-none focus:ring-2 ${
+                  errors.email ? "focus:ring-red-400/50" : "focus:ring-sky-400/50"
                 }`}
               />
             </div>
@@ -124,17 +123,17 @@ const StaffLogin = () => {
           {/* Password */}
           <div>
             <div className="flex justify-between items-center mb-1">
-              <label className="text-sm">Password</label>
+              <label className="text-sm text-slate-200">Password</label>
               <Link
                 to="/staff/forgot-password"
-                className="text-xs text-gray-100 hover:underline"
+                className="text-xs text-sky-400 hover:underline"
               >
                 Forgot Password?
               </Link>
             </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FiLock className="text-gray-400" />
+                <FiLock className="text-slate-400" />
               </div>
               <input
                 type="password"
@@ -144,8 +143,8 @@ const StaffLogin = () => {
                   setPassword(e.target.value);
                   setErrors({ ...errors, password: "" });
                 }}
-                className={`w-full pl-10 pr-3 py-2 rounded-md bg-[#10194f] text-white placeholder-gray-400 focus:outline-none focus:ring-2 ${
-                  errors.password ? "focus:ring-red-500" : "focus:ring-gray-700"
+                className={`w-full pl-10 pr-3 py-2.5 rounded-xl bg-white/5 text-white placeholder-slate-400 border border-white/10 focus:outline-none focus:ring-2 ${
+                  errors.password ? "focus:ring-red-400/50" : "focus:ring-sky-400/50"
                 }`}
               />
             </div>
@@ -159,11 +158,11 @@ const StaffLogin = () => {
             <input
               type="checkbox"
               id="remember"
-              className="accent-gray-100 mr-2"
+              className="accent-sky-500 mr-2"
               checked={rememberMe}
               onChange={() => setRememberMe(!rememberMe)}
             />
-            <label htmlFor="remember" className="text-sm">
+            <label htmlFor="remember" className="text-sm text-slate-200">
               Remember me
             </label>
           </div>
@@ -172,10 +171,10 @@ const StaffLogin = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full font-semibold text-sm py-2 rounded-md transition ${
+            className={`w-full font-semibold text-sm py-2.5 rounded-xl text-white shadow-md transition ${
               loading
-                ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                : "bg-white text-[#0c123d] hover:bg-gray-200"
+                ? "bg-slate-600 cursor-not-allowed"
+                : "bg-gradient-to-r from-sky-500 to-indigo-600 hover:brightness-110"
             }`}
           >
             {loading ? "Logging in..." : "STAFF LOGIN"}
@@ -183,11 +182,11 @@ const StaffLogin = () => {
         </form>
 
         {/* Registration Link */}
-        <p className="text-center text-sm text-gray-400 mt-6">
+        <p className="text-center text-sm text-slate-400 mt-6">
           Don't have a staff account?{" "}
           <Link
             to="/staff/registration"
-            className="text-white hover:underline font-medium"
+            className="text-sky-400 hover:underline font-medium"
           >
             Register as Staff
           </Link>

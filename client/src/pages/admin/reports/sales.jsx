@@ -31,6 +31,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useNavigate } from "react-router-dom";
+import { formatBDT, compactBDT } from "../../../utils/currency";
 
 const SalesReports = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -200,7 +201,7 @@ const SalesReports = () => {
           transactionId: payment.transactionId,
           paymentDate: new Date(payment.paymentDate).toLocaleDateString(),
           status: payment.status,
-          currency: payment.currency || "USD",
+          currency: payment.currency || "BDT",
           isFullPayment: true, // Payments are always full payments
           notes: payment.notes || "",
         }));
@@ -608,7 +609,7 @@ const SalesReports = () => {
       case "Overdue":
         return "bg-red-100 text-red-800";
       case "Draft":
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
       case "Unpaid":
         return "bg-blue-100 text-blue-800";
       case "Partiallypaid":
@@ -626,19 +627,15 @@ const SalesReports = () => {
       case "Sent":
         return "bg-blue-100 text-blue-800";
       case "Expired":
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-slate-100 text-slate-700";
     }
   };
 
   // Format currency
-  const formatCurrency = (amount, currency = "USD") => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: currency,
-      minimumFractionDigits: 2,
-    }).format(amount || 0);
+  const formatCurrency = (amount, currency = "BDT") => {
+    return formatBDT(amount);
   };
 
   // Export handler
@@ -1016,10 +1013,10 @@ const SalesReports = () => {
 
   // Render table controls (search, export, pagination, etc.)
   const renderTableControls = () => (
-    <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
       <div className="flex items-center gap-2">
         <select
-          className="border rounded px-2 py-1 text-sm"
+          className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
           value={entriesPerPage}
           onChange={(e) => {
             setEntriesPerPage(Number(e.target.value));
@@ -1036,16 +1033,16 @@ const SalesReports = () => {
         <div className="relative">
           <button
             onClick={() => setShowExportMenu((prev) => !prev)}
-            className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+            className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
           >
             <HiOutlineDownload /> Export
           </button>
           {showExportMenu && (
-            <div className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10">
+            <div className="absolute z-10 mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg">
               {["Excel", "CSV", "PDF", "Print"].map((item) => (
                 <button
                   key={item}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50"
                   onClick={() => handleExport(item)}
                 >
                   {item}
@@ -1057,7 +1054,7 @@ const SalesReports = () => {
 
         {/* Refresh */}
         <button
-          className="border px-2 py-1 rounded text-sm flex items-center"
+          className="flex items-center rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
           onClick={() => {
             if (activeReport === "invoices") fetchInvoices();
             else if (activeReport === "items") fetchItems();
@@ -1078,14 +1075,14 @@ const SalesReports = () => {
             placeholder={`Search ${activeReport}...`}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            className="border rounded pl-2 pr-3 py-1 text-sm"
+            className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
           />
           <button
             onClick={() => {
               setSearchTerm(searchInput);
               setCurrentPage(1);
             }}
-            className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
+            className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
           >
             Search
           </button>
@@ -1096,7 +1093,7 @@ const SalesReports = () => {
 
   // Render pagination
   const renderPagination = () => (
-    <div className="flex justify-between items-center mt-4 text-sm">
+    <div className="mt-4 flex items-center justify-between text-sm text-slate-500">
       <span>
         Showing {indexOfFirstItem + 1} to{" "}
         {Math.min(indexOfLastItem, filteredData.length)} of{" "}
@@ -1104,7 +1101,7 @@ const SalesReports = () => {
       </span>
       <div className="flex items-center gap-2">
         <button
-          className="px-2 py-1 border rounded disabled:opacity-50"
+          className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
           disabled={currentPage === 1}
           onClick={() => setCurrentPage((prev) => prev - 1)}
         >
@@ -1113,8 +1110,10 @@ const SalesReports = () => {
         {Array.from({ length: totalPages }, (_, i) => (
           <button
             key={i}
-            className={`px-3 py-1 border rounded ${
-              currentPage === i + 1 ? "bg-gray-200" : ""
+            className={`rounded-xl border px-3 py-1.5 font-semibold transition-colors ${
+              currentPage === i + 1
+                ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                : "border-slate-200 bg-white/80 text-slate-700 hover:bg-white"
             }`}
             onClick={() => setCurrentPage(i + 1)}
           >
@@ -1122,7 +1121,7 @@ const SalesReports = () => {
           </button>
         ))}
         <button
-          className="px-2 py-1 border rounded disabled:opacity-50"
+          className="rounded-xl border border-slate-200 bg-white/80 px-3 py-1.5 font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
           disabled={currentPage === totalPages || totalPages === 0}
           onClick={() => setCurrentPage((prev) => prev + 1)}
         >
@@ -1136,8 +1135,8 @@ const SalesReports = () => {
     switch (activeChart) {
       case "totalIncome":
         return (
-          <div className="p-6 bg-white rounded border">
-            <h3 className="text-lg font-semibold mb-4">Total Income Report</h3>
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h3 className="mb-4 text-lg font-semibold text-slate-900">Total Income Report</h3>
 
             {incomeLoading ? (
               <div className="text-center py-8">Loading income data...</div>
@@ -1152,7 +1151,7 @@ const SalesReports = () => {
                   </div>
                   <button
                     onClick={fetchIncomeData}
-                    className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200"
+                    className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                   >
                     <FaSyncAlt className="text-xs" /> Refresh
                   </button>
@@ -1169,14 +1168,22 @@ const SalesReports = () => {
                         bottom: 5,
                       }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
+                      <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 12, fill: "#94a3b8" }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
                       <YAxis
-                        tickFormatter={(value) => `$${value.toLocaleString()}`}
+                        tickFormatter={(value) => compactBDT(value)}
+                        tick={{ fontSize: 12, fill: "#94a3b8" }}
+                        axisLine={false}
+                        tickLine={false}
                       />
                       <Tooltip
                         formatter={(value) => [
-                          `$${value.toLocaleString()}`,
+                          formatBDT(value),
                           "Income",
                         ]}
                         labelFormatter={(label) => `Month: ${label}`}
@@ -1184,28 +1191,28 @@ const SalesReports = () => {
                       <Legend />
                       <Bar
                         dataKey="income"
-                        fill="#4f46e5"
+                        fill="#8b5cf6"
                         name="Income"
-                        radius={[4, 4, 0, 0]}
+                        radius={[8, 8, 0, 0]}
                       />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-blue-800">Total Income</h5>
-                    <p className="text-2xl font-bold text-blue-900">
+                  <div className="rounded-2xl border border-white/60 bg-white/70 p-4">
+                    <h5 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Total Income</h5>
+                    <p className="mt-1 text-3xl font-extrabold text-slate-900 tabular-nums">
                       {formatCurrency(
                         incomeData.reduce((sum, item) => sum + item.income, 0)
                       )}
                     </p>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-green-800">
+                  <div className="rounded-2xl border border-white/60 bg-white/70 p-4">
+                    <h5 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
                       Average Monthly Income
                     </h5>
-                    <p className="text-2xl font-bold text-green-900">
+                    <p className="mt-1 text-3xl font-extrabold text-slate-900 tabular-nums">
                       {formatCurrency(
                         incomeData.reduce((sum, item) => sum + item.income, 0) /
                           (incomeData.length || 1)
@@ -1224,8 +1231,8 @@ const SalesReports = () => {
 
       case "paymentModes":
         return (
-          <div className="p-6 bg-white rounded border">
-            <h3 className="text-lg font-semibold mb-4">Payment Modes Report</h3>
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h3 className="mb-4 text-lg font-semibold text-slate-900">Payment Modes Report</h3>
 
             {incomeLoading ? (
               <div className="text-center py-8">
@@ -1244,7 +1251,7 @@ const SalesReports = () => {
                   </div>
                   <button
                     onClick={fetchPaymentModesData}
-                    className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200"
+                    className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                   >
                     <FaSyncAlt className="text-xs" /> Refresh
                   </button>
@@ -1261,16 +1268,25 @@ const SalesReports = () => {
                         bottom: 5,
                       }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
+                      <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 12, fill: "#94a3b8" }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 12, fill: "#94a3b8" }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
                       <Tooltip
                         formatter={(value, name) => {
                           if (name === "Number of Payments") {
                             return [value, "Times Used"];
                           } else {
                             return [
-                              `$${value.toLocaleString()}`,
+                              formatBDT(value),
                               "Total Amount",
                             ];
                           }
@@ -1280,32 +1296,32 @@ const SalesReports = () => {
                       <Legend />
                       <Bar
                         dataKey="count"
-                        fill="#4f46e5"
+                        fill="#8b5cf6"
                         name="Number of Payments"
-                        radius={[4, 4, 0, 0]}
+                        radius={[8, 8, 0, 0]}
                       />
                       <Bar
                         dataKey="amount"
-                        fill="#10b981"
+                        fill="#22c55e"
                         name="Total Amount"
-                        radius={[4, 4, 0, 0]}
+                        radius={[8, 8, 0, 0]}
                       />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
 
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-blue-800">
+                  <div className="rounded-2xl border border-white/60 bg-white/70 p-4">
+                    <h5 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
                       Total Payments
                     </h5>
-                    <p className="text-2xl font-bold text-blue-900">
+                    <p className="mt-1 text-3xl font-extrabold text-slate-900 tabular-nums">
                       {incomeData.reduce((sum, item) => sum + item.count, 0)}
                     </p>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-green-800">Total Amount</h5>
-                    <p className="text-2xl font-bold text-green-900">
+                  <div className="rounded-2xl border border-white/60 bg-white/70 p-4">
+                    <h5 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Total Amount</h5>
+                    <p className="mt-1 text-3xl font-extrabold text-slate-900 tabular-nums">
                       {formatCurrency(
                         incomeData.reduce((sum, item) => sum + item.amount, 0)
                       )}
@@ -1319,11 +1335,11 @@ const SalesReports = () => {
                   </h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {incomeData.map((item, index) => (
-                      <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                      <div key={index} className="rounded-2xl border border-white/60 bg-white/70 p-4">
                         <div className="flex justify-between items-center mb-2">
                           <span className="font-medium">{item.name}</span>
                           <span
-                            className={`px-2 py-1 rounded text-xs ${
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${
                               item.name === "Bank"
                                 ? "bg-blue-100 text-blue-800"
                                 : "bg-purple-100 text-purple-800"
@@ -1371,8 +1387,8 @@ const SalesReports = () => {
 
       case "customerValue":
         return (
-          <div className="p-6 bg-white rounded border">
-            <h3 className="text-lg font-semibold mb-4">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h3 className="mb-4 text-lg font-semibold text-slate-900">
               Total Value by Customer Group
             </h3>
 
@@ -1391,7 +1407,7 @@ const SalesReports = () => {
                   </div>
                   <button
                     onClick={fetchCustomerGroupsData}
-                    className="flex items-center gap-2 px-3 py-1 bg-gray-100 rounded text-sm hover:bg-gray-200"
+                    className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                   >
                     <FaSyncAlt className="text-xs" /> Refresh
                   </button>
@@ -1408,14 +1424,22 @@ const SalesReports = () => {
                         bottom: 5,
                       }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
+                      <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                      <XAxis
+                        dataKey="name"
+                        tick={{ fontSize: 12, fill: "#94a3b8" }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
                       <YAxis
-                        tickFormatter={(value) => `$${value.toLocaleString()}`}
+                        tickFormatter={(value) => compactBDT(value)}
+                        tick={{ fontSize: 12, fill: "#94a3b8" }}
+                        axisLine={false}
+                        tickLine={false}
                       />
                       <Tooltip
                         formatter={(value) => [
-                          `$${value.toLocaleString()}`,
+                          formatBDT(value),
                           "Total Revenue",
                         ]}
                         labelFormatter={(label) => `Customer Group: ${label}`}
@@ -1423,18 +1447,18 @@ const SalesReports = () => {
                       <Legend />
                       <Bar
                         dataKey="value"
-                        fill="#4f46e5"
+                        fill="#8b5cf6"
                         name="Total Revenue"
-                        radius={[4, 4, 0, 0]}
+                        radius={[8, 8, 0, 0]}
                       />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
 
                 <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-blue-800">Total Revenue</h5>
-                    <p className="text-2xl font-bold text-blue-900">
+                  <div className="rounded-2xl border border-white/60 bg-white/70 p-4">
+                    <h5 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">Total Revenue</h5>
+                    <p className="mt-1 text-3xl font-extrabold text-slate-900 tabular-nums">
                       {formatCurrency(
                         customerGroupsData.reduce(
                           (sum, item) => sum + item.value,
@@ -1443,11 +1467,11 @@ const SalesReports = () => {
                       )}
                     </p>
                   </div>
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <h5 className="font-medium text-green-800">
+                  <div className="rounded-2xl border border-white/60 bg-white/70 p-4">
+                    <h5 className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-500">
                       Average per Group
                     </h5>
-                    <p className="text-2xl font-bold text-green-900">
+                    <p className="mt-1 text-3xl font-extrabold text-slate-900 tabular-nums">
                       {formatCurrency(
                         customerGroupsData.reduce(
                           (sum, item) => sum + item.value,
@@ -1464,10 +1488,10 @@ const SalesReports = () => {
                   </h5>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {customerGroupsData.map((item, index) => (
-                      <div key={index} className="bg-gray-50 p-4 rounded-lg">
+                      <div key={index} className="rounded-2xl border border-white/60 bg-white/70 p-4">
                         <div className="flex justify-between items-center mb-2">
                           <span className="font-medium">{item.name}</span>
-                          <span className="px-2 py-1 rounded text-xs bg-purple-100 text-purple-800">
+                          <span className="rounded-full px-3 py-1 text-xs font-medium bg-purple-100 text-purple-800">
                             {(
                               (item.value /
                                 customerGroupsData.reduce(
@@ -1510,7 +1534,7 @@ const SalesReports = () => {
 
       default:
         return (
-          <div className="p-6 bg-white rounded border text-gray-500 text-center">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-6 text-center text-slate-500 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
             Select a chart type to view its report
           </div>
         );
@@ -1523,104 +1547,89 @@ const SalesReports = () => {
         return (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Invoices Report</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Invoices Report</h2>
             </div>
 
             {renderTableControls()}
 
             {/*INVOICE Table */}
-            <div className="overflow-x-auto bg-white rounded-lg border">
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+            <div className="overflow-x-auto rounded-3xl border border-white/60 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left">
+                  <tr className="bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Invoice#
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Amount
                     </th>
                     {compactView ? (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Customer
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Date
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Status
                         </th>
                       </>
                     ) : (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Total Tax
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Customer
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Project
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Tags
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Date
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Due Date
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Reference
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Status
                         </th>
                       </>
                     )}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-200/70">
                   {currentData.length > 0 ? (
                     currentData.map((invoice) => {
                       const displayInvoiceNumber =
@@ -1651,24 +1660,24 @@ const SalesReports = () => {
                       return (
                         <tr
                           key={invoice._id}
-                          className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                          className="transition-colors hover:bg-white/70"
                           style={{ color: "black" }}
                         >
-                          <td className="p-3 border-0 ">
+                          <td className="px-4 sm:px-6 py-3">
                             {displayInvoiceNumber}
                           </td>
-                          <td className="p-3 border-0 ">{displayAmount}</td>
+                          <td className="px-4 sm:px-6 py-3">{displayAmount}</td>
                           {compactView ? (
                             <>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {invoice.customer || "-"}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatDate(invoice.invoiceDate)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                     invoice.status
                                   )}`}
                                 >
@@ -1678,30 +1687,30 @@ const SalesReports = () => {
                             </>
                           ) : (
                             <>
-                              <td className="p-3 border-0 ">
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatCurrency(totalTax, invoice.currency)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {invoice.customer || "-"}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {invoice.reference || "-"}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {invoice.tags || "-"}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatDate(invoice.invoiceDate)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatDate(invoice.dueDate)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {invoice.reference || "-"}
                               </td>
-                              <td className="p-3 rounded-r-lg border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                     invoice.status
                                   )}`}
                                 >
@@ -1717,7 +1726,7 @@ const SalesReports = () => {
                     <tr>
                       <td
                         colSpan={compactView ? 5 : 11}
-                        className="p-4 text-center text-gray-500"
+                        className="px-4 sm:px-6 py-6 text-center text-slate-500"
                       >
                         No invoices found
                       </td>
@@ -1734,20 +1743,18 @@ const SalesReports = () => {
         return (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Items Report</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Items Report</h2>
             </div>
 
             {renderTableControls()}
 
             {/* Items Table */}
-            <div className="overflow-x-auto bg-white rounded-lg border">
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+            <div className="overflow-x-auto rounded-3xl border border-white/60 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left">
+                  <tr className="bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       <input
                         type="checkbox"
                         checked={selectAll}
@@ -1755,53 +1762,39 @@ const SalesReports = () => {
                       />
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Description
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Long Description
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Rate
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Tax1
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Tax2
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Unit
                     </th>
                     <th
-                      className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Group Name
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-200/70">
                   {itemsLoading ? (
                     <tr>
-                      <td colSpan={8} className="p-4 text-center text-gray-500">
+                      <td colSpan={8} className="px-4 sm:px-6 py-6 text-center text-slate-500">
                         Loading items...
                       </td>
                     </tr>
@@ -1809,10 +1802,10 @@ const SalesReports = () => {
                     currentData.map((item) => (
                       <tr
                         key={item._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                        className="transition-colors hover:bg-white/70"
                         style={{ color: "black" }}
                       >
-                        <td className="p-3 rounded-l-lg border-0">
+                        <td className="px-4 sm:px-6 py-3">
                           <div className="flex items-center">
                             <input
                               type="checkbox"
@@ -1822,20 +1815,20 @@ const SalesReports = () => {
                             />
                           </div>
                         </td>
-                        <td className="p-3 border-0">{item.description}</td>
-                        <td className="p-3 border-0">{item.longDescription}</td>
-                        <td className="p-3 border-0">{item.rate}</td>
-                        <td className="p-3 border-0">{item.tax1}</td>
-                        <td className="p-3 border-0">{item.tax2}</td>
-                        <td className="p-3 border-0">{item.unit}</td>
-                        <td className="p-3 rounded-r-lg border-0">
+                        <td className="px-4 sm:px-6 py-3">{item.description}</td>
+                        <td className="px-4 sm:px-6 py-3">{item.longDescription}</td>
+                        <td className="px-4 sm:px-6 py-3">{item.rate}</td>
+                        <td className="px-4 sm:px-6 py-3">{item.tax1}</td>
+                        <td className="px-4 sm:px-6 py-3">{item.tax2}</td>
+                        <td className="px-4 sm:px-6 py-3">{item.unit}</td>
+                        <td className="px-4 sm:px-6 py-3">
                           {item.groupName}
                         </td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={8} className="p-4 text-center text-gray-500">
+                      <td colSpan={8} className="px-4 sm:px-6 py-6 text-center text-slate-500">
                         No items found
                       </td>
                     </tr>
@@ -1851,70 +1844,54 @@ const SalesReports = () => {
         return (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Payments Received</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Payments Received</h2>
             </div>
 
             {renderTableControls()}
 
             {/* Payments Table */}
-            <div className="overflow-x-auto bg-white rounded-lg border">
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+            <div className="overflow-x-auto rounded-3xl border border-white/60 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left">
+                  <tr className="bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Payment #
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Invoice #
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Payment Mode
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Transaction ID
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Customer
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Amount
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Payment Date
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-200/70">
                   {paymentsLoading ? (
                     <tr>
-                      <td colSpan={9} className="p-4 text-center text-gray-500">
+                      <td colSpan={9} className="px-4 sm:px-6 py-6 text-center text-slate-500">
                         Loading payments...
                       </td>
                     </tr>
@@ -1922,27 +1899,27 @@ const SalesReports = () => {
                     currentData.map((payment) => (
                       <tr
                         key={payment.paymentId}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                        className="transition-colors hover:bg-white/70"
                         style={{ color: "black" }}
                       >
-                        <td className="p-3 rounded-l-lg border-0 font-mono">
+                        <td className="px-4 sm:px-6 py-3 font-mono">
                           {payment.paymentId}
                         </td>
-                        <td className="p-3 border-0 font-mono">
+                        <td className="px-4 sm:px-6 py-3 font-mono">
                           {payment.invoiceNumber}
                         </td>
-                        <td className="p-3 border-0">{payment.paymentMode}</td>
-                        <td className="p-3 border-0">
+                        <td className="px-4 sm:px-6 py-3">{payment.paymentMode}</td>
+                        <td className="px-4 sm:px-6 py-3">
                           {payment.transactionId}
                         </td>
-                        <td className="p-3 border-0">{payment.customer}</td>
-                        <td className="p-3 border-0 ">
+                        <td className="px-4 sm:px-6 py-3">{payment.customer}</td>
+                        <td className="px-4 sm:px-6 py-3">
                           {formatCurrency(payment.amount, payment.currency)}
                         </td>
-                        <td className="p-3 border-0">{payment.paymentDate}</td>
-                        <td className="p-3 border-0">
+                        <td className="px-4 sm:px-6 py-3">{payment.paymentDate}</td>
+                        <td className="px-4 sm:px-6 py-3">
                           <span
-                            className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                            className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                               payment.status
                             )}`}
                           >
@@ -1955,7 +1932,7 @@ const SalesReports = () => {
                     <tr>
                       <td
                         colSpan={9}
-                        className="p-4 text-center text-gray-500 bg-white shadow rounded-lg"
+                        className="px-4 sm:px-6 py-6 text-center text-slate-500"
                       >
                         {paymentsData.length === 0
                           ? "No payment records found"
@@ -1974,20 +1951,18 @@ const SalesReports = () => {
         return (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Credit Notes Report</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Credit Notes Report</h2>
             </div>
 
             {renderTableControls()}
 
             {/* Credit Notes Table */}
-            <div className="overflow-x-auto bg-white rounded-lg border">
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+            <div className="overflow-x-auto rounded-3xl border border-white/60 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left">
+                  <tr className="bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       <input
                         type="checkbox"
                         checked={
@@ -2006,56 +1981,42 @@ const SalesReports = () => {
                       />
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Credit Note#
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Customer
                     </th>
 
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Project
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Reference
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Amount
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Date
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Status
                     </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-200/70">
                   {creditNotesLoading ? (
                     <tr>
                       <td
                         colSpan={compactView ? 7 : 9}
-                        className="p-4 text-center text-gray-500"
+                        className="px-4 sm:px-6 py-6 text-center text-slate-500"
                       >
                         Loading credit notes...
                       </td>
@@ -2076,10 +2037,10 @@ const SalesReports = () => {
                       return (
                         <tr
                           key={note._id}
-                          className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                          className="transition-colors hover:bg-white/70"
                           style={{ color: "black" }}
                         >
-                          <td className="p-3 rounded-l-lg border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             <input
                               type="checkbox"
                               checked={selectedCreditNotes.includes(note._id)}
@@ -2089,22 +2050,22 @@ const SalesReports = () => {
                               className="h-4 w-4"
                             />
                           </td>
-                          <td className="p-3 border-0 ">{displayNoteNumber}</td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">{displayNoteNumber}</td>
+                          <td className="px-4 sm:px-6 py-3">
                             {note.customer || "-"}
                           </td>
 
                           {compactView ? (
                             <>
-                              <td className="p-3 border-0 text-right">
+                              <td className="px-4 sm:px-6 py-3 text-right tabular-nums">
                                 {formatCurrency(note.total, note.currency)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatDate(note.creditNoteDate)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                     note.status
                                   )}`}
                                 >
@@ -2114,21 +2075,21 @@ const SalesReports = () => {
                             </>
                           ) : (
                             <>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {note.project || "-"}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {note.reference || "-"}
                               </td>
-                              <td className="p-3 border-0 ">
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatCurrency(note.total, note.currency)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatDate(note.creditNoteDate)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                     note.status
                                   )}`}
                                 >
@@ -2144,7 +2105,7 @@ const SalesReports = () => {
                     <tr>
                       <td
                         colSpan={compactView ? 7 : 9}
-                        className="p-4 text-center text-gray-500"
+                        className="px-4 sm:px-6 py-6 text-center text-slate-500"
                       >
                         No credit notes found
                       </td>
@@ -2162,20 +2123,18 @@ const SalesReports = () => {
         return (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Proposals Report</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Proposals Report</h2>
             </div>
 
             {renderTableControls()}
 
             {/* Proposals Table */}
-            <div className="overflow-x-auto bg-white rounded-lg border">
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+            <div className="overflow-x-auto rounded-3xl border border-white/60 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left">
+                  <tr className="bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       <input
                         type="checkbox"
                         checked={
@@ -2192,64 +2151,53 @@ const SalesReports = () => {
                       />
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Proposal#
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Client
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Title
                     </th>
 
                     <>
                       <th
-                        className="p-3"
-                        style={{ backgroundColor: "#333333", color: "white" }}
-                      >
+                        className="px-4 sm:px-6 py-3"
+                                              >
                         Amount
                       </th>
                       <th
-                        className="p-3"
-                        style={{ backgroundColor: "#333333", color: "white" }}
-                      >
+                        className="px-4 sm:px-6 py-3"
+                                              >
                         Date
                       </th>
                       <th
-                        className="p-3"
-                        style={{ backgroundColor: "#333333", color: "white" }}
-                      >
+                        className="px-4 sm:px-6 py-3"
+                                              >
                         Open Till
                       </th>
                       <th
-                        className="p-3"
-                        style={{ backgroundColor: "#333333", color: "white" }}
-                      >
+                        className="px-4 sm:px-6 py-3"
+                                              >
                         Tags
                       </th>
                       <th
-                        className="p-3"
-                        style={{ backgroundColor: "#333333", color: "white" }}
-                      >
+                        className="px-4 sm:px-6 py-3"
+                                              >
                         Status
                       </th>
                     </>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-200/70">
                   {loading ? (
                     <tr>
                       <td
                         colSpan={compactView ? 7 : 9}
-                        className="p-4 text-center text-gray-500"
+                        className="px-4 sm:px-6 py-6 text-center text-slate-500"
                       >
                         Loading proposals...
                       </td>
@@ -2285,10 +2233,10 @@ const SalesReports = () => {
                       return (
                         <tr
                           key={proposal._id}
-                          className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                          className="transition-colors hover:bg-white/70"
                           style={{ color: "black" }}
                         >
-                          <td className="p-3 rounded-l-lg border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             <div className="flex items-center">
                               <input
                                 type="checkbox"
@@ -2302,21 +2250,21 @@ const SalesReports = () => {
                               />
                             </div>
                           </td>
-                          <td className="p-3 border-0 ">
+                          <td className="px-4 sm:px-6 py-3">
                             {displayProposalNumber}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             {proposal.clientName || "-"}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             {proposal.title || "-"}
                           </td>
                           {compactView ? (
                             <>
-                              <td className="p-3 border-0 ">{displayAmount}</td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">{displayAmount}</td>
+                              <td className="px-4 sm:px-6 py-3">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                     proposal.status
                                   )}`}
                                 >
@@ -2326,19 +2274,19 @@ const SalesReports = () => {
                             </>
                           ) : (
                             <>
-                              <td className="p-3 border-0 ">{displayAmount}</td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">{displayAmount}</td>
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatDate(proposal.date)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatDate(proposal.openTill)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {proposal.tags || "-"}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                     proposal.status
                                   )}`}
                                 >
@@ -2354,7 +2302,7 @@ const SalesReports = () => {
                     <tr>
                       <td
                         colSpan={compactView ? 7 : 9}
-                        className="p-4 text-center text-gray-500"
+                        className="px-4 sm:px-6 py-6 text-center text-slate-500"
                       >
                         No proposals found
                       </td>
@@ -2371,20 +2319,18 @@ const SalesReports = () => {
         return (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Estimates Report</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Estimates Report</h2>
             </div>
 
             {renderTableControls()}
 
             {/* Estimates Table */}
-            <div className="overflow-x-auto bg-white rounded-lg border">
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+            <div className="overflow-x-auto rounded-3xl border border-white/60 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left">
+                  <tr className="bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       <input
                         type="checkbox"
                         checked={
@@ -2401,92 +2347,78 @@ const SalesReports = () => {
                       />
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Estimate#
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Customer
                     </th>
                     {compactView ? (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Amount
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Date
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Status
                         </th>
                       </>
                     ) : (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Amount
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Total Tax
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Project
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Tags
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Date
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Expiry Date
                         </th>
                         <th
-                          className="p-3 rounded-r-lg"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Status
                         </th>
                       </>
                     )}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-200/70">
                   {estimatesLoading ? (
                     <tr>
                       <td
                         colSpan={compactView ? 6 : 10}
-                        className="p-4 text-center text-gray-500"
+                        className="px-4 sm:px-6 py-6 text-center text-slate-500"
                       >
                         Loading estimates...
                       </td>
@@ -2521,10 +2453,10 @@ const SalesReports = () => {
                       return (
                         <tr
                           key={estimate._id}
-                          className="bg-white shadow rounded-lg hover:bg-gray-50 relative"
+                          className="transition-colors hover:bg-white/70"
                           style={{ color: "black" }}
                         >
-                          <td className="p-3 rounded-l-lg border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             <div className="flex items-center">
                               <input
                                 type="checkbox"
@@ -2538,21 +2470,21 @@ const SalesReports = () => {
                               />
                             </div>
                           </td>
-                          <td className="p-3 border-0 ">
+                          <td className="px-4 sm:px-6 py-3">
                             {displayEstimateNumber}
                           </td>
-                          <td className="p-3 border-0">
+                          <td className="px-4 sm:px-6 py-3">
                             {estimate.customer || "-"}
                           </td>
                           {compactView ? (
                             <>
-                              <td className="p-3 border-0 ">{displayAmount}</td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">{displayAmount}</td>
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatDate(estimate.estimateDate)}
                               </td>
-                              <td className="p-3 rounded-r-lg border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                     estimate.status
                                   )}`}
                                 >
@@ -2562,25 +2494,25 @@ const SalesReports = () => {
                             </>
                           ) : (
                             <>
-                              <td className="p-3 border-0 ">{displayAmount}</td>
-                              <td className="p-3 border-0 ">
+                              <td className="px-4 sm:px-6 py-3">{displayAmount}</td>
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatCurrency(totalTax, estimate.currency)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {estimate.reference || "-"}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {estimate.tags || "-"}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatDate(estimate.estimateDate)}
                               </td>
-                              <td className="p-3 border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 {formatDate(estimate.expiryDate)}
                               </td>
-                              <td className="p-3 rounded-r-lg border-0">
+                              <td className="px-4 sm:px-6 py-3">
                                 <span
-                                  className={`px-2 py-1 rounded text-xs ${getStatusColor(
+                                  className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
                                     estimate.status
                                   )}`}
                                 >
@@ -2596,7 +2528,7 @@ const SalesReports = () => {
                     <tr>
                       <td
                         colSpan={compactView ? 6 : 10}
-                        className="p-4 text-center text-gray-500"
+                        className="px-4 sm:px-6 py-6 text-center text-slate-500"
                       >
                         No estimates found
                       </td>
@@ -2613,20 +2545,18 @@ const SalesReports = () => {
         return (
           <div>
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Customers Report</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Customers Report</h2>
             </div>
 
             {renderTableControls()}
 
             {/* Customers Table */}
-            <div className="overflow-x-auto bg-white rounded-lg border">
-              <table className="w-full text-sm border-separate border-spacing-y-2">
+            <div className="overflow-x-auto rounded-3xl border border-white/60 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-left">
+                  <tr className="bg-slate-50/80 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       <input
                         type="checkbox"
                         checked={
@@ -2643,80 +2573,67 @@ const SalesReports = () => {
                       />
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Company
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Primary Contact
                     </th>
                     <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                      className="px-4 sm:px-6 py-3"                    >
                       Primary Email
                     </th>
                     {compactView ? (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Active Customer
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Active Contacts
                         </th>
                       </>
                     ) : (
                       <>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Phone
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Active Customer
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Active Contacts
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Groups
                         </th>
                         <th
-                          className="p-3"
-                          style={{ backgroundColor: "#333333", color: "white" }}
-                        >
+                          className="px-4 sm:px-6 py-3"
+                                                  >
                           Date Created
                         </th>
                       </>
                     )}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-slate-200/70">
                   {customersLoading ? (
                     <tr>
                       <td
                         colSpan={compactView ? 7 : 10}
-                        className="p-4 text-center text-gray-500"
+                        className="px-4 sm:px-6 py-6 text-center text-slate-500"
                       >
                         Loading customers...
                       </td>
@@ -2725,10 +2642,10 @@ const SalesReports = () => {
                     currentData.map((customer) => (
                       <tr
                         key={customer._id}
-                        className="bg-white shadow rounded-lg hover:bg-gray-50"
+                        className="transition-colors hover:bg-white/70"
                         style={{ color: "black" }}
                       >
-                        <td className="p-3 rounded-l-lg border-0">
+                        <td className="px-4 sm:px-6 py-3">
                           <div className="flex items-center">
                             <input
                               type="checkbox"
@@ -2740,34 +2657,34 @@ const SalesReports = () => {
                             />
                           </div>
                         </td>
-                        <td className="p-3 border-0">
+                        <td className="px-4 sm:px-6 py-3">
                           {customer.company || "-"}
                         </td>
-                        <td className="p-3 border-0">
+                        <td className="px-4 sm:px-6 py-3">
                           {customer.contact || "-"}
                         </td>
-                        <td className="p-3 border-0">
+                        <td className="px-4 sm:px-6 py-3">
                           {customer.email || "-"}
                         </td>
                         {compactView ? (
                           <>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3">
                               <span
-                                className={`px-2 py-1 rounded text-xs ${
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${
                                   customer.active
                                     ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-800"
+                                    : "bg-slate-100 text-slate-700"
                                 }`}
                               >
                                 {customer.active ? "Active" : "Inactive"}
                               </span>
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3">
                               <span
-                                className={`px-2 py-1 rounded text-xs ${
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${
                                   customer.contactsActive
                                     ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-800"
+                                    : "bg-slate-100 text-slate-700"
                                 }`}
                               >
                                 {customer.contactsActive
@@ -2778,26 +2695,26 @@ const SalesReports = () => {
                           </>
                         ) : (
                           <>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3">
                               {customer.phone || "-"}
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3">
                               <span
-                                className={`px-2 py-1 rounded text-xs ${
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${
                                   customer.active
                                     ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-800"
+                                    : "bg-slate-100 text-slate-700"
                                 }`}
                               >
                                 {customer.active ? "Active" : "Inactive"}
                               </span>
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3">
                               <span
-                                className={`px-2 py-1 rounded text-xs ${
+                                className={`rounded-full px-3 py-1 text-xs font-medium ${
                                   customer.contactsActive
                                     ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-800"
+                                    : "bg-slate-100 text-slate-700"
                                 }`}
                               >
                                 {customer.contactsActive
@@ -2805,19 +2722,19 @@ const SalesReports = () => {
                                   : "Inactive"}
                               </span>
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3">
                               {customer.groups && customer.groups.length > 0
                                 ? customer.groups.map((group, index) => (
                                     <span
                                       key={index}
-                                      className="bg-gray-100 px-2 py-1 rounded text-xs mr-1"
+                                      className="mr-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
                                     >
                                       {group}
                                     </span>
                                   ))
                                 : "-"}
                             </td>
-                            <td className="p-3 border-0">
+                            <td className="px-4 sm:px-6 py-3">
                               {customer.dateCreated
                                 ? new Date(
                                     customer.dateCreated
@@ -2832,7 +2749,7 @@ const SalesReports = () => {
                     <tr>
                       <td
                         colSpan={compactView ? 7 : 10}
-                        className="p-4 text-center text-gray-500"
+                        className="px-4 sm:px-6 py-6 text-center text-slate-500"
                       >
                         No customers found
                       </td>
@@ -2847,7 +2764,7 @@ const SalesReports = () => {
         );
       default:
         return (
-          <div className="p-6 text-center bg-white rounded border text-gray-500">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-6 text-center text-slate-500 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
             Select a report type from the options above
           </div>
         );
@@ -2855,17 +2772,22 @@ const SalesReports = () => {
   };
 
   return (
-    <div className="min-h-screen">
-      <div className="bg-white p-6 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-6">Sales Reports</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6 rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur sm:p-6">
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            Reports
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">Sales Reports</h1>
+        </div>
 
         {/* Report Type Selection */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-4 gap-3 mb-6">
           <button
-            className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 rounded-2xl border p-4 text-center transition-all ${
               activeReport === "invoices"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-white text-gray-700 border hover:bg-gray-50"
+                ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                : "border-white/60 bg-white/80 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:bg-white"
             }`}
             onClick={() => {
               setActiveReport("invoices");
@@ -2878,10 +2800,10 @@ const SalesReports = () => {
 
           {/* Other buttons remain the same */}
           <button
-            className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 rounded-2xl border p-4 text-center transition-all ${
               activeReport === "items"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-white text-gray-700 border hover:bg-gray-50"
+                ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                : "border-white/60 bg-white/80 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:bg-white"
             }`}
             onClick={() => {
               setActiveReport("items");
@@ -2893,10 +2815,10 @@ const SalesReports = () => {
           </button>
 
           <button
-            className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 rounded-2xl border p-4 text-center transition-all ${
               activeReport === "payments"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-white text-gray-700 border hover:bg-gray-50"
+                ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                : "border-white/60 bg-white/80 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:bg-white"
             }`}
             onClick={() => {
               setActiveReport("payments");
@@ -2908,10 +2830,10 @@ const SalesReports = () => {
           </button>
 
           <button
-            className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 rounded-2xl border p-4 text-center transition-all ${
               activeReport === "creditNotes"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-white text-gray-700 border hover:bg-gray-50"
+                ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                : "border-white/60 bg-white/80 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:bg-white"
             }`}
             onClick={() => {
               setActiveReport("creditNotes");
@@ -2923,10 +2845,10 @@ const SalesReports = () => {
           </button>
 
           <button
-            className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 rounded-2xl border p-4 text-center transition-all ${
               activeReport === "proposals"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-white text-gray-700 border hover:bg-gray-50"
+                ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                : "border-white/60 bg-white/80 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:bg-white"
             }`}
             onClick={() => {
               setActiveReport("proposals");
@@ -2938,10 +2860,10 @@ const SalesReports = () => {
           </button>
 
           <button
-            className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 rounded-2xl border p-4 text-center transition-all ${
               activeReport === "estimates"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-white text-gray-700 border hover:bg-gray-50"
+                ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                : "border-white/60 bg-white/80 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:bg-white"
             }`}
             onClick={() => {
               setActiveReport("estimates");
@@ -2953,10 +2875,10 @@ const SalesReports = () => {
           </button>
 
           <button
-            className={`p-3 rounded-lg flex flex-col items-center justify-center transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 rounded-2xl border p-4 text-center transition-all ${
               activeReport === "customers"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-white text-gray-700 border hover:bg-gray-50"
+                ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                : "border-white/60 bg-white/80 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:bg-white"
             }`}
             onClick={() => {
               setActiveReport("customers");
@@ -2970,13 +2892,15 @@ const SalesReports = () => {
 
         {/* Charts Based Report Section */}
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Charts Based Report</h2>
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">
+            Charts Based Report
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <button
-              className={`p-4 border rounded-lg flex flex-col items-center transition-all ${
+              className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition-all ${
                 activeChart === "totalIncome"
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                  : "border-white/60 bg-white/80 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:bg-white"
               }`}
               onClick={() => {
                 setActiveChart("totalIncome");
@@ -2987,10 +2911,10 @@ const SalesReports = () => {
               <span>Total Income</span>
             </button>
             <button
-              className={`p-4 border rounded-lg flex flex-col items-center transition-all ${
+              className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition-all ${
                 activeChart === "paymentModes"
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                  : "border-white/60 bg-white/80 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:bg-white"
               }`}
               onClick={() => {
                 setActiveChart("paymentModes");
@@ -3001,10 +2925,10 @@ const SalesReports = () => {
               <span>Payment Modes</span>
             </button>
             <button
-              className={`p-4 border rounded-lg flex flex-col items-center transition-all ${
+              className={`flex flex-col items-center gap-2 rounded-2xl border p-4 transition-all ${
                 activeChart === "customerValue"
-                  ? "bg-blue-600 text-white shadow-md"
-                  : "bg-white text-gray-700 hover:bg-gray-50"
+                  ? "border-slate-900 bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                  : "border-white/60 bg-white/80 text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur hover:bg-white"
               }`}
               onClick={() => {
                 setActiveChart("customerValue");
@@ -3018,11 +2942,11 @@ const SalesReports = () => {
         </div>
 
         {/* Report Content */}
-        <div className="bg-white p-4 rounded-lg border">
+        <div className="rounded-3xl border border-white/60 bg-white/60 p-4 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur sm:p-5">
           {activeReport && renderReportContent()}
           {activeChart && renderChartContent()}
           {!activeReport && !activeChart && (
-            <div className="p-6 text-center text-gray-500">
+            <div className="p-6 text-center text-slate-500">
               Select a report type or chart to view its content
             </div>
           )}

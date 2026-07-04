@@ -44,7 +44,8 @@ const ModalOverlay = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -52,14 +53,16 @@ const ModalOverlay = styled.div`
 `;
 
 const ModalContent = styled.div`
-  background: white;
-  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
   width: 600px;
+  max-width: calc(100% - 32px);
   max-height: 90vh;
   overflow-y: auto;
-  padding: 20px;
+  padding: 24px;
   box-sizing: border-box;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
 `;
 
 const ModalHeader = styled.div`
@@ -67,8 +70,15 @@ const ModalHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -85,43 +95,46 @@ const CloseButton = styled.button`
 `;
 
 const FormLabel = styled.label`
-  font-weight: bold;
-  margin-bottom: 5px;
+  font-weight: 600;
+  margin-bottom: 6px;
   display: block;
-  color: #333;
+  color: #334155;
+  font-size: 14px;
 `;
 
 const FormInput = styled.input`
   width: 100%;
   margin-bottom: 15px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 16px;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: rgba(248, 250, 252, 0.8);
+  font-size: 14px;
   box-sizing: border-box;
 
   &:focus {
     outline: none;
-    border-color: #1a202c;
-    box-shadow: 0 0 0 2px rgba(26, 32, 44, 0.25);
+    border-color: #cbd5e1;
+    box-shadow: 0 0 0 2px rgba(203, 213, 225, 0.6);
   }
 `;
 
 const FormTextarea = styled.textarea`
   width: 100%;
   margin-bottom: 15px;
-  padding: 10px;
+  padding: 10px 12px;
   min-height: 80px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  font-size: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background-color: rgba(248, 250, 252, 0.8);
+  font-size: 14px;
   box-sizing: border-box;
   resize: vertical;
 
   &:focus {
     outline: none;
-    border-color: #1a202c;
-    box-shadow: 0 0 0 2px rgba(26, 32, 44, 0.25);
+    border-color: #cbd5e1;
+    box-shadow: 0 0 0 2px rgba(203, 213, 225, 0.6);
   }
 `;
 
@@ -155,32 +168,35 @@ const ModalFooter = styled.div`
 `;
 
 const ModalButton = styled.button`
-  padding: 10px 20px;
+  padding: 10px 18px;
   border: none;
-  border-radius: 5px;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
 
   &:not(:last-child) {
     margin-right: 10px;
   }
 
   &.primary {
-    background: #4a5568;
+    background: linear-gradient(to right, #0f172a, #1e293b);
     color: white;
+    box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.2);
 
     &:hover {
-      background: #1a202c;
+      filter: brightness(1.1);
     }
   }
 
   &.secondary {
-    background: #4a5568;
-    color: white;
+    background: rgba(255, 255, 255, 0.8);
+    color: #334155;
+    border: 1px solid #e2e8f0;
 
     &:hover {
-      background: #1a202c;
+      background: #ffffff;
     }
   }
 `;
@@ -315,41 +331,44 @@ const CalendarContainer = styled.div`
   width: 100%;
   min-height: 100vh;
   margin: 0;
-  padding: 30px;
+  padding: 24px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   box-sizing: border-box;
-  background-color: #f8f9fa;
-  color: #343a40;
+  background: linear-gradient(to bottom right, #f1f5f9, #ffffff);
+  color: #0f172a;
 `;
 
 const CalendarHeader = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 25px;
-  background-color: #ffffff;
-  padding: 15px 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  background-color: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding: 16px 20px;
+  border-radius: 24px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
 `;
 
 const NavButton = styled.button`
-  padding: 10px 15px;
-  font-size: 20px;
-  border: 1px solid #4a5568; /* Equivalent to gray-700 for border */
-  border-radius: 8px;
-  background: #2d3748; /* Equivalent to gray-800 */
+  padding: 8px 16px;
+  font-size: 18px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white; /* Text white */
+  color: #334155;
+  font-weight: 600;
   transition: all 0.2s ease-in-out;
 
   &:hover {
-    background: #1a202c; /* Equivalent to gray-900 */
-    border-color: #2d3748; /* Keep border consistent or slightly darker */
-    color: white;
+    background: #ffffff;
+    border-color: #cbd5e1;
+    color: #0f172a;
   }
 `;
 
@@ -357,26 +376,26 @@ const MonthYearDisplay = styled.h2`
   margin: 0 25px;
   min-width: 220px;
   text-align: center;
-  color: #343a40;
-  font-size: 28px;
-  font-weight: 600;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 700;
 `;
 
 const DaysOfWeekHeader = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   margin-bottom: 10px;
-  background-color: #e9ecef;
-  border-radius: 8px;
+  border-radius: 12px;
   overflow: hidden;
 `;
 
 const DayOfWeek = styled.div`
   text-align: center;
-  font-weight: bold;
+  font-weight: 600;
   padding: 12px 0;
-  color: #495057;
-  font-size: 15px;
+  color: #64748b;
+  font-size: 12px;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 `;
 
@@ -386,45 +405,55 @@ const DatesGrid = styled.div`
   gap: 8px;
   height: calc(100vh - 250px); /* Adjusted height */
   overflow-y: auto;
-  border: 1px solid #e0e0e0;
-  padding: 10px;
-  border-radius: 10px;
-  background-color: #ffffff;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding: 16px;
+  border-radius: 24px;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
 `;
 
 const DateCell = styled.div`
-  border: 1px solid #e0e0e0;
+  border: 1px solid rgba(226, 232, 240, 0.7);
   min-height: 100px; /* Increased min-height for better spacing */
   padding: 8px;
   cursor: ${(props) => (props.isClickable ? "pointer" : "default")};
   background-color: ${(props) =>
-    props.isToday ? "#e6f7ff" : props.isCurrentMonth ? "white" : "#f8f9fa"};
-  color: ${(props) => (props.isCurrentMonth ? "#333" : "#adb5bd")};
-  border-radius: 8px;
+    props.isToday
+      ? "#f0f9ff"
+      : props.isCurrentMonth
+      ? "rgba(255, 255, 255, 0.6)"
+      : "rgba(248, 250, 252, 0.6)"};
+  color: ${(props) => (props.isCurrentMonth ? "#0f172a" : "#cbd5e1")};
+  border-radius: 12px;
+  box-shadow: ${(props) =>
+    props.isToday ? "0 0 0 2px #38bdf8" : "0 1px 2px rgba(15, 23, 42, 0.04)"};
   overflow: hidden;
   font-size: 15px;
   display: flex;
   flex-direction: column;
   transition: all 0.2s ease-in-out;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   &:hover {
     ${(props) =>
       props.isClickable &&
       `
-      background-color: ${props.isToday ? "#d0eeff" : "#f0f0f0"};
+      background-color: ${props.isToday ? "#e0f2fe" : "rgba(255, 255, 255, 0.9)"};
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: ${
+        props.isToday
+          ? "0 0 0 2px #38bdf8, 0 8px 16px rgba(15, 23, 42, 0.08)"
+          : "0 8px 16px rgba(15, 23, 42, 0.08)"
+      };
     `}
   }
 `;
 
 const DateNumber = styled.div`
-  font-weight: bold;
-  font-size: 1.2em;
+  font-weight: 700;
+  font-size: 1.15em;
   margin-bottom: 5px;
-  color: ${(props) => (props.isToday ? "#007bff" : "inherit")};
+  color: ${(props) => (props.isToday ? "#0284c7" : "inherit")};
 `;
 
 const EventList = styled.div`
@@ -440,8 +469,8 @@ const EventList = styled.div`
 const EventItem = styled.div`
   background-color: ${(props) => props.color};
   color: white;
-  border-radius: 5px;
-  padding: 4px 8px;
+  border-radius: 6px;
+  padding: 3px 6px;
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;

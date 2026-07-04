@@ -101,21 +101,24 @@ const ClientSidebar = ({ isOpen, onToggle }) => {
           width: isOpen ? 280 : 0,
         }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="bg-gradient-to-b from-gray-50 to-gray-100 h-screen flex flex-col border-r border-gray-200 shadow-xl overflow-hidden fixed lg:relative z-50"
+        style={{ background: "linear-gradient(160deg,#f8fafc,#eef2f7)" }}
+        className="h-screen flex flex-col border-r border-[rgba(226,232,240,.7)] shadow-xl overflow-hidden fixed lg:relative z-50"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-200">
+        <div className="flex items-center justify-between p-5 border-b border-[rgba(226,232,240,.7)]">
           <div className="flex items-center space-x-3">
-            <img src="/arbeit-logo.png" alt="ARBEIT Logo" className="h-8" />
+            <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-700 text-white flex items-center justify-center font-bold">
+              A
+            </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">ARBEIT CRM</h1>
-              <p className="text-sm text-gray-600">Client Portal</p>
+              <h1 className="text-lg font-bold text-slate-900">ARBEIT CRM</h1>
+              <p className="text-sm text-slate-500">Client Portal</p>
             </div>
           </div>
 
           <button
             onClick={onToggle}
-            className="lg:hidden p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-200 transition-colors"
+            className="lg:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-white/70 transition-colors"
           >
             <FiChevronDown className="w-5 h-5 transform rotate-90" />
           </button>
@@ -136,12 +139,15 @@ const ClientSidebar = ({ isOpen, onToggle }) => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => toggleMenu(item.name)}
-                        className={`flex items-center justify-between w-full p-3 rounded-xl transition-all ${
+                        className={`relative flex items-center justify-between w-full p-3 rounded-xl transition-all ${
                           isActive
-                            ? "bg-gray-50 text-gray-600 shadow-sm border border-gray-100"
-                            : "text-gray-700 hover:bg-gray-100"
+                            ? "bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                            : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
                         }`}
                       >
+                        {isActive && (
+                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-sky-400" />
+                        )}
                         <div className="flex items-center space-x-3">
                           <span className="w-5 h-5 flex items-center justify-center">
                             {item.icon}
@@ -166,7 +172,7 @@ const ClientSidebar = ({ isOpen, onToggle }) => {
                             transition={{ duration: 0.2 }}
                             className="overflow-hidden"
                           >
-                            <ul className="ml-8 border-l border-gray-200 pl-3 mt-2 space-y-1">
+                            <ul className="ml-8 border-l border-slate-200/70 pl-3 mt-2 space-y-1">
                               {item.children.map((child) => (
                                 <motion.li
                                   key={child.name}
@@ -177,8 +183,8 @@ const ClientSidebar = ({ isOpen, onToggle }) => {
                                     to={child.path}
                                     className={`block text-sm py-2.5 px-3 rounded-lg transition-colors ${
                                       isActivePath(child.path)
-                                        ? "bg-[#333333] text-white font-medium shadow-sm"
-                                        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                        ? "bg-gradient-to-r from-slate-900 to-slate-800 text-white font-medium shadow-md"
+                                        : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
                                     }`}
                                   >
                                     {child.name}
@@ -193,12 +199,15 @@ const ClientSidebar = ({ isOpen, onToggle }) => {
                   ) : (
                     <Link
                       to={item.path}
-                      className={`flex items-center w-full p-3 rounded-xl transition-all ${
+                      className={`relative flex items-center w-full p-3 rounded-xl transition-all ${
                         isActive
-                          ? "bg-[#333333] text-gray-100 shadow-sm border border-gray-100"
-                          : "text-gray-700 hover:bg-gray-100"
+                          ? "bg-gradient-to-r from-slate-900 to-slate-800 text-white shadow-md"
+                          : "text-slate-600 hover:bg-white/70 hover:text-slate-900"
                       }`}
                     >
+                      {isActive && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full bg-sky-400" />
+                      )}
                       <div className="flex items-center space-x-3">
                         <span className="w-5 h-5 flex items-center justify-center">
                           {item.icon}

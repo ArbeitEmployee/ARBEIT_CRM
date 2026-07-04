@@ -18,6 +18,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Papa from "papaparse";
 import { useNavigate } from "react-router-dom";
+import { formatBDT } from "../../../utils/currency";
 
 const Items = () => {
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -275,9 +276,9 @@ const Items = () => {
       const config = createAxiosConfig();
       const formattedItem = {
         ...formData,
-        rate: formData.rate.startsWith("$")
+        rate: formData.rate.startsWith("৳")
           ? formData.rate
-          : `$${formData.rate}`,
+          : `৳${formData.rate}`,
       };
 
       if (editingItem) {
@@ -329,7 +330,7 @@ const Items = () => {
     setFormData({
       description: item.description,
       longDescription: item.longDescription,
-      rate: item.rate.replace("$", ""),
+      rate: item.rate.replace("৳", ""),
       tax1: item.tax1,
       tax2: item.tax2,
       unit: item.unit,
@@ -421,7 +422,7 @@ const Items = () => {
         return {
           description,
           longDescription,
-          rate: rate ? (rate.startsWith("$") ? rate : `$${rate}`) : "$0",
+          rate: rate ? (rate.startsWith("৳") ? rate : `৳${rate}`) : "৳0",
           tax1,
           tax2,
           unit,
@@ -465,13 +466,17 @@ const Items = () => {
   );
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">
+      <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+          Sales
+        </p>
+        <h1 className="text-2xl font-bold text-white">
           {showForm ? (editingItem ? "Edit Item" : "Add New Item") : "Items"}
         </h1>
-        <div className="flex items-center text-gray-600">
+        <div className="flex items-center text-slate-300 text-sm">
           <span>Dashboard</span>
           <FaChevronRight className="mx-1 text-xs" />
           <span>Items</span>
@@ -479,9 +484,9 @@ const Items = () => {
       </div>
 
       {showForm ? (
-        <div className="bg-white shadow-md rounded p-6 mb-6">
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur mb-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-semibold">Item Details</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Item Details</h2>
             <button
               onClick={() => {
                 setShowForm(false);
@@ -496,7 +501,7 @@ const Items = () => {
                   groupName: "",
                 });
               }}
-              className="text-gray-500 hover:text-gray-700"
+              className="text-slate-500 hover:text-slate-700"
             >
               <FaTimes />
             </button>
@@ -507,7 +512,7 @@ const Items = () => {
               {/* Left Column */}
               <div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Description *
                   </label>
                   <input
@@ -515,36 +520,36 @@ const Items = () => {
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     required
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Long Description
                   </label>
                   <textarea
                     name="longDescription"
                     value={formData.longDescription}
                     onChange={handleChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     rows="3"
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Rate - USD (Base Currency) *
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Rate - BDT (Base Currency) *
                   </label>
                   <div className="relative">
-                    <span className="absolute left-3 top-2">$</span>
+                    <span className="absolute left-3 top-2.5 text-slate-500">৳</span>
                     <input
                       type="number"
                       name="rate"
                       value={formData.rate}
                       onChange={handleChange}
-                      className="w-full border rounded px-3 py-2 pl-6"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 pl-6 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-slate-300"
                       min="0"
                       step="0.01"
                       required
@@ -556,14 +561,14 @@ const Items = () => {
               {/* Right Column */}
               <div>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Tax 1
                   </label>
                   <select
                     name="tax1"
                     value={formData.tax1}
                     onChange={handleChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   >
                     {taxOptions.map((option, i) => (
                       <option key={i} value={option}>
@@ -574,14 +579,14 @@ const Items = () => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Tax 2
                   </label>
                   <select
                     name="tax2"
                     value={formData.tax2}
                     onChange={handleChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   >
                     {taxOptions.map((option, i) => (
                       <option key={i} value={option}>
@@ -592,7 +597,7 @@ const Items = () => {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Unit
                   </label>
                   <input
@@ -600,12 +605,12 @@ const Items = () => {
                     name="unit"
                     value={formData.unit}
                     onChange={handleChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   />
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
                     Item Group
                   </label>
                   <input
@@ -613,7 +618,7 @@ const Items = () => {
                     name="groupName"
                     value={formData.groupName}
                     onChange={handleChange}
-                    className="w-full border rounded px-3 py-2"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   />
                 </div>
               </div>
@@ -635,13 +640,13 @@ const Items = () => {
                     groupName: "",
                   });
                 }}
-                className="px-4 py-2 border rounded text-sm"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-black text-white rounded text-sm"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
                 disabled={!formData.description || !formData.rate}
               >
                 {editingItem ? "Update" : "Save"}
@@ -655,14 +660,13 @@ const Items = () => {
           <div className="flex items-center justify-between flex-wrap gap-2 mb-4">
             <div className="flex items-center gap-2">
               <button
-                className="px-3 py-1 text-sm rounded flex items-center gap-2"
-                style={{ backgroundColor: "#333333", color: "white" }}
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
                 onClick={() => setShowForm(true)}
               >
                 <FaPlus /> New Item
               </button>
               <button
-                className="border px-3 py-1 text-sm rounded flex items-center gap-2"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-2"
                 onClick={() => setShowImportForm(true)}
               >
                 <FaUpload /> Import Items
@@ -671,14 +675,14 @@ const Items = () => {
           </div>
 
           {/* White box for table */}
-          <div className="bg-white shadow-md rounded p-4">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
             {/* Controls */}
             <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 {/* Delete Selected button */}
                 {selectedItems.length > 0 && (
                   <button
-                    className="bg-red-600 text-white px-3 py-1 rounded"
+                    className="rounded-xl bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700"
                     onClick={handleBulkDelete}
                   >
                     Delete Selected ({selectedItems.length})
@@ -687,7 +691,7 @@ const Items = () => {
 
                 {/* Entries per page */}
                 <select
-                  className="border rounded px-2 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   value={entriesPerPage}
                   onChange={(e) => {
                     setEntriesPerPage(Number(e.target.value));
@@ -704,7 +708,7 @@ const Items = () => {
                 <div className="relative">
                   <button
                     onClick={() => setShowExportMenu((prev) => !prev)}
-                    className="border px-2 py-1 rounded text-sm flex items-center gap-1"
+                    className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center gap-1"
                   >
                     <HiOutlineDownload /> Export
                   </button>
@@ -713,7 +717,7 @@ const Items = () => {
                   {showExportMenu && (
                     <div
                       ref={exportMenuRef}
-                      className="absolute mt-1 w-32 bg-white border rounded shadow-md z-10"
+                      className="absolute mt-1 w-32 rounded-xl border border-slate-200 bg-white shadow-lg z-10 overflow-hidden"
                     >
                       <button
                         className="w-full text-left px-3 py-2 text-sm hover:bg-gray-100"
@@ -745,7 +749,7 @@ const Items = () => {
 
                 {/* Refresh button */}
                 <button
-                  className="border px-2.5 py-1.5 rounded text-sm flex items-center"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white flex items-center"
                   onClick={fetchItems}
                 >
                   <FaSyncAlt />
@@ -754,7 +758,7 @@ const Items = () => {
 
               {/* Search */}
               <div className="relative">
-                <FaSearch className="absolute left-2 top-2.5 text-gray-400 text-sm" />
+                <FaSearch className="absolute left-3 top-3 text-slate-400 text-sm" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -763,7 +767,7 @@ const Items = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="border rounded pl-8 pr-3 py-1 text-sm"
+                  className="rounded-xl border border-slate-200 bg-slate-50/80 pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -773,10 +777,7 @@ const Items = () => {
               <table className="w-full text-sm border-separate border-spacing-y-2">
                 <thead>
                   <tr className="text-left">
-                    <th
-                      className="p-3 rounded-l-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 rounded-l-lg">
                       <input
                         type="checkbox"
                         checked={
@@ -792,52 +793,28 @@ const Items = () => {
                         }}
                       />
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Description
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Long Description
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 text-right">
                       Rate
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Tax1
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Tax2
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Unit
                     </th>
-                    <th
-                      className="p-3"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3">
                       Group Name
                     </th>
-                    <th
-                      className="p-3 rounded-r-lg"
-                      style={{ backgroundColor: "#333333", color: "white" }}
-                    >
+                    <th className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 px-4 sm:px-6 py-3 rounded-r-lg">
                       Actions
                     </th>
                   </tr>
@@ -846,10 +823,9 @@ const Items = () => {
                   {currentData.map((item) => (
                     <tr
                       key={item._id}
-                      className="bg-white shadow rounded-lg hover:bg-gray-50"
-                      style={{ color: "black" }}
+                      className="bg-white shadow rounded-lg hover:bg-white/70 text-slate-700"
                     >
-                      <td className="p-3 rounded-l-lg border-0">
+                      <td className="px-4 sm:px-6 py-3 text-sm rounded-l-lg border-0">
                         <div className="flex items-center">
                           <input
                             type="checkbox"
@@ -859,25 +835,25 @@ const Items = () => {
                           />
                         </div>
                       </td>
-                      <td className="p-3 border-0">{item.description}</td>
-                      <td className="p-3 border-0">{item.longDescription}</td>
-                      <td className="p-3 border-0">{item.rate}</td>
-                      <td className="p-3 border-0">{item.tax1}</td>
-                      <td className="p-3 border-0">{item.tax2}</td>
-                      <td className="p-3 border-0">{item.unit}</td>
-                      <td className="p-3 border-0">{item.groupName}</td>
-                      <td className="p-3 rounded-r-lg border-0">
+                      <td className="px-4 sm:px-6 py-3 text-sm border-0">{item.description}</td>
+                      <td className="px-4 sm:px-6 py-3 text-sm border-0">{item.longDescription}</td>
+                      <td className="px-4 sm:px-6 py-3 text-sm text-right tabular-nums font-medium border-0">{item.rate}</td>
+                      <td className="px-4 sm:px-6 py-3 text-sm border-0">{item.tax1}</td>
+                      <td className="px-4 sm:px-6 py-3 text-sm border-0">{item.tax2}</td>
+                      <td className="px-4 sm:px-6 py-3 text-sm border-0">{item.unit}</td>
+                      <td className="px-4 sm:px-6 py-3 text-sm border-0">{item.groupName}</td>
+                      <td className="px-4 sm:px-6 py-3 text-sm rounded-r-lg border-0">
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleEditItem(item)}
-                            className="text-blue-500 hover:text-blue-700"
+                            className="rounded-lg p-2 bg-blue-100 text-blue-700"
                             title="Edit"
                           >
                             <FaEdit size={16} />
                           </button>
                           <button
                             onClick={() => handleDeleteItem(item._id)}
-                            className="text-red-500 hover:text-red-700"
+                            className="rounded-lg p-2 bg-red-100 text-red-700"
                             title="Delete"
                           >
                             <FaTrash size={16} />
@@ -892,14 +868,14 @@ const Items = () => {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-gray-700">
+              <div className="text-sm text-slate-500">
                 Showing {startIndex + 1} to{" "}
                 {Math.min(startIndex + entriesPerPage, filteredItems.length)} of{" "}
                 {filteredItems.length} entries
               </div>
               <div className="flex items-center space-x-2">
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.max(prev - 1, 1))
                   }
@@ -907,11 +883,11 @@ const Items = () => {
                 >
                   Previous
                 </button>
-                <span className="text-sm">
+                <span className="text-sm text-slate-600">
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
-                  className="px-3 py-1 border rounded text-sm"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm disabled:opacity-50"
                   onClick={() =>
                     setCurrentPage((prev) => Math.min(prev + 1, totalPages))
                   }
@@ -927,19 +903,19 @@ const Items = () => {
 
       {/* Import Modal */}
       {showImportForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-semibold mb-4">Import Items</h2>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="rounded-2xl border border-white/60 bg-white shadow-2xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-semibold text-slate-900 mb-4">Import Items</h2>
 
             <div className="mb-4">
-              <p className="text-sm mb-2">Select a CSV file to import items:</p>
+              <p className="text-sm mb-2 text-slate-600">Select a CSV file to import items:</p>
               <input
                 type="file"
                 accept=".csv"
                 onChange={handleFileUpload}
-                className="w-full border rounded p-2 text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-slate-500 mt-1">
                 CSV should contain columns: description, rate, tax1, tax2, unit,
                 groupName
               </p>
@@ -984,20 +960,20 @@ const Items = () => {
                   setCsvFile(null);
                   setCsvData([]);
                 }}
-                className="px-4 py-2 border rounded text-sm"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSimulateData}
-                className="px-4 py-2 bg-gray-200 rounded text-sm hover:bg-gray-300"
+                className="rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white disabled:opacity-50"
                 disabled={csvData.length === 0}
               >
                 Simulate Data
               </button>
               <button
                 onClick={handleImport}
-                className="px-4 py-2 bg-black text-white rounded text-sm"
+                className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 disabled:opacity-50"
                 disabled={csvData.length === 0}
               >
                 Import
@@ -1006,6 +982,7 @@ const Items = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

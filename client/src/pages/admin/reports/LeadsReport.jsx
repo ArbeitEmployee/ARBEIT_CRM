@@ -101,7 +101,9 @@ const LeadsReport = () => {
   }, [selectedMonth, selectedYear]);
 
   if (loading) {
-    return <div className="p-4 text-center">Loading reports...</div>;
+    return (
+      <div className="p-4 text-center text-slate-500">Loading reports...</div>
+    );
   }
 
   if (error) {
@@ -109,132 +111,175 @@ const LeadsReport = () => {
   }
 
   return (
-    <div className="bg-gray-100 min-h-screen p-4">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Leads Reports</h1>
-        <div className="flex items-center text-gray-600">
-          <span>Dashboard</span>
-          <FaChevronRight className="mx-1 text-xs" />
-          <span>Reports</span>
-          <FaChevronRight className="mx-1 text-xs" />
-          <span>Leads</span>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <p className="flex items-center text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+            <span>Dashboard</span>
+            <FaChevronRight className="mx-1 text-[8px]" />
+            <span>Reports</span>
+            <FaChevronRight className="mx-1 text-[8px]" />
+            <span>Leads</span>
+          </p>
+          <h1 className="text-2xl font-bold text-slate-900">Leads Reports</h1>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Leads by Source Chart (Pie Chart) */}
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">
-            Leads by Source (This Week)
-          </h2>
-          {sourceChartData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={sourceChartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={120}
-                  fill="#8884d8"
-                  dataKey="value"
-                  nameKey="name"
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {/* Leads by Source Chart (Pie Chart) */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              By Source
+            </p>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900">
+              Leads by Source (This Week)
+            </h2>
+            {sourceChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={sourceChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    outerRadius={120}
+                    fill="#8884d8"
+                    dataKey="value"
+                    nameKey="name"
+                  >
+                    {sourceChartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-slate-500">
+                No source data available for this week.
+              </p>
+            )}
+          </div>
+
+          {/* This Week Leads Conversions Chart (Bar Chart) */}
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              Conversions
+            </p>
+            <h2 className="mb-4 text-lg font-semibold text-slate-900">
+              This Week Leads Conversions
+            </h2>
+            {weekConversionData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={weekConversionData}
+                  margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                 >
-                  {sourceChartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-gray-500">
-              No source data available for this week.
-            </p>
-          )}
-        </div>
-
-        {/* This Week Leads Conversions Chart (Bar Chart) */}
-        <div className="bg-white shadow-md rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">
-            This Week Leads Conversions
-          </h2>
-          {weekConversionData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={weekConversionData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="value" fill="#8884d8" name="Conversions" />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-gray-500">
-              No conversion data available for this week.
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Daily Leads Chart */}
-      <div className="bg-white shadow-md rounded-lg p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Daily Leads</h2>
-          <div className="flex gap-2">
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-              className="border rounded px-3 py-1"
-            >
-              {months.map((month) => (
-                <option key={month.value} value={month.value}>
-                  {month.label}
-                </option>
-              ))}
-            </select>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-              className="border rounded px-3 py-1"
-            >
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
+                  <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 12, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12, fill: "#94a3b8" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip />
+                  <Legend />
+                  <Bar
+                    dataKey="value"
+                    fill="#8b5cf6"
+                    name="Conversions"
+                    radius={[8, 8, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-slate-500">
+                No conversion data available for this week.
+              </p>
+            )}
           </div>
         </div>
 
-        {dailyLeadsData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={400}>
-            <BarChart
-              data={dailyLeadsData}
-              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="value" fill="#82ca9d" name="Number of Leads" />
-            </BarChart>
-          </ResponsiveContainer>
-        ) : (
-          <p className="text-gray-500">
-            No daily leads data available for the selected period.
-          </p>
-        )}
+        {/* Daily Leads Chart */}
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+                Daily
+              </p>
+              <h2 className="text-lg font-semibold text-slate-900">
+                Daily Leads
+              </h2>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+              >
+                {months.map((month) => (
+                  <option key={month.value} value={month.value}>
+                    {month.label}
+                  </option>
+                ))}
+              </select>
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
+              >
+                {years.map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {dailyLeadsData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={dailyLeadsData}
+                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+              >
+                <CartesianGrid stroke="#e2e8f0" vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 12, fill: "#94a3b8" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip />
+                <Legend />
+                <Bar
+                  dataKey="value"
+                  fill="#0ea5e9"
+                  name="Number of Leads"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-slate-500">
+              No daily leads data available for the selected period.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );

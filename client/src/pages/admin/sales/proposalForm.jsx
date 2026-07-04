@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FaPlus, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { formatBDT, CURRENCY_SYMBOL } from "../../../utils/currency";
 
 // Custom hook for detecting outside clicks
 const useOutsideClick = (callback) => {
@@ -40,7 +41,7 @@ const ProposalForm = () => {
     total: 0,
     date: "",
     openTill: "",
-    currency: "USD",
+    currency: "BDT",
     discountType: "percent",
     discountValue: 0,
     tags: "",
@@ -431,18 +432,24 @@ const ProposalForm = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-gray-800 mb-2">New Quotation</h2>
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6 space-y-6">
+      {/* Hero band */}
+      <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 to-slate-800 p-6 text-white shadow-[0_30px_90px_rgba(15,23,42,.25)]">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-300">
+          Sales
+        </p>
+        <h2 className="text-2xl font-bold text-white mt-1">New Quotation</h2>
+      </div>
 
       {/* Main Form Container */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+      <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         {/* Two-column form layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Left Column */}
           <div>
             {/* Title */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Title*
               </label>
               <input
@@ -450,8 +457,8 @@ const ProposalForm = () => {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className={`w-full border px-3 py-2 rounded text-sm ${
-                  errors.title ? "border-red-500" : "border-gray-300"
+                className={`w-full rounded-xl border bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 ${
+                  errors.title ? "border-red-500" : "border-slate-200"
                 }`}
               />
               {errors.title && (
@@ -461,7 +468,7 @@ const ProposalForm = () => {
 
             {/* Client Name */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Client Name*
               </label>
               <div className="relative" ref={clientRef}>
@@ -470,17 +477,17 @@ const ProposalForm = () => {
                   name="clientName"
                   value={formData.clientName}
                   onChange={handleClientSearchChange}
-                  className={`w-full border px-3 py-2 rounded text-sm ${
-                    errors.clientName ? "border-red-500" : "border-gray-300"
+                  className={`w-full rounded-xl border bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 ${
+                    errors.clientName ? "border-red-500" : "border-slate-200"
                   }`}
                   placeholder="Search client by company name..."
                 />
                 {showClientDropdown && clientSearchResults.length > 0 && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                  <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg max-h-60 overflow-auto">
                     {clientSearchResults.map((client, index) => (
                       <div
                         key={index}
-                        className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                        className="px-3 py-2 hover:bg-slate-100 cursor-pointer"
                         onClick={() => handleSelectClient(client)}
                       >
                         <div className="font-medium">{client.company}</div>
@@ -494,7 +501,7 @@ const ProposalForm = () => {
                 {showClientDropdown &&
                   clientSearchResults.length === 0 &&
                   clientSearchTerm.length >= 2 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                    <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg">
                       <div className="px-3 py-2 text-gray-500">
                         No clients found
                       </div>
@@ -509,7 +516,7 @@ const ProposalForm = () => {
             {/* Date fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   Date
                 </label>
                 <input
@@ -517,11 +524,11 @@ const ProposalForm = () => {
                   name="date"
                   value={formData.date}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   Open Till
                 </label>
                 <input
@@ -529,7 +536,7 @@ const ProposalForm = () => {
                   name="openTill"
                   value={formData.openTill}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
@@ -537,29 +544,29 @@ const ProposalForm = () => {
             {/* Currency and Discount */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   Currency
                 </label>
                 <select
                   name="currency"
                   value={formData.currency}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
-                  <option value="USD">USD</option>
                   <option value="BDT">BDT</option>
+                  <option value="USD">USD</option>
                   <option value="EUR">EUR</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   Discount Type
                 </label>
                 <select
                   name="discountType"
                   value={formData.discountType}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="percent">Percentage</option>
                   <option value="fixed">Fixed Amount</option>
@@ -569,14 +576,14 @@ const ProposalForm = () => {
 
             {/* Tags */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Tags
               </label>
               <select
                 name="tags"
                 value={formData.tags}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               >
                 <option value="">Select Tag</option>
                 {tagOptions.map((tag, i) => (
@@ -593,14 +600,14 @@ const ProposalForm = () => {
             {/* Status and Assigned */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   Status
                 </label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 >
                   <option value="Draft">Draft</option>
                   <option value="Sent">Sent</option>
@@ -609,7 +616,7 @@ const ProposalForm = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   Assigned
                 </label>
                 <div className="relative" ref={staffRef}>
@@ -618,15 +625,15 @@ const ProposalForm = () => {
                     name="assigned"
                     value={formData.assigned}
                     onChange={handleStaffSearchChange}
-                    className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     placeholder="Search staff by name..."
                   />
                   {showStaffDropdown && staffSearchResults.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto">
+                    <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg max-h-60 overflow-auto">
                       {staffSearchResults.map((staff, index) => (
                         <div
                           key={index}
-                          className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                          className="px-3 py-2 hover:bg-slate-100 cursor-pointer"
                           onClick={() => handleSelectStaff(staff)}
                         >
                           <div className="font-medium">{staff.name}</div>
@@ -640,7 +647,7 @@ const ProposalForm = () => {
                   {showStaffDropdown &&
                     staffSearchResults.length === 0 &&
                     staffSearchTerm.length >= 2 && (
-                      <div className="absolute z-10 mt-1 w-full bg-white border rounded shadow-lg">
+                      <div className="absolute z-10 mt-1 w-full rounded-xl border border-slate-200 bg-white shadow-lg">
                         <div className="px-3 py-2 text-gray-500">
                           No staff found
                         </div>
@@ -652,7 +659,7 @@ const ProposalForm = () => {
 
             {/* Client Email */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Client Email*
               </label>
               <input
@@ -660,8 +667,8 @@ const ProposalForm = () => {
                 name="clientEmail"
                 value={formData.clientEmail}
                 onChange={handleChange}
-                className={`w-full border px-3 py-2 rounded text-sm ${
-                  errors.clientEmail ? "border-red-500" : "border-gray-300"
+                className={`w-full rounded-xl border bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 ${
+                  errors.clientEmail ? "border-red-500" : "border-slate-200"
                 }`}
               />
               {errors.clientEmail && (
@@ -673,14 +680,14 @@ const ProposalForm = () => {
 
             {/* Address */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Address
               </label>
               <textarea
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 rows="3"
               />
             </div>
@@ -688,7 +695,7 @@ const ProposalForm = () => {
             {/* Location fields */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   City
                 </label>
                 <input
@@ -696,11 +703,11 @@ const ProposalForm = () => {
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   State
                 </label>
                 <input
@@ -708,11 +715,11 @@ const ProposalForm = () => {
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   Country
                 </label>
                 <input
@@ -720,11 +727,11 @@ const ProposalForm = () => {
                   name="country"
                   value={formData.country}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                   Zip Code
                 </label>
                 <input
@@ -732,14 +739,14 @@ const ProposalForm = () => {
                   name="zip"
                   value={formData.zip}
                   onChange={handleChange}
-                  className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
             </div>
 
             {/* Phone */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                 Phone
               </label>
               <input
@@ -747,7 +754,7 @@ const ProposalForm = () => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="w-full border px-3 py-2 rounded text-sm border-gray-300"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
               />
             </div>
           </div>
@@ -755,13 +762,17 @@ const ProposalForm = () => {
       </div>
 
       {/* Items Database Management Section */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+      <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Item Database</h3>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              Catalog
+            </p>
+            <h3 className="text-lg font-semibold text-slate-900">Item Database</h3>
+          </div>
           <button
             onClick={() => setShowItemForm(true)}
-            className="px-3 py-2 text-sm rounded flex items-center gap-2 text-white"
-            style={{ backgroundColor: "#333333" }}
+            className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110 flex items-center gap-2"
           >
             <FaPlus /> Add New Item
           </button>
@@ -771,35 +782,32 @@ const ProposalForm = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr
-                className="text-left"
-                style={{ backgroundColor: "#333333", color: "white" }}
-              >
-                <th className="p-3 rounded-l-lg">Description</th>
+              <tr className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left">
+                <th className="p-3 rounded-l-xl">Description</th>
                 <th className="p-3">Rate</th>
                 <th className="p-3">Unit</th>
                 <th className="p-3">Tax 1</th>
                 <th className="p-3">Tax 2</th>
                 <th className="p-3">Group</th>
-                <th className="p-3 rounded-r-lg">Action</th>
+                <th className="p-3 rounded-r-xl">Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200/70">
               {databaseItems.map((item) => (
                 <tr
                   key={item._id}
-                  className="bg-white shadow rounded-lg hover:bg-gray-50"
+                  className="hover:bg-white/70 transition-colors"
                 >
-                  <td className="p-3 border-0">{item.description}</td>
-                  <td className="p-3 border-0">{item.rate}</td>
-                  <td className="p-3 border-0">{item.unit}</td>
-                  <td className="p-3 border-0">{item.tax1}</td>
-                  <td className="p-3 border-0">{item.tax2}</td>
-                  <td className="p-3 border-0">{item.groupName}</td>
-                  <td className="p-3 border-0">
+                  <td className="p-3 text-slate-700">{item.description}</td>
+                  <td className="p-3 text-slate-700 tabular-nums">{item.rate}</td>
+                  <td className="p-3 text-slate-700">{item.unit}</td>
+                  <td className="p-3 text-slate-700">{item.tax1}</td>
+                  <td className="p-3 text-slate-700">{item.tax2}</td>
+                  <td className="p-3 text-slate-700">{item.groupName}</td>
+                  <td className="p-3">
                     <button
                       onClick={() => addItemFromDatabase(item)}
-                      className="text-black-600 hover:text-blue-800"
+                      className="text-sm font-semibold text-slate-900 hover:text-slate-600"
                     >
                       Add to Proposal
                     </button>
@@ -812,9 +820,14 @@ const ProposalForm = () => {
       </div>
 
       {/* Proposal Items Section */}
-      <div className="bg-white shadow-md rounded-lg p-6 mb-6">
+      <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Quotation Items</h3>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              Line Items
+            </p>
+            <h3 className="text-lg font-semibold text-slate-900">Quotation Items</h3>
+          </div>
           <button
             onClick={() => {
               setProposalItems([
@@ -828,8 +841,7 @@ const ProposalForm = () => {
                 },
               ]);
             }}
-            className="px-3 py-2 text-sm rounded flex items-center gap-2 text-white"
-            style={{ backgroundColor: "#333333" }}
+            className="rounded-xl border border-dashed border-slate-300 text-slate-600 px-5 py-2.5 text-sm font-semibold hover:bg-white flex items-center gap-2"
           >
             <FaPlus /> Add Custom Item
           </button>
@@ -843,39 +855,36 @@ const ProposalForm = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr
-                className="text-left"
-                style={{ backgroundColor: "#333333", color: "white" }}
-              >
-                <th className="p-3 rounded-l-lg">#</th>
+              <tr className="bg-slate-50/80 text-xs uppercase tracking-wider font-semibold text-slate-500 text-left">
+                <th className="p-3 rounded-l-xl">#</th>
                 <th className="p-3">Item Description</th>
                 <th className="p-3">Qty</th>
                 <th className="p-3">Rate</th>
                 <th className="p-3">Tax 1</th>
                 <th className="p-3">Tax 2</th>
-                <th className="p-3">Amount</th>
-                <th className="p-3 rounded-r-lg">Action</th>
+                <th className="p-3 text-right">Amount</th>
+                <th className="p-3 rounded-r-xl">Action</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-slate-200/70">
               {proposalItems.map((item, i) => (
                 <tr
                   key={i}
-                  className="bg-white shadow rounded-lg hover:bg-gray-50"
+                  className="hover:bg-white/70 transition-colors"
                 >
-                  <td className="p-3 border-0">{i + 1}</td>
-                  <td className="p-3 border-0">
+                  <td className="p-3 text-slate-500 tabular-nums">{i + 1}</td>
+                  <td className="p-3">
                     <input
                       type="text"
                       value={item.description}
                       onChange={(e) =>
                         handleItemChange(i, "description", e.target.value)
                       }
-                      className="w-full border px-2 py-1 rounded"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                       placeholder="Item description"
                     />
                   </td>
-                  <td className="p-3 border-0">
+                  <td className="p-3">
                     <input
                       type="number"
                       value={item.quantity}
@@ -886,11 +895,11 @@ const ProposalForm = () => {
                         );
                         handleItemChange(i, "quantity", quantity);
                       }}
-                      className="w-full border px-2 py-1 rounded"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                       min="1"
                     />
                   </td>
-                  <td className="p-3 border-0">
+                  <td className="p-3">
                     <input
                       type="number"
                       value={item.rate}
@@ -898,12 +907,12 @@ const ProposalForm = () => {
                         const rate = parseFloat(e.target.value) || 0;
                         handleItemChange(i, "rate", rate);
                       }}
-                      className="w-full border px-2 py-1 rounded"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                       min="0"
                       step="0.01"
                     />
                   </td>
-                  <td className="p-3 border-0">
+                  <td className="p-3">
                     <input
                       type="number"
                       value={item.tax1}
@@ -914,12 +923,12 @@ const ProposalForm = () => {
                           parseFloat(e.target.value) || 0
                         )
                       }
-                      className="w-full border px-2 py-1 rounded"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                       min="0"
                       step="0.01"
                     />
                   </td>
-                  <td className="p-3 border-0">
+                  <td className="p-3">
                     <input
                       type="number"
                       value={item.tax2}
@@ -930,15 +939,15 @@ const ProposalForm = () => {
                           parseFloat(e.target.value) || 0
                         )
                       }
-                      className="w-full border px-2 py-1 rounded"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                       min="0"
                       step="0.01"
                     />
                   </td>
-                  <td className="p-3 border-0 text-right">
-                    ${(item.quantity * item.rate).toFixed(2)}
+                  <td className="p-3 text-right font-semibold text-slate-900 tabular-nums">
+                    {formatBDT(item.quantity * item.rate)}
                   </td>
-                  <td className="p-3 border-0 text-center">
+                  <td className="p-3 text-center">
                     <button
                       onClick={() => deleteItem(i)}
                       className="text-red-600 hover:text-red-800"
@@ -956,23 +965,23 @@ const ProposalForm = () => {
 
       {/* Totals Section */}
       <div className="flex justify-end">
-        <div className="bg-white shadow-md rounded-lg p-6 w-full md:w-1/3">
-          <div className="flex justify-between py-2 border-b">
-            <span className="font-medium">Subtotal:</span>
-            <span>${subtotal.toFixed(2)}</span>
+        <div className="rounded-3xl border border-white/60 bg-white/80 p-5 sm:p-6 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur w-full md:w-1/3">
+          <div className="flex justify-between py-2 border-b border-slate-200/70">
+            <span className="font-medium text-slate-600">Subtotal:</span>
+            <span className="tabular-nums text-slate-900">{formatBDT(subtotal)}</span>
           </div>
 
-          <div className="flex justify-between items-center py-2 border-b">
+          <div className="flex justify-between items-center py-2 border-b border-slate-200/70">
             <div className="flex items-center">
-              <span className="font-medium mr-2">Discount:</span>
+              <span className="font-medium text-slate-600 mr-2">Discount:</span>
               <select
                 name="discountType"
                 value={formData.discountType}
                 onChange={handleChange}
-                className="border px-2 py-1 rounded text-xs"
+                className="rounded-lg border border-slate-200 bg-slate-50/80 px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-slate-300"
               >
                 <option value="percent">%</option>
-                <option value="fixed">$</option>
+                <option value="fixed">{CURRENCY_SYMBOL}</option>
               </select>
             </div>
             <div className="flex items-center">
@@ -987,32 +996,32 @@ const ProposalForm = () => {
                     discountValue: Math.max(0, parseFloat(e.target.value) || 0),
                   });
                 }}
-                className="w-20 border px-2 py-1 rounded text-sm text-right"
+                className="w-20 rounded-lg border border-slate-200 bg-white px-2 py-1 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-slate-300"
                 min="0"
                 step={formData.discountType === "percent" ? "1" : "0.01"}
               />
-              <span className="ml-1">
-                {formData.discountType === "percent" ? "%" : "$"}
+              <span className="ml-1 text-slate-600">
+                {formData.discountType === "percent" ? "%" : CURRENCY_SYMBOL}
               </span>
             </div>
           </div>
 
-          <div className="flex justify-between py-2 font-bold text-lg mt-2">
-            <span>Total:</span>
-            <span>${total.toFixed(2)}</span>
+          <div className="flex justify-between items-baseline py-2 mt-2">
+            <span className="font-semibold text-slate-600">Total:</span>
+            <span className="text-2xl font-extrabold text-slate-900 tabular-nums">{formatBDT(total)}</span>
           </div>
         </div>
       </div>
 
       {/* Add Item Form Modal */}
       {showItemForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl">
-            <div className="flex justify-between items-center border-b p-4">
-              <h2 className="text-xl font-semibold">Add Item</h2>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="rounded-3xl border border-white/60 bg-white/90 shadow-[0_30px_90px_rgba(15,23,42,.25)] backdrop-blur w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-200/70 p-5">
+              <h2 className="text-xl font-semibold text-slate-900">Add Item</h2>
               <button
                 onClick={() => setShowItemForm(false)}
-                className="text-gray-500 hover:text-gray-700"
+                className="text-slate-400 hover:text-slate-600"
               >
                 <FaTimes />
               </button>
@@ -1021,7 +1030,7 @@ const ProposalForm = () => {
             <form onSubmit={saveNewItemToDatabase} className="p-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                     Description
                   </label>
                   <input
@@ -1029,24 +1038,24 @@ const ProposalForm = () => {
                     name="description"
                     value={newItem.description}
                     onChange={handleNewItemChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                     Long Description
                   </label>
                   <textarea
                     name="longDescription"
                     value={newItem.longDescription}
                     onChange={handleNewItemChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     rows="3"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                     Rate - USD (Base Currency)
                   </label>
                   <div className="relative">
@@ -1056,7 +1065,7 @@ const ProposalForm = () => {
                       name="rate"
                       value={newItem.rate}
                       onChange={handleNewItemChange}
-                      className="w-full border px-3 py-2 rounded text-sm pl-6"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 pl-6 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                       min="0"
                       step="0.01"
                       required
@@ -1065,14 +1074,14 @@ const ProposalForm = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                       Tax 1
                     </label>
                     <select
                       name="tax1"
                       value={newItem.tax1}
                       onChange={handleNewItemChange}
-                      className="w-full border px-3 py-2 rounded text-sm"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     >
                       {taxOptions.map((option, i) => (
                         <option key={i} value={option}>
@@ -1082,14 +1091,14 @@ const ProposalForm = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                       Tax 2
                     </label>
                     <select
                       name="tax2"
                       value={newItem.tax2}
                       onChange={handleNewItemChange}
-                      className="w-full border px-3 py-2 rounded text-sm"
+                      className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                     >
                       {taxOptions.map((option, i) => (
                         <option key={i} value={option}>
@@ -1100,7 +1109,7 @@ const ProposalForm = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                     Unit
                   </label>
                   <input
@@ -1108,11 +1117,11 @@ const ProposalForm = () => {
                     name="unit"
                     value={newItem.unit}
                     onChange={handleNewItemChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-[11px] font-bold uppercase tracking-[0.15em] text-slate-500 mb-1">
                     Item Group
                   </label>
                   <input
@@ -1120,7 +1129,7 @@ const ProposalForm = () => {
                     name="groupName"
                     value={newItem.groupName}
                     onChange={handleNewItemChange}
-                    className="w-full border px-3 py-2 rounded text-sm"
+                    className="w-full rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300"
                   />
                 </div>
               </div>
@@ -1129,14 +1138,13 @@ const ProposalForm = () => {
                 <button
                   type="button"
                   onClick={() => setShowItemForm(false)}
-                  className="px-4 py-2 border border-gray-300 rounded text-sm hover:bg-gray-50"
+                  className="rounded-xl border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
                 >
                   Close
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-white rounded text-sm"
-                  style={{ backgroundColor: "#333333" }}
+                  className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
                 >
                   Save Item
                 </button>
@@ -1147,16 +1155,16 @@ const ProposalForm = () => {
       )}
 
       {/* Form Buttons */}
-      <div className="mt-6 flex justify-end gap-3">
+      <div className="flex justify-end gap-3">
         <button
           onClick={() => handleSubmit(false)}
-          className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+          className="rounded-xl border border-slate-200 bg-white/80 px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-white"
         >
           Save Draft
         </button>
         <button
           onClick={() => handleSubmit(true)}
-          className="px-6 py-2 bg-black text-white rounded hover:bg-gray-800"
+          className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-md hover:brightness-110"
         >
           Save & Send
         </button>

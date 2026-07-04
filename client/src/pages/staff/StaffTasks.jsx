@@ -166,139 +166,144 @@ const StaffTasks = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-xl">Loading tasks...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white flex items-center justify-center">
+        <div className="rounded-3xl border border-white/60 bg-white/80 px-8 py-6 text-lg font-semibold text-slate-700 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+          Loading tasks...
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 to-white p-4 sm:p-6">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold">My Tasks</h1>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-slate-400">
+              Staff Portal
+            </p>
+            <h1 className="mt-1 text-2xl font-bold text-slate-900">My Tasks</h1>
             <button
               onClick={() => navigate("/staff/dashboard")}
-              className="text-blue-600 hover:underline flex items-center"
+              className="mt-1 flex items-center text-sm font-medium text-slate-500 hover:text-slate-900"
             >
               ← Back to Dashboard
             </button>
           </div>
           <button
             onClick={fetchStaffTasks}
-            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            className="rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:brightness-110"
           >
             Refresh Tasks
           </button>
-        </div>
-      </header>
+        </header>
 
-      <main className="max-w-7xl mx-auto py-6 px-4">
         {tasks.length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-8 text-center">
-            <h2 className="text-xl font-semibold text-gray-600 mb-4">
+          <div className="rounded-3xl border border-white/60 bg-white/80 p-8 text-center shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <h2 className="mb-2 text-xl font-semibold text-slate-700">
               No Tasks Assigned
             </h2>
-            <p className="text-gray-500">
+            <p className="text-slate-500">
               You don't have any tasks assigned to you yet.
             </p>
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            <table className="min-w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Task
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Priority
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Due Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {tasks.map((task) => (
-                  <tr key={task._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {task.title}
-                        </div>
-                        {task.description && (
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {task.description}
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getPriorityColor(
-                          task.priority
-                        )}`}
-                      >
-                        {task.priority.charAt(0).toUpperCase() +
-                          task.priority.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      {formatDate(task.dueDate)}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(
-                          task.status
-                        )}`}
-                      >
-                        {getDisplayStatus(task.status)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex space-x-2">
-                        <select
-                          value={
-                            statusOptions.find(
-                              (opt) =>
-                                opt.value.toLowerCase().replace(" ", "-") ===
-                                task.status
-                            )?.value || ""
-                          }
-                          onChange={(e) =>
-                            updateTaskStatus(task._id, e.target.value)
-                          }
-                          disabled={updatingTask === task._id}
-                          className="border rounded px-2 py-1 text-sm disabled:opacity-50"
-                        >
-                          {statusOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        {updatingTask === task._id && (
-                          <span className="text-xs text-gray-500">
-                            Updating...
-                          </span>
-                        )}
-                      </div>
-                    </td>
+          <div className="overflow-hidden rounded-3xl border border-white/60 bg-white/80 shadow-[0_20px_60px_rgba(15,23,42,.08)] backdrop-blur">
+            <div className="overflow-x-auto">
+              <table className="min-w-full">
+                <thead className="bg-slate-50/80">
+                  <tr>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Task
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Priority
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Due Date
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Status
+                    </th>
+                    <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-200/70">
+                  {tasks.map((task) => (
+                    <tr key={task._id} className="transition hover:bg-white/70">
+                      <td className="px-4 sm:px-6 py-3 text-sm">
+                        <div>
+                          <div className="font-medium text-slate-900">
+                            {task.title}
+                          </div>
+                          {task.description && (
+                            <div className="truncate max-w-xs text-sm text-slate-500">
+                              {task.description}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 text-sm">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${getPriorityColor(
+                            task.priority
+                          )}`}
+                        >
+                          {task.priority.charAt(0).toUpperCase() +
+                            task.priority.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 text-sm text-slate-700 tabular-nums">
+                        {formatDate(task.dueDate)}
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 text-sm">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-medium ${getStatusColor(
+                            task.status
+                          )}`}
+                        >
+                          {getDisplayStatus(task.status)}
+                        </span>
+                      </td>
+                      <td className="px-4 sm:px-6 py-3 text-sm">
+                        <div className="flex items-center space-x-2">
+                          <select
+                            value={
+                              statusOptions.find(
+                                (opt) =>
+                                  opt.value.toLowerCase().replace(" ", "-") ===
+                                  task.status
+                              )?.value || ""
+                            }
+                            onChange={(e) =>
+                              updateTaskStatus(task._id, e.target.value)
+                            }
+                            disabled={updatingTask === task._id}
+                            className="rounded-xl border border-slate-200 bg-slate-50/80 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-300 disabled:opacity-50"
+                          >
+                            {statusOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </select>
+                          {updatingTask === task._id && (
+                            <span className="text-xs text-slate-500">
+                              Updating...
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 };
